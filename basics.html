@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Basics — Larder</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+            Larder
+        </div>
+        <div class="nav-controls">
+            <a href="index.html" class="nav-link">Recipes</a>
+            <a href="cms.html" class="nav-link">Manage</a>
+        </div>
+    </nav>
+
+    <div class="basics-layout">
+        <!-- Sticky Sidebar TOC -->
+        <aside class="basics-sidebar">
+            <div class="basics-sidebar-inner">
+                <span class="sidebar-label">Kitchen Basics</span>
+                <nav class="sidebar-nav">
+                    <a href="#equipment" class="sidebar-link active" data-section="equipment">
+                        <span class="sidebar-link-marker"></span>Equipment
+                    </a>
+                    <a href="#knives" class="sidebar-link" data-section="knives">
+                        <span class="sidebar-link-marker"></span>Knives
+                    </a>
+                    <a href="#cookware" class="sidebar-link" data-section="cookware">
+                        <span class="sidebar-link-marker"></span>Cookware
+                    </a>
+                    <a href="#space" class="sidebar-link" data-section="space">
+                        <span class="sidebar-link-marker"></span>Space Organisation
+                    </a>
+                    <a href="#techniques" class="sidebar-link" data-section="techniques">
+                        <span class="sidebar-link-marker"></span>Techniques
+                    </a>
+                    <a href="#safety" class="sidebar-link" data-section="safety">
+                        <span class="sidebar-link-marker"></span>Food Safety
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="basics-main">
+
+            <!-- Hero Header -->
+            <header class="basics-hero">
+                <h1>Kitchen<br>Basics</h1>
+                <p class="basics-subtitle">A great kitchen companion for your cooking adventures. Master the fundamentals before you reach for the stove.</p>
+            </header>
+
+            <!-- Section: Equipment Overview -->
+            <section id="equipment" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-seafood);">
+                    <span class="section-number">01</span>
+                    <h2>Equipment</h2>
+                </div>
+                <p class="section-intro">A kitchen should have an assortment of equipment for at least basic functionality. Different people will prefer some equipment over others, and what some may perceive as indispensable may only be of convenience to others.</p>
+            </section>
+
+            <!-- Section: Knives -->
+            <section id="knives" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-seafood);">
+                    <span class="section-number">01.1</span>
+                    <h2>Knives</h2>
+                </div>
+                <p class="section-intro">Knives are essential in food preparation. Choosing which knives to buy can be difficult from the abundant choices — from different shapes, sizes, blade materials and handle materials. Here are the essentials.</p>
+                
+                <div class="knife-grid">
+                    <div class="knife-card" style="--card-accent: var(--accent-seafood);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">8–12"</span>
+                        </div>
+                        <h3>Chef Knife</h3>
+                        <p>General purpose. The workhorse of the kitchen. Chop, slice, mince, and dice.</p>
+                    </div>
+                    <div class="knife-card" style="--card-accent: var(--accent-vegetables);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">5–8"</span>
+                        </div>
+                        <h3>Santoku</h3>
+                        <p>Similar to the Chef Knife. Excels at precision slicing, dicing, and mincing.</p>
+                    </div>
+                    <div class="knife-card" style="--card-accent: var(--accent-baking);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">2.5–4"</span>
+                        </div>
+                        <h3>Paring Knife</h3>
+                        <p>Small tasks. To peel, to core, and for detailed garnish work.</p>
+                    </div>
+                    <div class="knife-card" style="--card-accent: var(--accent-stocks);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">8–10"</span>
+                        </div>
+                        <h3>Serrated Knife</h3>
+                        <p>Items with hard exterior and soft interior, such as bread and tomatoes.</p>
+                    </div>
+                    <div class="knife-card" style="--card-accent: var(--accent-meat);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">6"</span>
+                        </div>
+                        <h3>Cleaver</h3>
+                        <p>Tough edge. Split bones, dense cartilage, and thick cuts of meat.</p>
+                    </div>
+                    <div class="knife-card" style="--card-accent: var(--accent-jams);">
+                        <div class="knife-card-head">
+                            <span class="knife-size">5–6"</span>
+                        </div>
+                        <h3>Boning Knife</h3>
+                        <p>Thin flexible blade. Remove bones from meat with precision.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Cookware -->
+            <section id="cookware" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-stocks);">
+                    <span class="section-number">01.2</span>
+                    <h2>Cookware Materials</h2>
+                </div>
+                
+                <div class="material-grid">
+                    <div class="material-card">
+                        <div class="material-accent" style="background: var(--accent-dairies);"></div>
+                        <h3>Stainless Steel</h3>
+                        <div class="material-pros">
+                            <span class="material-tag pro">Good heat conductor</span>
+                            <span class="material-tag pro">Non-reactive</span>
+                            <span class="material-tag pro">Low maintenance</span>
+                        </div>
+                        <div class="material-cons">
+                            <span class="material-tag con">Relatively expensive</span>
+                            <span class="material-tag con">Uneven heating</span>
+                        </div>
+                    </div>
+                    <div class="material-card">
+                        <div class="material-accent" style="background: var(--accent-stocks);"></div>
+                        <h3>Carbon Steel</h3>
+                        <div class="material-pros">
+                            <span class="material-tag pro">Relatively cheap</span>
+                            <span class="material-tag pro">Great heat conductor</span>
+                            <span class="material-tag pro">Non-stick after seasoning</span>
+                        </div>
+                        <div class="material-cons">
+                            <span class="material-tag con">High maintenance</span>
+                            <span class="material-tag con">Reactive with acidic foods</span>
+                        </div>
+                    </div>
+                    <div class="material-card">
+                        <div class="material-accent" style="background: var(--accent-meat);"></div>
+                        <h3>Cast Iron</h3>
+                        <div class="material-pros">
+                            <span class="material-tag pro">Great heat conductor</span>
+                            <span class="material-tag pro">Excellent heat retention</span>
+                            <span class="material-tag pro">Oven safe</span>
+                        </div>
+                        <div class="material-cons">
+                            <span class="material-tag con">High maintenance</span>
+                            <span class="material-tag con">Reactive with acidic foods</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Space Organisation -->
+            <section id="space" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-vegetables);">
+                    <span class="section-number">02</span>
+                    <h2>Space Organisation</h2>
+                </div>
+                <div class="pull-quote" style="border-color: var(--accent-vegetables);">
+                    Avoid cluttering the countertop, drawers, or cupboard with ingredients, utensils or anything else.
+                </div>
+                <p class="section-body">Use racks, shelves, or other organising units where necessary to keep order in the kitchen space. Having a clear countertop will allow more space for food preparation and organised drawers and cupboards will make items easier to locate.</p>
+                <p class="section-body">A countertop with easy access to the sink and the stovetop is recommended. Food preparation generally requires some cleaning up, thus a sink nearby does help. The same concept applies to ingredients, cookware, and utensils. Keep a select handful of items that are used regularly near the preparation area.</p>
+            </section>
+
+            <!-- Section: Techniques -->
+            <section id="techniques" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-jams);">
+                    <span class="section-number">03</span>
+                    <h2>Techniques</h2>
+                </div>
+                <p class="section-intro">Getting comfortable using a knife properly will make it quicker, safer, and more enjoyable to cook regularly. The two most important things to learn are to always use a sharp knife and make sure to stabilise the cutting board.</p>
+                
+                <div class="technique-grid">
+                    <div class="technique-card">
+                        <div class="technique-label" style="background: var(--accent-jams);">Pinch Grip</div>
+                        <p>Place the middle finger behind the knife bolster or guard, with the ring and little finger around the handle, while pinching the blade with the thumb and forefinger. A safe hold even with slightly damp hands.</p>
+                    </div>
+                    <div class="technique-card">
+                        <div class="technique-label" style="background: var(--accent-baking);">Claw Grip</div>
+                        <p>The other hand holds the ingredient being cut. Hold on to the ingredient with thumb and fingers, and keep fingertips curled inward to avoid getting hit by the knife's blade.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Safety -->
+            <section id="safety" class="basics-section">
+                <div class="section-header" style="--section-accent: var(--accent-meat);">
+                    <span class="section-number">04</span>
+                    <h2>Food & Kitchen Safety</h2>
+                </div>
+                <p class="section-intro">Properly handling and preparing food is crucial to keep everybody safe. Before handling any food or equipment, hands should be washed thoroughly with soap and water.</p>
+                
+                <div class="safety-grid">
+                    <div class="safety-card">
+                        <div class="safety-icon" style="color: var(--accent-meat);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M3.6 15.4 10.4 3.6a1.8 1.8 0 0 1 3.2 0l6.8 11.8a1.8 1.8 0 0 1-1.6 2.6H5.2a1.8 1.8 0 0 1-1.6-2.6z"/></svg>
+                        </div>
+                        <h4>Temperature Control</h4>
+                        <p>Meat should not be kept at room temperature for more than 2 hours.</p>
+                    </div>
+                    <div class="safety-card">
+                        <div class="safety-icon" style="color: var(--accent-stocks);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
+                        </div>
+                        <h4>Cross-Contamination</h4>
+                        <p>Thoroughly wash vegetables, especially root varieties. Use separate cutting boards for meat and vegetables.</p>
+                    </div>
+                    <div class="safety-card">
+                        <div class="safety-icon" style="color: var(--accent-seafood);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V7h-5a8 8 0 0 0-5 2 8 8 0 0 0-5-2H2Z"/></svg>
+                        </div>
+                        <h4>Thawing</h4>
+                        <p>Thaw meat from the freezer properly before cooking. Recommended: in the refrigerator or submerged in cold water.</p>
+                    </div>
+                    <div class="safety-card">
+                        <div class="safety-icon" style="color: var(--accent-vegetables);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                        </div>
+                        <h4>Cleaning</h4>
+                        <p>Clean sponges after each use. The sink is subjected to grease, dirt, and food residue — sanitise this area regularly.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Scroll-spy for sidebar navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.sidebar-link');
+            const sections = document.querySelectorAll('.basics-section');
+
+            // Smooth scroll on click
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            // Intersection Observer for scroll-spy
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        links.forEach(l => l.classList.remove('active'));
+                        const activeLink = document.querySelector(`.sidebar-link[data-section="${entry.target.id}"]`);
+                        if (activeLink) activeLink.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-20% 0px -60% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+</html>

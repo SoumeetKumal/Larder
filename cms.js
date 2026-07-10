@@ -1,0 +1,215 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const addBtn = document.getElementById('add-recipe-btn');
+    const statusText = document.getElementById('status-text');
+    const listContainer = document.getElementById('cms-recipe-list');
+    
+    const modal = document.getElementById('cms-editor-modal');
+    const form = document.getElementById('recipe-form');
+    const closeBtn = modal.querySelector('.cms-close');
+    const editorTitle = document.getElementById('editor-title');
+    const ingContainer = document.getElementById('ingredients-container');
+    const addIngBtn = document.getElementById('add-ing-btn');
+    const macroRefSelect = document.getElementById('macro-reference');
+    const macroRefAmountGroup = document.getElementById('macro-ref-amount-group');
+
+    macroRefSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'per_x_g') {
+            macroRefAmountGroup.style.display = 'block';
+        } else {
+            macroRefAmountGroup.style.display = 'none';
+        }
+    });
+
+    let recipes = [];
+
+    // --- Load recipes from API ---
+    async function loadRecipes() {
+        try {
+            const res = await fetch('/api/recipes');
+            if (!res.ok) throw new Error('API not available');
+            recipes = await res.json();
+            statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipe(s)`;
+            addBtn.classList.remove('hidden');
+            renderCMSList();
+        } catch(e) {
+            statusText.textContent = '⚠ Could not connect. Run: node server.js';
+            statusText.style.color = '#D1777D';
+        }
+    }
+
+    loadRecipes();
+
+    async function saveRecipes() {
+        try {
+            const res = await fetch('/api/recipes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(recipes)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            const result = await res.json();
+            statusText.innerHTML = `<span class="status-dot"></span> Saved · ${result.count} recipe(s)`;
+        } catch(e) {
+            statusText.textContent = '⚠ Save failed. Is the server running?';
+            statusText.style.color = '#D1777D';
+        }
+    }
+
+    // --- Render CMS List ---
+    function renderCMSList() {
+        if (recipes.length === 0) {
+            listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "Add New Recipe" to start!</div>`;
+            return;
+        }
+
+        listContainer.innerHTML = recipes.map(recipe => {
+            const theme = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
+            return `
+            <div class="cms-recipe-item ${theme}">
+                <div>
+                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--accent-current, var(--accent-default)); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 0.3rem;">${recipe.category || 'Recipe'}</span>
+                    <strong style="font-size: 1.1rem; font-weight: 600;">${recipe.title}</strong>
+                </div>
+                <div class="cms-recipe-actions">
+                    <button class="btn secondary edit-btn" data-id="${recipe.id}">Edit</button>
+                    <button class="btn danger delete-btn" data-id="${recipe.id}">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => openEditor(btn.dataset.id));
+        });
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Delete this recipe?')) {
+                    recipes = recipes.filter(r => r.id !== btn.dataset.id);
+                    renderCMSList();
+                    await saveRecipes();
+                }
+            });
+        });
+    }
+
+    addBtn.addEventListener('click', () => openEditor());
+
+    // --- Ingredient Rows ---
+    function createIngredientRow(item = '', metric = '', imperial = '') {
+        const div = document.createElement('div');
+        div.className = 'cms-ing-row form-row';
+        div.innerHTML = `
+            <div class="form-group" style="flex: 2;"><input type="text" placeholder="Item name" value="${item.replace(/"/g, '&quot;')}"></div>
+            <div class="form-group" style="flex: 1;"><input type="text" placeholder="Metric" value="${metric.replace(/"/g, '&quot;')}"></div>
+            <div class="form-group" style="flex: 1;"><input type="text" placeholder="Imperial" value="${imperial.replace(/"/g, '&quot;')}"></div>
+            <div class="form-group" style="flex: 0 0 auto;"><button type="button" class="btn danger">&times;</button></div>
+        `;
+        div.querySelector('.btn.danger').addEventListener('click', () => div.remove());
+        ingContainer.appendChild(div);
+    }
+
+    addIngBtn.addEventListener('click', () => createIngredientRow());
+
+    // --- Editor ---
+    function openEditor(id = null) {
+        ingContainer.innerHTML = '';
+
+        if (id) {
+            const recipe = recipes.find(r => r.id === id);
+            editorTitle.textContent = 'Edit Recipe';
+            document.getElementById('recipe-id').value = recipe.id;
+            document.getElementById('recipe-title').value = recipe.title;
+            document.getElementById('recipe-category').value = recipe.category || 'Default';
+            document.getElementById('recipe-desc').value = recipe.description || '';
+            document.getElementById('recipe-image').value = recipe.imageUrl || '';
+
+            if (recipe.macros) {
+                if (recipe.macros.macroReference) {
+                    document.getElementById('macro-reference').value = recipe.macros.macroReference.type || 'per_serving';
+                    document.getElementById('macro-ref-amount').value = recipe.macros.macroReference.referenceAmount || '';
+                } else {
+                    document.getElementById('macro-reference').value = 'per_serving';
+                    document.getElementById('macro-ref-amount').value = '';
+                }
+                
+                // Trigger change to update visibility
+                macroRefSelect.dispatchEvent(new Event('change'));
+
+                document.getElementById('macro-yield').value = recipe.macros.yield || '';
+                document.getElementById('macro-energy').value = recipe.macros.energy || '';
+                document.getElementById('macro-carbs').value = recipe.macros.carbohydrate || '';
+                document.getElementById('macro-protein').value = recipe.macros.protein || '';
+                document.getElementById('macro-fat').value = recipe.macros.fat || '';
+            } else {
+                document.getElementById('macro-reference').value = 'per_serving';
+                macroRefSelect.dispatchEvent(new Event('change'));
+            }
+
+            if (recipe.ingredients?.length > 0) {
+                recipe.ingredients.forEach(ing => createIngredientRow(ing.item, ing.metric, ing.imperial));
+            } else {
+                createIngredientRow();
+            }
+
+            document.getElementById('recipe-steps').value = (recipe.steps || []).join('\n');
+            document.getElementById('recipe-note').value = recipe.note || '';
+            document.getElementById('recipe-variations').value = recipe.variations || '';
+        } else {
+            editorTitle.textContent = 'Add New Recipe';
+            form.reset();
+            document.getElementById('recipe-id').value = Date.now().toString();
+            createIngredientRow();
+        }
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const ingRows = Array.from(ingContainer.querySelectorAll('.cms-ing-row'));
+        const ingredients = ingRows.map(row => {
+            const inputs = row.querySelectorAll('input');
+            return { item: inputs[0].value, metric: inputs[1].value, imperial: inputs[2].value };
+        }).filter(ing => ing.item.trim() !== '');
+
+        const newRecipe = {
+            id: document.getElementById('recipe-id').value,
+            title: document.getElementById('recipe-title').value,
+            category: document.getElementById('recipe-category').value,
+            description: document.getElementById('recipe-desc').value,
+            imageUrl: document.getElementById('recipe-image').value,
+            macros: {
+                macroReference: {
+                    type: document.getElementById('macro-reference').value,
+                    referenceAmount: document.getElementById('macro-ref-amount').value
+                },
+                yield: document.getElementById('macro-yield').value,
+                energy: document.getElementById('macro-energy').value,
+                carbohydrate: document.getElementById('macro-carbs').value,
+                protein: document.getElementById('macro-protein').value,
+                fat: document.getElementById('macro-fat').value
+            },
+            ingredients,
+            steps: document.getElementById('recipe-steps').value.split('\n').filter(l => l.trim()),
+            note: document.getElementById('recipe-note').value,
+            variations: document.getElementById('recipe-variations').value
+        };
+
+        const idx = recipes.findIndex(r => r.id === newRecipe.id);
+        if (idx >= 0) recipes[idx] = newRecipe;
+        else recipes.push(newRecipe);
+
+        closeModal();
+        renderCMSList();
+        await saveRecipes();
+    });
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+});

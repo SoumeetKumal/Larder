@@ -1,0 +1,117 @@
+[
+  {
+    "id": "1",
+    "title": "TUNA PASTA",
+    "category": "Seafood",
+    "description": "Rich, creamy, and spicy tuna pasta",
+    "imageUrl": "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "638kCal",
+      "carbohydrate": "74.0g",
+      "protein": "30.2g",
+      "fat": "21.3g"
+    },
+    "ingredients": [
+      {
+        "item": "Tagliatelle",
+        "metric": "320g",
+        "imperial": "3 cups"
+      },
+      {
+        "item": "Parsley, chopped",
+        "metric": "",
+        "imperial": "2 tbsp"
+      },
+      {
+        "item": "Tuna Flakes",
+        "metric": "170g",
+        "imperial": "1 can"
+      },
+      {
+        "item": "White Wine",
+        "metric": "125ml",
+        "imperial": "½ cup"
+      },
+      {
+        "item": "Olive Oil",
+        "metric": "45ml",
+        "imperial": "3 tbsp"
+      },
+      {
+        "item": "Tomato Purée",
+        "metric": "375ml",
+        "imperial": "1½ cups"
+      },
+      {
+        "item": "Garlic, minced",
+        "metric": "",
+        "imperial": "5 cloves"
+      },
+      {
+        "item": "Sugar",
+        "metric": "12g",
+        "imperial": "1 tbsp"
+      },
+      {
+        "item": "Onion, diced",
+        "metric": "",
+        "imperial": "1 medium"
+      },
+      {
+        "item": "Parmigiano Reggiano, grated",
+        "metric": "75g",
+        "imperial": "1 cup"
+      },
+      {
+        "item": "Thyme",
+        "metric": "",
+        "imperial": "2 sprigs"
+      },
+      {
+        "item": "Lemon, squeezed",
+        "metric": "",
+        "imperial": "½ small"
+      },
+      {
+        "item": "Tarragon",
+        "metric": "",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Salt",
+        "metric": "",
+        "imperial": "2 tbsp"
+      },
+      {
+        "item": "Rosemary",
+        "metric": "",
+        "imperial": "1 sprig"
+      },
+      {
+        "item": "Pepper, freshly ground",
+        "metric": "",
+        "imperial": "1 tbsp"
+      },
+      {
+        "item": "Chilli Flakes",
+        "metric": "",
+        "imperial": "1 pinch"
+      }
+    ],
+    "steps": [
+      "Add 2 tbsp olive oil and tuna flakes in a sauce pan and cook on medium heat until golden brown.",
+      "Remove tuna from the heat and place on a dish or in a container.",
+      "Add 1 tbsp olive oil, onion, garlic, thyme, tarragon, rosemary, and chilli flakes in the sauce pan. Cook until the onions have softened.",
+      "Deglaze with white wine, let the alcohol cook out.",
+      "Add tomato purée, salt, sugar, and pepper. Cook for 15 minutes and add parmigiano reggiano.",
+      "Meanwhile, bring 8 cups of water to a boil in a pot and add 1 tbsp salt. Add tagliatelle to water and cook most of the way.",
+      "Add tuna from earlier to the sauce pan, mix, and cook for 1 minute.",
+      "Taste and adjust for salt and pepper.",
+      "Add the tagliatelle and some of the starchy water to the sauté pan, mix, and let the tagliatelle finish cooking in the sauce. Grate some parmigiano reggiano on top while cooking.",
+      "Garnish with parsley and more parmigiano reggiano before serving."
+    ],
+    "note": "The sauce can be be ahead of time and heated before adding freshly cooked pasta. DO NOT cook pasta ahead of time.",
+    "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!"
+  }
+]

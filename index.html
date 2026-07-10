@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Larder</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+            Larder
+        </div>
+        <div class="nav-controls">
+            <input type="text" id="search-input" class="search-input" placeholder="Search recipes...">
+            <a href="basics.html" class="nav-link">Basics</a>
+            <a href="cms.html" class="nav-link">Manage</a>
+        </div>
+    </nav>
+
+    <!-- Category Filters & Macros Toggle -->
+    <div class="filters-bar">
+        <div class="category-filters" id="category-filters"></div>
+        <button id="toggle-macro-filters" class="btn secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: text-bottom;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Macro Filters
+        </button>
+    </div>
+
+    <!-- Macro Filters Panel -->
+    <div id="macro-filters-panel" class="macro-filters-panel hidden">
+        <div class="macro-filters-header">
+            <span>Nutritional Filters</span>
+            <span class="macro-filters-note">Per Serving</span>
+        </div>
+        <div class="macro-filters-grid">
+            <div class="macro-filter-group">
+                <label>Calories</label>
+                <div class="range-pair">
+                    <input type="number" id="filter-cal-min" placeholder="Min" min="0" max="5000">
+                    <span class="range-dash">—</span>
+                    <input type="number" id="filter-cal-max" placeholder="Max" min="0" max="5000">
+                </div>
+                <span class="filter-display" id="filter-cal-val">Any</span>
+            </div>
+            <div class="macro-filter-group">
+                <label>Carbs</label>
+                <div class="range-pair">
+                    <input type="number" id="filter-carbs-min" placeholder="Min" min="0" max="500">
+                    <span class="range-dash">—</span>
+                    <input type="number" id="filter-carbs-max" placeholder="Max" min="0" max="500">
+                </div>
+                <span class="filter-display" id="filter-carbs-val">Any</span>
+            </div>
+            <div class="macro-filter-group">
+                <label>Protein</label>
+                <div class="range-pair">
+                    <input type="number" id="filter-protein-min" placeholder="Min" min="0" max="500">
+                    <span class="range-dash">—</span>
+                    <input type="number" id="filter-protein-max" placeholder="Max" min="0" max="500">
+                </div>
+                <span class="filter-display" id="filter-protein-val">Any</span>
+            </div>
+            <div class="macro-filter-group">
+                <label>Fat</label>
+                <div class="range-pair">
+                    <input type="number" id="filter-fat-min" placeholder="Min" min="0" max="500">
+                    <span class="range-dash">—</span>
+                    <input type="number" id="filter-fat-max" placeholder="Max" min="0" max="500">
+                </div>
+                <span class="filter-display" id="filter-fat-val">Any</span>
+            </div>
+        </div>
+        <button id="reset-filters" class="btn secondary" style="margin-top: 0.5rem;">Clear All</button>
+    </div>
+    <main class="container">
+        <div id="recipe-grid" class="recipe-grid">
+            <div class="empty-state">Loading...</div>
+        </div>
+    </main>
+
+    <!-- Modal for Recipe Details -->
+    <div id="recipe-modal" class="modal hidden">
+        <div class="modal-content" id="modal-container">
+            <span class="close-btn">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

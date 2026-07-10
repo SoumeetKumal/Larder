@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Larder CMS</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Larder CMS
+        </div>
+        <div class="nav-links">
+            <a href="basics.html" class="nav-link">Basics</a>
+            <a href="index.html" class="nav-link">Recipes</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="cms-header">
+            <div class="cms-status" id="status-text">Connecting...</div>
+            <button id="add-recipe-btn" class="btn primary hidden">+ Add New Recipe</button>
+        </div>
+
+        <div id="cms-recipe-list">
+            <div class="empty-state">Connecting to server...</div>
+        </div>
+    </main>
+
+    <!-- CMS Editor Modal -->
+    <div id="cms-editor-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn cms-close">&times;</span>
+            <h2 id="editor-title" class="cms-section-title" style="margin-top:0;">Add Recipe</h2>
+            <form id="recipe-form" class="recipe-form">
+                <input type="hidden" id="recipe-id">
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Title</label>
+                        <input type="text" id="recipe-title" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Category</label>
+                        <select id="recipe-category" required>
+                            <option value="Vegetables, Fruits, and Seeds">Vegetables, Fruits, and Seeds</option>
+                            <option value="Meat">Meat</option>
+                            <option value="Seafood">Seafood</option>
+                            <option value="Stocks, Seasonings, Sauces, and Soups">Stocks, Seasonings, Sauces, and Soups</option>
+                            <option value="Baking and Pastry">Baking and Pastry</option>
+                            <option value="Jams, Jellies, Preserves, and Pickles">Jams, Jellies, Preserves, and Pickles</option>
+                            <option value="Dairies, Wine, and Liqueur">Dairies, Wine, and Liqueur</option>
+                            <option value="Essential Pantry">Essential Pantry</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Subtitle / Description</label>
+                    <input type="text" id="recipe-desc" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="url" id="recipe-image" required>
+                </div>
+
+                <div class="cms-section-title">Macros</div>
+                <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Macro Reference</label>
+                        <select id="macro-reference">
+                            <option value="per_serving">Per Serving</option>
+                            <option value="total">Total Recipe</option>
+                            <option value="per_100g">Per 100g</option>
+                            <option value="per_x_g">Per X grams</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="macro-ref-amount-group" style="flex: 1; display: none;">
+                        <label>Grams (X)</label>
+                        <input type="number" id="macro-ref-amount" placeholder="e.g. 50">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Yield</label><input type="text" id="macro-yield" placeholder="e.g. 4 Servings"></div>
+                    <div class="form-group"><label>Energy</label><input type="text" id="macro-energy"></div>
+                    <div class="form-group"><label>Carbs</label><input type="text" id="macro-carbs"></div>
+                    <div class="form-group"><label>Protein</label><input type="text" id="macro-protein"></div>
+                    <div class="form-group"><label>Fat</label><input type="text" id="macro-fat"></div>
+                </div>
+
+                <div class="cms-section-title">Ingredients</div>
+                <div id="ingredients-container"></div>
+                <button type="button" id="add-ing-btn" class="btn secondary" style="margin-bottom: 2rem;">+ Add Ingredient</button>
+
+                <div class="form-group">
+                    <label>Steps (One per line)</label>
+                    <textarea id="recipe-steps" rows="8" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Note (Optional)</label>
+                    <textarea id="recipe-note" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Variations (Optional)</label>
+                    <textarea id="recipe-variations" rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="btn primary full-width">Save Recipe</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="cms.js"></script>
+</body>
+</html>
