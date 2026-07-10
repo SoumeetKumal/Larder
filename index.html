@@ -15,8 +15,8 @@
         </div>
         <div class="nav-controls">
             <input type="text" id="search-input" class="search-input" placeholder="Search recipes...">
-            <a href="basics.html" class="nav-link">Basics</a>
-            <a href="cms.html" class="nav-link">Manage</a>
+            <a href="basics" class="nav-link">Basics</a>
+            <a href="cms" class="nav-link">Manage</a>
         </div>
     </nav>
 
@@ -87,7 +87,7 @@
 
     <script>
         if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            document.querySelectorAll('a[href="cms.html"]').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
         }
     </script>
     <script src="app.js"></script>
