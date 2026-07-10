@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Larder</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -38,35 +39,19 @@
         <div class="macro-filters-grid">
             <div class="macro-filter-group">
                 <label>Calories <span class="filter-val-label" id="filter-cal-val">Any</span></label>
-                <div class="dual-range-slider">
-                    <div class="slider-track" id="track-cal"></div>
-                    <input type="range" id="filter-cal-min" min="0" max="2000" step="50" value="0">
-                    <input type="range" id="filter-cal-max" min="0" max="2000" step="50" value="2000">
-                </div>
+                <div id="slider-cal" class="editorial-slider"></div>
             </div>
             <div class="macro-filter-group">
                 <label>Carbs <span class="filter-val-label" id="filter-carbs-val">Any</span></label>
-                <div class="dual-range-slider">
-                    <div class="slider-track" id="track-carbs"></div>
-                    <input type="range" id="filter-carbs-min" min="0" max="200" step="5" value="0">
-                    <input type="range" id="filter-carbs-max" min="0" max="200" step="5" value="200">
-                </div>
+                <div id="slider-carbs" class="editorial-slider"></div>
             </div>
             <div class="macro-filter-group">
                 <label>Protein <span class="filter-val-label" id="filter-protein-val">Any</span></label>
-                <div class="dual-range-slider">
-                    <div class="slider-track" id="track-protein"></div>
-                    <input type="range" id="filter-protein-min" min="0" max="150" step="5" value="0">
-                    <input type="range" id="filter-protein-max" min="0" max="150" step="5" value="150">
-                </div>
+                <div id="slider-protein" class="editorial-slider"></div>
             </div>
             <div class="macro-filter-group">
                 <label>Fat <span class="filter-val-label" id="filter-fat-val">Any</span></label>
-                <div class="dual-range-slider">
-                    <div class="slider-track" id="track-fat"></div>
-                    <input type="range" id="filter-fat-min" min="0" max="150" step="5" value="0">
-                    <input type="range" id="filter-fat-max" min="0" max="150" step="5" value="150">
-                </div>
+                <div id="slider-fat" class="editorial-slider"></div>
             </div>
         </div>
         <button id="reset-filters" class="btn secondary" style="margin-top: 0.5rem;">Clear All</button>
@@ -90,6 +75,7 @@
             document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

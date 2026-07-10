@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const macroFiltersPanel = document.getElementById('macro-filters-panel');
     const resetFiltersBtn = document.getElementById('reset-filters');
 
-    // Filter state: { min, max } for each macro (null = no filter)
     let macroFilters = {
         cal: { min: null, max: null },
         carbs: { min: null, max: null },
@@ -63,65 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
         fat: { min: null, max: null }
     };
 
-    function getFilterEls(key) {
-        return {
-            min: document.getElementById(`filter-${key}-min`),
-            max: document.getElementById(`filter-${key}-max`),
-            display: document.getElementById(`filter-${key}-val`),
-            track: document.getElementById(`track-${key}`)
-        };
-    }
+    const sliderConfigs = {
+        cal: { min: 0, max: 2000, step: 50 },
+        carbs: { min: 0, max: 200, step: 5 },
+        protein: { min: 0, max: 150, step: 5 },
+        fat: { min: 0, max: 150, step: 5 }
+    };
 
-    function updateFilterDisplay(key) {
-        const els = getFilterEls(key);
-        const f = macroFilters[key];
+    function updateFilterDisplay(key, values) {
+        const display = document.getElementById(`filter-${key}-val`);
         const unit = key === 'cal' ? ' kcal' : 'g';
+        const config = sliderConfigs[key];
         
-        let minV = parseInt(els.min.value);
-        let maxV = parseInt(els.max.value);
-        
-        // Prevent thumbs crossing
-        if (minV > maxV) {
-            let tmp = minV;
-            minV = maxV;
-            maxV = tmp;
-        }
+        const minV = Math.round(values[0]);
+        const maxV = Math.round(values[1]);
 
-        const maxAllowed = parseInt(els.max.max);
-        const minAllowed = parseInt(els.min.min);
+        macroFilters[key].min = minV > config.min ? minV : null;
+        macroFilters[key].max = maxV < config.max ? maxV : null;
 
-        // Update track visuals
-        const percent1 = ((minV - minAllowed) / (maxAllowed - minAllowed)) * 100;
-        const percent2 = ((maxV - minAllowed) / (maxAllowed - minAllowed)) * 100;
-        els.track.style.left = percent1 + '%';
-        els.track.style.width = (percent2 - percent1) + '%';
-
-        f.min = minV > minAllowed ? minV : null;
-        f.max = maxV < maxAllowed ? maxV : null;
-
+        const f = macroFilters[key];
         if (f.min !== null && f.max !== null) {
-            els.display.textContent = `${f.min}${unit} – ${f.max}${unit}`;
+            display.textContent = `${f.min}${unit} – ${f.max}${unit}`;
         } else if (f.min !== null) {
-            els.display.textContent = `≥ ${f.min}${unit}`;
+            display.textContent = `≥ ${f.min}${unit}`;
         } else if (f.max !== null) {
-            els.display.textContent = `≤ ${f.max}${unit}`;
+            display.textContent = `≤ ${f.max}${unit}`;
         } else {
-            els.display.textContent = 'Any';
+            display.textContent = 'Any';
         }
-    }
-
-    function setupFilterInput(key) {
-        const els = getFilterEls(key);
-        els.min.addEventListener('input', () => {
-            updateFilterDisplay(key);
-            renderGrid();
-        });
-        els.max.addEventListener('input', () => {
-            updateFilterDisplay(key);
-            renderGrid();
-        });
-        // Initial setup
-        updateFilterDisplay(key);
     }
 
     if (toggleMacroFiltersBtn && macroFiltersPanel) {
@@ -130,14 +98,33 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleMacroFiltersBtn.classList.toggle('active');
         });
 
-        ['cal', 'carbs', 'protein', 'fat'].forEach(setupFilterInput);
+        Object.keys(sliderConfigs).forEach(key => {
+            const config = sliderConfigs[key];
+            const sliderEl = document.getElementById(`slider-${key}`);
+            
+            noUiSlider.create(sliderEl, {
+                start: [config.min, config.max],
+                connect: true,
+                step: config.step,
+                range: {
+                    'min': config.min,
+                    'max': config.max
+                }
+            });
+
+            sliderEl.noUiSlider.on('update', (values) => {
+                updateFilterDisplay(key, values);
+            });
+
+            sliderEl.noUiSlider.on('change', () => {
+                renderGrid();
+            });
+        });
 
         resetFiltersBtn.addEventListener('click', () => {
-            ['cal', 'carbs', 'protein', 'fat'].forEach(key => {
-                const els = getFilterEls(key);
-                els.min.value = els.min.min;
-                els.max.value = els.max.max;
-                updateFilterDisplay(key);
+            Object.keys(sliderConfigs).forEach(key => {
+                const config = sliderConfigs[key];
+                document.getElementById(`slider-${key}`).noUiSlider.set([config.min, config.max]);
             });
             renderGrid();
         });
