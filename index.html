@@ -15,7 +15,7 @@
             Larder
         </div>
         <div class="nav-controls">
-            <input type="text" id="search-input" class="search-input" placeholder="Search recipes...">
+            <input type="text" id="search-input" class="search-input" placeholder="Search recipes..." aria-label="Search recipes">
             <a href="basics" class="nav-link">Basics</a>
             <a href="cms" class="nav-link">Manage</a>
         </div>
@@ -63,9 +63,9 @@
     </main>
 
     <!-- Modal for Recipe Details -->
-    <div id="recipe-modal" class="modal hidden">
+    <div id="recipe-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content" id="modal-container">
-            <span class="close-btn">&times;</span>
+            <button class="close-btn" aria-label="Close modal">&times;</button>
             <div id="modal-body"></div>
         </div>
     </div>
@@ -75,6 +75,13 @@
             document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
         }
     </script>
+
+    <div id="gdpr-banner" class="gdpr-banner hidden no-print">
+        <div class="gdpr-content">
+            <p>Larder uses local storage solely to save your display preferences. We do not track or collect personal data.</p>
+            <button id="gdpr-accept" class="btn primary">Got it</button>
+        </div>
+    </div>
 
     <footer class="site-footer no-print">
         <span>© 2025 Larder. All rights reserved.</span>
