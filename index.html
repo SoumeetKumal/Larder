@@ -37,40 +37,36 @@
         </div>
         <div class="macro-filters-grid">
             <div class="macro-filter-group">
-                <label>Calories</label>
-                <div class="range-pair">
-                    <input type="number" id="filter-cal-min" placeholder="Min" min="0" max="5000">
-                    <span class="range-dash">—</span>
-                    <input type="number" id="filter-cal-max" placeholder="Max" min="0" max="5000">
+                <label>Calories <span class="filter-val-label" id="filter-cal-val">Any</span></label>
+                <div class="dual-range-slider">
+                    <div class="slider-track" id="track-cal"></div>
+                    <input type="range" id="filter-cal-min" min="0" max="2000" step="50" value="0">
+                    <input type="range" id="filter-cal-max" min="0" max="2000" step="50" value="2000">
                 </div>
-                <span class="filter-display" id="filter-cal-val">Any</span>
             </div>
             <div class="macro-filter-group">
-                <label>Carbs</label>
-                <div class="range-pair">
-                    <input type="number" id="filter-carbs-min" placeholder="Min" min="0" max="500">
-                    <span class="range-dash">—</span>
-                    <input type="number" id="filter-carbs-max" placeholder="Max" min="0" max="500">
+                <label>Carbs <span class="filter-val-label" id="filter-carbs-val">Any</span></label>
+                <div class="dual-range-slider">
+                    <div class="slider-track" id="track-carbs"></div>
+                    <input type="range" id="filter-carbs-min" min="0" max="200" step="5" value="0">
+                    <input type="range" id="filter-carbs-max" min="0" max="200" step="5" value="200">
                 </div>
-                <span class="filter-display" id="filter-carbs-val">Any</span>
             </div>
             <div class="macro-filter-group">
-                <label>Protein</label>
-                <div class="range-pair">
-                    <input type="number" id="filter-protein-min" placeholder="Min" min="0" max="500">
-                    <span class="range-dash">—</span>
-                    <input type="number" id="filter-protein-max" placeholder="Max" min="0" max="500">
+                <label>Protein <span class="filter-val-label" id="filter-protein-val">Any</span></label>
+                <div class="dual-range-slider">
+                    <div class="slider-track" id="track-protein"></div>
+                    <input type="range" id="filter-protein-min" min="0" max="150" step="5" value="0">
+                    <input type="range" id="filter-protein-max" min="0" max="150" step="5" value="150">
                 </div>
-                <span class="filter-display" id="filter-protein-val">Any</span>
             </div>
             <div class="macro-filter-group">
-                <label>Fat</label>
-                <div class="range-pair">
-                    <input type="number" id="filter-fat-min" placeholder="Min" min="0" max="500">
-                    <span class="range-dash">—</span>
-                    <input type="number" id="filter-fat-max" placeholder="Max" min="0" max="500">
+                <label>Fat <span class="filter-val-label" id="filter-fat-val">Any</span></label>
+                <div class="dual-range-slider">
+                    <div class="slider-track" id="track-fat"></div>
+                    <input type="range" id="filter-fat-min" min="0" max="150" step="5" value="0">
+                    <input type="range" id="filter-fat-max" min="0" max="150" step="5" value="150">
                 </div>
-                <span class="filter-display" id="filter-fat-val">Any</span>
             </div>
         </div>
         <button id="reset-filters" class="btn secondary" style="margin-top: 0.5rem;">Clear All</button>
@@ -89,6 +85,11 @@
         </div>
     </div>
 
+    <script>
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            document.querySelectorAll('a[href="cms.html"]').forEach(el => el.style.display = 'none');
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

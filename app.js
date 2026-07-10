@@ -67,7 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             min: document.getElementById(`filter-${key}-min`),
             max: document.getElementById(`filter-${key}-max`),
-            display: document.getElementById(`filter-${key}-val`)
+            display: document.getElementById(`filter-${key}-val`),
+            track: document.getElementById(`track-${key}`)
         };
     }
 
@@ -75,6 +76,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const els = getFilterEls(key);
         const f = macroFilters[key];
         const unit = key === 'cal' ? ' kcal' : 'g';
+        
+        let minV = parseInt(els.min.value);
+        let maxV = parseInt(els.max.value);
+        
+        // Prevent thumbs crossing
+        if (minV > maxV) {
+            let tmp = minV;
+            minV = maxV;
+            maxV = tmp;
+        }
+
+        const maxAllowed = parseInt(els.max.max);
+        const minAllowed = parseInt(els.min.min);
+
+        // Update track visuals
+        const percent1 = ((minV - minAllowed) / (maxAllowed - minAllowed)) * 100;
+        const percent2 = ((maxV - minAllowed) / (maxAllowed - minAllowed)) * 100;
+        els.track.style.left = percent1 + '%';
+        els.track.style.width = (percent2 - percent1) + '%';
+
+        f.min = minV > minAllowed ? minV : null;
+        f.max = maxV < maxAllowed ? maxV : null;
+
         if (f.min !== null && f.max !== null) {
             els.display.textContent = `${f.min}${unit} – ${f.max}${unit}`;
         } else if (f.min !== null) {
@@ -89,17 +113,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupFilterInput(key) {
         const els = getFilterEls(key);
         els.min.addEventListener('input', () => {
-            const v = els.min.value.trim();
-            macroFilters[key].min = v !== '' ? parseFloat(v) : null;
             updateFilterDisplay(key);
             renderGrid();
         });
         els.max.addEventListener('input', () => {
-            const v = els.max.value.trim();
-            macroFilters[key].max = v !== '' ? parseFloat(v) : null;
             updateFilterDisplay(key);
             renderGrid();
         });
+        // Initial setup
+        updateFilterDisplay(key);
     }
 
     if (toggleMacroFiltersBtn && macroFiltersPanel) {
@@ -113,9 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resetFiltersBtn.addEventListener('click', () => {
             ['cal', 'carbs', 'protein', 'fat'].forEach(key => {
                 const els = getFilterEls(key);
-                els.min.value = '';
-                els.max.value = '';
-                macroFilters[key] = { min: null, max: null };
+                els.min.value = els.min.min;
+                els.max.value = els.max.max;
                 updateFilterDisplay(key);
             });
             renderGrid();

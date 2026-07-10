@@ -276,5 +276,10 @@
             sections.forEach(section => observer.observe(section));
         });
     </script>
+    <script>
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            document.querySelectorAll('a[href="cms.html"]').forEach(el => el.style.display = 'none');
+        }
+    </script>
 </body>
 </html>
