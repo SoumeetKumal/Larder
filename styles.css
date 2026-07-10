@@ -1184,4 +1184,156 @@ select option { background: var(--bg-surface); }
     .basics-hero h1 { font-size: 2.2rem; }
     .nav-controls, .nav-links { gap: 1rem; }
     .filter-btn { padding: 1rem; font-size: 0.65rem; }
+    .macro-filters-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ===========================
+   RECIPE ACTIONS (Print Button)
+   =========================== */
+.recipe-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 1rem 0;
+}
+
+.print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+}
+
+/* ===========================
+   GLOBAL SITE FOOTER
+   =========================== */
+.site-footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.site-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.site-footer a:hover {
+    color: var(--text-primary);
+}
+
+.footer-links {
+    display: flex;
+    gap: 2rem;
+}
+
+/* ===========================
+   PRINT STYLES
+   =========================== */
+@media print {
+    * {
+        color: #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body {
+        overflow: visible !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Hide everything except the modal content */
+    .navbar,
+    .filters-bar,
+    .macro-filters-panel,
+    .container,
+    .site-footer,
+    .modal,
+    .close-btn,
+    .no-print,
+    .scaler-buttons {
+        display: none !important;
+    }
+
+    .modal,
+    .modal.hidden {
+        display: block !important;
+        position: static !important;
+        overflow: visible !important;
+        background: none !important;
+    }
+
+    .modal-content {
+        position: static !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #modal-body {
+        overflow: visible !important;
+    }
+
+    .recipe-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #000;
+        padding-bottom: 1rem;
+    }
+
+    .recipe-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .recipe-header p {
+        font-size: 1rem;
+        color: #555 !important;
+    }
+
+    .macros-bar {
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .macros-divider {
+        background: #ccc !important;
+    }
+
+    .ingredients-grid {
+        break-inside: avoid;
+    }
+
+    .step-item {
+        break-inside: avoid;
+        padding: 0.3rem 0;
+        margin-bottom: 0.2rem;
+    }
+
+    .steps-list {
+        margin-bottom: 1.5rem;
+    }
+
+    .recipe-footer {
+        break-inside: avoid;
+    }
+
+    h2 {
+        break-after: avoid;
+    }
 }
