@@ -11,6 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const addIngBtn = document.getElementById('add-ing-btn');
     const macroRefSelect = document.getElementById('macro-reference');
     const macroRefAmountGroup = document.getElementById('macro-ref-amount-group');
+    const recipeFieldsGroup = document.getElementById('recipe-fields-group');
+    const ingredientFieldsGroup = document.getElementById('ingredient-fields-group');
+    const entryTypeRadios = document.querySelectorAll('input[name="entryType"]');
+
+    entryTypeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'ingredient') {
+                recipeFieldsGroup.style.display = 'none';
+                ingredientFieldsGroup.style.display = 'block';
+            } else {
+                recipeFieldsGroup.style.display = 'block';
+                ingredientFieldsGroup.style.display = 'none';
+            }
+        });
+    });
 
     macroRefSelect.addEventListener('change', (e) => {
         if (e.target.value === 'per_x_g') {
@@ -115,12 +130,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (id) {
             const recipe = recipes.find(r => r.id === id);
-            editorTitle.textContent = 'Edit Recipe';
+            editorTitle.textContent = recipe.entryType === 'ingredient' ? 'Edit Ingredient Profile' : 'Edit Recipe';
             document.getElementById('recipe-id').value = recipe.id;
             document.getElementById('recipe-title').value = recipe.title;
             document.getElementById('recipe-category').value = recipe.category || 'Default';
             document.getElementById('recipe-desc').value = recipe.description || '';
             document.getElementById('recipe-image').value = recipe.imageUrl || '';
+
+            const eType = recipe.entryType === 'ingredient' ? 'ingredient' : 'recipe';
+            document.querySelector(`input[name="entryType"][value="${eType}"]`).checked = true;
+            document.querySelector(`input[name="entryType"][value="${eType}"]`).dispatchEvent(new Event('change'));
+
+            if (eType === 'ingredient' && recipe.ingredientDetails) {
+                document.getElementById('ing-storage').value = recipe.ingredientDetails.storage || '';
+                document.getElementById('ing-flavour').value = recipe.ingredientDetails.flavour || '';
+                document.getElementById('ing-pairings').value = recipe.ingredientDetails.pairings || '';
+                document.getElementById('ing-varieties').value = recipe.ingredientDetails.varieties || '';
+                document.getElementById('ing-preparations').value = recipe.ingredientDetails.preparations || '';
+            } else {
+                document.getElementById('ing-storage').value = '';
+                document.getElementById('ing-flavour').value = '';
+                document.getElementById('ing-pairings').value = '';
+                document.getElementById('ing-varieties').value = '';
+                document.getElementById('ing-preparations').value = '';
+            }
 
             if (recipe.macros) {
                 if (recipe.macros.macroReference) {
@@ -130,10 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('macro-reference').value = 'per_serving';
                     document.getElementById('macro-ref-amount').value = '';
                 }
-                
-                // Trigger change to update visibility
                 macroRefSelect.dispatchEvent(new Event('change'));
-
                 document.getElementById('macro-yield').value = recipe.macros.yield || '';
                 document.getElementById('macro-energy').value = recipe.macros.energy || '';
                 document.getElementById('macro-carbs').value = recipe.macros.carbohydrate || '';
@@ -156,6 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             editorTitle.textContent = 'Add New Recipe';
             form.reset();
+            document.querySelector(`input[name="entryType"][value="recipe"]`).dispatchEvent(new Event('change'));
             document.getElementById('recipe-id').value = Date.now().toString();
             createIngredientRow();
         }
@@ -172,13 +203,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return { item: inputs[0].value, metric: inputs[1].value, imperial: inputs[2].value };
         }).filter(ing => ing.item.trim() !== '');
 
+        const eType = document.querySelector('input[name="entryType"]:checked').value;
         const newRecipe = {
             id: document.getElementById('recipe-id').value,
+            entryType: eType,
             title: document.getElementById('recipe-title').value,
             category: document.getElementById('recipe-category').value,
             description: document.getElementById('recipe-desc').value,
             imageUrl: document.getElementById('recipe-image').value,
-            macros: {
+        };
+
+        if (eType === 'ingredient') {
+            newRecipe.ingredientDetails = {
+                storage: document.getElementById('ing-storage').value,
+                flavour: document.getElementById('ing-flavour').value,
+                pairings: document.getElementById('ing-pairings').value,
+                varieties: document.getElementById('ing-varieties').value,
+                preparations: document.getElementById('ing-preparations').value
+            };
+        } else {
+            newRecipe.macros = {
                 macroReference: {
                     type: document.getElementById('macro-reference').value,
                     referenceAmount: document.getElementById('macro-ref-amount').value
@@ -188,12 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 carbohydrate: document.getElementById('macro-carbs').value,
                 protein: document.getElementById('macro-protein').value,
                 fat: document.getElementById('macro-fat').value
-            },
-            ingredients,
-            steps: document.getElementById('recipe-steps').value.split('\n').filter(l => l.trim()),
-            note: document.getElementById('recipe-note').value,
-            variations: document.getElementById('recipe-variations').value
-        };
+            };
+            newRecipe.ingredients = ingredients;
+            newRecipe.steps = document.getElementById('recipe-steps').value.split('\n').filter(l => l.trim());
+            newRecipe.note = document.getElementById('recipe-note').value;
+            newRecipe.variations = document.getElementById('recipe-variations').value;
+        }
 
         const idx = recipes.findIndex(r => r.id === newRecipe.id);
         if (idx >= 0) recipes[idx] = newRecipe;

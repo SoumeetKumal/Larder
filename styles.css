@@ -568,6 +568,30 @@ body {
     font-weight: 500;
 }
 
+.ingredient-link {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--accent-default);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 4px;
+    transition: color 0.2s ease;
+}
+
+.ingredient-link:hover {
+    color: var(--accent-current, var(--accent-hover));
+}
+
+.ingredient-recipe-link:hover {
+    color: var(--accent-current, var(--accent-hover)) !important;
+}
+
 .ingredient-amounts {
     display: grid;
     grid-template-columns: 80px 80px; /* Fixed width columns for alignment */

@@ -38,6 +38,14 @@
             <form id="recipe-form" class="recipe-form">
                 <input type="hidden" id="recipe-id">
                 
+                <div class="form-group" style="margin-bottom: 1.5rem; background: var(--bg-hover); padding: 1rem;">
+                    <label style="margin-bottom: 0.5rem; display: block; font-weight: bold;">Entry Type</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="entryType" value="recipe" checked> Recipe</label>
+                        <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="entryType" value="ingredient"> Ingredient Profile</label>
+                    </div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label>Title</label>
@@ -68,47 +76,75 @@
                     <input type="url" id="recipe-image" required>
                 </div>
 
-                <div class="cms-section-title">Macros</div>
-                <div class="form-row" style="margin-bottom: 1.5rem;">
-                    <div class="form-group" style="flex: 2;">
-                        <label>Macro Reference</label>
-                        <select id="macro-reference">
-                            <option value="per_serving">Per Serving</option>
-                            <option value="total">Total Recipe</option>
-                            <option value="per_100g">Per 100g</option>
-                            <option value="per_x_g">Per X grams</option>
-                        </select>
+                <!-- RECIPE FIELDS -->
+                <div id="recipe-fields-group">
+                    <div class="cms-section-title">Macros</div>
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Macro Reference</label>
+                            <select id="macro-reference">
+                                <option value="per_serving">Per Serving</option>
+                                <option value="total">Total Recipe</option>
+                                <option value="per_100g">Per 100g</option>
+                                <option value="per_x_g">Per X grams</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="macro-ref-amount-group" style="flex: 1; display: none;">
+                            <label>Grams (X)</label>
+                            <input type="number" id="macro-ref-amount" placeholder="e.g. 50">
+                        </div>
                     </div>
-                    <div class="form-group" id="macro-ref-amount-group" style="flex: 1; display: none;">
-                        <label>Grams (X)</label>
-                        <input type="number" id="macro-ref-amount" placeholder="e.g. 50">
+                    <div class="form-row">
+                        <div class="form-group"><label>Yield</label><input type="text" id="macro-yield" placeholder="e.g. 4 Servings"></div>
+                        <div class="form-group"><label>Energy</label><input type="text" id="macro-energy"></div>
+                        <div class="form-group"><label>Carbs</label><input type="text" id="macro-carbs"></div>
+                        <div class="form-group"><label>Protein</label><input type="text" id="macro-protein"></div>
+                        <div class="form-group"><label>Fat</label><input type="text" id="macro-fat"></div>
+                    </div>
+
+                    <div class="cms-section-title">Ingredients</div>
+                    <div id="ingredients-container"></div>
+                    <button type="button" id="add-ing-btn" class="btn secondary" style="margin-bottom: 2rem;">+ Add Ingredient</button>
+
+                    <div class="form-group">
+                        <label>Steps (One per line)</label>
+                        <textarea id="recipe-steps" rows="8"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Note (Optional)</label>
+                        <textarea id="recipe-note" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Variations (Optional)</label>
+                        <textarea id="recipe-variations" rows="2"></textarea>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Yield</label><input type="text" id="macro-yield" placeholder="e.g. 4 Servings"></div>
-                    <div class="form-group"><label>Energy</label><input type="text" id="macro-energy"></div>
-                    <div class="form-group"><label>Carbs</label><input type="text" id="macro-carbs"></div>
-                    <div class="form-group"><label>Protein</label><input type="text" id="macro-protein"></div>
-                    <div class="form-group"><label>Fat</label><input type="text" id="macro-fat"></div>
-                </div>
 
-                <div class="cms-section-title">Ingredients</div>
-                <div id="ingredients-container"></div>
-                <button type="button" id="add-ing-btn" class="btn secondary" style="margin-bottom: 2rem;">+ Add Ingredient</button>
-
-                <div class="form-group">
-                    <label>Steps (One per line)</label>
-                    <textarea id="recipe-steps" rows="8" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Note (Optional)</label>
-                    <textarea id="recipe-note" rows="2"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Variations (Optional)</label>
-                    <textarea id="recipe-variations" rows="2"></textarea>
+                <!-- INGREDIENT PROFILE FIELDS -->
+                <div id="ingredient-fields-group" style="display: none;">
+                    <div class="cms-section-title">Ingredient Details</div>
+                    <div class="form-group">
+                        <label>Storage</label>
+                        <textarea id="ing-storage" rows="2" placeholder="e.g., Cool, dark, well-ventilated place"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Flavour Profile</label>
+                        <textarea id="ing-flavour" rows="2" placeholder="e.g., Earthy, mild, starchy"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Pairings</label>
+                        <textarea id="ing-pairings" rows="2" placeholder="e.g., Rosemary, butter, garlic"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Varieties / Types</label>
+                        <textarea id="ing-varieties" rows="2" placeholder="e.g., Russet, Yukon Gold"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Preparations</label>
+                        <textarea id="ing-preparations" rows="2" placeholder="e.g., Boil, bake, fry, mash"></textarea>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn primary full-width">Save Recipe</button>

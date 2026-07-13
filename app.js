@@ -162,7 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered = filtered.filter(r => (r.category || 'Other') === currentCategory);
         }
 
-        if (searchQuery) {
+        if (!searchQuery) {
+            filtered = filtered.filter(r => r.entryType !== 'ingredient');
+        } else {
             filtered = filtered.filter(r => {
                 const titleMatch = r.title.toLowerCase().includes(searchQuery);
                 const descMatch = (r.description || '').toLowerCase().includes(searchQuery);
@@ -264,14 +266,21 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="ingredients-grid">`;
         
-        html += recipe.ingredients.map(ing => `
+        html += recipe.ingredients.map(ing => {
+            const profile = recipesData.find(r => r.entryType === 'ingredient' && ing.item.toLowerCase().includes(r.title.toLowerCase()));
+            const itemNameHtml = profile 
+                ? `<button class="ingredient-link" data-id="${profile.id}">${ing.item}</button>`
+                : `<span class="ingredient-name">${ing.item}</span>`;
+
+            return `
             <div class="ingredient-row">
-                <span class="ingredient-name">${ing.item}</span>
+                ${itemNameHtml}
                 <span class="ingredient-amounts">
                     <span>${scaleAmount(ing.metric, scale)}</span>
                     <span>${scaleAmount(ing.imperial, scale)}</span>
                 </span>
-            </div>`).join('');
+            </div>`;
+        }).join('');
             
         html += '</div>';
         return html;
@@ -364,6 +373,41 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildModalContent() {
         const recipe = currentRecipe;
 
+        if (recipe.entryType === 'ingredient') {
+            const details = recipe.ingredientDetails || {};
+            
+            const usedIn = recipesData.filter(r => r.entryType !== 'ingredient' && (r.ingredients || []).some(ing => ing.item.toLowerCase().includes(recipe.title.toLowerCase())));
+            
+            let usedInHtml = '';
+            if (usedIn.length > 0) {
+                usedInHtml = `
+                <div class="ingredient-usage-section" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <h2>Recipes using ${recipe.title}</h2>
+                    <ul class="usage-list" style="list-style: none; padding: 0;">
+                        ${usedIn.map(r => `<li style="margin-bottom: 0.5rem;"><button class="ingredient-recipe-link" data-id="${r.id}" style="background: none; border: none; padding: 0; color: var(--accent-default); font-weight: 500; font-family: inherit; font-size: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; transition: all 0.2s;">${r.title}</button></li>`).join('')}
+                    </ul>
+                </div>`;
+            }
+
+            modalBody.innerHTML = `
+                <div class="recipe-header">
+                    <h1 id="modal-title">${recipe.title}</h1>
+                    <p>${recipe.description}</p>
+                </div>
+                <div class="ingredient-details-grid" style="display: grid; gap: 1.5rem; margin-top: 1.5rem;">
+                    ${details.storage ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Storage</h2><p style="font-size: 0.95rem; margin: 0;">${details.storage}</p></div>` : ''}
+                    ${details.flavour ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Flavour Profile</h2><p style="font-size: 0.95rem; margin: 0;">${details.flavour}</p></div>` : ''}
+                    ${details.pairings ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Pairings</h2><p style="font-size: 0.95rem; margin: 0;">${details.pairings}</p></div>` : ''}
+                    ${details.varieties ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Varieties / Types</h2><p style="font-size: 0.95rem; margin: 0;">${details.varieties}</p></div>` : ''}
+                    ${details.preparations ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Preparations</h2><p style="font-size: 0.95rem; margin: 0;">${details.preparations}</p></div>` : ''}
+                </div>
+                ${usedInHtml}
+            `;
+
+            attachModalListeners();
+            return;
+        }
+
         let macrosHtml = '';
         let stdMacros = getStandardMacros(recipe);
         
@@ -423,6 +467,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attachModalListeners() {
+        // Ingredient Profile links
+        const ingredientLinks = modalBody.querySelectorAll('.ingredient-link, .ingredient-recipe-link');
+        ingredientLinks.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal(btn.dataset.id);
+            });
+        });
+
         // Scaler Listeners
         const wrapper = document.getElementById('ingredients-wrapper');
         if (wrapper) {
