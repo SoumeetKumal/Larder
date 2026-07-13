@@ -1329,40 +1329,55 @@ select:focus-visible {
 }
 
 /* ===========================
-   PRINT STYLES
+   PRINT STYLES — Magazine Layout
    =========================== */
 @media print {
+    @page {
+        margin: 1.8cm 2cm;
+        size: A4;
+    }
+
     * {
-        color: #000 !important;
+        color: #1a1a1a !important;
         background: #fff !important;
         box-shadow: none !important;
+        text-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     body {
+        font-family: 'Montserrat', 'Helvetica Neue', sans-serif;
+        font-size: 10pt;
+        line-height: 1.5;
         overflow: visible !important;
         margin: 0;
         padding: 0;
     }
 
-    /* Hide everything except the modal content */
+    /* ---- Hide everything except the modal ---- */
     .navbar,
     .filters-bar,
     .macro-filters-panel,
     .container,
     .site-footer,
-    .modal,
+    .gdpr-banner,
     .close-btn,
     .no-print,
-    .scaler-buttons {
+    .scaler-controls,
+    .scaler-buttons,
+    .macros-reference-badge {
         display: none !important;
     }
 
+    /* ---- Make modal fill the page ---- */
     .modal,
     .modal.hidden {
         display: block !important;
         position: static !important;
         overflow: visible !important;
         background: none !important;
+        z-index: auto !important;
     }
 
     .modal-content {
@@ -1381,52 +1396,215 @@ select:focus-visible {
         overflow: visible !important;
     }
 
+    /* ---- Recipe Header — Centered, elegant ---- */
     .recipe-header {
         text-align: center;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid #000;
+        margin-bottom: 1.2rem;
         padding-bottom: 1rem;
+        border-bottom: none;
+    }
+
+    .recipe-header::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 2px;
+        background: #1a1a1a !important;
+        margin: 1rem auto 0;
     }
 
     .recipe-header h1 {
-        font-size: 2rem;
+        font-size: 22pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 3px;
         margin-bottom: 0.3rem;
+        line-height: 1.2;
     }
 
     .recipe-header p {
-        font-size: 1rem;
-        color: #555 !important;
+        font-size: 10pt;
+        color: #666 !important;
+        font-weight: 300;
+        font-style: italic;
+        max-width: 80%;
+        margin: 0 auto;
+        line-height: 1.5;
     }
 
+    /* ---- Macros Bar — Clean info strip ---- */
     .macros-bar {
-        border: 1px solid #ccc;
-        padding: 0.5rem;
-        margin-bottom: 1rem;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+        border: 1px solid #ddd !important;
+        border-left: none !important;
+        border-right: none !important;
+        padding: 0.6rem 0;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .macros-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 1.2rem;
+    }
+
+    .macros-label {
+        font-size: 6pt;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #999 !important;
+        font-weight: 600;
+    }
+
+    .macros-value {
+        font-size: 9pt;
+        font-weight: 700;
+        color: #1a1a1a !important;
     }
 
     .macros-divider {
-        background: #ccc !important;
+        width: 1px !important;
+        height: 25px !important;
+        background: #ddd !important;
+    }
+
+    /* ---- Section headings ---- */
+    h2 {
+        font-size: 9pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #1a1a1a !important;
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px solid #e0e0e0;
+        break-after: avoid;
+    }
+
+    /* ---- Ingredients ---- */
+    .ingredients-header {
+        margin-bottom: 0;
+    }
+
+    .ingredients-header h2 {
+        margin-bottom: 0.4rem;
     }
 
     .ingredients-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 2.5rem;
+        margin-bottom: 1.5rem;
         break-inside: avoid;
+    }
+
+    .ingredient-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+        border-bottom: 1px dotted #ddd !important;
+        font-size: 9pt;
+    }
+
+    .ingredient-name {
+        font-weight: 500;
+        color: #1a1a1a !important;
+    }
+
+    .ingredient-amounts {
+        display: grid;
+        grid-template-columns: 65px 65px;
+        gap: 0.5rem;
+        text-align: right;
+        color: #555 !important;
+        font-weight: 300;
+        font-size: 8.5pt;
+    }
+
+    /* ---- Instructions ---- */
+    .steps-list {
+        list-style: none;
+        margin-bottom: 1.5rem;
+        padding: 0;
     }
 
     .step-item {
-        break-inside: avoid;
+        display: flex;
+        gap: 0.8rem;
         padding: 0.3rem 0;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0;
+        margin-left: 0;
+        margin-right: 0;
+        font-size: 9.5pt;
+        line-height: 1.6;
+        break-inside: avoid;
+        opacity: 1 !important;
+        background: none !important;
     }
 
-    .steps-list {
-        margin-bottom: 1.5rem;
+    .step-number {
+        font-weight: 800;
+        color: #1a1a1a !important;
+        font-size: 9.5pt;
+        min-width: 18px;
+        flex-shrink: 0;
     }
 
+    .step-text {
+        color: #333 !important;
+        font-weight: 300;
+    }
+
+    /* ---- Notes & Variations ---- */
     .recipe-footer {
+        margin-top: 1rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid #e0e0e0 !important;
         break-inside: avoid;
     }
 
-    h2 {
-        break-after: avoid;
+    .footer-block {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-label {
+        font-size: 7pt;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: #eee !important;
+        color: #1a1a1a !important;
+        padding: 0.15rem 0.5rem;
+        align-self: flex-start;
+        min-width: auto;
+    }
+
+    .footer-text {
+        font-size: 9pt;
+        color: #555 !important;
+        font-weight: 300;
+        font-style: italic;
+        line-height: 1.5;
+    }
+
+    /* ---- Printed footer credit ---- */
+    #modal-body::after {
+        content: 'Larder — larder.app';
+        display: block;
+        text-align: center;
+        font-size: 7pt;
+        color: #bbb !important;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 2rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid #eee;
     }
 }
