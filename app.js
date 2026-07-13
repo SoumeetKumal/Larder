@@ -94,8 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (toggleMacroFiltersBtn && macroFiltersPanel) {
         toggleMacroFiltersBtn.addEventListener('click', () => {
-            macroFiltersPanel.classList.toggle('hidden');
+            const isHidden = macroFiltersPanel.classList.toggle('hidden');
             toggleMacroFiltersBtn.classList.toggle('active');
+            toggleMacroFiltersBtn.setAttribute('aria-expanded', !isHidden);
         });
 
         Object.keys(sliderConfigs).forEach(key => {
@@ -200,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const yield_ = recipe.macros?.yield || '';
             const energy = recipe.macros?.energy || '';
             return `
-            <div class="card ${theme}" data-id="${recipe.id}">
+            <div class="card ${theme}" data-id="${recipe.id}" role="listitem" tabindex="0" aria-label="View recipe: ${recipe.title}">
                 <div class="card-img-wrapper">
                     <img src="${recipe.imageUrl}" alt="${recipe.title}" class="recipe-img" loading="lazy">
                 </div>
@@ -215,6 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', () => openModal(card.dataset.id));
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openModal(card.dataset.id);
+                }
+            });
         });
     }
 
@@ -270,7 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return html;
     }
 
+    let lastFocusedElement = null;
+
     function openModal(id) {
+        lastFocusedElement = document.activeElement;
         currentRecipe = recipesData.find(r => r.id === id);
         if (!currentRecipe) return;
         currentScale = 1;
@@ -283,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        if (closeBtn) closeBtn.focus();
     }
 
     function getStandardMacros(recipe) {
@@ -393,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modalBody.innerHTML = `
             <div class="recipe-header">
-                <h1>${recipe.title}</h1>
+                <h1 id="modal-title">${recipe.title}</h1>
                 <p>${recipe.description}</p>
             </div>
             <div class="recipe-actions no-print">
@@ -448,9 +459,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeModal() {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     }
 
     closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal(); 
+        }
+        // Focus trap
+        if (e.key === 'Tab' && !modal.classList.contains('hidden')) {
+            const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const first = focusableElements[0];
+            const last = focusableElements[focusableElements.length - 1];
+            if (e.shiftKey) {
+                if (document.activeElement === first) {
+                    last.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    first.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+    });
+
+    // --- GDPR Banner Logic ---
+    const gdprBanner = document.getElementById('gdpr-banner');
+    const gdprAccept = document.getElementById('gdpr-accept');
+    if (gdprBanner && gdprAccept) {
+        if (localStorage.getItem('larder_gdpr_accepted') !== 'true') {
+            setTimeout(() => gdprBanner.classList.remove('hidden'), 1000);
+        }
+        gdprAccept.addEventListener('click', () => {
+            localStorage.setItem('larder_gdpr_accepted', 'true');
+            gdprBanner.classList.add('hidden');
+        });
+    }
 });

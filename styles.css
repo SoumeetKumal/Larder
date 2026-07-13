@@ -1236,6 +1236,99 @@ select option { background: var(--bg-surface); }
 }
 
 /* ===========================
+   LIGHT THEME ACCENT FIX (WCAG AAA)
+   =========================== */
+body.light-theme {
+    /* For AAA compliance on white backgrounds, we darken the pastel accents slightly for text use */
+    --accent-vegetables: #2F8863; 
+    --accent-meat: #A6575E; 
+    --accent-seafood: #386990; 
+    --accent-stocks: #C58A54; 
+    --accent-baking: #CC7796; 
+    --accent-jams: #895C88; 
+    --accent-dairies: #5E948C; 
+    --accent-essential: #52666D; 
+    --accent: #4A6B6E;
+}
+
+/* ===========================
+   GDPR BANNER
+   =========================== */
+.gdpr-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    padding: 1.5rem;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gdpr-banner:not(.hidden) {
+    transform: translateY(0);
+}
+
+.gdpr-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.gdpr-content p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .gdpr-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    .gdpr-content .btn {
+        width: 100%;
+    }
+}
+
+/* ===========================
+   FOCUS-VISIBLE (WCAG AAA)
+   =========================== */
+*:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+}
+
+.noUi-handle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ===========================
    PRINT STYLES
    =========================== */
 @media print {

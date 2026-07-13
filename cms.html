@@ -116,6 +116,38 @@
         </div>
     </div>
 
+    <div id="gdpr-banner" class="gdpr-banner hidden no-print">
+        <div class="gdpr-content">
+            <p>Larder uses local storage solely to save your display preferences. We do not track or collect personal data.</p>
+            <button id="gdpr-accept" class="btn primary">Got it</button>
+        </div>
+    </div>
+
+    <footer class="site-footer no-print">
+        <span>© <span id="current-year">2026</span> Larder. All rights reserved.</span>
+        <div class="footer-links">
+            <a href="legal#disclaimer">Disclaimer</a>
+            <a href="legal#terms">Terms</a>
+            <a href="legal#privacy">Privacy</a>
+        </div>
+    </footer>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+    <script>
+        (function() {
+            var b = document.getElementById('gdpr-banner');
+            var a = document.getElementById('gdpr-accept');
+            if (b && a) {
+                if (localStorage.getItem('larder_gdpr_accepted') !== 'true') {
+                    setTimeout(function() { b.classList.remove('hidden'); }, 1000);
+                }
+                a.addEventListener('click', function() {
+                    localStorage.setItem('larder_gdpr_accepted', 'true');
+                    b.classList.add('hidden');
+                });
+            }
+        })();
+    </script>
+
     <script src="cms.js"></script>
 </body>
 </html>

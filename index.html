@@ -24,14 +24,14 @@
     <!-- Category Filters & Macros Toggle -->
     <div class="filters-bar">
         <div class="category-filters" id="category-filters"></div>
-        <button id="toggle-macro-filters" class="btn secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: text-bottom;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <button id="toggle-macro-filters" class="btn secondary" aria-expanded="false" aria-controls="macro-filters-panel" aria-label="Toggle nutritional macro filters">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: text-bottom;" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             Macro Filters
         </button>
     </div>
 
     <!-- Macro Filters Panel -->
-    <div id="macro-filters-panel" class="macro-filters-panel hidden">
+    <div id="macro-filters-panel" class="macro-filters-panel hidden" role="region" aria-label="Nutritional filters">
         <div class="macro-filters-header">
             <span>Nutritional Filters</span>
             <span class="macro-filters-note">Per Serving</span>
@@ -54,10 +54,10 @@
                 <div id="slider-fat" class="editorial-slider"></div>
             </div>
         </div>
-        <button id="reset-filters" class="btn secondary" style="margin-top: 0.5rem;">Clear All</button>
+        <button id="reset-filters" class="btn secondary" aria-label="Clear all nutritional filters" style="margin-top: 0.5rem;">Clear All</button>
     </div>
-    <main class="container">
-        <div id="recipe-grid" class="recipe-grid">
+    <main class="container" role="main">
+        <div id="recipe-grid" class="recipe-grid" role="list" aria-label="Recipe cards">
             <div class="empty-state">Loading...</div>
         </div>
     </main>
@@ -84,13 +84,14 @@
     </div>
 
     <footer class="site-footer no-print">
-        <span>© 2025 Larder. All rights reserved.</span>
+        <span>© <span id="current-year">2026</span> Larder. All rights reserved.</span>
         <div class="footer-links">
             <a href="legal#disclaimer">Disclaimer</a>
             <a href="legal#terms">Terms</a>
             <a href="legal#privacy">Privacy</a>
         </div>
     </footer>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <script src="app.js"></script>
