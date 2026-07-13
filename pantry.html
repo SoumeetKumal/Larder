@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Larder</title>
+    <title>Pantry — Larder</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -15,7 +15,7 @@
             Larder
         </div>
         <div class="nav-controls">
-            <input type="text" id="search-input" class="search-input" placeholder="Search recipes..." aria-label="Search recipes">
+            <input type="text" id="search-input" class="search-input" placeholder="Search ingredients..." aria-label="Search ingredients">
             <a href="./" class="nav-link">Recipes</a>
             <a href="pantry" class="nav-link">Pantry</a>
             <a href="basics" class="nav-link">Basics</a>
@@ -24,40 +24,9 @@
         </div>
     </nav>
 
-    <!-- Category Filters & Macros Toggle -->
+    <!-- Category Filters -->
     <div class="filters-bar">
         <div class="category-filters" id="category-filters"></div>
-        <button id="toggle-macro-filters" class="btn secondary" aria-expanded="false" aria-controls="macro-filters-panel" aria-label="Toggle nutritional macro filters">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: text-bottom;" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Macro Filters
-        </button>
-    </div>
-
-    <!-- Macro Filters Panel -->
-    <div id="macro-filters-panel" class="macro-filters-panel hidden" role="region" aria-label="Nutritional filters">
-        <div class="macro-filters-header">
-            <span>Nutritional Filters</span>
-            <span class="macro-filters-note">Per Serving</span>
-        </div>
-        <div class="macro-filters-grid">
-            <div class="macro-filter-group">
-                <label>Calories <span class="filter-val-label" id="filter-cal-val">Any</span></label>
-                <div id="slider-cal" class="editorial-slider"></div>
-            </div>
-            <div class="macro-filter-group">
-                <label>Carbs <span class="filter-val-label" id="filter-carbs-val">Any</span></label>
-                <div id="slider-carbs" class="editorial-slider"></div>
-            </div>
-            <div class="macro-filter-group">
-                <label>Protein <span class="filter-val-label" id="filter-protein-val">Any</span></label>
-                <div id="slider-protein" class="editorial-slider"></div>
-            </div>
-            <div class="macro-filter-group">
-                <label>Fat <span class="filter-val-label" id="filter-fat-val">Any</span></label>
-                <div id="slider-fat" class="editorial-slider"></div>
-            </div>
-        </div>
-        <button id="reset-filters" class="btn secondary" aria-label="Clear all nutritional filters" style="margin-top: 0.5rem;">Clear All</button>
     </div>
     <main class="container" role="main">
         <div id="recipe-grid" class="recipe-grid" role="list" aria-label="Recipe cards">
