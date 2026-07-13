@@ -70,8 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Render CMS List ---
+    // --- Render CMS List & Suggestions ---
+    function populateIngredientSuggestions() {
+        const datalist = document.getElementById('ingredient-suggestions');
+        if (!datalist) return;
+        
+        const profiles = recipes.filter(r => r.entryType === 'ingredient');
+        datalist.innerHTML = profiles.map(p => `<option value="${p.title}">`).join('');
+    }
+
     function renderCMSList() {
+        populateIngredientSuggestions();
+
         if (recipes.length === 0) {
             listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "Add New Recipe" to start!</div>`;
             return;
@@ -113,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.className = 'cms-ing-row form-row';
         div.innerHTML = `
-            <div class="form-group" style="flex: 2;"><input type="text" placeholder="Item name" value="${item.replace(/"/g, '&quot;')}"></div>
+            <div class="form-group" style="flex: 2;"><input type="text" list="ingredient-suggestions" placeholder="Item name" value="${item.replace(/"/g, '&quot;')}"></div>
             <div class="form-group" style="flex: 1;"><input type="text" placeholder="Metric" value="${metric.replace(/"/g, '&quot;')}"></div>
             <div class="form-group" style="flex: 1;"><input type="text" placeholder="Imperial" value="${imperial.replace(/"/g, '&quot;')}"></div>
             <div class="form-group" style="flex: 0 0 auto;"><button type="button" class="btn danger">&times;</button></div>
