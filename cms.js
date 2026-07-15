@@ -36,6 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let recipes = [];
+    let currentCMSTab = 'recipe';
+
+    const cmsTabs = document.getElementById('cms-tabs');
+    document.querySelectorAll('.cms-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            document.querySelectorAll('.cms-tab').forEach(t => {
+                t.classList.remove('active');
+                t.style.borderBottomColor = 'transparent';
+                t.style.color = 'var(--text-muted)';
+            });
+            e.target.classList.add('active');
+            e.target.style.borderBottomColor = 'var(--text-primary)';
+            e.target.style.color = 'inherit';
+            currentCMSTab = e.target.dataset.tab;
+            renderCMSList();
+        });
+    });
 
     // --- Load recipes from API ---
     async function loadRecipes() {
@@ -43,8 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/recipes');
             if (!res.ok) throw new Error('API not available');
             recipes = await res.json();
-            statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipe(s)`;
+            statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} total entries`;
             addBtn.classList.remove('hidden');
+            if (cmsTabs) cmsTabs.classList.remove('hidden');
             renderCMSList();
         } catch(e) {
             statusText.textContent = '⚠ Could not connect. Run: node server.js';
@@ -82,12 +100,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCMSList() {
         populateIngredientSuggestions();
 
-        if (recipes.length === 0) {
-            listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "Add New Recipe" to start!</div>`;
+        let filtered = recipes;
+        if (currentCMSTab === 'ingredient') {
+            filtered = recipes.filter(r => r.entryType === 'ingredient');
+        } else {
+            filtered = recipes.filter(r => r.entryType !== 'ingredient');
+        }
+
+        if (filtered.length === 0) {
+            listContainer.innerHTML = `<div class="empty-state">No ${currentCMSTab === 'ingredient' ? 'ingredients' : 'recipes'} yet. Click "Add New Entry" to start!</div>`;
             return;
         }
 
-        listContainer.innerHTML = recipes.map(recipe => {
+        listContainer.innerHTML = filtered.map(recipe => {
             const theme = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
             return `
             <div class="cms-recipe-item ${theme}">

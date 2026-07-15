@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchQuery = '';
     let currentRecipe = null;
     let currentScale = 1;
+    
+    const isPantryPage = window.location.pathname.includes('pantry');
 
     // Load recipes — try API first, fallback to static
     function loadRecipes() {
@@ -141,7 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderFilters() {
-        const categories = ['All', ...new Set(recipesData.map(r => r.category || 'Other'))];
+        const relevantRecipes = isPantryPage 
+            ? recipesData.filter(r => r.entryType === 'ingredient')
+            : recipesData.filter(r => r.entryType !== 'ingredient');
+            
+        const categories = ['All', ...new Set(relevantRecipes.map(r => r.category || 'Other'))];
         categoryFilters.innerHTML = categories.map(cat => `
             <button class="filter-btn ${cat === currentCategory ? 'active' : ''}" data-category="${cat}">${cat}</button>
         `).join('');
@@ -158,13 +164,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderGrid() {
         let filtered = recipesData;
         
+        if (isPantryPage) {
+            filtered = filtered.filter(r => r.entryType === 'ingredient');
+        } else {
+            if (!searchQuery) {
+                filtered = filtered.filter(r => r.entryType !== 'ingredient');
+            }
+        }
+        
         if (currentCategory !== 'All') {
             filtered = filtered.filter(r => (r.category || 'Other') === currentCategory);
         }
 
-        if (!searchQuery) {
-            filtered = filtered.filter(r => r.entryType !== 'ingredient');
-        } else {
+        if (searchQuery) {
             filtered = filtered.filter(r => {
                 const titleMatch = r.title.toLowerCase().includes(searchQuery);
                 const descMatch = (r.description || '').toLowerCase().includes(searchQuery);

@@ -24,7 +24,12 @@
     <main class="container">
         <div class="cms-header">
             <div class="cms-status" id="status-text">Connecting...</div>
-            <button id="add-recipe-btn" class="btn primary hidden">+ Add New Recipe</button>
+            <button id="add-recipe-btn" class="btn primary hidden">+ Add New Entry</button>
+        </div>
+
+        <div class="cms-tabs hidden" id="cms-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border);">
+            <button class="cms-tab active" data-tab="recipe" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; border-bottom: 2px solid var(--text-primary); margin-bottom: -1px; transition: all 0.2s;">Recipes</button>
+            <button class="cms-tab" data-tab="ingredient" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Ingredients</button>
         </div>
 
         <div id="cms-recipe-list">
