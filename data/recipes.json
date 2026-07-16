@@ -15,86 +15,103 @@
     "ingredients": [
       {
         "item": "Tagliatelle",
+        "foodId": "tagliatelle",
         "metric": "320g",
         "imperial": "3 cups"
       },
       {
         "item": "Parsley, chopped",
+        "foodId": "parsley",
         "metric": "",
         "imperial": "2 tbsp"
       },
       {
         "item": "Tuna Flakes",
+        "foodId": "tuna_flakes",
         "metric": "170g",
         "imperial": "1 can"
       },
       {
         "item": "White Wine",
+        "foodId": "white_wine",
         "metric": "125ml",
         "imperial": "½ cup"
       },
       {
         "item": "Olive Oil",
+        "foodId": "olive_oil",
         "metric": "45ml",
         "imperial": "3 tbsp"
       },
       {
         "item": "Tomato Purée",
+        "foodId": "tomato_puree",
         "metric": "375ml",
         "imperial": "1½ cups"
       },
       {
         "item": "Garlic, minced",
+        "foodId": "garlic",
         "metric": "",
         "imperial": "5 cloves"
       },
       {
         "item": "Sugar",
+        "foodId": "sugar",
         "metric": "12g",
         "imperial": "1 tbsp"
       },
       {
         "item": "Onion, diced",
+        "foodId": "onion",
         "metric": "",
         "imperial": "1 medium"
       },
       {
         "item": "Parmigiano Reggiano, grated",
+        "foodId": "parmigiano_reggiano",
         "metric": "75g",
         "imperial": "1 cup"
       },
       {
         "item": "Thyme",
+        "foodId": "thyme",
         "metric": "",
         "imperial": "2 sprigs"
       },
       {
         "item": "Lemon, squeezed",
+        "foodId": "lemon_juice",
         "metric": "",
         "imperial": "½ small"
       },
       {
         "item": "Tarragon",
+        "foodId": "tarragon",
         "metric": "",
         "imperial": "1 tsp"
       },
       {
         "item": "Salt",
+        "foodId": "salt",
         "metric": "",
         "imperial": "2 tbsp"
       },
       {
         "item": "Rosemary",
+        "foodId": "rosemary",
         "metric": "",
         "imperial": "1 sprig"
       },
       {
         "item": "Pepper, freshly ground",
+        "foodId": "pepper",
         "metric": "",
         "imperial": "1 tbsp"
       },
       {
         "item": "Chilli Flakes",
+        "foodId": "chilli_flakes",
         "metric": "",
         "imperial": "1 pinch"
       }
@@ -113,20 +130,5 @@
     ],
     "note": "The sauce can be be ahead of time and heated before adding freshly cooked pasta. DO NOT cook pasta ahead of time.",
     "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!"
-  },
-  {
-    "id": "ing-garlic",
-    "entryType": "ingredient",
-    "title": "Garlic",
-    "category": "Essential Pantry",
-    "description": "A pungent, flavorful allium used as a foundational aromatic in cuisines worldwide.",
-    "imageUrl": "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=800&q=80",
-    "ingredientDetails": {
-      "storage": "Store whole bulbs in a cool, dry, dark, and well-ventilated place.",
-      "flavour": "Pungent, spicy, and harsh when raw. Sweet, rich, and mellow when roasted or cooked.",
-      "pairings": "Olive oil, butter, onions, tomatoes, basil, thyme, almost all savory dishes.",
-      "varieties": "Hardneck (Rocambole, Porcelain) and Softneck (Silverskin, Artichoke).",
-      "preparations": "Minced, crushed, sliced, roasted whole, or pureed."
-    }
   }
 ]

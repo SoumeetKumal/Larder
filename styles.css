@@ -1646,3 +1646,41 @@ select:focus-visible {
         border-top: 1px solid #eee;
     }
 }
+
+/* ===========================
+   FOOD TABLE EDITOR
+   =========================== */
+.food-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.food-table th, .food-table td {
+    border: 1px solid var(--border);
+    padding: 0;
+}
+.food-table th {
+    background: var(--bg-hover);
+    text-align: left;
+    font-weight: 600;
+    padding: 0.6rem 0.5rem;
+    white-space: nowrap;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+}
+.food-table input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0.6rem 0.5rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+.food-table input:focus {
+    outline: 2px solid var(--accent);
+    background: var(--bg-hover);
+    outline-offset: -2px;
+}

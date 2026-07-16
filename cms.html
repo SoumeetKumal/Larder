@@ -29,7 +29,7 @@
 
         <div class="cms-tabs hidden" id="cms-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border);">
             <button class="cms-tab active" data-tab="recipe" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; border-bottom: 2px solid var(--text-primary); margin-bottom: -1px; transition: all 0.2s;">Recipes</button>
-            <button class="cms-tab" data-tab="ingredient" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Ingredients</button>
+            <button class="cms-tab" data-tab="food" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Ingredients</button>
         </div>
 
         <div id="cms-recipe-list">
@@ -45,13 +45,7 @@
             <form id="recipe-form" class="recipe-form">
                 <input type="hidden" id="recipe-id">
                 
-                <div class="form-group" style="margin-bottom: 1.5rem; background: var(--bg-hover); padding: 1rem;">
-                    <label style="margin-bottom: 0.5rem; display: block; font-weight: bold;">Entry Type</label>
-                    <div style="display: flex; gap: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="entryType" value="recipe" checked> Recipe</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="entryType" value="ingredient"> Ingredient Profile</label>
-                    </div>
-                </div>
+                <input type="hidden" name="entryType" value="recipe">
 
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
@@ -130,32 +124,54 @@
                     </div>
                 </div>
 
-                <!-- INGREDIENT PROFILE FIELDS -->
-                <div id="ingredient-fields-group" style="display: none;">
-                    <div class="cms-section-title">Ingredient Details</div>
-                    <div class="form-group">
-                        <label>Storage</label>
-                        <textarea id="ing-storage" rows="2" placeholder="e.g., Cool, dark, well-ventilated place"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Flavour Profile</label>
-                        <textarea id="ing-flavour" rows="2" placeholder="e.g., Earthy, mild, starchy"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Pairings</label>
-                        <textarea id="ing-pairings" rows="2" placeholder="e.g., Rosemary, butter, garlic"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Varieties / Types</label>
-                        <textarea id="ing-varieties" rows="2" placeholder="e.g., Russet, Yukon Gold"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Preparations</label>
-                        <textarea id="ing-preparations" rows="2" placeholder="e.g., Boil, bake, fry, mash"></textarea>
-                    </div>
-                </div>
+
 
                 <button type="submit" class="btn primary full-width">Save Recipe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ingredient Profile Editor Modal -->
+    <div id="cms-food-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn food-close">&times;</span>
+            <h2 id="food-editor-title" class="cms-section-title" style="margin-top:0;">Edit Ingredient Profile</h2>
+            <form id="ingredient-profile-form" class="recipe-form">
+                <input type="hidden" id="profile-food-id">
+
+                <div class="form-group">
+                    <label>Description / Subtitle</label>
+                    <input type="text" id="profile-description" placeholder="e.g., A pungent bulb essential to global cuisine">
+                </div>
+
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="url" id="profile-image" placeholder="https://...">
+                </div>
+
+                <div class="cms-section-title">Culinary Details</div>
+                <div class="form-group">
+                    <label>Storage</label>
+                    <textarea id="profile-storage" rows="2" placeholder="e.g., Cool, dark, well-ventilated place"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Flavour Profile</label>
+                    <textarea id="profile-flavour" rows="2" placeholder="e.g., Earthy, mild, starchy"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pairings</label>
+                    <textarea id="profile-pairings" rows="2" placeholder="e.g., Rosemary, butter, garlic"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Varieties / Types</label>
+                    <textarea id="profile-varieties" rows="2" placeholder="e.g., Russet, Yukon Gold"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Preparations</label>
+                    <textarea id="profile-preparations" rows="2" placeholder="e.g., Boil, bake, fry, mash"></textarea>
+                </div>
+
+                <button type="submit" class="btn primary full-width">Save Profile</button>
             </form>
         </div>
     </div>

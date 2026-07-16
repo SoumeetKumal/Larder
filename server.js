@@ -5,6 +5,8 @@ const path = require('path');
 const PORT = 8000;
 const ROOT = __dirname;
 const RECIPES_PATH = path.join(ROOT, 'data', 'recipes.json');
+const INGREDIENTS_PATH = path.join(ROOT, 'data', 'ingredients.json');
+const API_KEY = 'larder_local_sync_8f92k';
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -24,12 +26,22 @@ const server = http.createServer((req, res) => {
     // CORS headers for local dev
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
         return;
+    }
+
+    // Security: Require API key for all /api/ endpoints
+    if (req.url.startsWith('/api/')) {
+        const auth = req.headers['authorization'];
+        if (auth !== `Bearer ${API_KEY}`) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Unauthorized: Invalid or missing API key' }));
+            return;
+        }
     }
 
     // API: GET recipes
@@ -64,6 +76,46 @@ const server = http.createServer((req, res) => {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, count: parsed.length }));
                     console.log(`  💾 Saved ${parsed.length} recipe(s) to recipes.json`);
+                });
+            } catch (e) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
+    // API: GET ingredients
+    if (req.method === 'GET' && req.url === '/api/ingredients') {
+        fs.readFile(INGREDIENTS_PATH, 'utf8', (err, data) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Could not read ingredients.json' }));
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(data);
+        });
+        return;
+    }
+
+    // API: PUT (save) ingredients
+    if (req.method === 'PUT' && req.url === '/api/ingredients') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+            try {
+                const parsed = JSON.parse(body);
+                const formatted = JSON.stringify(parsed, null, 2);
+                fs.writeFile(INGREDIENTS_PATH, formatted, 'utf8', (err) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'Could not write ingredients.json' }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, count: parsed.length }));
+                    console.log(`  💾 Saved ${parsed.length} ingredient(s) to ingredients.json`);
                 });
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
