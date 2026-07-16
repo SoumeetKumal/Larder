@@ -125,6 +125,31 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // API: POST (rescue) data
+    if (req.method === 'POST' && req.url === '/api/rescue') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+            try {
+                const parsed = JSON.parse(body);
+                const formatted = JSON.stringify(parsed, null, 2);
+                fs.writeFile(path.join(ROOT, 'data', 'rescued_data.json'), formatted, 'utf8', (err) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'Save failed' }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true }));
+                });
+            } catch (e) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
     // Static file serving
     let urlPath = req.url.split('?')[0]; // strip query params
     if (urlPath === '/') urlPath = '/index.html';
