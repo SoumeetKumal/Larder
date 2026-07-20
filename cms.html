@@ -23,13 +23,22 @@
 
     <main class="container">
         <div class="cms-header">
-            <div class="cms-status" id="status-text">Connecting...</div>
-            <button id="add-recipe-btn" class="btn primary hidden">+ Add New Entry</button>
+            <div>
+                <h1 class="cms-title">Larder CMS</h1>
+                <p class="cms-status" id="status-text">Connecting...</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" id="cms-search" placeholder="Search..." style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); min-width: 200px; display: none;">
+                <button class="btn primary hidden" id="add-recipe-btn">+ Add Entry</button>
+            </div>
         </div>
 
         <div class="cms-tabs hidden" id="cms-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border);">
             <button class="cms-tab active" data-tab="recipe" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; border-bottom: 2px solid var(--text-primary); margin-bottom: -1px; transition: all 0.2s;">Recipes</button>
             <button class="cms-tab" data-tab="food" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Ingredients</button>
+            <button class="cms-tab" data-tab="mealplan" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Meal Plan</button>
+            <button class="cms-tab" data-tab="pantry" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Pantry</button>
+            <button class="cms-tab" data-tab="shopping" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Shopping Lists</button>
         </div>
 
         <div id="cms-recipe-list">
@@ -171,15 +180,156 @@
                     <textarea id="profile-preparations" rows="2" placeholder="e.g., Boil, bake, fry, mash"></textarea>
                 </div>
 
+                <details class="cms-details-section">
+                    <summary class="cms-section-title" style="cursor:pointer; user-select:none;">Vitamins ▸</summary>
+                    <div class="form-row" style="margin-top: 0.75rem;">
+                        <div class="form-group"><label>Vitamin A (mcg)</label><input type="number" step="any" id="profile-vitaminAMcg" placeholder="0"></div>
+                        <div class="form-group"><label>Vitamin C (mg)</label><input type="number" step="any" id="profile-vitaminCMg" placeholder="0"></div>
+                        <div class="form-group"><label>Vitamin D (mcg)</label><input type="number" step="any" id="profile-vitaminDMcg" placeholder="0"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Vitamin E (mg)</label><input type="number" step="any" id="profile-vitaminEMg" placeholder="0"></div>
+                        <div class="form-group"><label>Vitamin K (mcg)</label><input type="number" step="any" id="profile-vitaminKMcg" placeholder="0"></div>
+                        <div class="form-group"><label>Thiamin / B1 (mg)</label><input type="number" step="any" id="profile-thiaminMg" placeholder="0"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Riboflavin / B2 (mg)</label><input type="number" step="any" id="profile-riboflavinMg" placeholder="0"></div>
+                        <div class="form-group"><label>Niacin / B3 (mg)</label><input type="number" step="any" id="profile-niacinMg" placeholder="0"></div>
+                        <div class="form-group"><label>Vitamin B6 (mg)</label><input type="number" step="any" id="profile-vitaminB6Mg" placeholder="0"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Folate / B9 (mcg)</label><input type="number" step="any" id="profile-folateMcg" placeholder="0"></div>
+                        <div class="form-group"><label>Vitamin B12 (mcg)</label><input type="number" step="any" id="profile-vitaminB12Mcg" placeholder="0"></div>
+                        <div class="form-group"></div>
+                    </div>
+                </details>
+
+                <details class="cms-details-section">
+                    <summary class="cms-section-title" style="cursor:pointer; user-select:none;">Minerals ▸</summary>
+                    <div class="form-row" style="margin-top: 0.75rem;">
+                        <div class="form-group"><label>Calcium (mg)</label><input type="number" step="any" id="profile-calciumMg" placeholder="0"></div>
+                        <div class="form-group"><label>Iron (mg)</label><input type="number" step="any" id="profile-ironMg" placeholder="0"></div>
+                        <div class="form-group"><label>Magnesium (mg)</label><input type="number" step="any" id="profile-magnesiumMg" placeholder="0"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Phosphorus (mg)</label><input type="number" step="any" id="profile-phosphorusMg" placeholder="0"></div>
+                        <div class="form-group"><label>Potassium (mg)</label><input type="number" step="any" id="profile-potassiumMg" placeholder="0"></div>
+                        <div class="form-group"><label>Sodium (mg)</label><input type="number" step="any" id="profile-sodiumMg" placeholder="0"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Zinc (mg)</label><input type="number" step="any" id="profile-zincMg" placeholder="0"></div>
+                        <div class="form-group"><label>Copper (mg)</label><input type="number" step="any" id="profile-copperMg" placeholder="0"></div>
+                        <div class="form-group"><label>Selenium (mcg)</label><input type="number" step="any" id="profile-seleniumMcg" placeholder="0"></div>
+                    </div>
+                </details>
+
+                <details class="cms-details-section">
+                    <summary class="cms-section-title" style="cursor:pointer; user-select:none;">Pricing ▸</summary>
+                    <div class="form-row" style="margin-top: 0.75rem;">
+                        <div class="form-group" style="flex:1;"><label>Average Price</label><input type="number" step="any" id="profile-averagePrice" placeholder="0"></div>
+                        <div class="form-group" style="flex:1;"><label>Currency</label><input type="text" id="profile-priceCurrency" placeholder="MUR" value="MUR"></div>
+                    </div>
+                </details>
+
                 <button type="submit" class="btn primary full-width">Save Profile</button>
             </form>
         </div>
     </div>
 
+    <!-- Custom Confirmation Dialog -->
+    <div id="confirm-dialog" class="modal hidden">
+        <div class="confirm-dialog-content">
+            <div class="confirm-dialog-icon">⚠</div>
+            <h3 id="confirm-dialog-title">Confirm Delete</h3>
+            <p id="confirm-dialog-message">Are you sure?</p>
+            <div class="confirm-dialog-actions">
+                <button id="confirm-dialog-cancel" class="btn secondary">Cancel</button>
+                <button id="confirm-dialog-ok" class="btn danger">Delete</button>
+            </div>
+        </div>
+    </div>
     <div id="gdpr-banner" class="gdpr-banner hidden no-print">
         <div class="gdpr-content">
             <p>Larder uses local storage solely to save your display preferences. We do not track or collect personal data.</p>
             <button id="gdpr-accept" class="btn primary">Got it</button>
+        </div>
+    </div>
+
+    <!-- Meal Assignment Modal -->
+    <div id="meal-assign-modal" class="modal hidden" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 450px; text-align: left;">
+            <h3 id="meal-assign-title" style="margin-top: 0; color: var(--text-primary); text-align: center;">Assign Meal</h3>
+            <p id="meal-assign-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; text-align: center;">Select options for this slot</p>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-hover); padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border);">
+                <input type="checkbox" id="meal-assign-eating-out" style="accent-color: var(--accent-stocks); width: 16px; height: 16px; cursor: pointer;">
+                <label for="meal-assign-eating-out" style="font-weight: 600; cursor: pointer;">Mark as "Eating Out"</label>
+            </div>
+
+            <div id="meal-assign-servings-row" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border);">
+                <label for="meal-assign-servings" style="font-weight: 600; font-size: 0.85rem; white-space: nowrap;">Servings (people):</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button id="servings-decrement" type="button" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-hover); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">−</button>
+                    <input type="number" id="meal-assign-servings" value="2" min="1" max="20" step="1" style="width: 50px; text-align: center; padding: 0.4rem; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-weight: 700; font-size: 1rem;">
+                    <button id="servings-increment" type="button" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-hover); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">+</button>
+                </div>
+            </div>
+
+            <div id="meal-assign-builder">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Add Recipe or Ingredient</label>
+                
+                <div style="position: relative; margin-bottom: 0.5rem;">
+                    <input type="text" id="meal-assign-search" placeholder="Search for recipes or ingredients..." style="width: 100%; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px;" autocomplete="off">
+                    <div id="meal-assign-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-top: none; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+
+                <div id="meal-assign-amount-group" style="display: none; gap: 0.5rem; margin-bottom: 1rem; align-items: center;">
+                    <input type="number" id="meal-assign-amount" placeholder="Amount" step="any" style="flex: 1; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px;">
+                    <span id="meal-assign-unit" style="color: var(--text-muted); font-size: 0.9rem; min-width: 30px;">g</span>
+                    <button id="meal-assign-add-btn" class="btn primary" style="padding: 0.8rem 1.2rem;">Add</button>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Selected Items:</label>
+                    <ul id="meal-assign-selected-list" style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); min-height: 50px;">
+                        <!-- Selected items will render here -->
+                    </ul>
+                </div>
+            </div>
+
+            <button id="meal-assign-clear" class="btn danger" style="display: none; width: 100%; margin-top: 1.5rem;">
+                Clear Entire Slot
+            </button>
+
+            <!-- Templates -->
+            <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Meal Templates</label>
+                    <button id="meal-template-save" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.7rem;">Save as Template</button>
+                </div>
+                <div id="meal-template-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 30px;">
+                    <!-- Template chips render here -->
+                </div>
+            </div>
+
+            <!-- Copy to Days -->
+            <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Also apply to:</label>
+                <div id="meal-copy-days" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="0" style="accent-color: var(--accent); width: 14px; height: 14px;"> Mon</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="1" style="accent-color: var(--accent); width: 14px; height: 14px;"> Tue</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="2" style="accent-color: var(--accent); width: 14px; height: 14px;"> Wed</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="3" style="accent-color: var(--accent); width: 14px; height: 14px;"> Thu</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="4" style="accent-color: var(--accent); width: 14px; height: 14px;"> Fri</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="5" style="accent-color: var(--accent); width: 14px; height: 14px;"> Sat</label>
+                    <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm, 6px); background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="6" style="accent-color: var(--accent); width: 14px; height: 14px;"> Sun</label>
+                </div>
+            </div>
+
+            <div class="confirm-dialog-actions" style="margin-top: 2rem; justify-content: space-between;">
+                <button id="meal-assign-cancel" class="btn" style="background: var(--bg-hover);">Cancel</button>
+                <button id="meal-assign-confirm" class="btn primary">Save Assignment</button>
+            </div>
         </div>
     </div>
 

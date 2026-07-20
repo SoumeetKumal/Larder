@@ -1,31 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&display=swap');
 
 :root {
-    /* Sharp Editorial Dark */
-    --bg-base: #000000;
-    --bg-surface: #0a0a0a;
-    --bg-card: #0a0a0a;
-    --bg-hover: #141414;
+    /* Premium Obsidian Dark */
+    --bg-base: #0b0f19;
+    --bg-surface: #111827;
+    --bg-card: #1f2937;
+    --bg-hover: #374151;
     
-    --text-primary: #ffffff;
-    --text-secondary: #aaaaaa;
-    --text-muted: #666666;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
     
-    --border: #222222;
-    --border-hover: #444444;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(255, 255, 255, 0.2);
 
-    /* Kitchen Book Pastel Accents */
-    --accent: #638A8D;
-    --accent-vegetables: #48B584; /* Green */
-    --accent-meat: #D1777D; /* Red */
-    --accent-seafood: #4A88B7; /* Blue */
-    --accent-stocks: #E1B88B; /* Orange */
-    --accent-baking: #F4B3CE; /* Pink */
-    --accent-jams: #A979AB; /* Purple */
-    --accent-dairies: #7EBAB2; /* Teal */
-    --accent-essential: #718991; /* Slate */
+    /* Vibrant Accents */
+    --accent: #38bdf8;
+    --accent-vegetables: #10b981; /* Emerald */
+    --accent-meat: #f43f5e; /* Rose */
+    --accent-seafood: #0ea5e9; /* Sky */
+    --accent-stocks: #f59e0b; /* Amber */
+    --accent-baking: #d946ef; /* Fuchsia */
+    --accent-jams: #8b5cf6; /* Violet */
+    --accent-dairies: #14b8a6; /* Teal */
+    --accent-essential: #64748b; /* Slate */
     
-    --radius: 0px; /* SHARP edges */
+    --radius-sm: 6px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,8 +60,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 2.5rem;
-    background: var(--bg-base);
+    padding: 1.2rem 2.5rem;
+    background: rgba(11, 15, 25, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -296,15 +301,19 @@ body {
 .card {
     background: var(--bg-surface);
     border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    transition: border-color 0.3s ease, transform 0.3s ease;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .card:hover {
     border-color: var(--accent-current, var(--accent));
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
 }
 
 .card-img-wrapper {
@@ -340,9 +349,10 @@ body {
     align-self: flex-start;
     font-size: 0.65rem;
     font-weight: 800;
-    color: #000;
+    color: #fff;
     background: var(--accent-current, var(--accent));
-    padding: 0.3rem 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
     margin-bottom: 1rem;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -384,10 +394,11 @@ body {
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     z-index: 1000;
     opacity: 1;
@@ -402,19 +413,26 @@ body {
 }
 
 .modal-content {
-    background: var(--bg-base);
-    border: 1px solid var(--accent-current, var(--accent));
-    padding: 4rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 3rem;
     max-width: 900px;
     width: 100%;
     position: relative;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal.hidden .modal-content {
+    transform: scale(0.95);
 }
 
 .close-btn {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
+    top: 1rem;
+    right: 1rem;
     width: 2.5rem;
     height: 2.5rem;
     display: flex;
@@ -424,9 +442,10 @@ body {
     font-weight: 300;
     cursor: pointer;
     color: var(--text-muted);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    transition: var(--transition);
     z-index: 10;
 }
 
@@ -715,22 +734,25 @@ body {
 }
 
 .btn {
-    padding: 0.8rem 1.5rem;
+    padding: 0.7rem 1.5rem;
     background: transparent;
     border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     cursor: pointer;
     color: var(--text-primary);
-    transition: all 0.2s ease;
+    transition: var(--transition);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .btn:hover {
     border-color: var(--text-primary);
     background: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 .btn.primary {
@@ -739,8 +761,9 @@ body {
     border-color: var(--text-primary);
 }
 .btn.primary:hover {
-    background: transparent;
-    color: var(--text-primary);
+    background: var(--text-secondary);
+    border-color: var(--text-secondary);
+    color: var(--bg-base);
 }
 
 .btn.secondary { background: var(--bg-surface); }
@@ -792,15 +815,17 @@ input, textarea, select {
     padding: 0.8rem 1rem;
     background: var(--bg-base);
     border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 0.95rem;
     color: var(--text-primary);
-    transition: border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: var(--text-primary);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 select option { background: var(--bg-surface); }
 
@@ -824,6 +849,124 @@ select option { background: var(--bg-surface); }
     border-bottom: 1px solid var(--border);
 }
 
+.cms-details-section {
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+    padding: 0;
+}
+
+.cms-details-section > summary {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    border-bottom: none;
+    list-style: none;
+    transition: background 0.2s;
+}
+
+.cms-details-section > summary::-webkit-details-marker { display: none; }
+
+.cms-details-section > summary:hover {
+    background: var(--bg-hover);
+}
+
+.cms-details-section[open] > summary {
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+}
+
+.cms-details-section > .form-row {
+    padding: 0 1rem;
+}
+
+.cms-details-section > .form-row:last-child {
+    padding-bottom: 1rem;
+}
+
+/* Custom Confirmation Dialog */
+.confirm-dialog-content {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+    max-width: 420px;
+    margin: 20vh auto;
+    text-align: center;
+    animation: dialogSlideIn 0.2s ease-out;
+}
+
+@keyframes dialogSlideIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.confirm-dialog-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    filter: grayscale(0.3);
+}
+
+.confirm-dialog-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.confirm-dialog-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.confirm-dialog-actions .btn {
+    min-width: 120px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Ingredient row checkbox */
+.f-select {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-meat);
+}
+
+.food-table th.select-col,
+.food-table td.select-col {
+    width: 30px;
+    text-align: center;
+    padding: 0.3rem;
+}
+
+/* Bulk action bar */
+.bulk-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    transition: opacity 0.2s;
+}
+
+.bulk-action-bar .selected-count {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -834,6 +977,100 @@ select option { background: var(--bg-surface); }
     text-transform: uppercase;
     letter-spacing: 2px;
     grid-column: 1 / -1; /* Span full grid width */
+}
+
+/* Meal Planner Calendar */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+}
+
+.calendar-day {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.calendar-day-header {
+    text-align: center;
+    padding: 0.8rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-hover);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-day-date {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 0.2rem;
+}
+
+.calendar-slot {
+    padding: 1.2rem 0.5rem 0.5rem 0.5rem;
+    border-bottom: 1px dashed var(--border);
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.calendar-slot:last-child {
+    border-bottom: none;
+}
+
+.calendar-slot:hover {
+    background: var(--bg-hover);
+}
+
+.calendar-slot-label {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+.calendar-slot-content {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 5px;
+    color: var(--text-primary);
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+.slot-eating-out {
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.03),
+        rgba(255, 255, 255, 0.03) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    color: var(--accent-stocks);
+}
+
+.slot-populated {
+    color: var(--accent-vegetables);
 }
 
 /* Modal section headings (Instructions, etc.) */

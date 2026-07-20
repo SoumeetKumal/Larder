@@ -130,5 +130,5011 @@
     ],
     "note": "The sauce can be be ahead of time and heated before adding freshly cooked pasta. DO NOT cook pasta ahead of time.",
     "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!"
+  },
+  {
+    "id": "2",
+    "title": "Dholl Puri",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak split peas 4 hours, drain and grind to paste with turmeric and cumin.",
+      "Make dough with flour and water, rest 30 min.",
+      "Roll dough thin, spread pea paste, fold and roll again.",
+      "Cook on hot griddle with oil until golden both sides."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "3",
+    "title": "Rougaille Saucisse",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice sausages and brown in oil.",
+      "Add chopped onions, garlic, ginger and cook until soft.",
+      "Add diced tomatoes, thyme, chili, salt and pepper.",
+      "Simmer 20 minutes until sauce thickens.",
+      "Serve with rice or bread."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "4",
+    "title": "Mine Frit",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil noodles, drain.",
+      "Stir-fry chicken and Vegetable with garlic, ginger in hot oil.",
+      "Add noodles, soy sauce, salt, pepper.",
+      "Toss until well mixed and slightly crispy.",
+      "Garnish with scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "5",
+    "title": "Vindaye Poisson",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Fry fish pieces until golden, set aside.",
+      "Toast mustard seeds, add curry powder, turmeric.",
+      "Add onions, garlic, ginger, cook until soft.",
+      "Add vinegar, water, Bay leaf, dried, thyme, salt, chili.",
+      "Simmer 10 minutes, add fish, simmer 5 more minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "6",
+    "title": "Briani",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Marinate chicken with yogurt, half the spices, salt.",
+      "Fry onions until golden, remove half.",
+      "Add chicken, cook 10 min.",
+      "Parboil rice with remaining spices and bay leaves.",
+      "Layer rice over chicken, top with fried onions, mint, cilantro, saffron in water.",
+      "Cover tight, cook on low 30 minutes.",
+      "Add boiled potatoes in layers."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "7",
+    "title": "Gateaux Piment",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak split peas 4 hours, drain and grind coarsely.",
+      "Mix with chopped onions, scallions, cilantro, chili, cumin, salt, baking powder.",
+      "Add water to make thick batter.",
+      "Deep fry spoonfuls until golden and crispy.",
+      "Drain on paper towels."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "8",
+    "title": "Curry Poulet",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, fry onions until soft.",
+      "Add garlic, ginger, curry powder, turmeric, cook 2 minutes.",
+      "Add chicken pieces, brown.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 30 minutes.",
+      "Add potatoes, cook until tender.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "9",
+    "title": "Bouillon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil beef in water with salt, thyme, garlic, ginger until tender (1.5 hours).",
+      "Add all chopped Vegetable.",
+      "Simmer 30 minutes until Vegetable soft.",
+      "Season with pepper.",
+      "Garnish with parsley.",
+      "Serve as soup with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "10",
+    "title": "Roti",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, salt, water to form soft dough.",
+      "Knead 10 minutes, rest 30 minutes covered.",
+      "Divide into balls, roll thin.",
+      "Cook on hot griddle, brush with oil, flip when bubbles form.",
+      "Cook until golden spots appear both sides."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "11",
+    "title": "Daube",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut beef into cubes.",
+      "Heat oil, brown meat.",
+      "Add onions, garlic, ginger, cook until soft.",
+      "Add tomatoes, spices, thyme, salt, pepper, water, vinegar, sugar.",
+      "Simmer covered 1.5 hours until meat tender and sauce thick."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "12",
+    "title": "Achard Legumes",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Blanch Vegetable briefly, drain.",
+      "Heat oil, add mustard seeds, turmeric.",
+      "Add garlic, ginger, onions, cook 2 minutes.",
+      "Add Vegetable, vinegar, salt, sugar, chili.",
+      "Mix well, simmer 5 minutes.",
+      "Cool and store.",
+      "Serve as pickle/condiment."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "13",
+    "title": "Boulettes",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grind fish with soaked bread, half the onions, garlic, ginger, cilantro, cumin, salt, pepper, egg.",
+      "Form balls.",
+      "Make sauce: fry remaining onions, add tomatoes, thyme, chili, water, salt.",
+      "Add fish balls gently, simmer 20 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "14",
+    "title": "Salade Palmiste",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice hearts of palm.",
+      "Dice tomatoes and onions.",
+      "Mix all in bowl.",
+      "Dress with lemon juice, olive oil, salt, pepper.",
+      "Toss gently.",
+      "Garnish with parsley.",
+      "Chill before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "15",
+    "title": "Curry Ourite",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Clean and cut octopus.",
+      "Boil 30 minutes until tender, drain.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, octopus, thyme, salt, chili, water.",
+      "Simmer 20 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "16",
+    "title": "Gateaux Patate",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil and mash sweet potatoes.",
+      "Mix with grated coconut, sugar, eggs, milk, vanilla, spices, flour, melted butter, baking powder.",
+      "Pour into greased pan.",
+      "Bake 180°C for 45 minutes until golden and set."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "17",
+    "title": "Riz Frit",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, scramble eggs, set aside.",
+      "Stir-fry garlic, ginger, onions.",
+      "Add carrots, peas, cook 3 minutes.",
+      "Add rice, break up clumps.",
+      "Add soy sauce, salt, pepper, eggs.",
+      "Toss well on high heat.",
+      "Garnish with scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "18",
+    "title": "Mazavaroo",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut fish into pieces.",
+      "Grind chilies, ginger, garlic, turmeric, salt to paste.",
+      "Rub paste over fish.",
+      "Heat oil until very hot, fry fish until crispy and cooked through.",
+      "Drizzle with lemon juice.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "19",
+    "title": "Puri",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, salt, water to form stiff dough.",
+      "Knead well, rest 30 minutes.",
+      "Roll into small circles.",
+      "Deep fry in hot oil, pressing gently until they puff up.",
+      "Drain on paper towels."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "20",
+    "title": "Cari Crevette",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, fry onions, garlic, ginger until soft.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 10 minutes.",
+      "Add shrimp, coconut milk, cook 5 minutes until shrimp pink.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "21",
+    "title": "Napolitaine",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook noodles, drain.",
+      "Fry sliced sausages.",
+      "Add onions, garlic, cook until soft.",
+      "Add tomatoes, tomato paste, thyme, salt, pepper, sugar, water.",
+      "Simmer 15 minutes.",
+      "Toss with noodles.",
+      "Top with parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "22",
+    "title": "Gateau Coco",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cream butter and sugar.",
+      "Add eggs one at a time.",
+      "Mix in grated coconut.",
+      "Fold in flour, baking powder, salt alternating with milk.",
+      "Add vanilla.",
+      "Bake in greased pan at 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "23",
+    "title": "Chatini Coco",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate coconut finely.",
+      "Grind chilies, garlic, onions with little water to paste.",
+      "Mix with coconut, lemon juice, salt.",
+      "Adjust consistency with water.",
+      "Serve as condiment with curry and rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "24",
+    "title": "Samousa",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook ground beef with onions, garlic, ginger, spices until done.",
+      "Add boiled diced potatoes, peas, cilantro, chili.",
+      "Cool.",
+      "Make dough with flour and water, roll thin, cut into strips.",
+      "Fill with mixture, fold into triangles.",
+      "Deep fry until golden."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "25",
+    "title": "Pain Maison",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dissolve yeast and sugar in warm water.",
+      "Mix with flour and salt.",
+      "Knead 10 minutes.",
+      "Add butter, knead until smooth.",
+      "Let rise 1 hour.",
+      "Shape into loaves.",
+      "Let rise 30 minutes.",
+      "Bake at 200°C for 30 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "26",
+    "title": "Cari Poule",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, add cinnamon, Bay leaf, dried.",
+      "Fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add chicken pieces, brown all sides.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 35 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "27",
+    "title": "Chatini Cotomili",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate raw chayote.",
+      "Finely chop onions, chilies, garlic.",
+      "Mix all with lemon juice, salt, oil.",
+      "Let sit 15 minutes before serving.",
+      "Serve as fresh condiment."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "28",
+    "title": "Vindaye Ourite",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil octopus until tender, cut into pieces.",
+      "Toast mustard seeds, add curry powder, turmeric.",
+      "Add onions, garlic, ginger, cook until soft.",
+      "Add vinegar, water, Bay leaf, dried, thyme, salt, chili.",
+      "Simmer 10 minutes, add octopus, simmer 5 more minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "29",
+    "title": "Gateau Arouille",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil and mash taro.",
+      "Mix with grated coconut, sugar, eggs, milk, vanilla, spices, flour, melted butter, baking powder.",
+      "Pour into greased pan.",
+      "Bake 180°C for 45 minutes until set and golden."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "30",
+    "title": "Rougaille Morue",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak salt cod overnight, drain, shred.",
+      "Fry onions, garlic, ginger in oil.",
+      "Add tomatoes, thyme, chili, pepper, little salt.",
+      "Cook 15 minutes.",
+      "Add shredded cod, cook 10 more minutes until sauce thickens.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "31",
+    "title": "Cari Zourite",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Clean octopus, boil 30 minutes until tender, cut up.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric.",
+      "Add tomatoes, octopus, thyme, salt, chili, water.",
+      "Add potatoes, simmer 25 minutes until potatoes tender.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "32",
+    "title": "Alouda",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil Agar agar in 100ml water until dissolved.",
+      "Pour in flat dish to set, cut into strips.",
+      "Boil milk with sugar and vanilla.",
+      "Cool.",
+      "In glasses, layer Agar agar strips, basil seeds (soaked), ice, sweetened milk.",
+      "Serve cold."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "33",
+    "title": "Lasary Voem",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Finely dice tomatoes and onions.",
+      "Mix with lemon juice, oil, salt, pepper, chopped chili.",
+      "Garnish with cilantro.",
+      "Let sit 10 minutes before serving.",
+      "Serve as fresh salad with meals."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "34",
+    "title": "Cari Canard",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut duck into pieces.",
+      "Heat oil, brown duck.",
+      "Remove, set aside.",
+      "Fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, duck, spices, thyme, salt, chili, water.",
+      "Simmer 1 hour.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "35",
+    "title": "Gateaux Manioc",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate cassava finely, squeeze out excess liquid.",
+      "Mix with grated coconut, sugar, eggs, milk, vanilla, cinnamon, melted butter, baking powder.",
+      "Pour into greased pan.",
+      "Bake 180°C for 50 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "36",
+    "title": "Satini Mangue",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate unripe mango.",
+      "Grind chilies and garlic.",
+      "Mix all with lemon juice, salt, sugar.",
+      "Let sit 10 minutes.",
+      "Serve as tangy condiment with curries."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "37",
+    "title": "Cari Bichique",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 10 minutes.",
+      "Add small fish carefully, cook gently 8 minutes without stirring much.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "38",
+    "title": "Gateau Banane",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mash bananas.",
+      "Cream butter and sugar, add eggs, vanilla.",
+      "Mix in mashed bananas.",
+      "Fold in flour, baking powder, salt, cinnamon alternating with milk.",
+      "Pour into greased pan.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "39",
+    "title": "Cari Tangue",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut pork into cubes.",
+      "Heat oil, brown pork.",
+      "Add onions, garlic, ginger, cook until soft.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 40 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "40",
+    "title": "Pain Frit",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, yeast, sugar, salt, water to form soft dough.",
+      "Knead 5 minutes, let rise 1 hour.",
+      "Divide into small balls, flatten.",
+      "Deep fry in hot oil until golden and puffed.",
+      "Drain and serve warm."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "41",
+    "title": "Chatini Tomate",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Finely chop tomatoes, onions, chilies, garlic, ginger.",
+      "Mix all with salt, lemon juice, oil, cumin.",
+      "Let sit 15 minutes.",
+      "Serve as fresh chutney with curries and rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "42",
+    "title": "Cari Cabri",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut goat into pieces.",
+      "Heat oil, brown meat.",
+      "Add onions, garlic, ginger, cook soft.",
+      "Add curry powder, turmeric, coriander, cumin, cook 2 minutes.",
+      "Add tomatoes, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 1.5 hours.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "43",
+    "title": "Lasary Concombre",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice cucumbers and onions thinly.",
+      "Mix with lemon juice, oil, salt, pepper, chopped chili.",
+      "Garnish with parsley.",
+      "Chill before serving.",
+      "Serve as fresh salad."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "44",
+    "title": "Rougaille Boucane",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak salted fish 2 hours, drain, break into pieces.",
+      "Fry onions, garlic, ginger.",
+      "Add tomatoes, thyme, chili, pepper, little salt.",
+      "Cook 15 minutes.",
+      "Add fish pieces, simmer 10 minutes.",
+      "Serve with rice or bread."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "45",
+    "title": "Ladob Sale",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Peel and cut plantains, cassava, sweet potato into chunks.",
+      "Boil in salted water with onions, thyme, chili until half cooked.",
+      "Add coconut milk, simmer until Vegetable tender and sauce thick.",
+      "Serve as savory side dish."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "46",
+    "title": "Fricassee",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut chicken into pieces.",
+      "Heat oil, brown chicken.",
+      "Add onions, garlic, ginger, cook soft.",
+      "Add diced potatoes, carrots, soy sauce, thyme, salt, pepper, water.",
+      "Cover, simmer 30 minutes until tender.",
+      "Garnish with scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "47",
+    "title": "Gateau Piment Mais",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Blend corn kernels coarsely.",
+      "Mix with flour, chopped onions, scallions, cilantro, chili, cumin, salt, baking powder, egg, milk to make thick batter.",
+      "Deep fry spoonfuls until golden.",
+      "Drain on paper towels."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "48",
+    "title": "Cari Camaron",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, tamarind, thyme, salt, chili, water.",
+      "Simmer 10 minutes.",
+      "Add shrimp, coconut milk, cook 5 minutes until shrimp pink.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "49",
+    "title": "Gateau Pistache",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grind peanuts to coarse powder.",
+      "Cream butter and sugar, add eggs, vanilla.",
+      "Mix in ground peanuts, flour, baking powder, salt alternating with milk.",
+      "Pour into greased pan.",
+      "Bake 180°C for 35 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "50",
+    "title": "Cari Poisson",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat oil, fry onions, garlic, ginger until soft.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, thyme, salt, chili, water.",
+      "Simmer 15 minutes.",
+      "Add fish pieces gently, cook 10 minutes without stirring too much.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "51",
+    "title": "Chatini Citron",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Remove lemon seeds, chop roughly with peel.",
+      "Grind with chilies, garlic, salt, sugar, mustard to chunky paste.",
+      "Add water to adjust consistency.",
+      "Let sit 30 minutes before serving.",
+      "Serve as tangy chutney."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "52",
+    "title": "Cari Cerf",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut venison into cubes.",
+      "Heat oil, brown meat.",
+      "Add onions, garlic, ginger, cook soft.",
+      "Add curry powder, turmeric, coriander, cumin, cook 2 minutes.",
+      "Add tomatoes, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 1.5 hours.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "53",
+    "title": "Gateau Ti Son",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix wheat bran, flour, sugar, grated coconut, baking powder, salt.",
+      "Beat eggs with milk and vanilla.",
+      "Combine wet and dry ingredients, add melted butter.",
+      "Pour into greased pan.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "54",
+    "title": "Rougaille Saucisse Fumee",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice sausages, brown in oil.",
+      "Add onions, garlic, ginger, Bay leaf, dried, cook until soft.",
+      "Add tomatoes, thyme, chili, salt, pepper.",
+      "Simmer 25 minutes until thick.",
+      "Garnish with scallions.",
+      "Serve with rice or bread."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "55",
+    "title": "Cari Brede",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Wash and chop spinach.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add spinach, salt, chili, water.",
+      "Cook 15 minutes.",
+      "Add coconut milk, simmer 5 minutes.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "56",
+    "title": "Gateau Miel",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cream butter, sugar, honey.",
+      "Add eggs one at a time.",
+      "Mix in flour, baking powder, salt, spices alternating with milk.",
+      "Add vanilla.",
+      "Pour into greased pan.",
+      "Bake 180°C for 45 minutes until golden."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "57",
+    "title": "Bringelle Frite",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice eggplant into rounds.",
+      "Make batter with flour, water, turmeric, salt, pepper.",
+      "Dip eggplant slices in batter.",
+      "Deep fry in hot oil until golden and crispy.",
+      "Drain on paper towels.",
+      "Serve hot."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "58",
+    "title": "Cari Langue",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil tongue 1 hour, peel skin, slice.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, tongue, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 40 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "59",
+    "title": "Chatini Ananas",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dice pineapple finely.",
+      "Grind chilies, garlic, ginger with mustard, turmeric.",
+      "Mix all with pineapple, salt, sugar, vinegar.",
+      "Let sit 20 minutes before serving.",
+      "Serve as sweet-spicy chutney."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "60",
+    "title": "Rougaille Corned Beef",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Break up corned beef.",
+      "Fry onions, garlic, ginger in oil.",
+      "Add tomatoes, thyme, chili, pepper, little salt.",
+      "Cook 15 minutes.",
+      "Add corned beef, mix well, cook 5 minutes.",
+      "Garnish with scallions.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "61",
+    "title": "Gateau Gingembre",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate ginger finely.",
+      "Cream butter and sugar, add eggs, vanilla, molasses.",
+      "Mix in grated ginger, flour, baking powder, salt, cinnamon alternating with milk.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "62",
+    "title": "Cari Tripe",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Clean tripe thoroughly, cut into strips, boil 1 hour.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, tripe, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 1 hour.",
+      "Add lemon juice, garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "63",
+    "title": "Satini Tamarin",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix tamarind paste with water to dissolve.",
+      "Grind chilies, garlic, cumin.",
+      "Mix all with tamarind, sugar, salt.",
+      "Cook on low heat 10 minutes, stirring.",
+      "Cool before serving.",
+      "Serve as tangy-sweet chutney."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "64",
+    "title": "Bouillon Creole",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil beef and pork in water with salt, thyme, Bay leaf, dried, garlic, ginger 1.5 hours.",
+      "Add all chopped Vegetable and leeks.",
+      "Simmer 35 minutes.",
+      "Season with pepper.",
+      "Garnish with parsley and scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "65",
+    "title": "Gateau Cassava",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate cassava, squeeze out liquid.",
+      "Mix with coconut milk, sugar, eggs, vanilla, cinnamon, nutmeg, salt, melted butter.",
+      "Pour into greased pan.",
+      "Bake 180°C for 55 minutes until golden and firm."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "66",
+    "title": "Cari Haricot",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak beans overnight, drain, boil until tender.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cumin, cook 2 minutes.",
+      "Add tomatoes, beans, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 25 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "67",
+    "title": "Pain Rassis Grille",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice stale bread thick.",
+      "Beat eggs with milk and vanilla.",
+      "Dip bread in mixture.",
+      "Fry in butter until golden both sides.",
+      "Sprinkle with cinnamon sugar.",
+      "Serve warm as breakfast or snack."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "68",
+    "title": "Vindaye Poulet",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut cooked chicken into pieces.",
+      "Toast mustard seeds, add curry powder, turmeric.",
+      "Add onions, garlic, ginger, cook until soft.",
+      "Add vinegar, water, Bay leaf, dried, thyme, salt, chili.",
+      "Simmer 10 minutes, add chicken, simmer 8 more minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "69",
+    "title": "Gateau Fruit",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak dried fruits in rum 1 hour.",
+      "Cream butter and sugar, add eggs, vanilla.",
+      "Mix in flour, baking powder, salt, spices alternating with milk.",
+      "Fold in fruits and lemon peel.",
+      "Bake 160°C for 60 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "70",
+    "title": "Cari Lentille",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Rinse lentils.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cumin, cook 2 minutes.",
+      "Add tomatoes, lentils, thyme, salt, chili, water.",
+      "Simmer 35 minutes until lentils soft.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "71",
+    "title": "Lasary Betrave",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil beets until tender, peel and dice.",
+      "Slice onions thinly.",
+      "Mix beets and onions with lemon juice, oil, salt, pepper.",
+      "Garnish with parsley.",
+      "Chill before serving.",
+      "Serve as colorful salad."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "72",
+    "title": "Rougaille Thon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut tuna into chunks.",
+      "Fry onions, garlic, ginger in oil.",
+      "Add tomatoes, thyme, chili, salt, pepper.",
+      "Cook 15 minutes.",
+      "Add tuna, cook gently 10 minutes.",
+      "Garnish with scallions.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "73",
+    "title": "Gateau Farine Mais",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix cornmeal, sugar, baking powder, salt, spices.",
+      "Beat eggs with coconut milk and vanilla.",
+      "Combine wet and dry ingredients.",
+      "Pour into greased pan.",
+      "Bake 180°C for 45 minutes until golden."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "74",
+    "title": "Cari Pois Chiche",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak chickpeas overnight, boil until tender.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cumin, cook 2 minutes.",
+      "Add tomatoes, chickpeas, thyme, salt, chili, water.",
+      "Simmer 25 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "75",
+    "title": "Chatini Bilimbi",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Chop bilimbi (or starfruit) roughly, remove seeds.",
+      "Grind with chilies, garlic, salt, sugar to chunky paste.",
+      "Add water to adjust consistency.",
+      "Let sit 15 minutes.",
+      "Serve as sour-spicy chutney with curries."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "76",
+    "title": "Brede Songe",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Remove stems from taro leaves, chop.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add leaves, salt, chili, water.",
+      "Cook covered 25 minutes.",
+      "Add coconut milk, simmer 5 minutes.",
+      "Serve as vegetable side."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "77",
+    "title": "Gateau Cravate",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make dough with flour, water, egg, 20g sugar, vanilla.",
+      "Roll thin, cut into strips, twist into bow shapes.",
+      "Deep fry until golden.",
+      "Melt remaining sugar with butter, honey, cinnamon.",
+      "Dip fried bows in syrup.",
+      "Cool on rack."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "78",
+    "title": "Cari Queue Boeuf",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut oxtail into segments.",
+      "Heat oil, brown oxtail.",
+      "Add onions, garlic, ginger, cook soft.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, thyme, Bay leaf, dried, salt, chili, water.",
+      "Simmer 2 hours.",
+      "Add carrots, cook 30 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "79",
+    "title": "Lasary Papaye",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate green papaya or dice ripe papaya.",
+      "Slice onions thinly.",
+      "Mix with lemon juice, oil, salt, pepper, chopped chili.",
+      "Garnish with mint.",
+      "Let sit 10 minutes before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "80",
+    "title": "Rougaille Z'Andouille",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice sausages.",
+      "Fry in oil until browned.",
+      "Add onions, garlic, ginger, Bay leaf, dried, cook until soft.",
+      "Add tomatoes, thyme, chili, salt, pepper.",
+      "Simmer 20 minutes until sauce thickens.",
+      "Serve with bread or rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "81",
+    "title": "Gateau Tamarin",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dissolve tamarind in water.",
+      "Cream butter and sugar, add eggs, vanilla.",
+      "Mix in tamarind water, flour, baking powder, salt, cinnamon alternating with milk.",
+      "Pour into greased pan.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "82",
+    "title": "Cari Chou Chou",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Peel and cube chayote.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, chayote, thyme, salt, chili, water.",
+      "Simmer 20 minutes.",
+      "Add coconut milk, cook 5 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "83",
+    "title": "Satini Coriandre",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Wash cilantro well.",
+      "Blend with chilies, garlic, cumin, salt, lemon juice, water to smooth paste.",
+      "Adjust consistency with more water if needed.",
+      "Serve fresh as green chutney with snacks."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "84",
+    "title": "Beignets Banane",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mash bananas.",
+      "Mix flour, sugar, baking powder, salt, cinnamon.",
+      "Beat egg with milk and vanilla.",
+      "Combine all with mashed bananas.",
+      "Drop spoonfuls in hot oil, fry until golden.",
+      "Drain, dust with powdered sugar."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "85",
+    "title": "Cari Ti Jacques",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut young jackfruit into chunks.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, jackfruit, thyme, salt, chili, water.",
+      "Simmer 30 minutes.",
+      "Add coconut milk, cook 5 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "86",
+    "title": "Pain Perdu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Beat eggs with milk, sugar, vanilla, cinnamon.",
+      "Dip bread slices in mixture.",
+      "Fry in butter until golden both sides.",
+      "Dust with powdered sugar.",
+      "Serve warm for breakfast."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "87",
+    "title": "Cari Palmiste",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice hearts of palm.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, palm hearts, thyme, salt, chili, water.",
+      "Simmer 15 minutes.",
+      "Add coconut milk, cook 5 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "88",
+    "title": "Chatini Pomme D'Amour",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Blanch tomatoes, peel, chop.",
+      "Grind chilies, garlic, ginger, cumin.",
+      "Mix with tomatoes, salt, sugar, lemon juice, oil.",
+      "Cook on low 10 minutes.",
+      "Cool before serving.",
+      "Serve as cooked chutney."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "89",
+    "title": "Gateaux Avocat",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mash avocado with lime juice.",
+      "Cream butter and sugar, add eggs, vanilla.",
+      "Mix in mashed avocado, flour, baking powder, salt alternating with milk.",
+      "Pour into greased pan.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "90",
+    "title": "Cari Brinjal",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut eggplant into chunks.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, eggplant, tamarind, thyme, salt, chili, water.",
+      "Simmer 25 minutes until soft.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "91",
+    "title": "Lasary Carotte",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grate carrots finely.",
+      "Slice onions thin.",
+      "Toast cumin seeds lightly.",
+      "Mix all with lemon juice, oil, salt, pepper, cumin.",
+      "Garnish with parsley.",
+      "Let sit 10 minutes before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "92",
+    "title": "Rougaille Sardine",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Drain sardines.",
+      "Fry onions, garlic, ginger in oil.",
+      "Add tomatoes, thyme, chili, salt, pepper.",
+      "Cook 15 minutes.",
+      "Add sardines gently, cook 5 minutes.",
+      "Add lemon juice.",
+      "Serve with bread or rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "93",
+    "title": "Gateau Cerise",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Pit cherries.",
+      "Cream butter and sugar, add eggs, vanilla, almond extract.",
+      "Mix in flour, baking powder, salt alternating with milk.",
+      "Fold in cherries gently.",
+      "Pour into greased pan.",
+      "Bake 180°C for 45 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "94",
+    "title": "Cari Concombre",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Peel and cube cucumber.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, cucumber, salt, chili, water.",
+      "Simmer 15 minutes.",
+      "Add coconut milk, cook 5 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "95",
+    "title": "Chatini Menthe",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Wash herbs well.",
+      "Blend mint, cilantro, chilies, garlic, cumin, salt, lemon juice, water to smooth paste.",
+      "Adjust consistency.",
+      "Serve fresh as cooling green chutney with fried foods."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "96",
+    "title": "Beignets Giraumon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook and mash pumpkin.",
+      "Mix flour, sugar, baking powder, salt, spices.",
+      "Beat egg with milk and vanilla.",
+      "Combine all with pumpkin.",
+      "Drop spoonfuls in hot oil, fry until golden.",
+      "Drain, dust with powdered sugar."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "97",
+    "title": "Cari Giraumon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Peel and cube pumpkin.",
+      "Heat oil, fry onions, garlic, ginger.",
+      "Add curry powder, turmeric, cook 2 minutes.",
+      "Add tomatoes, pumpkin, thyme, salt, chili, water.",
+      "Simmer 20 minutes until soft.",
+      "Add coconut milk, cook 5 minutes.",
+      "Garnish with cilantro."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "98",
+    "title": "Lasary Chou",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Shred cabbage finely.",
+      "Grate carrots.",
+      "Slice onions thin.",
+      "Mix all with lemon juice, oil, salt, pepper, toasted cumin.",
+      "Garnish with parsley.",
+      "Let sit 15 minutes before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "99",
+    "title": "Rougaille Ti Jacques",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut young jackfruit into chunks.",
+      "Fry onions, garlic, ginger in oil.",
+      "Add tomatoes, jackfruit, thyme, chili, salt, pepper.",
+      "Cook covered 30 minutes until jackfruit tender.",
+      "Serve as vegetable curry."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "100",
+    "title": "Ramen",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Simmer broth with garlic, ginger, soy sauce, mirin, sake.",
+      "Slice pork thin, sear.",
+      "Boil eggs 7 minutes, peel, halve.",
+      "Cook noodles, divide into bowls.",
+      "Pour hot broth, top with pork, eggs, bamboo shoots, corn, scallions, nori.",
+      "Drizzle sesame oil."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "101",
+    "title": "Sushi Rice",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Rinse rice until water runs clear.",
+      "Cook rice with water.",
+      "Heat vinegar, sugar, salt until dissolved.",
+      "When rice done, fold in vinegar mixture gently while rice warm.",
+      "Cool to room temperature before making sushi."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "102",
+    "title": "Miso Soup",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat water, add dashi powder.",
+      "Cut tofu into cubes.",
+      "Rehydrate wakame.",
+      "When water simmers, add tofu and wakame.",
+      "Dissolve miso in small amount of broth, add to pot.",
+      "Remove from heat immediately.",
+      "Garnish with sliced scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "103",
+    "title": "Tempura",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, egg, ice water lightly (keep lumpy).",
+      "Slice Vegetable.",
+      "Devein shrimp.",
+      "Heat oil to 180°C.",
+      "Dip ingredients in batter, fry until crisp.",
+      "Drain.",
+      "Make dipping sauce: heat water, dashi, soy sauce, mirin.",
+      "Serve tempura with sauce, grated daikon and ginger."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "104",
+    "title": "Yakitori",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut chicken into bite-size pieces.",
+      "Cut scallions into 3cm pieces.",
+      "Thread alternating chicken and scallions on skewers.",
+      "Mix soy sauce, mirin, sake, sugar, grated ginger, garlic.",
+      "Grill skewers, brushing with sauce frequently until cooked and glazed.",
+      "Sprinkle with sesame seeds."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "105",
+    "title": "Gyoza",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Finely chop cabbage, salt, squeeze out water.",
+      "Mix pork, cabbage, chives, garlic, ginger, soy sauce, sesame oil, pepper.",
+      "Place filling in wrappers, fold.",
+      "Heat oil in pan, add gyoza, fry until bottom golden.",
+      "Add water, cover, steam 5 minutes.",
+      "Uncover, cook until crispy.",
+      "Serve with dipping sauce: rice vinegar, soy sauce, chili oil."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "106",
+    "title": "Teriyaki Chicken",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix soy sauce, mirin, sake, sugar, grated ginger, garlic for sauce.",
+      "Heat oil, sear chicken skin-side down until golden.",
+      "Flip, cook until done.",
+      "Pour sauce over, simmer until thick and glossy.",
+      "Slice, garnish with sesame seeds and scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "107",
+    "title": "Okonomiyaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Shred cabbage finely.",
+      "Mix flour, eggs, water, dashi powder.",
+      "Fold in cabbage and scallions.",
+      "Heat oil in pan, pour batter, flatten.",
+      "Top with bacon.",
+      "Flip when bottom set, cook until done.",
+      "Top with sauce, mayonnaise, bonito flakes, nori, ginger."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "108",
+    "title": "Tonkatsu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Pound pork cutlets to even thickness.",
+      "Coat in flour, dip in beaten eggs, press into breadcrumbs.",
+      "Deep fry at 170°C until golden and cooked through, 5-6 minutes.",
+      "Drain.",
+      "Slice into strips.",
+      "Serve with shredded cabbage, tonkatsu sauce, sesame seeds, lemon wedges."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "109",
+    "title": "Udon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat water with dashi powder, soy sauce, mirin.",
+      "Cook udon according to package.",
+      "Drain, divide into bowls.",
+      "Pour hot broth over.",
+      "Top with sliced fish cake, rehydrated wakame, sliced scallions, poached egg, tempura bits."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "110",
+    "title": "Katsu Curry",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Prepare tonkatsu: coat pork in flour, egg, breadcrumbs, fry.",
+      "For curry: sauté onions, garlic, ginger, add curry powder, flour, cook.",
+      "Add diced Vegetable, water, soy sauce, Worcestershire, honey, grated apple.",
+      "Simmer until thick.",
+      "Serve curry with rice and sliced tonkatsu."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "111",
+    "title": "Chawanmushi",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Beat eggs gently with dashi, soy sauce, mirin, salt.",
+      "Strain.",
+      "Divide chicken, shrimp, mushrooms, spinach, fish cake into cups.",
+      "Pour egg mixture over.",
+      "Steam covered 15 minutes until just set.",
+      "Garnish with lemon zest."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "112",
+    "title": "Takoyaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, eggs, dashi, baking powder to make batter.",
+      "Heat takoyaki pan, oil wells.",
+      "Pour batter, add octopus piece, ginger, scallions, tempura bits to each.",
+      "Turn with picks to form balls.",
+      "Cook until golden.",
+      "Top with sauce, mayonnaise, bonito flakes, nori."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "113",
+    "title": "Soba",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make broth: heat water with dashi powder, soy sauce, mirin, sugar.",
+      "Cook soba noodles, rinse in cold water, drain.",
+      "For hot soba: serve noodles in hot broth.",
+      "For cold soba: serve noodles chilled with cold dipping sauce, wasabi, scallions, nori.",
+      "Add tempura on side."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "114",
+    "title": "Oyakodon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice chicken and onions.",
+      "Simmer dashi, soy sauce, mirin, sugar, sake.",
+      "Add onions, cook 3 minutes.",
+      "Add chicken, cook until done.",
+      "Beat eggs, pour over, cover, cook until eggs just set.",
+      "Serve over hot rice, garnish with scallions and nori."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "115",
+    "title": "Yakiniku",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef very thin.",
+      "Mix soy sauce, sake, mirin, sugar, garlic, ginger, sesame oil, sesame seeds for marinade.",
+      "Marinate beef 30 minutes.",
+      "Grill over high heat until caramelized.",
+      "Serve with rice, lettuce wraps, perilla leaves, kimchi."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "116",
+    "title": "Natto",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Stir natto vigorously until stringy.",
+      "Mix with soy sauce, mustard, chopped scallions.",
+      "Serve over hot rice.",
+      "Wrap in nori if desired.",
+      "Eat immediately while natto is fresh and sticky."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "117",
+    "title": "Tamagoyaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Beat eggs with dashi, soy sauce, mirin, sugar, salt.",
+      "Heat rectangular pan, oil lightly.",
+      "Pour thin layer of egg, cook until almost set.",
+      "Roll up from one end.",
+      "Push to end of pan.",
+      "Add more egg mixture, lift rolled egg, let mixture flow under.",
+      "Roll again.",
+      "Repeat until all egg used.",
+      "Cool, slice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "118",
+    "title": "Nikujaga",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut beef thin, Vegetable into chunks.",
+      "Heat oil, brown beef.",
+      "Add onions, cook until soft.",
+      "Add potatoes, carrots, dashi, soy sauce, mirin, sugar, sake.",
+      "Simmer 20 minutes until tender.",
+      "Add peas, cook 3 minutes.",
+      "Garnish with scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "119",
+    "title": "Karaage",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut chicken into bite-size pieces.",
+      "Marinate in soy sauce, sake, grated ginger, garlic for 30 minutes.",
+      "Coat in potato starch.",
+      "Deep fry at 170°C for 3 minutes, rest 2 minutes, fry again 1 minute until crispy and golden.",
+      "Serve with lemon, mayonnaise, lettuce."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "120",
+    "title": "Shabu Shabu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef paper-thin.",
+      "Prepare Vegetable.",
+      "Make broth: simmer water with kombu.",
+      "Set up hot pot at table.",
+      "Each person swishes beef and Vegetable in boiling broth until cooked.",
+      "Dip in ponzu or sesame sauce mixed with condiments.",
+      "Add noodles at end.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "121",
+    "title": "Onigiri",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix tuna with mayo and soy sauce for filling.",
+      "Grill salmon, flake.",
+      "With wet salted hands, form rice into triangles.",
+      "Make indent, add filling (tuna, salmon, or umeboshi), seal with more rice.",
+      "Wrap in nori.",
+      "Sprinkle with sesame seeds."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "122",
+    "title": "Sukiyaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef thin.",
+      "Cut Vegetable and tofu.",
+      "Mix soy sauce, mirin, sugar, sake for sauce.",
+      "Heat pot, add fat from beef to grease.",
+      "Add beef, sauce, cook.",
+      "Add Vegetable, tofu, noodles, simmer until done.",
+      "Each person dips cooked items in raw beaten egg before eating.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "123",
+    "title": "Agedashi Tofu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut tofu into cubes, drain well.",
+      "Coat in potato starch.",
+      "Deep fry at 180°C until golden and crispy.",
+      "Drain.",
+      "Heat dashi, soy sauce, mirin, sugar.",
+      "Place fried tofu in bowls, pour hot broth over.",
+      "Top with grated daikon, ginger, scallions, bonito flakes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "124",
+    "title": "Yaki Udon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice pork and Vegetable.",
+      "Heat oil in wok, stir-fry pork.",
+      "Add Vegetable, garlic, ginger, cook 3 minutes.",
+      "Add udon noodles, soy sauce, mirin, sake, oyster sauce, sesame oil.",
+      "Toss well.",
+      "Garnish with scallions, bonito flakes, pickled ginger."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "125",
+    "title": "Korokke",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil potatoes, mash.",
+      "Sauté onions and beef, mix with potatoes, salt, pepper.",
+      "Shape into oval patties.",
+      "Coat in flour, egg, breadcrumbs.",
+      "Deep fry at 170°C until golden.",
+      "Drain.",
+      "Serve with tonkatsu sauce and shredded cabbage."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "126",
+    "title": "Yakisoba",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice pork and Vegetable thin.",
+      "Heat oil in wok, stir-fry pork.",
+      "Add Vegetable, cook 3 minutes.",
+      "Add noodles, yakisoba sauce, toss well over high heat.",
+      "Serve topped with pickled ginger, nori strips, bonito flakes, scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "127",
+    "title": "Dango",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix rice flour, sugar with hot water to form dough.",
+      "Shape into small balls.",
+      "Boil until they float, 3 minutes.",
+      "Drain.",
+      "Make glaze: simmer soy sauce, mirin, sugar, dissolved potato starch in water until thick.",
+      "Thread dango on skewers, brush with glaze.",
+      "Grill or broil briefly."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "128",
+    "title": "Chirashi Sushi",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make sushi rice with vinegar, sugar, salt.",
+      "Make thin omelet from eggs, slice.",
+      "Slice fish, Vegetable.",
+      "Spread rice in bowls.",
+      "Arrange fish, shrimp, omelet, cucumber, avocado on top.",
+      "Garnish with nori, sesame seeds.",
+      "Serve with pickled ginger, wasabi, soy sauce."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "129",
+    "title": "Zaru Soba",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make dipping sauce: simmer dashi, soy sauce, mirin, sugar, cool.",
+      "Cook soba, rinse in ice water until cold, drain well.",
+      "Serve noodles on bamboo mat over plate.",
+      "Serve cold dipping sauce in cups with wasabi, scallions, nori.",
+      "Eat by dipping noodles.",
+      "Serve tempura on side."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "130",
+    "title": "Hiyayakko",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut chilled tofu into blocks.",
+      "Place in bowls.",
+      "Top with grated ginger, sliced scallions, bonito flakes, nori strips.",
+      "Drizzle with soy sauce just before serving.",
+      "Serve as cold appetizer."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "131",
+    "title": "Kakiage",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Julienne Vegetable, chop shrimp.",
+      "Mix lightly with flour.",
+      "Make tempura batter.",
+      "Mix Vegetable and shrimp with batter.",
+      "Drop spoonfuls into hot oil, fry until golden and crispy.",
+      "Drain.",
+      "Serve with dipping sauce and grated daikon, ginger."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "132",
+    "title": "Tonjiru",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut pork and Vegetable into bite-size pieces.",
+      "Sauté pork in sesame oil with ginger.",
+      "Add Vegetable (except scallions), dashi, sake, simmer 20 minutes.",
+      "Add tofu, simmer 5 minutes.",
+      "Dissolve miso in broth, add to pot.",
+      "Remove from heat.",
+      "Garnish with scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "133",
+    "title": "Omurice",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dice chicken and Vegetable.",
+      "Sauté in butter, add rice, ketchup, salt, pepper, mix well.",
+      "Beat eggs with milk.",
+      "Make thin omelets.",
+      "Place rice mixture on each omelet, fold over.",
+      "Top with ketchup, garnish with parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "134",
+    "title": "Kakuni",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut pork into 5cm cubes.",
+      "Blanch 5 minutes, drain.",
+      "Put pork, scallions, ginger in pot with water, simmer 1 hour.",
+      "Add soy sauce, mirin, sake, sugar, simmer 2 hours until very tender.",
+      "Add boiled eggs, simmer 30 minutes.",
+      "Serve with mustard."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "135",
+    "title": "Edamame",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil water with 20g salt.",
+      "Add edamame, boil 5 minutes until tender.",
+      "Drain.",
+      "Sprinkle with remaining salt.",
+      "Serve warm or cold as snack or appetizer."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "136",
+    "title": "Nasu Dengaku",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Halve eggplants lengthwise, score flesh in diamond pattern.",
+      "Brush with oil, grill or broil until soft.",
+      "Mix miso, sugar, mirin, sake, cook until thick.",
+      "Spread miso glaze on eggplant.",
+      "Broil until caramelized.",
+      "Garnish with sesame seeds and scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "137",
+    "title": "Oden",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut daikon into thick rounds, parboil.",
+      "Cut other ingredients into pieces.",
+      "Make broth: simmer dashi with kombu, soy sauce, mirin, sake, sugar.",
+      "Add all ingredients, simmer gently 1-2 hours.",
+      "Serve hot in bowls with broth and mustard."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "138",
+    "title": "Yudofu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut tofu into cubes.",
+      "Put kombu in pot with water, add tofu, heat gently without boiling.",
+      "Each person takes tofu from pot, dips in ponzu sauce with scallions, grated ginger, bonito flakes, sesame seeds."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "139",
+    "title": "Chikuzenni",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Rehydrate shiitake.",
+      "Cut all ingredients bite-size.",
+      "Heat sesame oil, sauté chicken.",
+      "Add Vegetable, stir-fry 5 minutes.",
+      "Add dashi, soy sauce, mirin, sugar, sake.",
+      "Simmer 30 minutes until tender.",
+      "Add peas, cook 3 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "140",
+    "title": "Hayashi Rice",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef thin, onions and mushrooms.",
+      "Sauté beef in butter.",
+      "Add onions, mushrooms, cook until soft.",
+      "Add flour, cook 2 minutes.",
+      "Add tomato paste, ketchup, water, wine, soy sauce, Worcestershire, sugar, Bay leaf, dried.",
+      "Simmer 30 minutes.",
+      "Serve over rice, garnish with parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "141",
+    "title": "Taiyaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, baking powder, sugar.",
+      "Beat egg with milk, combine with dry ingredients.",
+      "Heat taiyaki mold, brush with oil.",
+      "Pour batter to half fill, add red bean paste, cover with more batter.",
+      "Close mold, cook 2 minutes each side until golden.",
+      "Serve warm."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "142",
+    "title": "Daigaku Imo",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut sweet potatoes into chunks.",
+      "Deep fry at 170°C until golden and tender.",
+      "Drain.",
+      "Make syrup: heat sugar, water, soy sauce, mirin until thick.",
+      "Add fried sweet potatoes, toss to coat.",
+      "Sprinkle with sesame seeds.",
+      "Serve warm."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "143",
+    "title": "Negimaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef very thin, pound flat.",
+      "Cut scallions into lengths.",
+      "Place scallions on beef, roll up tight.",
+      "Secure with toothpicks.",
+      "Mix soy sauce, mirin, sake, sugar, grated ginger.",
+      "Sear beef rolls in oil, add sauce, simmer until cooked and glazed.",
+      "Remove picks, slice.",
+      "Sprinkle with sesame seeds."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "144",
+    "title": "Mizutaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make light broth: simmer water with kombu.",
+      "Cut chicken and Vegetable.",
+      "Set up hot pot at table with simmering broth.",
+      "Each person cooks chicken and Vegetable in pot.",
+      "Dip in ponzu sauce with daikon, scallions, chili paste.",
+      "Serve with rice."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "145",
+    "title": "Mentaiko Pasta",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook pasta al dente.",
+      "Remove membrane from mentaiko.",
+      "Melt butter, add mentaiko, soy sauce, cream.",
+      "Toss with hot pasta.",
+      "Garnish with nori strips, scallions, squeeze of lemon.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "146",
+    "title": "Katsudon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make tonkatsu: coat pork in flour, 2 eggs, breadcrumbs, fry.",
+      "Slice.",
+      "Simmer dashi, soy sauce, mirin, sugar with sliced onions.",
+      "Add tonkatsu slices.",
+      "Beat 4 eggs, pour over, cook until just set.",
+      "Serve over rice in bowls, garnish with scallions and pickled ginger."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "147",
+    "title": "Anmitsu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dissolve Agar agar in boiling water with sugar.",
+      "Pour in pan to set, cut into cubes.",
+      "Arrange Agar agar cubes, red bean paste, fruit, mochi pieces in bowls.",
+      "Pour shirataki syrup over.",
+      "Top with scoop of ice cream.",
+      "Serve as cold dessert."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "148",
+    "title": "Niku Udon",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "149",
+    "title": "Dorayaki",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, baking powder.",
+      "Beat eggs with sugar and honey until fluffy.",
+      "Fold in flour and milk.",
+      "Heat griddle, brush with oil.",
+      "Pour small circles of batter, cook until bubbles form, flip, cook until done.",
+      "Sandwich red bean paste between two pancakes.",
+      "Serve warm or room temperature."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "150",
+    "title": "Shabu Shabu Salad",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice beef paper-thin.",
+      "Blanch briefly in boiling water until just cooked, drain, chill.",
+      "Cut Vegetable.",
+      "Arrange lettuce, Vegetable, beef on plates.",
+      "Mix ponzu sauce with sesame oil and grated ginger.",
+      "Drizzle over salad.",
+      "Garnish with sesame seeds and scallions."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "151",
+    "title": "Spaghetti Carbonara",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook pasta al dente.",
+      "Fry bacon until crispy, add garlic briefly.",
+      "Beat eggs with parmesan, romano, pepper.",
+      "Drain pasta, reserve pasta water.",
+      "Toss hot pasta with bacon off heat.",
+      "Add egg mixture, toss quickly, add pasta water to create creamy sauce.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "152",
+    "title": "Margherita Pizza",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make dough: mix flour, water, yeast, sugar, salt, oil, knead, rise 1 hour.",
+      "Make sauce: blend tomatoes, garlic, oregano, salt.",
+      "Roll dough thin.",
+      "Spread sauce, top with mozzarella, parmesan.",
+      "Bake 250°C for 10-12 minutes.",
+      "Top with fresh basil."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "153",
+    "title": "Lasagna",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make meat sauce: sauté onions, carrots, celery, garlic, add beef, brown.",
+      "Add tomatoes, paste, wine, herbs, Bay leaf, dried, sugar, salt, pepper.",
+      "Simmer 1 hour.",
+      "Mix ricotta with egg, parsley, salt, nutmeg.",
+      "Cook noodles.",
+      "Layer: sauce, noodles, ricotta, mozzarella.",
+      "Repeat.",
+      "Top with parmesan.",
+      "Bake 180°C covered 40 minutes, uncovered 15 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "154",
+    "title": "Risotto alla Milanese",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat broth, keep warm.",
+      "Sauté minced onions in butter and oil until soft.",
+      "Add rice, toast 2 minutes.",
+      "Add wine, stir until absorbed.",
+      "Add saffron to broth.",
+      "Add broth one ladle at a time, stirring constantly, letting each addition absorb before adding more, 18-20 minutes.",
+      "Stir in bone marrow, butter, parmesan.",
+      "Season with salt, pepper."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "155",
+    "title": "Osso Buco",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Season veal shanks, dredge in flour.",
+      "Brown in oil and butter.",
+      "Remove.",
+      "Sauté onions, carrots, celery, garlic.",
+      "Add tomatoes, wine, broth, herbs, Bay leaf, dried.",
+      "Return veal, cover, simmer 2 hours until tender.",
+      "Make gremolata: mix lemon zest, parsley, garlic, anchovies.",
+      "Serve osso buco with gremolata on top."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "156",
+    "title": "Penne Arrabbiata",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Crush tomatoes.",
+      "Heat olive oil, sauté sliced garlic and chopped chili until fragrant.",
+      "Add tomatoes, salt, simmer 20 minutes.",
+      "Cook pasta al dente.",
+      "Toss with sauce, torn basil, parsley.",
+      "Serve with parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "157",
+    "title": "Tiramisu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Beat egg yolks with sugar until thick.",
+      "Fold in mascarpone gently.",
+      "Beat egg whites to stiff peaks, fold in.",
+      "Mix espresso with liqueur.",
+      "Quickly dip ladyfingers in coffee, layer in dish.",
+      "Spread half mascarpone cream.",
+      "Repeat layers.",
+      "Refrigerate 4 hours.",
+      "Dust heavily with cocoa before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "158",
+    "title": "Caprese Salad",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice tomatoes and mozzarella thickly.",
+      "Arrange alternating on platter.",
+      "Tuck basil leaves between.",
+      "Drizzle with olive oil and balsamic vinegar.",
+      "Season with salt and fresh black pepper.",
+      "Serve at room temperature."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "159",
+    "title": "Fettuccine Alfredo",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook fettuccine al dente.",
+      "Melt butter, add cream, simmer 3 minutes.",
+      "Add parmesan, stir until smooth.",
+      "Season with nutmeg, salt, pepper.",
+      "Toss with hot pasta and pasta water to create silky sauce.",
+      "Garnish with parsley and more parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "160",
+    "title": "Minestrone",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Sauté onions, carrots, celery, garlic in olive oil.",
+      "Add tomatoes, broth, potatoes, cabbage, beans, herbs, Bay leaf, dried.",
+      "Simmer 30 minutes.",
+      "Add zucchini and pasta, cook 12 minutes.",
+      "Season with salt, pepper.",
+      "Serve with parmesan, parsley, drizzle of olive oil."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "161",
+    "title": "Panna Cotta",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Bloom gelatin in cold water.",
+      "Heat cream, milk, sugar, vanilla until sugar dissolves.",
+      "Remove from heat, stir in gelatin until dissolved.",
+      "Pour into molds, refrigerate 4 hours until set.",
+      "Make berry sauce: simmer berries with sugar and lemon juice 10 minutes.",
+      "Cool.",
+      "Unmold panna cotta, serve with berry sauce."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "162",
+    "title": "Chicken Parmigiana",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Pound chicken thin.",
+      "Coat in flour, beaten eggs, breadcrumbs mixed with parmesan.",
+      "Fry in olive oil until golden.",
+      "Make sauce: sauté garlic, add tomatoes, basil, oregano, salt, pepper, simmer 20 minutes.",
+      "Place chicken in baking dish, top with sauce, mozzarella, parmesan.",
+      "Bake 180°C for 20 minutes.",
+      "Serve with pasta."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "163",
+    "title": "Bruschetta",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice bread thick, grill or toast.",
+      "Rub with cut garlic.",
+      "Dice tomatoes, mix with torn basil, olive oil, balsamic, salt, pepper.",
+      "Let sit 10 minutes.",
+      "Top bread with tomato mixture.",
+      "Drizzle with more olive oil.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "164",
+    "title": "Gnocchi",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil potatoes, peel, mash while hot.",
+      "Mix with flour, egg, salt, nutmeg to form soft dough.",
+      "Roll into ropes, cut into pieces, press with fork.",
+      "Boil in salted water until they float.",
+      "Drain.",
+      "Sauté in butter with sage until lightly browned.",
+      "Serve with parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "165",
+    "title": "Pesto Pasta",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Blend basil, pine nuts, garlic, salt, pepper.",
+      "Add parmesan and pecorino.",
+      "Slowly add olive oil while blending until smooth.",
+      "Cook pasta al dente.",
+      "Reserve pasta water.",
+      "Toss pasta with pesto, adding pasta water and cream to create creamy consistency.",
+      "Serve with extra parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "166",
+    "title": "Saltimbocca",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Pound veal thin.",
+      "Top each with prosciutto and sage leaves, secure with toothpick.",
+      "Dredge in flour.",
+      "Sauté in butter and oil sage-side down first, 2 minutes each side.",
+      "Remove, keep warm.",
+      "Add wine and lemon juice to pan, simmer 2 minutes.",
+      "Pour sauce over veal.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "167",
+    "title": "Arancini",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix cooked rice with beaten egg, parmesan, saffron, salt, pepper.",
+      "Make filling: sauté onions, garlic, add beef, tomato sauce, peas.",
+      "Cool.",
+      "Form rice into balls with filling and mozzarella cube in center.",
+      "Coat in flour, beaten eggs, breadcrumbs.",
+      "Deep fry at 180°C until golden.",
+      "Drain.",
+      "Serve hot."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "168",
+    "title": "Cacio e Pepe",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Toast coarsely ground black pepper in dry pan.",
+      "Cook pasta in well-salted water until al dente.",
+      "Reserve 2 cups pasta water.",
+      "Drain pasta.",
+      "Mix pecorino with pasta water to make creamy paste.",
+      "Toss hot pasta with cheese paste and toasted pepper, adding more pasta water as needed for creamy consistency."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "169",
+    "title": "Ribollita",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Sauté onions, carrots, celery, garlic in olive oil.",
+      "Add tomatoes, broth, potatoes, herbs, Bay leaf, dried, simmer 30 minutes.",
+      "Add beans, kale, cabbage, simmer 20 minutes.",
+      "Add torn bread, let soak 10 minutes.",
+      "Season with salt, pepper.",
+      "Serve with olive oil, parmesan, parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "170",
+    "title": "Vitello Tonnato",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Poach veal with wine, Vegetable, Bay leaf, dried, salt until tender, 1.5 hours.",
+      "Cool, slice thin.",
+      "Blend tuna, anchovies, capers, egg yolks, lemon juice.",
+      "Slowly add olive oil to make thick sauce.",
+      "Thin with cooking liquid if needed.",
+      "Arrange veal on platter, cover with tuna sauce.",
+      "Garnish with capers and parsley.",
+      "Chill before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "171",
+    "title": "Focaccia",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix flour, water, yeast, sugar, salt, 40g olive oil.",
+      "Knead, let rise 1 hour.",
+      "Press into oiled pan, dimple with fingers.",
+      "Drizzle with remaining olive oil, sprinkle with rosemary and coarse salt.",
+      "Let rise 30 minutes.",
+      "Bake 220°C for 25 minutes until golden."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "172",
+    "title": "Pasta e Fagioli",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Soak beans overnight, drain.",
+      "Sauté onions, carrots, celery, garlic in olive oil.",
+      "Add beans, tomatoes, broth, rosemary, Bay leaf, dried.",
+      "Simmer 1.5 hours until beans tender.",
+      "Mash some beans to thicken.",
+      "Add pasta, cook until done.",
+      "Season with salt, pepper.",
+      "Serve with olive oil, parmesan, parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "173",
+    "title": "Carbonara di Zucchine",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut zucchini into matchsticks.",
+      "Sauté with garlic in olive oil until tender.",
+      "Cook pasta al dente.",
+      "Beat eggs with pecorino, parmesan, pepper.",
+      "Toss hot pasta with zucchini off heat.",
+      "Add egg mixture, toss quickly.",
+      "Add pasta water to create creamy sauce.",
+      "Garnish with torn mint and basil."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "174",
+    "title": "Sfogliatelle",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make dough: mix flour, water, salt, knead until smooth.",
+      "Rest 1 hour.",
+      "Roll very thin, brush with melted lard, roll up, chill.",
+      "Make filling: mix ricotta, sugar, eggs, semolina, orange zest, vanilla, cinnamon, candied fruit.",
+      "Slice dough, shape into cones, fill.",
+      "Bake 200°C for 25 minutes.",
+      "Dust with powdered sugar."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "175",
+    "title": "Spaghetti Aglio e Olio",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cook pasta in well-salted water.",
+      "Heat olive oil, add sliced garlic and chopped chili, cook gently until garlic golden.",
+      "Toast breadcrumbs in separate pan.",
+      "Toss drained pasta with garlic oil, add pasta water to emulsify.",
+      "Add parsley, pepper.",
+      "Top with breadcrumbs and parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "176",
+    "title": "Eggplant Parmigiana",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Slice eggplant, salt, let drain 30 minutes.",
+      "Pat dry.",
+      "Coat in flour, beaten eggs, breadcrumbs.",
+      "Fry until golden.",
+      "Make sauce: sauté garlic, add tomatoes, basil, oregano, sugar, salt, pepper, simmer 20 minutes.",
+      "Layer: sauce, eggplant, mozzarella, parmesan.",
+      "Repeat.",
+      "Bake 180°C for 40 minutes."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "177",
+    "title": "Ossobuco alla Milanese",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Tie veal shanks, season, dredge in flour.",
+      "Brown in oil and butter.",
+      "Remove.",
+      "Sauté Vegetable.",
+      "Add wine, reduce.",
+      "Add tomatoes, stock, herbs.",
+      "Return veal, braise covered 2 hours.",
+      "Make gremolata: lemon zest, parsley, garlic, anchovies.",
+      "Serve with gremolata and saffron risotto."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "178",
+    "title": "Polenta",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "6 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Bring salted water to boil.",
+      "Slowly whisk in cornmeal.",
+      "Reduce heat, cook stirring constantly 40 minutes until thick and pulling from sides.",
+      "Stir in butter, parmesan, milk.",
+      "Serve soft or pour into pan, cool, slice and grill."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "179",
+    "title": "Pasta alla Norma",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cube eggplant, salt, drain 30 minutes.",
+      "Pat dry, fry in olive oil until golden.",
+      "Drain.",
+      "Make sauce: sauté garlic, add crushed tomatoes, chili, salt, simmer 20 minutes.",
+      "Cook pasta al dente.",
+      "Toss with sauce and eggplant.",
+      "Top with torn basil and grated ricotta salata."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "180",
+    "title": "Cannoli",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Make dough: mix flour, sugar, butter, egg, wine, vinegar, salt.",
+      "Knead, rest 1 hour.",
+      "Roll thin, cut circles, wrap around cannoli tubes.",
+      "Deep fry until golden.",
+      "Cool, remove tubes.",
+      "Make filling: mix ricotta, sugar, chocolate chips, candied fruit, vanilla, cinnamon, orange zest.",
+      "Pipe into shells.",
+      "Dip ends in pistachios.",
+      "Dust with powdered sugar."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "181",
+    "title": "Amatriciana",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut bacon into strips, render fat.",
+      "Add diced onions, cook until soft.",
+      "Add wine, reduce.",
+      "Add crushed tomatoes, chili, salt, pepper, simmer 20 minutes.",
+      "Cook pasta al dente.",
+      "Toss with sauce and pasta water.",
+      "Serve with pecorino and black pepper."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "182",
+    "title": "Zabaglione",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Beat egg yolks with sugar and lemon zest in heatproof bowl.",
+      "Add marsala.",
+      "Place over simmering water, whisk constantly until thick and tripled in volume, 8-10 minutes.",
+      "Do not let boil.",
+      "Serve warm in glasses with fresh berries."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "183",
+    "title": "Carciofi alla Romana",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Clean artichokes, remove tough outer leaves, trim stems.",
+      "Rub with lemon.",
+      "Mix garlic, parsley, mint, breadcrumbs, pecorino, salt, pepper.",
+      "Stuff between artichoke leaves.",
+      "Place upside down in pot with olive oil, wine, water.",
+      "Cover, braise 40 minutes until tender."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "184",
+    "title": "Pappardelle al Ragu",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dice meats.",
+      "Sauté Vegetable in oil and butter until soft.",
+      "Add meats, brown.",
+      "Add wine, reduce.",
+      "Add tomatoes, paste, herbs, Bay leaf, dried, milk, salt, pepper, nutmeg.",
+      "Simmer covered 3 hours, stirring occasionally.",
+      "Cook pappardelle.",
+      "Toss with ragu.",
+      "Serve with parmesan."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "185",
+    "title": "Frittata",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Sauté onions, peppers, zucchini in olive oil until tender.",
+      "Beat eggs with milk, parmesan, torn basil, salt, pepper.",
+      "Pour over Vegetable in pan.",
+      "Cook on low, lifting edges to let uncooked egg flow under.",
+      "When almost set, finish under broiler until puffed and golden.",
+      "Slice into wedges."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "186",
+    "title": "Spaghetti alla Puttanesca",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat olive oil, sauté garlic, anchovies, chili until anchovies melt.",
+      "Add crushed tomatoes, olives, capers, oregano, salt, pepper.",
+      "Simmer 20 minutes.",
+      "Cook pasta al dente.",
+      "Toss with sauce.",
+      "Garnish with parsley.",
+      "No cheese traditionally served with this."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "187",
+    "title": "Biscotti",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "40 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Toast almonds.",
+      "Mix flour, sugar, baking powder, salt.",
+      "Beat eggs with melted butter, vanilla, almond extract, orange zest.",
+      "Combine with dry ingredients, fold in almonds.",
+      "Shape into logs.",
+      "Bake 180°C for 30 minutes.",
+      "Cool 10 minutes, slice diagonally.",
+      "Bake slices 10 minutes each side until crisp.",
+      "Cool completely."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "188",
+    "title": "Pasta Primavera",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut Vegetable into bite-size pieces.",
+      "Blanch asparagus and peas briefly.",
+      "Sauté garlic in butter and oil.",
+      "Add zucchini, peppers, cook 5 minutes.",
+      "Add asparagus, peas, tomatoes, cook 3 minutes.",
+      "Add cream, simmer 5 minutes.",
+      "Cook pasta al dente.",
+      "Toss with Vegetable, basil, parsley, lemon juice, parmesan.",
+      "Season with salt, pepper."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "189",
+    "title": "Panettone",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "10 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Dissolve yeast in warm milk with 30g sugar.",
+      "Let foam.",
+      "Mix with 100g flour, let rise 1 hour.",
+      "Add remaining flour, sugar, eggs, yolks, honey, vanilla, citrus zests, salt.",
+      "Knead, gradually add soft butter.",
+      "Knead until smooth and elastic.",
+      "Let rise 3 hours.",
+      "Fold in raisins, candied peels soaked in rum.",
+      "Shape into tall round, place in mold.",
+      "Let rise 3 hours.",
+      "Bake 180°C for 50 minutes.",
+      "Cool completely."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "190",
+    "title": "Pasta alla Gricia",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Cut guanciale into strips, render fat on medium heat until crispy.",
+      "Remove from heat.",
+      "Cook pasta in well-salted water.",
+      "Reserve pasta water.",
+      "Mix pecorino with pasta water to make paste.",
+      "Toss hot drained pasta with guanciale and fat, pecorino paste, lots of black pepper.",
+      "Add more pasta water as needed for creamy sauce."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "191",
+    "title": "Stracciatella Soup",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Heat broth to simmer.",
+      "Beat eggs with parmesan, semolina, nutmeg.",
+      "Slowly drizzle egg mixture into simmering broth, stirring constantly to create ribbons.",
+      "Add chopped spinach, cook 2 minutes.",
+      "Season with lemon juice, salt, pepper.",
+      "Garnish with parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "192",
+    "title": "Supplì",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix cooked rice with tomato sauce, ground beef, peas, parmesan, 1 beaten egg, salt, pepper.",
+      "Cool.",
+      "Form into ovals with mozzarella cube in center.",
+      "Coat in flour, beaten eggs, breadcrumbs.",
+      "Deep fry at 180°C until golden.",
+      "Drain.",
+      "Serve hot."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "193",
+    "title": "Pasta con le Sarde",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Boil fennel in salted water until tender, reserve water.",
+      "Chop fennel.",
+      "Soak raisins and saffron.",
+      "Sauté onions, anchovies in olive oil until anchovies melt.",
+      "Add tomato paste, fennel, raisins, saffron, pine nuts, fennel seeds.",
+      "Cook pasta in fennel water.",
+      "Toss with sauce and sardines.",
+      "Top with toasted breadcrumbs and parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "194",
+    "title": "Affogato",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Place scoops of vanilla gelato in cups or glasses.",
+      "Brew hot espresso.",
+      "Pour hot espresso over gelato just before serving.",
+      "Drizzle with amaretto if desired.",
+      "Serve immediately with biscotti on side."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "195",
+    "title": "Pasta e Ceci",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "4 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Sauté onions, celery, carrots, garlic in olive oil.",
+      "Add tomatoes, chickpeas, broth, rosemary, Bay leaf, dried.",
+      "Simmer 30 minutes.",
+      "Mash some chickpeas to thicken.",
+      "Add pasta, cook until done.",
+      "Season with salt, pepper.",
+      "Serve with olive oil, parmesan, parsley."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "196",
+    "title": "Bistecca alla Fiorentina",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "2 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Bring steak to room temperature.",
+      "Rub with olive oil, crushed garlic, rosemary.",
+      "Season generously with coarse salt and cracked black pepper.",
+      "Grill over very high heat 5-7 minutes per side for rare to medium-rare.",
+      "Rest 10 minutes.",
+      "Slice thick, drizzle with olive oil and lemon juice.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "197",
+    "title": "Torta Caprese",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "8 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Grind almonds finely.",
+      "Melt chocolate with butter.",
+      "Beat eggs with sugar until thick and pale.",
+      "Fold in melted chocolate, ground almonds, vanilla, amaretto, salt.",
+      "Pour into greased pan.",
+      "Bake 180°C for 35 minutes.",
+      "Center should be slightly soft.",
+      "Cool completely.",
+      "Dust with powdered sugar before serving."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "198",
+    "title": "Weetabix Original Breakfast",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "1 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix Weetabix biscuit in bowl.",
+      "Pour Candy Up milk over cereal.",
+      "Top with Kramsi cereal for crunch.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "199",
+    "title": "Weetabix Protein Breakfast",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "1 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Mix Weetabix Protein biscuit in bowl.",
+      "Pour Candy Up milk over cereal.",
+      "Top with Kramsi cereal for crunch.",
+      "Serve immediately."
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "200",
+    "title": "Cheese and Jam Sandwich",
+    "category": "Uncategorized",
+    "description": "",
+    "imageUrl": "",
+    "macros": {
+      "yield": "1 Servings",
+      "energy": "",
+      "carbohydrate": "",
+      "protein": "",
+      "fat": ""
+    },
+    "ingredients": [],
+    "steps": [
+      "Spread butter on bread slice.",
+      "Add jam on half of the buttered side.",
+      "Place cheese slice on the other half.",
+      "Fold bread in half or serve open-faced."
+    ],
+    "note": "",
+    "variations": ""
   }
 ]

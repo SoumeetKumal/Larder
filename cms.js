@@ -24,6 +24,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
     }
 
+    // --- Custom Confirmation Dialog ---
+    const confirmDialog = document.getElementById('confirm-dialog');
+    const confirmTitle = document.getElementById('confirm-dialog-title');
+    const confirmMessage = document.getElementById('confirm-dialog-message');
+    const confirmOkBtn = document.getElementById('confirm-dialog-ok');
+    const confirmCancelBtn = document.getElementById('confirm-dialog-cancel');
+
+    function showConfirmDialog(title, message, okLabel = 'Delete') {
+        return new Promise((resolve) => {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmOkBtn.textContent = okLabel;
+            confirmDialog.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            function cleanup() {
+                confirmDialog.classList.add('hidden');
+                document.body.style.overflow = '';
+                confirmOkBtn.removeEventListener('click', onOk);
+                confirmCancelBtn.removeEventListener('click', onCancel);
+                confirmDialog.removeEventListener('click', onBackdrop);
+            }
+            function onOk() { cleanup(); resolve(true); }
+            function onCancel() { cleanup(); resolve(false); }
+            function onBackdrop(e) { if (e.target === confirmDialog) { cleanup(); resolve(false); } }
+
+            confirmOkBtn.addEventListener('click', onOk);
+            confirmCancelBtn.addEventListener('click', onCancel);
+            confirmDialog.addEventListener('click', onBackdrop);
+        });
+    }
+
     macroRefSelect.addEventListener('change', (e) => {
         if (e.target.value === 'per_x_g') {
             macroRefAmountGroup.style.display = 'block';
@@ -34,9 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let recipes = [];
     let ingredients = [];
+    let mealPlans = [];
+    let pantry = [];
+    let shoppingLists = [];
     let currentCMSTab = 'recipe';
+    let cmsSearchQuery = '';
 
     const cmsTabs = document.getElementById('cms-tabs');
+    const searchInput = document.getElementById('cms-search');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            cmsSearchQuery = e.target.value.toLowerCase();
+            renderCMSList();
+        });
+    }
     document.querySelectorAll('.cms-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {
             document.querySelectorAll('.cms-tab').forEach(t => {
@@ -61,12 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData() {
         try {
-            const [resRecipes, resIngredients] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/pantry', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
+            mealPlans = resMealPlans;
+            pantry = resPantry;
+            shoppingLists = resShoppingLists;
+            
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
             addBtn.classList.remove('hidden');
             if (cmsTabs) cmsTabs.classList.remove('hidden');
@@ -119,12 +170,732 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCMSList() {
         populateIngredientSuggestions();
 
-        if (currentCMSTab === 'food') {
+        // Manage search bar visibility
+        if (searchInput) {
+            if (['recipe', 'food', 'pantry'].includes(currentCMSTab)) {
+                searchInput.style.display = 'block';
+            } else {
+                searchInput.style.display = 'none';
+            }
+        }
+
+        if (currentCMSTab === 'mealplan') {
+            const slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+            const today = new Date();
+            const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Make Monday=1, Sunday=7
+            
+            // Get Monday of current week
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+            
+            let gridHTML = '<div class="calendar-grid">';
+            
+            for (let i = 0; i < 7; i++) {
+                const currentDate = new Date(startOfWeek);
+                currentDate.setDate(startOfWeek.getDate() + i);
+                const dateString = currentDate.toISOString().split('T')[0];
+                const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
+                const formattedDate = currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                gridHTML += `
+                <div class="calendar-day">
+                    <div class="calendar-day-header">
+                        ${dayName}
+                        <span class="calendar-day-date">${formattedDate}</span>
+                    </div>
+                `;
+                
+                slots.forEach(slot => {
+                    const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
+                    
+                    let slotClass = '';
+                    let slotText = '';
+                    
+                    if (plan) {
+                        if (plan.isEatingOut || plan.type === 'eating_out') {
+                            slotClass = 'slot-eating-out';
+                            slotText = 'Eating Out';
+                        } else {
+                            slotClass = 'slot-populated';
+                            const servingsLabel = plan.servings && plan.servings !== 1 ? `<span style="font-size: 0.55rem; color: var(--text-muted); display: block; margin-top: 2px;">×${plan.servings} servings</span>` : '';
+                            
+                            // Support old data model
+                            if (plan.type === 'recipe') {
+                                const r = recipes.find(rec => rec.id === plan.referenceId);
+                                slotText = (r ? r.title : 'Unknown Recipe') + servingsLabel;
+                            } else if (plan.items && plan.items.length > 0) {
+                                // New multi-item model
+                                const names = plan.items.map(item => item.name);
+                                if (names.length <= 2) {
+                                    slotText = names.join('<br>') + servingsLabel;
+                                } else {
+                                    slotText = names.slice(0, 2).join('<br>') + `<br><span style="font-size: 0.6rem; color: var(--text-muted);">+${names.length - 2} more</span>` + servingsLabel;
+                                }
+                            }
+                        }
+                    }
+                    
+                    gridHTML += `
+                    <div class="calendar-slot ${slotClass}" data-date="${dateString}" data-slot="${slot}">
+                        <div class="calendar-slot-label">${slot}</div>
+                        <div class="calendar-slot-content">${slotText}</div>
+                    </div>
+                    `;
+                });
+                
+                gridHTML += `</div>`; // Close day
+            }
+            
+            gridHTML += '</div>';
+            gridHTML += `
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button id="save-mealplan-btn" class="btn primary">Save Plan</button>
+                </div>
+            `;
+            
+            listContainer.innerHTML = gridHTML;
+            addBtn.style.display = 'none';
+            
+            // Attach slot click handlers
+            const assignModal = document.getElementById('meal-assign-modal');
+            const assignTitle = document.getElementById('meal-assign-title');
+            const assignSubtitle = document.getElementById('meal-assign-subtitle');
+            
+            const checkboxEatingOut = document.getElementById('meal-assign-eating-out');
+            const builderSection = document.getElementById('meal-assign-builder');
+            
+            const servingsInput = document.getElementById('meal-assign-servings');
+            const servingsRow = document.getElementById('meal-assign-servings-row');
+            const servingsDecrement = document.getElementById('servings-decrement');
+            const servingsIncrement = document.getElementById('servings-increment');
+            
+            const searchInput = document.getElementById('meal-assign-search');
+            const suggestionsBox = document.getElementById('meal-assign-suggestions');
+            const amountGroup = document.getElementById('meal-assign-amount-group');
+            const amountInput = document.getElementById('meal-assign-amount');
+            const unitLabel = document.getElementById('meal-assign-unit');
+            const addBtnModal = document.getElementById('meal-assign-add-btn');
+            
+            const selectedList = document.getElementById('meal-assign-selected-list');
+            const btnClear = document.getElementById('meal-assign-clear');
+            const btnCancel = document.getElementById('meal-assign-cancel');
+            const btnConfirm = document.getElementById('meal-assign-confirm');
+            const templateSaveBtn = document.getElementById('meal-template-save');
+            const templateListEl = document.getElementById('meal-template-list');
+            const copyDayCheckboxes = document.querySelectorAll('.copy-day-cb');
+            
+            let activeDate = null;
+            let activeSlotName = null;
+            let modalSelectedItems = [];
+            let currentStagedItem = null; // { type, referenceId, name, unit }
+            
+            // Load templates from localStorage
+            let mealTemplates = JSON.parse(localStorage.getItem('larder_meal_templates') || '[]');
+            
+            function saveTemplatesToStorage() {
+                localStorage.setItem('larder_meal_templates', JSON.stringify(mealTemplates));
+            }
+            
+            function renderTemplateChips() {
+                if (mealTemplates.length === 0) {
+                    templateListEl.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted); padding: 0.3rem;">No templates saved yet.</span>';
+                    return;
+                }
+                templateListEl.innerHTML = mealTemplates.map((t, idx) => `
+                    <div style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface); font-size: 0.75rem; cursor: pointer;" class="template-chip" data-idx="${idx}">
+                        <span class="template-chip-name" data-idx="${idx}" style="font-weight: 600;">${t.name}</span>
+                        <span style="color: var(--text-muted);">(${t.items.length} item${t.items.length !== 1 ? 's' : ''}, ×${t.servings})</span>
+                        <button class="template-delete" data-idx="${idx}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 0.2rem;">&times;</button>
+                    </div>
+                `).join('');
+                
+                // Click chip name to load
+                document.querySelectorAll('.template-chip-name').forEach(el => {
+                    el.onclick = (e) => {
+                        const t = mealTemplates[parseInt(e.target.dataset.idx)];
+                        if (!t) return;
+                        modalSelectedItems = JSON.parse(JSON.stringify(t.items));
+                        servingsInput.value = t.servings || 1;
+                        checkboxEatingOut.checked = false;
+                        builderSection.style.opacity = '1';
+                        builderSection.style.pointerEvents = 'auto';
+                        servingsRow.style.opacity = '1';
+                        servingsRow.style.pointerEvents = 'auto';
+                        renderModalSelectedItems();
+                    };
+                });
+                
+                // Click X to delete
+                document.querySelectorAll('.template-delete').forEach(el => {
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        mealTemplates.splice(parseInt(e.target.dataset.idx), 1);
+                        saveTemplatesToStorage();
+                        renderTemplateChips();
+                    };
+                });
+            }
+            
+            // Save as template
+            templateSaveBtn.onclick = () => {
+                if (modalSelectedItems.length === 0 && !checkboxEatingOut.checked) {
+                    alert('Add some items first before saving a template.');
+                    return;
+                }
+                const name = prompt('Name this template (e.g. "My Weekday Breakfast"):');
+                if (!name || !name.trim()) return;
+                mealTemplates.push({
+                    name: name.trim(),
+                    items: JSON.parse(JSON.stringify(modalSelectedItems)),
+                    servings: parseInt(servingsInput.value) || 1,
+                    isEatingOut: checkboxEatingOut.checked
+                });
+                saveTemplatesToStorage();
+                renderTemplateChips();
+            };
+
+            // Render selected items
+            function renderModalSelectedItems() {
+                if (modalSelectedItems.length === 0) {
+                    selectedList.innerHTML = '<li style="padding: 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No items added yet.</li>';
+                    return;
+                }
+                
+                selectedList.innerHTML = modalSelectedItems.map((item, index) => `
+                    <li style="padding: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                        <div>
+                            <span style="font-weight: 600; color: var(--text-primary);">${item.name}</span>
+                            <span style="color: var(--text-muted); margin-left: 0.5rem;">
+                                ${item.type === 'ingredient' ? `${item.amount} ${item.unit}` : '(Recipe)'}
+                            </span>
+                        </div>
+                        <button class="remove-item-btn" data-index="${index}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
+                    </li>
+                `).join('');
+                
+                document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        const idx = parseInt(e.target.dataset.index);
+                        modalSelectedItems.splice(idx, 1);
+                        renderModalSelectedItems();
+                    };
+                });
+            }
+            
+            document.querySelectorAll('.calendar-slot').forEach(slotEl => {
+                slotEl.addEventListener('click', () => {
+                    activeDate = slotEl.dataset.date;
+                    activeSlotName = slotEl.dataset.slot;
+                    
+                    assignTitle.textContent = `Plan ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
+                    assignSubtitle.textContent = `For ${activeDate}`;
+                    
+                    const existingPlan = mealPlans.find(p => p.date === activeDate && p.slot === activeSlotName);
+                    
+                    // Reset modal state
+                    searchInput.value = '';
+                    suggestionsBox.style.display = 'none';
+                    amountGroup.style.display = 'none';
+                    currentStagedItem = null;
+                    checkboxEatingOut.checked = false;
+                    builderSection.style.opacity = '1';
+                    builderSection.style.pointerEvents = 'auto';
+                    servingsInput.value = 2;
+                    servingsRow.style.opacity = '1';
+                    servingsRow.style.pointerEvents = 'auto';
+                    
+                    // Reset copy-to-days checkboxes; auto-check the current day
+                    const currentDayIdx = (new Date(activeDate + 'T00:00:00')).getDay();
+                    // Convert JS getDay (0=Sun) to our checkbox order (0=Mon...6=Sun)
+                    const mappedIdx = currentDayIdx === 0 ? 6 : currentDayIdx - 1;
+                    copyDayCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                        cb.disabled = (parseInt(cb.value) === mappedIdx);
+                        if (parseInt(cb.value) === mappedIdx) {
+                            cb.closest('label').style.opacity = '0.4';
+                        } else {
+                            cb.closest('label').style.opacity = '1';
+                        }
+                    });
+                    
+                    renderTemplateChips();
+                    
+                    if (existingPlan) {
+                        btnClear.style.display = 'block';
+                        if (existingPlan.isEatingOut) {
+                            checkboxEatingOut.checked = true;
+                            builderSection.style.opacity = '0.5';
+                            builderSection.style.pointerEvents = 'none';
+                            servingsRow.style.opacity = '0.5';
+                            servingsRow.style.pointerEvents = 'none';
+                            modalSelectedItems = [];
+                        } else {
+                            modalSelectedItems = JSON.parse(JSON.stringify(existingPlan.items || []));
+                            servingsInput.value = existingPlan.servings || 1;
+                            // Backwards compatibility for old data model
+                            if (existingPlan.type === 'recipe') {
+                                const r = recipes.find(rec => rec.id === existingPlan.referenceId);
+                                if (r && modalSelectedItems.length === 0) {
+                                    modalSelectedItems.push({ type: 'recipe', referenceId: r.id, name: r.title });
+                                }
+                            }
+                        }
+                    } else {
+                        btnClear.style.display = 'none';
+                        modalSelectedItems = [];
+                    }
+                    
+                    renderModalSelectedItems();
+                    assignModal.classList.remove('hidden');
+                });
+            });
+
+            // Toggle Eating Out
+            checkboxEatingOut.onchange = (e) => {
+                if (e.target.checked) {
+                    builderSection.style.opacity = '0.5';
+                    builderSection.style.pointerEvents = 'none';
+                    servingsRow.style.opacity = '0.5';
+                    servingsRow.style.pointerEvents = 'none';
+                } else {
+                    builderSection.style.opacity = '1';
+                    builderSection.style.pointerEvents = 'auto';
+                    servingsRow.style.opacity = '1';
+                    servingsRow.style.pointerEvents = 'auto';
+                }
+            };
+            
+            // Servings +/- buttons
+            servingsDecrement.onclick = () => {
+                const cur = parseInt(servingsInput.value) || 1;
+                if (cur > 1) servingsInput.value = cur - 1;
+            };
+            servingsIncrement.onclick = () => {
+                const cur = parseInt(servingsInput.value) || 1;
+                if (cur < 20) servingsInput.value = cur + 1;
+            };
+            
+            // Autocomplete Search
+            searchInput.oninput = (e) => {
+                const query = e.target.value.toLowerCase();
+                if (!query) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query)).map(r => ({ ...r, _type: 'recipe' }));
+                const matchedIngredients = ingredients.filter(i => i.name.toLowerCase().includes(query)).map(i => ({ ...i, _type: 'ingredient' }));
+                
+                const combined = [...matchedRecipes, ...matchedIngredients].slice(0, 15); // Top 15
+                
+                if (combined.length === 0) {
+                    suggestionsBox.innerHTML = '<div style="padding: 0.8rem; color: var(--text-muted); font-size: 0.85rem;">No results found.</div>';
+                } else {
+                    suggestionsBox.innerHTML = combined.map((item, idx) => `
+                        <div class="autocomplete-item" data-idx="${idx}" style="padding: 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem;">
+                            <span style="font-weight: 600;">${item._type === 'recipe' ? item.title : item.name}</span>
+                            <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
+                        </div>
+                    `).join('');
+                    
+                    document.querySelectorAll('.autocomplete-item').forEach(el => {
+                        el.onclick = () => {
+                            const selected = combined[parseInt(el.dataset.idx)];
+                            searchInput.value = selected._type === 'recipe' ? selected.title : selected.name;
+                            suggestionsBox.style.display = 'none';
+                            
+                            currentStagedItem = {
+                                type: selected._type,
+                                referenceId: selected._type === 'recipe' ? selected.id : selected.foodId,
+                                name: selected._type === 'recipe' ? selected.title : selected.name,
+                                unit: selected._type === 'ingredient' ? (selected.servingUnit || 'g') : null
+                            };
+                            
+                            if (selected._type === 'ingredient') {
+                                unitLabel.textContent = currentStagedItem.unit;
+                                amountInput.value = '';
+                                amountGroup.style.display = 'flex';
+                            } else {
+                                amountGroup.style.display = 'none';
+                                // Auto-add recipe
+                                addBtnModal.click();
+                            }
+                        };
+                    });
+                }
+                suggestionsBox.style.display = 'block';
+            };
+            
+            // Hide autocomplete on click outside
+            document.addEventListener('click', (e) => {
+                if (e.target !== searchInput && e.target !== suggestionsBox) {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+            
+            // Add item to slot list
+            addBtnModal.onclick = () => {
+                if (!currentStagedItem) return;
+                
+                if (currentStagedItem.type === 'ingredient') {
+                    const amt = parseFloat(amountInput.value);
+                    if (!amt || amt <= 0) {
+                        alert('Please enter a valid amount.');
+                        return;
+                    }
+                    currentStagedItem.amount = amt;
+                }
+                
+                modalSelectedItems.push({ ...currentStagedItem });
+                renderModalSelectedItems();
+                
+                // Reset inputs
+                searchInput.value = '';
+                amountInput.value = '';
+                amountGroup.style.display = 'none';
+                currentStagedItem = null;
+            };
+            
+            btnCancel.onclick = () => {
+                assignModal.classList.add('hidden');
+            };
+            
+            btnClear.onclick = () => {
+                mealPlans = mealPlans.filter(p => !(p.date === activeDate && p.slot === activeSlotName));
+                assignModal.classList.add('hidden');
+                renderCMSList();
+            };
+            
+            btnConfirm.onclick = () => {
+                // Build the list of dates to apply to
+                const today = new Date();
+                const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+                
+                // Collect all target dates: the active date + any checked copy-to days
+                const targetDates = [activeDate];
+                copyDayCheckboxes.forEach(cb => {
+                    if (cb.checked && !cb.disabled) {
+                        const d = new Date(startOfWeek);
+                        d.setDate(startOfWeek.getDate() + parseInt(cb.value));
+                        const ds = d.toISOString().split('T')[0];
+                        if (!targetDates.includes(ds)) targetDates.push(ds);
+                    }
+                });
+                
+                // Apply to all target dates
+                targetDates.forEach(dateStr => {
+                    // Remove existing for this date+slot
+                    mealPlans = mealPlans.filter(p => !(p.date === dateStr && p.slot === activeSlotName));
+                    
+                    if (checkboxEatingOut.checked) {
+                        mealPlans.push({
+                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
+                            date: dateStr,
+                            slot: activeSlotName,
+                            isEatingOut: true,
+                            items: [],
+                            servings: 1,
+                            isConsumed: false
+                        });
+                    } else if (modalSelectedItems.length > 0) {
+                        mealPlans.push({
+                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
+                            date: dateStr,
+                            slot: activeSlotName,
+                            isEatingOut: false,
+                            items: JSON.parse(JSON.stringify(modalSelectedItems)),
+                            servings: parseInt(servingsInput.value) || 1,
+                            isConsumed: false
+                        });
+                    }
+                });
+                
+                assignModal.classList.add('hidden');
+                renderCMSList();
+            };
+            
+            // Save logic
+            document.getElementById('save-mealplan-btn').onclick = async () => {
+                try {
+                    const res = await fetch('/api/mealplans', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(mealPlans)
+                    });
+                    if (!res.ok) throw new Error('Save failed');
+                    statusText.innerHTML = `<span class="status-dot"></span> Saved Meal Plan`;
+                } catch(e) {
+                    alert('Save failed. Is the server running?');
+                }
+            };
+            
+            return;
+        }
+
+        if (currentCMSTab === 'pantry') {
+            const filteredIngredients = ingredients.filter(ing => 
+                ing.name.toLowerCase().includes(cmsSearchQuery) || 
+                (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
+            );
+
             const tableHTML = `
+                <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    Check "Tracked" to actively subtract these items from your shopping lists based on stock.
+                </div>
                 <div style="overflow-x: auto; margin-bottom: 1rem;">
                     <table class="food-table">
                         <thead>
                             <tr>
+                                <th style="width: 8%; text-align: center;">Tracked</th>
+                                <th style="width: 40%;">Ingredient</th>
+                                <th style="width: 15%;">Stock Qty</th>
+                                <th style="width: 10%;">Unit</th>
+                                <th>Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pantry-table-body">
+                            ${filteredIngredients.length === 0 ? `<tr><td colspan="5" style="text-align: center; padding: 1rem;">No ingredients match.</td></tr>` : ''}
+                            ${filteredIngredients.map((ing, i) => {
+                                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
+                                return `
+                                <tr data-foodid="${ing.foodId}">
+                                    <td style="text-align: center;"><input type="checkbox" class="p-track f-select" ${pItem.isTracked ? 'checked' : ''}></td>
+                                    <td style="font-weight: 600;">${ing.name}</td>
+                                    <td><input type="number" step="any" class="p-qty" value="${pItem.quantity}" ${!pItem.isTracked ? 'disabled opacity="0.5"' : ''}></td>
+                                    <td style="color: var(--text-muted);">${ing.servingUnit || 'g'}</td>
+                                    <td style="color: var(--text-muted);">${ing.category || ''}</td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button id="save-pantry-btn" class="btn primary">Save Pantry</button>
+                </div>
+            `;
+            listContainer.innerHTML = tableHTML;
+            addBtn.style.display = 'none';
+
+            // Toggle quantity input based on track checkbox
+            document.querySelectorAll('.p-track').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const row = e.target.closest('tr');
+                    const qtyInput = row.querySelector('.p-qty');
+                    if (e.target.checked) {
+                        qtyInput.removeAttribute('disabled');
+                        qtyInput.style.opacity = '1';
+                    } else {
+                        qtyInput.setAttribute('disabled', 'true');
+                        qtyInput.style.opacity = '0.5';
+                    }
+                });
+            });
+
+            document.getElementById('save-pantry-btn').addEventListener('click', async () => {
+                const rows = document.querySelectorAll('#pantry-table-body tr[data-foodid]');
+                const updatedPantry = [];
+
+                rows.forEach(row => {
+                    const foodId = row.dataset.foodid;
+                    const isTracked = row.querySelector('.p-track').checked;
+                    const quantity = parseFloat(row.querySelector('.p-qty').value) || 0;
+                    
+                    if (isTracked || quantity > 0) {
+                        updatedPantry.push({ foodId, isTracked, quantity });
+                    }
+                });
+
+                pantry = updatedPantry;
+                try {
+                    const res = await fetch('/api/pantry', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(pantry)
+                    });
+                    if (!res.ok) throw new Error('Save failed');
+                    statusText.innerHTML = `<span class="status-dot"></span> Saved pantry`;
+                } catch(e) {
+                    alert('Save failed. Is the server running?');
+                }
+            });
+            return;
+        }
+
+        if (currentCMSTab === 'shopping') {
+            const uiHTML = `
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;">
+                    <button id="generate-list-btn" class="btn primary">Generate List for This Week</button>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">(Aggregates ingredients from planned recipes and subtracts tracked pantry stock)</span>
+                </div>
+                <div id="shopping-list-results" style="display: grid; gap: 1rem;">
+                    <!-- Results render here -->
+                    <div class="empty-state">Click "Generate" to calculate your shopping needs.</div>
+                </div>
+            `;
+            listContainer.innerHTML = uiHTML;
+            addBtn.style.display = 'none';
+
+            function generateList() {
+                // 1. Determine "this week" range based on current calendar logic
+                const today = new Date();
+                const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+                
+                const validDates = [];
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(startOfWeek);
+                    d.setDate(startOfWeek.getDate() + i);
+                    validDates.push(d.toISOString().split('T')[0]);
+                }
+
+                // 2. Filter meal plans for this week (and ignore eating_out)
+                const targetPlans = mealPlans.filter(p => validDates.includes(p.date) && !p.isEatingOut && p.type !== 'eating_out');
+                
+                // 3. Aggregate required ingredients
+                const requiredMap = new Map(); // foodId -> { name, requiredQty, unit }
+                
+                targetPlans.forEach(plan => {
+                    const servingsMultiplier = plan.servings || 1;
+                    
+                    // Backwards compatibility for old format
+                    let itemsToProcess = plan.items || [];
+                    if (itemsToProcess.length === 0 && plan.type === 'recipe') {
+                        itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
+                    }
+                    
+                    itemsToProcess.forEach(item => {
+                        if (item.type === 'recipe') {
+                            const recipe = recipes.find(r => r.id === item.referenceId);
+                            if (!recipe || !recipe.ingredients) return;
+                            
+                            recipe.ingredients.forEach(ing => {
+                                if (!ing.foodId) return;
+                                
+                                const scaledAmount = (parseFloat(ing.amount) || 0) * servingsMultiplier;
+                                const existing = requiredMap.get(ing.foodId);
+                                if (existing) {
+                                    existing.requiredQty += scaledAmount;
+                                } else {
+                                    const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                                    requiredMap.set(ing.foodId, {
+                                        name: foodRef ? foodRef.name : (ing.name || 'Unknown'),
+                                        requiredQty: scaledAmount,
+                                        unit: ing.unit || 'g'
+                                    });
+                                }
+                            });
+                        } else if (item.type === 'ingredient' && item.referenceId) {
+                            const scaledAmount = (parseFloat(item.amount) || 0) * servingsMultiplier;
+                            const existing = requiredMap.get(item.referenceId);
+                            if (existing) {
+                                existing.requiredQty += scaledAmount;
+                            } else {
+                                const foodRef = ingredients.find(f => f.foodId === item.referenceId);
+                                requiredMap.set(item.referenceId, {
+                                    name: foodRef ? foodRef.name : item.name,
+                                    requiredQty: scaledAmount,
+                                    unit: item.unit || 'g'
+                                });
+                            }
+                        }
+                    });
+                });
+
+                // 4. Subtract Tracked Pantry Stock
+                const shoppingList = [];
+                requiredMap.forEach((data, foodId) => {
+                    const pantryItem = pantry.find(p => p.foodId === foodId);
+                    let deficit = data.requiredQty;
+                    
+                    if (pantryItem && pantryItem.isTracked) {
+                        deficit -= (parseFloat(pantryItem.quantity) || 0);
+                    }
+                    
+                    if (deficit > 0) {
+                        shoppingList.push({
+                            foodId,
+                            name: data.name,
+                            amount: Math.ceil(deficit),
+                            unit: data.unit,
+                            checked: false
+                        });
+                    }
+                });
+
+                return shoppingList.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            document.getElementById('generate-list-btn').onclick = () => {
+                const list = generateList();
+                const resultsContainer = document.getElementById('shopping-list-results');
+                
+                if (list.length === 0) {
+                    resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
+                    return;
+                }
+                
+                let listHTML = `
+                <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                    <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Shopping List</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                `;
+                
+                list.forEach((item, index) => {
+                    listHTML += `
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
+                            <input type="checkbox" class="sl-checkbox f-select" id="sl-item-${index}">
+                            <label for="sl-item-${index}" style="cursor: pointer; flex: 1; font-weight: 600;">${item.name}</label>
+                            <span style="color: var(--text-secondary);">${item.amount} ${item.unit}</span>
+                        </li>
+                    `;
+                });
+                
+                listHTML += `</ul></div>`;
+                resultsContainer.innerHTML = listHTML;
+                
+                // Strike-through logic
+                document.querySelectorAll('.sl-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const label = e.target.nextElementSibling;
+                        const qty = label.nextElementSibling;
+                        if (e.target.checked) {
+                            label.style.textDecoration = 'line-through';
+                            label.style.color = 'var(--text-muted)';
+                            qty.style.textDecoration = 'line-through';
+                            qty.style.color = 'var(--text-muted)';
+                        } else {
+                            label.style.textDecoration = 'none';
+                            label.style.color = 'inherit';
+                            qty.style.textDecoration = 'none';
+                            qty.style.color = 'var(--text-secondary)';
+                        }
+                    });
+                });
+            };
+            
+            return;
+        }
+
+        if (currentCMSTab === 'food') {
+            const filteredIngredients = ingredients.filter(ing => 
+                ing.name.toLowerCase().includes(cmsSearchQuery) || 
+                (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
+            );
+
+            const tableHTML = `
+                <div id="bulk-action-bar" class="bulk-action-bar" style="display:none;">
+                    <span class="selected-count" id="selected-count">0</span> selected
+                    <button id="delete-selected-btn" class="btn danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Delete Selected</button>
+                </div>
+                <div style="overflow-x: auto; margin-bottom: 1rem;">
+                    <table class="food-table">
+                        <thead>
+                            <tr>
+                                <th class="select-col"><input type="checkbox" class="f-select" id="select-all-foods" title="Select all"></th>
                                 <th style="width: 15%;">Name</th>
                                 <th style="width: 12%;">ID</th>
                                 <th style="width: 10%;">Category</th>
@@ -141,9 +912,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         </thead>
                         <tbody id="food-table-body">
-                            ${ingredients.length === 0 ? `<tr><td colspan="13" style="text-align: center; padding: 1rem;">No ingredients yet. Click "+ Add Row".</td></tr>` : ''}
-                            ${ingredients.map((ing, i) => `
-                                <tr data-index="${i}">
+                            ${filteredIngredients.length === 0 ? `<tr><td colspan="14" style="text-align: center; padding: 1rem;">No ingredients match.</td></tr>` : ''}
+                            ${filteredIngredients.map((ing, i) => `
+                                <tr data-index="${ingredients.indexOf(ing)}">
+                                    <td class="select-col"><input type="checkbox" class="f-select f-row-select" data-index="${ingredients.indexOf(ing)}"></td>
                                     <td><input type="text" class="f-name" value="${(ing.name || '').replace(/"/g, '&quot;')}"></td>
                                     <td><input type="text" class="f-id" value="${(ing.foodId || '').replace(/"/g, '&quot;')}" placeholder="auto"></td>
                                     <td><input type="text" class="f-cat" value="${(ing.category || '').replace(/"/g, '&quot;')}"></td>
@@ -158,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td><input type="text" class="f-notes" value="${(ing.notes || '').replace(/"/g, '&quot;')}"></td>
                                     <td style="text-align: center; white-space: nowrap;">
                                         <button class="btn secondary edit-profile-btn" data-id="${ing.foodId}" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;" title="Edit culinary profile">📝</button>
-                                        <button class="btn danger delete-food-row" style="padding: 0.2rem 0.5rem;">&times;</button>
+                                        <button class="btn danger delete-food-row" data-index="${i}" style="padding: 0.2rem 0.5rem;">&times;</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -201,6 +973,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const existing = ingredients.find(f => f.foodId === foodId);
 
                     updatedIngredients.push({
+                        // Spread all existing fields first (preserves micronutrients, profile, pricing, etc.)
+                        ...(existing || {}),
+                        // Then overwrite with table values
                         foodId: foodId,
                         name: name,
                         category: row.querySelector('.f-cat').value.trim(),
@@ -213,10 +988,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         fiberG: parseFloat(row.querySelector('.f-fiber').value) || 0,
                         sugarG: parseFloat(row.querySelector('.f-sugar').value) || 0,
                         notes: row.querySelector('.f-notes').value.trim(),
-                        // Preserve culinary profile fields
-                        ...(existing?.description && { description: existing.description }),
-                        ...(existing?.imageUrl && { imageUrl: existing.imageUrl }),
-                        ...(existing?.ingredientDetails && { ingredientDetails: existing.ingredientDetails }),
                     });
                 });
 
@@ -227,12 +998,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderCMSList();
             });
 
+            // --- Ingredient Selection & Deletion ---
+            const selectAllCheckbox = document.getElementById('select-all-foods');
+            const rowCheckboxes = document.querySelectorAll('.f-row-select');
+            const bulkActionBar = document.getElementById('bulk-action-bar');
+            const selectedCountSpan = document.getElementById('selected-count');
+            
+            function updateBulkActionBar() {
+                const checkedCount = document.querySelectorAll('.f-row-select:checked').length;
+                selectedCountSpan.textContent = checkedCount;
+                bulkActionBar.style.display = checkedCount > 0 ? 'flex' : 'none';
+                selectAllCheckbox.checked = checkedCount > 0 && checkedCount === rowCheckboxes.length;
+            }
+
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                rowCheckboxes.forEach(cb => cb.checked = isChecked);
+                updateBulkActionBar();
+            });
+
+            rowCheckboxes.forEach(cb => {
+                cb.addEventListener('change', updateBulkActionBar);
+            });
+
+            document.getElementById('delete-selected-btn').addEventListener('click', async () => {
+                const checkedBoxes = Array.from(document.querySelectorAll('.f-row-select:checked'));
+                if (checkedBoxes.length === 0) return;
+                
+                const confirmed = await showConfirmDialog(
+                    'Delete Selected',
+                    `Are you sure you want to delete ${checkedBoxes.length} ingredient(s)? This action cannot be undone.`,
+                    `Delete ${checkedBoxes.length} Items`
+                );
+                
+                if (confirmed) {
+                    // Collect indices to delete in reverse order to avoid shifting issues
+                    const indicesToDelete = checkedBoxes
+                        .map(cb => parseInt(cb.dataset.index, 10))
+                        .sort((a, b) => b - a);
+                        
+                    indicesToDelete.forEach(index => {
+                        ingredients.splice(index, 1);
+                    });
+                    
+                    renderCMSList();
+                    // Auto-save when items are deleted? The original logic didn't, but let's leave it as is 
+                    // (the user must click Save Changes, just like single row delete).
+                }
+            });
+
             document.querySelectorAll('.delete-food-row').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', async (e) => {
                     const row = e.target.closest('tr');
                     const index = parseInt(row.dataset.index, 10);
-                    ingredients.splice(index, 1);
-                    renderCMSList();
+                    const name = row.querySelector('.f-name').value || 'this ingredient';
+                    
+                    const confirmed = await showConfirmDialog(
+                        'Delete Ingredient',
+                        `Are you sure you want to delete "${name}"?`,
+                        'Delete'
+                    );
+                    
+                    if (confirmed) {
+                        ingredients.splice(index, 1);
+                        renderCMSList();
+                    }
                 });
             });
 
@@ -281,8 +1111,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (confirm('Delete this recipe?')) {
-                    recipes = recipes.filter(r => r.id !== btn.dataset.id);
+                const recipeId = btn.dataset.id;
+                const recipe = recipes.find(r => r.id === recipeId);
+                const title = recipe ? recipe.title : 'this recipe';
+                
+                const confirmed = await showConfirmDialog(
+                    'Delete Recipe',
+                    `Are you sure you want to delete "${title}"?`,
+                    'Delete'
+                );
+                
+                if (confirmed) {
+                    recipes = recipes.filter(r => r.id !== recipeId);
                     renderCMSList();
                     await saveRecipes();
                 }
@@ -445,6 +1285,34 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('profile-varieties').value = details.varieties || '';
         document.getElementById('profile-preparations').value = details.preparations || '';
 
+        // Vitamins
+        document.getElementById('profile-vitaminAMcg').value = ing.vitaminAMcg || '';
+        document.getElementById('profile-vitaminCMg').value = ing.vitaminCMg || '';
+        document.getElementById('profile-vitaminDMcg').value = ing.vitaminDMcg || '';
+        document.getElementById('profile-vitaminEMg').value = ing.vitaminEMg || '';
+        document.getElementById('profile-vitaminKMcg').value = ing.vitaminKMcg || '';
+        document.getElementById('profile-thiaminMg').value = ing.thiaminMg || '';
+        document.getElementById('profile-riboflavinMg').value = ing.riboflavinMg || '';
+        document.getElementById('profile-niacinMg').value = ing.niacinMg || '';
+        document.getElementById('profile-vitaminB6Mg').value = ing.vitaminB6Mg || '';
+        document.getElementById('profile-folateMcg').value = ing.folateMcg || '';
+        document.getElementById('profile-vitaminB12Mcg').value = ing.vitaminB12Mcg || '';
+
+        // Minerals
+        document.getElementById('profile-calciumMg').value = ing.calciumMg || '';
+        document.getElementById('profile-ironMg').value = ing.ironMg || '';
+        document.getElementById('profile-magnesiumMg').value = ing.magnesiumMg || '';
+        document.getElementById('profile-phosphorusMg').value = ing.phosphorusMg || '';
+        document.getElementById('profile-potassiumMg').value = ing.potassiumMg || '';
+        document.getElementById('profile-sodiumMg').value = ing.sodiumMg || '';
+        document.getElementById('profile-zincMg').value = ing.zincMg || '';
+        document.getElementById('profile-copperMg').value = ing.copperMg || '';
+        document.getElementById('profile-seleniumMcg').value = ing.seleniumMcg || '';
+
+        // Pricing
+        document.getElementById('profile-averagePrice').value = ing.averagePrice || '';
+        document.getElementById('profile-priceCurrency').value = ing.priceCurrency || 'MUR';
+
         foodModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
@@ -465,6 +1333,34 @@ document.addEventListener('DOMContentLoaded', () => {
             varieties: document.getElementById('profile-varieties').value.trim(),
             preparations: document.getElementById('profile-preparations').value.trim()
         };
+
+        // Vitamins
+        ingredients[idx].vitaminAMcg = parseFloat(document.getElementById('profile-vitaminAMcg').value) || 0;
+        ingredients[idx].vitaminCMg = parseFloat(document.getElementById('profile-vitaminCMg').value) || 0;
+        ingredients[idx].vitaminDMcg = parseFloat(document.getElementById('profile-vitaminDMcg').value) || 0;
+        ingredients[idx].vitaminEMg = parseFloat(document.getElementById('profile-vitaminEMg').value) || 0;
+        ingredients[idx].vitaminKMcg = parseFloat(document.getElementById('profile-vitaminKMcg').value) || 0;
+        ingredients[idx].thiaminMg = parseFloat(document.getElementById('profile-thiaminMg').value) || 0;
+        ingredients[idx].riboflavinMg = parseFloat(document.getElementById('profile-riboflavinMg').value) || 0;
+        ingredients[idx].niacinMg = parseFloat(document.getElementById('profile-niacinMg').value) || 0;
+        ingredients[idx].vitaminB6Mg = parseFloat(document.getElementById('profile-vitaminB6Mg').value) || 0;
+        ingredients[idx].folateMcg = parseFloat(document.getElementById('profile-folateMcg').value) || 0;
+        ingredients[idx].vitaminB12Mcg = parseFloat(document.getElementById('profile-vitaminB12Mcg').value) || 0;
+
+        // Minerals
+        ingredients[idx].calciumMg = parseFloat(document.getElementById('profile-calciumMg').value) || 0;
+        ingredients[idx].ironMg = parseFloat(document.getElementById('profile-ironMg').value) || 0;
+        ingredients[idx].magnesiumMg = parseFloat(document.getElementById('profile-magnesiumMg').value) || 0;
+        ingredients[idx].phosphorusMg = parseFloat(document.getElementById('profile-phosphorusMg').value) || 0;
+        ingredients[idx].potassiumMg = parseFloat(document.getElementById('profile-potassiumMg').value) || 0;
+        ingredients[idx].sodiumMg = parseFloat(document.getElementById('profile-sodiumMg').value) || 0;
+        ingredients[idx].zincMg = parseFloat(document.getElementById('profile-zincMg').value) || 0;
+        ingredients[idx].copperMg = parseFloat(document.getElementById('profile-copperMg').value) || 0;
+        ingredients[idx].seleniumMcg = parseFloat(document.getElementById('profile-seleniumMcg').value) || 0;
+
+        // Pricing
+        ingredients[idx].averagePrice = parseFloat(document.getElementById('profile-averagePrice').value) || 0;
+        ingredients[idx].priceCurrency = document.getElementById('profile-priceCurrency').value.trim() || 'MUR';
 
         closeFoodModal();
         await saveIngredients();

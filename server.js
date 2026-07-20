@@ -6,6 +6,9 @@ const PORT = 8000;
 const ROOT = __dirname;
 const RECIPES_PATH = path.join(ROOT, 'data', 'recipes.json');
 const INGREDIENTS_PATH = path.join(ROOT, 'data', 'ingredients.json');
+const MEALPLANS_PATH = path.join(ROOT, 'data', 'mealplans.json');
+const PANTRY_PATH = path.join(ROOT, 'data', 'pantry.json');
+const SHOPPINGLISTS_PATH = path.join(ROOT, 'data', 'shoppinglists.json');
 const API_KEY = 'larder_local_sync_8f92k';
 
 const MIME_TYPES = {
@@ -125,30 +128,56 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // API: POST (rescue) data
-    if (req.method === 'POST' && req.url === '/api/rescue') {
-        let body = '';
-        req.on('data', chunk => { body += chunk; });
-        req.on('end', () => {
-            try {
-                const parsed = JSON.parse(body);
-                const formatted = JSON.stringify(parsed, null, 2);
-                fs.writeFile(path.join(ROOT, 'data', 'rescued_data.json'), formatted, 'utf8', (err) => {
-                    if (err) {
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ error: 'Save failed' }));
+    // --- MEAL PLANNER API ENDPOINTS ---
+    function handleGenericFileAPI(req, res, filePath, name) {
+        if (req.method === 'GET') {
+            fs.readFile(filePath, 'utf8', (err, data) => {
+                if (err) {
+                    // If file doesn't exist yet, return empty array
+                    if (err.code === 'ENOENT') {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end('[]');
                         return;
                     }
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: true }));
-                });
-            } catch (e) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid JSON' }));
-            }
-        });
-        return;
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: `Could not read ${name}.json` }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(data);
+            });
+            return true;
+        }
+        if (req.method === 'PUT') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+                try {
+                    const parsed = JSON.parse(body);
+                    const formatted = JSON.stringify(parsed, null, 2);
+                    fs.writeFile(filePath, formatted, 'utf8', (err) => {
+                        if (err) {
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: `Could not write ${name}.json` }));
+                            return;
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true, count: parsed.length }));
+                        console.log(`  💾 Saved ${parsed.length} record(s) to ${name}.json`);
+                    });
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid JSON' }));
+                }
+            });
+            return true;
+        }
+        return false;
     }
+
+    if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
+    if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
+    if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
 
     // Static file serving
     let urlPath = req.url.split('?')[0]; // strip query params
@@ -187,11 +216,25 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
+    // Get local IP address for display
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    let localIp = 'localhost';
+    
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                localIp = net.address;
+                break;
+            }
+        }
+    }
+
     console.log('');
     console.log('  🍽️  Larder is running!');
-    console.log(`  📡 Local:  http://localhost:${PORT}`);
-    console.log(`  📝 CMS:    http://localhost:${PORT}/cms.html`);
+    console.log(`  📡 Local IP: http://${localIp}:${PORT}`);
+    console.log(`  📝 CMS:      http://${localIp}:${PORT}/cms.html`);
     console.log('');
     console.log('  Press Ctrl+C to stop.');
     console.log('');
