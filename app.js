@@ -13,22 +13,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRecipe = null;
     let currentScale = 1;
     
-    const isPantryPage = window.location.pathname.includes('pantry');
+    const isIngredientsPage = window.location.pathname.includes('ingredients');
 
-    // Load recipes — try API first, fallback to static
+    // Load data — try API first, fallback to static
     function loadRecipes() {
-        fetch('/api/recipes')
+        const endpoint = isIngredientsPage ? '/api/ingredients' : '/api/recipes';
+        const fallbackFile = isIngredientsPage ? 'data/ingredients.json' : 'data/recipes.json';
+        
+        fetch(endpoint)
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => { recipesData = data; initUI(); })
             .catch(() => {
-                fetch('data/recipes.json')
+                fetch(fallbackFile)
                     .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                     .then(data => { recipesData = data; initUI(); })
                     .catch(() => {
                         try {
                             const xhr = new XMLHttpRequest();
                             xhr.overrideMimeType('application/json');
-                            xhr.open('GET', 'data/recipes.json', true);
+                            xhr.open('GET', fallbackFile, true);
                             xhr.onreadystatechange = function() {
                                 if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
                                     try { recipesData = JSON.parse(xhr.responseText); initUI(); } catch(e) {}
@@ -143,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderFilters() {
-        const relevantRecipes = isPantryPage 
-            ? recipesData.filter(r => r.entryType === 'ingredient')
+        const relevantRecipes = isIngredientsPage 
+            ? recipesData 
             : recipesData.filter(r => r.entryType !== 'ingredient');
             
         const categories = ['All', ...new Set(relevantRecipes.map(r => r.category || 'Other'))];
@@ -164,9 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderGrid() {
         let filtered = recipesData;
         
-        if (isPantryPage) {
-            filtered = filtered.filter(r => r.entryType === 'ingredient');
-        } else {
+        if (!isIngredientsPage) {
             if (!searchQuery) {
                 filtered = filtered.filter(r => r.entryType !== 'ingredient');
             }
@@ -211,19 +212,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         grid.innerHTML = filtered.map(recipe => {
+            const title = recipe.title || recipe.name || 'Unknown';
             const theme = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
             const yield_ = recipe.macros?.yield || '';
-            const energy = recipe.macros?.energy || '';
+            const energy = recipe.macros?.energy || recipe.calories || '';
+            const itemId = recipe.id || recipe.foodId;
             return `
-            <div class="card ${theme}" data-id="${recipe.id}" role="listitem" tabindex="0" aria-label="View recipe: ${recipe.title}">
+            <div class="card ${theme}" data-id="${itemId}" role="listitem" tabindex="0" aria-label="View: ${title}">
                 <div class="card-img-wrapper">
-                    <img src="${recipe.imageUrl}" alt="${recipe.title}" class="recipe-img" loading="lazy">
+                    <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" class="recipe-img" loading="lazy" style="${!recipe.imageUrl ? 'object-fit: contain; padding: 2rem;' : ''}">
                 </div>
                 <div class="recipe-content">
-                    <span class="recipe-category">${recipe.category || 'Recipe'}</span>
-                    <h2 class="recipe-title">${recipe.title}</h2>
-                    <p class="recipe-desc">${recipe.description}</p>
-                    ${(yield_ || energy) ? `<div class="recipe-card-meta"><span>${yield_}</span><span>${energy}</span></div>` : ''}
+                    <span class="recipe-category">${recipe.category || (isIngredientsPage ? 'Ingredient' : 'Recipe')}</span>
+                    <h2 class="recipe-title">${title}</h2>
+                    <p class="recipe-desc">${recipe.description || (isIngredientsPage ? `Standard serving: ${recipe.servingSizeG || 100}${recipe.servingUnit || 'g'}` : '')}</p>
+                    ${(yield_ || energy) ? `<div class="recipe-card-meta"><span>${yield_}</span><span>${energy} kcal</span></div>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -302,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openModal(id) {
         lastFocusedElement = document.activeElement;
-        currentRecipe = recipesData.find(r => r.id === id);
+        currentRecipe = recipesData.find(r => (r.id === id || r.foodId === id));
         if (!currentRecipe) return;
         currentScale = 1;
 
@@ -318,8 +321,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getStandardMacros(recipe) {
-        if (!recipe.macros) return null;
-        let m = recipe.macros;
+        if (!recipe.macros && typeof recipe.calories === 'undefined') return null;
+        
+        let parseStr = (str) => {
+            if (typeof str === 'number') return { num: str, unit: 'g' };
+            if (!str) return { num: 0, unit: '' };
+            let match = String(str).match(/^(\d*\.?\d+)\s*(.*)/);
+            if (match) return { num: parseFloat(match[1]), unit: match[2] };
+            return { num: 0, unit: '' };
+        };
+
+        let e = recipe.macros ? parseStr(recipe.macros.energy) : { num: recipe.calories || 0, unit: 'kcal' };
+        let c = recipe.macros ? parseStr(recipe.macros.carbohydrate) : { num: recipe.carbsG || 0, unit: 'g' };
+        let p = recipe.macros ? parseStr(recipe.macros.protein) : { num: recipe.proteinG || 0, unit: 'g' };
+        let f = recipe.macros ? parseStr(recipe.macros.fat) : { num: recipe.fatG || 0, unit: 'g' };
+
+        let m = recipe.macros || {};
         let refType = m.macroReference?.type || 'per_serving';
         let refAmt = m.macroReference?.referenceAmount || '';
 
@@ -328,18 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let match = m.yield.match(/^(\d*\.?\d+)/);
             if (match) yieldNum = parseFloat(match[1]) || 1;
         }
-
-        let parseStr = (str) => {
-            if (!str) return { num: 0, unit: '' };
-            let match = str.match(/^(\d*\.?\d+)\s*(.*)/);
-            if (match) return { num: parseFloat(match[1]), unit: match[2] };
-            return { num: 0, unit: '' };
-        };
-
-        let e = parseStr(m.energy);
-        let c = parseStr(m.carbohydrate);
-        let p = parseStr(m.protein);
-        let f = parseStr(m.fat);
 
         let divisor = 1;
         let suffix = '';
@@ -385,10 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildModalContent() {
         const recipe = currentRecipe;
 
-        if (recipe.entryType === 'ingredient') {
+        if (isIngredientsPage || recipe.entryType === 'ingredient') {
+            const title = recipe.name || recipe.title;
             const details = recipe.ingredientDetails || {};
             
-            const usedIn = recipesData.filter(r => r.entryType !== 'ingredient' && (r.ingredients || []).some(ing => ing.item.toLowerCase().includes(recipe.title.toLowerCase())));
+            const usedIn = []; // Needs a full DB fetch if we want to show recipes an ingredient is used in on the ingredients page, omitted for now.
             
             let usedInHtml = '';
             if (usedIn.length > 0) {
@@ -403,10 +409,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             modalBody.innerHTML = `
                 <div class="recipe-header">
-                    <h1 id="modal-title">${recipe.title}</h1>
-                    <p>${recipe.description}</p>
+                    <h1 id="modal-title">${title}</h1>
+                    <p>${recipe.description || ''}</p>
                 </div>
-                <div class="ingredient-details-grid" style="display: grid; gap: 1.5rem; margin-top: 1.5rem;">
+                
+                <div class="macros-bar" style="margin-top: 1rem;">
+                    <div class="macros-item"><span class="macros-label">Serving</span><span class="macros-value">${recipe.servingSizeG || 100}${recipe.servingUnit || 'g'}</span></div>
+                    <div class="macros-divider"></div>
+                    <div class="macros-item"><span class="macros-label">Energy</span><span class="macros-value">${recipe.calories || '-'}</span></div>
+                    <div class="macros-divider"></div>
+                    <div class="macros-item"><span class="macros-label">Carbs</span><span class="macros-value">${recipe.carbsG || '-'}g</span></div>
+                    <div class="macros-divider"></div>
+                    <div class="macros-item"><span class="macros-label">Protein</span><span class="macros-value">${recipe.proteinG || '-'}g</span></div>
+                    <div class="macros-divider"></div>
+                    <div class="macros-item"><span class="macros-label">Fat</span><span class="macros-value">${recipe.fatG || '-'}g</span></div>
+                </div>
+
+                <div class="ingredient-details-grid" style="display: grid; gap: 1.5rem; margin-top: 2.5rem;">
                     ${details.storage ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Storage</h2><p style="font-size: 0.95rem; margin: 0;">${details.storage}</p></div>` : ''}
                     ${details.flavour ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Flavour Profile</h2><p style="font-size: 0.95rem; margin: 0;">${details.flavour}</p></div>` : ''}
                     ${details.pairings ? `<div><h2 style="font-size: 0.8rem; color: #666; margin-bottom: 0.2rem;">Pairings</h2><p style="font-size: 0.95rem; margin: 0;">${details.pairings}</p></div>` : ''}

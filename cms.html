@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Larder CMS</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" href="images/icon.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">
-            <img src="favicon.svg" alt="Larder Logo" width="22" height="22">
+        <a href="cms.html" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+            <img src="images/icon.png" alt="Larder Logo" width="22" height="22" style="border-radius: 4px;">
             Larder CMS
-        </div>
+        </a>
         <div class="nav-links">
             <a href="./" class="nav-link">Recipes</a>
-            <a href="pantry" class="nav-link">Pantry</a>
+            <a href="ingredients" class="nav-link">Ingredients</a>
             <a href="basics" class="nav-link">Basics</a>
             <a href="reference" class="nav-link">Reference</a>
         </div>
@@ -39,6 +39,7 @@
             <button class="cms-tab" data-tab="mealplan" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Meal Plan</button>
             <button class="cms-tab" data-tab="pantry" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Pantry</button>
             <button class="cms-tab" data-tab="shopping" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Shopping Lists</button>
+            <button class="cms-tab" data-tab="settings" style="background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;">Settings</button>
         </div>
 
         <div id="cms-recipe-list">
@@ -266,12 +267,10 @@
                 <label for="meal-assign-eating-out" style="font-weight: 600; cursor: pointer;">Mark as "Eating Out"</label>
             </div>
 
-            <div id="meal-assign-servings-row" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border);">
-                <label for="meal-assign-servings" style="font-weight: 600; font-size: 0.85rem; white-space: nowrap;">Servings (people):</label>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <button id="servings-decrement" type="button" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-hover); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">−</button>
-                    <input type="number" id="meal-assign-servings" value="2" min="1" max="20" step="1" style="width: 50px; text-align: center; padding: 0.4rem; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-weight: 700; font-size: 1rem;">
-                    <button id="servings-increment" type="button" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-hover); color: var(--text-primary); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">+</button>
+            <div id="meal-assign-eaters-row" style="margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border);">
+                <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Who is eating?</label>
+                <div id="meal-assign-eaters-list" style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+                    <!-- Checkboxes populated via JS -->
                 </div>
             </div>
 
@@ -279,7 +278,13 @@
                 <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Add Recipe or Ingredient</label>
                 
                 <div style="position: relative; margin-bottom: 0.5rem;">
-                    <input type="text" id="meal-assign-search" placeholder="Search for recipes or ingredients..." style="width: 100%; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px;" autocomplete="off">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                        <input type="number" id="meal-assign-max-cal" placeholder="Max Cals" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.8rem;">
+                        <input type="number" id="meal-assign-min-pro" placeholder="Min Protein" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.8rem;">
+                        <input type="number" id="meal-assign-max-carb" placeholder="Max Carbs" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.8rem;">
+                        <input type="number" id="meal-assign-max-fat" placeholder="Max Fat" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.8rem;">
+                    </div>
+                    <input type="text" id="meal-assign-search" placeholder="Search for recipes or ingredients by name..." style="width: 100%; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px;" autocomplete="off">
                     <div id="meal-assign-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-top: none; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
                 </div>
 

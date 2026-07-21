@@ -2,10 +2,70 @@
   "name": "larder",
   "version": "1.0.0",
   "description": "Personal Recipe Collection — Kitchen Book Inspired",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "electron .",
+    "server": "node server.js",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable"
   },
-  "private": true
+  "private": true,
+  "build": {
+    "appId": "com.larder.cms",
+    "productName": "Larder",
+    "icon": "images/icon.png",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!docs/**",
+      "!node_modules/.cache/**"
+    ],
+    "extraResources": [
+      {
+        "from": "data",
+        "to": "data",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Larder"
+    },
+    "portable": {
+      "artifactName": "Larder-Portable.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.0"
+  }
 }

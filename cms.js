@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let mealPlans = [];
     let pantry = [];
     let shoppingLists = [];
+    let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
 
@@ -105,18 +106,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData() {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resSettings] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/pantry', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] })
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
             mealPlans = resMealPlans;
             pantry = resPantry;
             shoppingLists = resShoppingLists;
+            appSettings = Array.isArray(resSettings) ? { profiles: [] } : resSettings;
+            if (!appSettings.profiles) appSettings.profiles = [];
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
             addBtn.classList.remove('hidden');
@@ -177,6 +181,108 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 searchInput.style.display = 'none';
             }
+        }
+
+        if (currentCMSTab === 'settings') {
+            addBtn.style.display = 'none';
+            if (searchInput) searchInput.style.display = 'none';
+            
+            listContainer.innerHTML = `
+                <div class="settings-container" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+                    <h2>Eater Profiles</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Configure daily macro targets for meal planning.</p>
+                    <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+                        ${appSettings.profiles.map((p, i) => `
+                            <div class="profile-card" style="background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <div class="form-group"><label>Name</label><input type="text" value="${p.name}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
+                                    <div class="form-group"><label>Calories</label><input type="number" value="${p.calories}" class="profile-input" data-index="${i}" data-field="calories" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Carbs (%)</label><input type="number" value="${p.carbs}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Protein (%)</label><input type="number" value="${p.protein}" class="profile-input" data-index="${i}" data-field="protein" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Fat (%)</label><input type="number" value="${p.fat}" class="profile-input" data-index="${i}" data-field="fat" style="width: 100px;"></div>
+                                    <button class="btn delete-profile-btn" data-index="${i}" style="margin-top: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);">🗑</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn secondary" id="add-profile-btn">+ Add Eater</button>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn primary" id="save-settings-btn">Save Profiles</button>
+                    </div>
+
+                    <h2 style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">Data Management</h2>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <a href="/api/export" class="btn secondary" download="larder_backup.zip">Export Data (ZIP)</a>
+                        <label class="btn secondary" style="cursor: pointer;">
+                            Import Data (ZIP)
+                            <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
+                        </label>
+                    </div>
+                    <p id="import-status" style="margin-top: 0.5rem; font-size: 0.8rem;"></p>
+                </div>
+            `;
+            
+            document.getElementById('add-profile-btn').onclick = () => {
+                appSettings.profiles.push({ name: "New Eater", calories: 2000, carbs: 40, protein: 30, fat: 30 });
+                renderCMSList();
+            };
+            
+            document.querySelectorAll('.delete-profile-btn').forEach(btn => {
+                btn.onclick = () => {
+                    appSettings.profiles.splice(btn.dataset.index, 1);
+                    renderCMSList();
+                };
+            });
+            
+            document.querySelectorAll('.profile-input').forEach(input => {
+                input.onchange = (e) => {
+                    const idx = e.target.dataset.index;
+                    const field = e.target.dataset.field;
+                    let val = e.target.value;
+                    if (field !== 'name') val = parseInt(val) || 0;
+                    appSettings.profiles[idx][field] = val;
+                };
+            });
+            
+            document.getElementById('save-settings-btn').onclick = async () => {
+                try {
+                    const res = await fetch('/api/settings', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(appSettings)
+                    });
+                    if (res.ok) alert('Settings saved successfully.');
+                    else throw new Error();
+                } catch(e) {
+                    alert('Failed to save settings.');
+                }
+            };
+
+            const importInput = document.getElementById('import-zip-input');
+            const importStatus = document.getElementById('import-status');
+            importInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                importStatus.textContent = "Importing... please wait.";
+                try {
+                    const res = await fetch('/api/import', {
+                        method: 'POST',
+                        body: file
+                    });
+                    if (res.ok) {
+                        importStatus.textContent = "Import successful! Reloading data...";
+                        importStatus.style.color = "var(--success-color, #4ade80)";
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        throw new Error("Server rejected import.");
+                    }
+                } catch(err) {
+                    importStatus.textContent = "Import failed. Invalid ZIP?";
+                    importStatus.style.color = "var(--danger-color, #f87171)";
+                }
+            };
+            
+            return;
         }
 
         if (currentCMSTab === 'mealplan') {
@@ -243,9 +349,86 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 });
                 
+                // Calculate Daily Macros
+                let dailyCals = 0, dailyPro = 0, dailyCarbs = 0, dailyFat = 0;
+                let targetCals = 0, targetPro = 0, targetCarbs = 0, targetFat = 0;
+                
+                // Only compute targets for active eaters on this day
+                const eatersThisDay = new Set();
+                
+                slots.forEach(slot => {
+                    const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
+                    if (plan && !plan.isEatingOut && plan.items) {
+                        if (plan.eaters) plan.eaters.forEach(e => eatersThisDay.add(e));
+                        
+                        plan.items.forEach(item => {
+                            const getVal = (valStr) => {
+                                if (!valStr) return 0;
+                                if (typeof valStr === 'number') return valStr;
+                                const m = String(valStr).match(/^([\d.]+)/);
+                                return m ? parseFloat(m[1]) : 0;
+                            };
+                            
+                            const addMacros = (r, mult) => {
+                                if (r.macros) {
+                                    dailyCals += getVal(r.macros.energy) * mult;
+                                    dailyPro += getVal(r.macros.protein) * mult;
+                                    dailyCarbs += getVal(r.macros.carbohydrate) * mult;
+                                    dailyFat += getVal(r.macros.fat) * mult;
+                                } else {
+                                    dailyCals += getVal(r.calories) * mult;
+                                    dailyPro += getVal(r.proteinG) * mult;
+                                    dailyCarbs += getVal(r.carbsG) * mult;
+                                    dailyFat += getVal(r.fatG) * mult;
+                                }
+                            };
+                            
+                            const multiplier = plan.eaters ? plan.eaters.length : 1;
+                            
+                            if (item.type === 'recipe') {
+                                const r = recipes.find(rec => rec.id === item.referenceId);
+                                if (r) addMacros(r, multiplier);
+                            } else if (item.type === 'ingredient') {
+                                const i = ingredients.find(ing => ing.foodId === item.referenceId);
+                                if (i) addMacros(i, (parseFloat(item.amount) || 100) / 100 * multiplier);
+                            }
+                        });
+                    }
+                });
+                
+                eatersThisDay.forEach(eName => {
+                    const profile = appSettings.profiles.find(p => p.name === eName);
+                    if (profile) {
+                        targetCals += profile.calories;
+                        targetCarbs += Math.round((profile.calories * (profile.carbs/100)) / 4);
+                        targetPro += Math.round((profile.calories * (profile.protein/100)) / 4);
+                        targetFat += Math.round((profile.calories * (profile.fat/100)) / 9);
+                    }
+                });
+                
+                const pct = targetCals > 0 ? Math.min(100, (dailyCals / targetCals) * 100) : 0;
+                const calColor = pct > 105 ? 'var(--danger-color, #f87171)' : (pct > 90 ? 'var(--success-color, #4ade80)' : 'var(--text-muted)');
+                
+                if (targetCals > 0) {
+                    gridHTML += `
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-hover); border-radius: 4px; border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-secondary);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                            <span style="font-weight: 600;">Cals:</span>
+                            <span style="color: ${calColor}">${Math.round(dailyCals)} / ${targetCals}</span>
+                        </div>
+                        <div style="width: 100%; height: 4px; background: var(--bg-base); border-radius: 2px; margin-bottom: 0.5rem;">
+                            <div style="width: ${pct}%; height: 100%; background: ${calColor}; border-radius: 2px;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.65rem;">
+                            <span>P: ${Math.round(dailyPro)}/${targetPro}g</span>
+                            <span>C: ${Math.round(dailyCarbs)}/${targetCarbs}g</span>
+                            <span>F: ${Math.round(dailyFat)}/${targetFat}g</span>
+                        </div>
+                    </div>
+                    `;
+                }
+                
                 gridHTML += `</div>`; // Close day
-            }
-            
             gridHTML += '</div>';
             gridHTML += `
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -264,12 +447,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkboxEatingOut = document.getElementById('meal-assign-eating-out');
             const builderSection = document.getElementById('meal-assign-builder');
             
-            const servingsInput = document.getElementById('meal-assign-servings');
-            const servingsRow = document.getElementById('meal-assign-servings-row');
-            const servingsDecrement = document.getElementById('servings-decrement');
-            const servingsIncrement = document.getElementById('servings-increment');
+            const eatersRow = document.getElementById('meal-assign-eaters-row');
+            const eatersList = document.getElementById('meal-assign-eaters-list');
             
             const searchInput = document.getElementById('meal-assign-search');
+            const maxCalInput = document.getElementById('meal-assign-max-cal');
+            const minProInput = document.getElementById('meal-assign-min-pro');
+            const maxCarbInput = document.getElementById('meal-assign-max-carb');
+            const maxFatInput = document.getElementById('meal-assign-max-fat');
+            
+
             const suggestionsBox = document.getElementById('meal-assign-suggestions');
             const amountGroup = document.getElementById('meal-assign-amount-group');
             const amountInput = document.getElementById('meal-assign-amount');
@@ -315,12 +502,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         const t = mealTemplates[parseInt(e.target.dataset.idx)];
                         if (!t) return;
                         modalSelectedItems = JSON.parse(JSON.stringify(t.items));
-                        servingsInput.value = t.servings || 1;
+                        // Setup eaters from template
+                        if (t.eaters) {
+                            document.querySelectorAll('.eater-cb').forEach(cb => {
+                                cb.checked = t.eaters.includes(cb.value);
+                            });
+                        }
                         checkboxEatingOut.checked = false;
                         builderSection.style.opacity = '1';
                         builderSection.style.pointerEvents = 'auto';
-                        servingsRow.style.opacity = '1';
-                        servingsRow.style.pointerEvents = 'auto';
+                        eatersRow.style.opacity = '1';
+                        eatersRow.style.pointerEvents = 'auto';
                         renderModalSelectedItems();
                     };
                 });
@@ -344,10 +536,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const name = prompt('Name this template (e.g. "My Weekday Breakfast"):');
                 if (!name || !name.trim()) return;
+                const selectedEaters = Array.from(document.querySelectorAll('.eater-cb:checked')).map(cb => cb.value);
                 mealTemplates.push({
                     name: name.trim(),
                     items: JSON.parse(JSON.stringify(modalSelectedItems)),
-                    servings: parseInt(servingsInput.value) || 1,
+                    eaters: selectedEaters,
                     isEatingOut: checkboxEatingOut.checked
                 });
                 saveTemplatesToStorage();
@@ -400,9 +593,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkboxEatingOut.checked = false;
                     builderSection.style.opacity = '1';
                     builderSection.style.pointerEvents = 'auto';
-                    servingsInput.value = 2;
-                    servingsRow.style.opacity = '1';
-                    servingsRow.style.pointerEvents = 'auto';
+                    eatersList.innerHTML = appSettings.profiles.map(p => `
+                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer;">
+                            <input type="checkbox" class="eater-cb" value="${p.name}" style="accent-color: var(--accent); width: 16px; height: 16px;" checked>
+                            ${p.name}
+                        </label>
+                    `).join('');
+                    
+                    eatersRow.style.opacity = '1';
+                    eatersRow.style.pointerEvents = 'auto';
                     
                     // Reset copy-to-days checkboxes; auto-check the current day
                     const currentDayIdx = (new Date(activeDate + 'T00:00:00')).getDay();
@@ -426,12 +625,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             checkboxEatingOut.checked = true;
                             builderSection.style.opacity = '0.5';
                             builderSection.style.pointerEvents = 'none';
-                            servingsRow.style.opacity = '0.5';
-                            servingsRow.style.pointerEvents = 'none';
+                            eatersRow.style.opacity = '0.5';
+                            eatersRow.style.pointerEvents = 'none';
                             modalSelectedItems = [];
                         } else {
                             modalSelectedItems = JSON.parse(JSON.stringify(existingPlan.items || []));
-                            servingsInput.value = existingPlan.servings || 1;
+                            if (existingPlan.eaters) {
+                                document.querySelectorAll('.eater-cb').forEach(cb => {
+                                    cb.checked = existingPlan.eaters.includes(cb.value);
+                                });
+                            }
                             // Backwards compatibility for old data model
                             if (existingPlan.type === 'recipe') {
                                 const r = recipes.find(rec => rec.id === existingPlan.referenceId);
@@ -455,45 +658,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target.checked) {
                     builderSection.style.opacity = '0.5';
                     builderSection.style.pointerEvents = 'none';
-                    servingsRow.style.opacity = '0.5';
-                    servingsRow.style.pointerEvents = 'none';
+                    eatersRow.style.opacity = '0.5';
+                    eatersRow.style.pointerEvents = 'none';
                 } else {
                     builderSection.style.opacity = '1';
                     builderSection.style.pointerEvents = 'auto';
-                    servingsRow.style.opacity = '1';
-                    servingsRow.style.pointerEvents = 'auto';
+                    eatersRow.style.opacity = '1';
+                    eatersRow.style.pointerEvents = 'auto';
                 }
             };
             
-            // Servings +/- buttons
-            servingsDecrement.onclick = () => {
-                const cur = parseInt(servingsInput.value) || 1;
-                if (cur > 1) servingsInput.value = cur - 1;
-            };
-            servingsIncrement.onclick = () => {
-                const cur = parseInt(servingsInput.value) || 1;
-                if (cur < 20) servingsInput.value = cur + 1;
-            };
-            
-            // Autocomplete Search
-            searchInput.oninput = (e) => {
-                const query = e.target.value.toLowerCase();
-                if (!query) {
+            const handleSearch = () => {
+                const query = searchInput.value.toLowerCase();
+                const maxCal = parseFloat(maxCalInput.value) || Infinity;
+                const minPro = parseFloat(minProInput.value) || 0;
+                const maxCarb = parseFloat(maxCarbInput.value) || Infinity;
+                const maxFat = parseFloat(maxFatInput.value) || Infinity;
+
+                if (!query && maxCal === Infinity && minPro === 0 && maxCarb === Infinity && maxFat === Infinity) {
                     suggestionsBox.style.display = 'none';
                     return;
                 }
                 
-                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query)).map(r => ({ ...r, _type: 'recipe' }));
-                const matchedIngredients = ingredients.filter(i => i.name.toLowerCase().includes(query)).map(i => ({ ...i, _type: 'ingredient' }));
+                const getEnergy = r => r.macros?.energy || r.calories || 0;
+                const getPro = r => {
+                    if (r.proteinG !== undefined) return r.proteinG;
+                    const p = r.macros?.protein?.match(/[\d.]+/);
+                    return p ? parseFloat(p[0]) : 0;
+                };
+                const getCarb = r => {
+                    if (r.carbsG !== undefined) return r.carbsG;
+                    const p = r.macros?.carbohydrate?.match(/[\d.]+/);
+                    return p ? parseFloat(p[0]) : 0;
+                };
+                const getFat = r => {
+                    if (r.fatG !== undefined) return r.fatG;
+                    const p = r.macros?.fat?.match(/[\d.]+/);
+                    return p ? parseFloat(p[0]) : 0;
+                };
+
+                let matchedRecipes = recipes.filter(r => 
+                    r.title.toLowerCase().includes(query) &&
+                    getEnergy(r) <= maxCal && getPro(r) >= minPro && getCarb(r) <= maxCarb && getFat(r) <= maxFat
+                ).map(r => ({ ...r, _type: 'recipe' }));
+                let matchedIngredients = ingredients.filter(r => 
+                    (r.name || r.title).toLowerCase().includes(query) &&
+                    getEnergy(r) <= maxCal && getPro(r) >= minPro && getCarb(r) <= maxCarb && getFat(r) <= maxFat
+                ).map(i => ({ ...i, _type: 'ingredient' }));
                 
-                const combined = [...matchedRecipes, ...matchedIngredients].slice(0, 15); // Top 15
+                const combined = [...matchedRecipes, ...matchedIngredients].slice(0, 15);
                 
                 if (combined.length === 0) {
                     suggestionsBox.innerHTML = '<div style="padding: 0.8rem; color: var(--text-muted); font-size: 0.85rem;">No results found.</div>';
                 } else {
                     suggestionsBox.innerHTML = combined.map((item, idx) => `
                         <div class="autocomplete-item" data-idx="${idx}" style="padding: 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem;">
-                            <span style="font-weight: 600;">${item._type === 'recipe' ? item.title : item.name}</span>
+                            <span style="font-weight: 600;">${item._type === 'recipe' ? (item.title || item.name) : item.name}</span>
                             <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
                         </div>
                     `).join('');
@@ -501,13 +721,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.querySelectorAll('.autocomplete-item').forEach(el => {
                         el.onclick = () => {
                             const selected = combined[parseInt(el.dataset.idx)];
-                            searchInput.value = selected._type === 'recipe' ? selected.title : selected.name;
+                            searchInput.value = selected._type === 'recipe' ? (selected.title || selected.name) : selected.name;
                             suggestionsBox.style.display = 'none';
                             
                             currentStagedItem = {
                                 type: selected._type,
                                 referenceId: selected._type === 'recipe' ? selected.id : selected.foodId,
-                                name: selected._type === 'recipe' ? selected.title : selected.name,
+                                name: selected._type === 'recipe' ? (selected.title || selected.name) : selected.name,
                                 unit: selected._type === 'ingredient' ? (selected.servingUnit || 'g') : null
                             };
                             
@@ -517,7 +737,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 amountGroup.style.display = 'flex';
                             } else {
                                 amountGroup.style.display = 'none';
-                                // Auto-add recipe
                                 addBtnModal.click();
                             }
                         };
@@ -567,13 +786,11 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             btnConfirm.onclick = () => {
-                // Build the list of dates to apply to
                 const today = new Date();
                 const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
                 const startOfWeek = new Date(today);
                 startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
                 
-                // Collect all target dates: the active date + any checked copy-to days
                 const targetDates = [activeDate];
                 copyDayCheckboxes.forEach(cb => {
                     if (cb.checked && !cb.disabled) {
@@ -584,32 +801,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                // Apply to all target dates
                 targetDates.forEach(dateStr => {
-                    // Remove existing for this date+slot
                     mealPlans = mealPlans.filter(p => !(p.date === dateStr && p.slot === activeSlotName));
                     
-                    if (checkboxEatingOut.checked) {
-                        mealPlans.push({
-                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
-                            date: dateStr,
-                            slot: activeSlotName,
-                            isEatingOut: true,
-                            items: [],
-                            servings: 1,
-                            isConsumed: false
-                        });
-                    } else if (modalSelectedItems.length > 0) {
-                        mealPlans.push({
-                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
-                            date: dateStr,
-                            slot: activeSlotName,
-                            isEatingOut: false,
-                            items: JSON.parse(JSON.stringify(modalSelectedItems)),
-                            servings: parseInt(servingsInput.value) || 1,
-                            isConsumed: false
-                        });
-                    }
+                    mealPlans.push({
+                        id: crypto.randomUUID(),
+                        date: dateStr,
+                        slot: activeSlotName,
+                        type: 'multi',
+                        items: JSON.parse(JSON.stringify(modalSelectedItems)),
+                        eaters: Array.from(document.querySelectorAll('.eater-cb:checked')).map(cb => cb.value),
+                        isEatingOut: checkboxEatingOut.checked
+                    });
                 });
                 
                 assignModal.classList.add('hidden');
@@ -739,7 +942,6 @@ document.addEventListener('DOMContentLoaded', () => {
             addBtn.style.display = 'none';
 
             function generateList() {
-                // 1. Determine "this week" range based on current calendar logic
                 const today = new Date();
                 const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
                 const startOfWeek = new Date(today);
@@ -752,20 +954,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     validDates.push(d.toISOString().split('T')[0]);
                 }
 
-                // 2. Filter meal plans for this week (and ignore eating_out)
-                const targetPlans = mealPlans.filter(p => validDates.includes(p.date) && !p.isEatingOut && p.type !== 'eating_out');
+                const targetPlans = mealPlans.filter(p => validDates.includes(p.date) && !p.isEatingOut);
                 
-                // 3. Aggregate required ingredients
-                const requiredMap = new Map(); // foodId -> { name, requiredQty, unit }
+                const requiredMap = new Map(); 
                 
                 targetPlans.forEach(plan => {
-                    const servingsMultiplier = plan.servings || 1;
-                    
-                    // Backwards compatibility for old format
                     let itemsToProcess = plan.items || [];
-                    if (itemsToProcess.length === 0 && plan.type === 'recipe') {
-                        itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
-                    }
                     
                     itemsToProcess.forEach(item => {
                         if (item.type === 'recipe') {
@@ -775,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             recipe.ingredients.forEach(ing => {
                                 if (!ing.foodId) return;
                                 
-                                const scaledAmount = (parseFloat(ing.amount) || 0) * servingsMultiplier;
+                                const scaledAmount = parseFloat(ing.amount) || 0;
                                 const existing = requiredMap.get(ing.foodId);
                                 if (existing) {
                                     existing.requiredQty += scaledAmount;
@@ -789,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             });
                         } else if (item.type === 'ingredient' && item.referenceId) {
-                            const scaledAmount = (parseFloat(item.amount) || 0) * servingsMultiplier;
+                            const scaledAmount = parseFloat(item.amount) || 0;
                             const existing = requiredMap.get(item.referenceId);
                             if (existing) {
                                 existing.requiredQty += scaledAmount;
@@ -805,7 +999,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-                // 4. Subtract Tracked Pantry Stock
                 const shoppingList = [];
                 requiredMap.forEach((data, foodId) => {
                     const pantryItem = pantry.find(p => p.foodId === foodId);
@@ -857,7 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 listHTML += `</ul></div>`;
                 resultsContainer.innerHTML = listHTML;
                 
-                // Strike-through logic
                 document.querySelectorAll('.sl-checkbox').forEach(cb => {
                     cb.addEventListener('change', (e) => {
                         const label = e.target.nextElementSibling;
@@ -969,13 +1161,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         hasError = true;
                     }
 
-                    // Preserve existing profile data if present
                     const existing = ingredients.find(f => f.foodId === foodId);
 
                     updatedIngredients.push({
-                        // Spread all existing fields first (preserves micronutrients, profile, pricing, etc.)
                         ...(existing || {}),
-                        // Then overwrite with table values
                         foodId: foodId,
                         name: name,
                         category: row.querySelector('.f-cat').value.trim(),
@@ -998,7 +1187,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderCMSList();
             });
 
-            // --- Ingredient Selection & Deletion ---
+            searchInput.oninput = handleSearch;
+            maxCalInput.oninput = handleSearch;
+            minProInput.oninput = handleSearch;
+            maxCarbInput.oninput = handleSearch;
+            maxFatInput.oninput = handleSearch;
+
             const selectAllCheckbox = document.getElementById('select-all-foods');
             const rowCheckboxes = document.querySelectorAll('.f-row-select');
             const bulkActionBar = document.getElementById('bulk-action-bar');

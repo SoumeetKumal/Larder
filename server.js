@@ -1,15 +1,35 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const os = require('os');
+const AdmZip = require('adm-zip');
 
 const PORT = 8000;
 const ROOT = __dirname;
-const RECIPES_PATH = path.join(ROOT, 'data', 'recipes.json');
-const INGREDIENTS_PATH = path.join(ROOT, 'data', 'ingredients.json');
-const MEALPLANS_PATH = path.join(ROOT, 'data', 'mealplans.json');
-const PANTRY_PATH = path.join(ROOT, 'data', 'pantry.json');
-const SHOPPINGLISTS_PATH = path.join(ROOT, 'data', 'shoppinglists.json');
+const DATA_DIR = global.LARDER_DATA_DIR || path.join(ROOT, 'data');
+const RECIPES_PATH = path.join(DATA_DIR, 'recipes.json');
+const INGREDIENTS_PATH = path.join(DATA_DIR, 'ingredients.json');
+const MEALPLANS_PATH = path.join(DATA_DIR, 'mealplans.json');
+const PANTRY_PATH = path.join(DATA_DIR, 'pantry.json');
+const SHOPPINGLISTS_PATH = path.join(DATA_DIR, 'shoppinglists.json');
+const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
 const API_KEY = 'larder_local_sync_8f92k';
+
+// Initialize data directory
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Seed default files if missing
+const defaultFiles = {
+    'recipes.json': '[]',
+    'ingredients.json': '[]',
+    'mealplans.json': '[]',
+    'pantry.json': '[]',
+    'shoppinglists.json': '[]',
+    'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
+};
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -178,6 +198,46 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
+    if (req.url === '/api/settings' && handleGenericFileAPI(req, res, SETTINGS_PATH, 'settings')) return;
+
+    if (req.url === '/api/export' && req.method === 'GET') {
+        try {
+            const zip = new AdmZip();
+            zip.addLocalFolder(DATA_DIR);
+            const buffer = zip.toBuffer();
+            res.writeHead(200, {
+                'Content-Type': 'application/zip',
+                'Content-Disposition': 'attachment; filename=larder_backup.zip',
+                'Content-Length': buffer.length
+            });
+            res.end(buffer);
+            console.log(`  📦 Exported data archive`);
+        } catch (e) {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Export failed' }));
+        }
+        return;
+    }
+
+    if (req.url === '/api/import' && req.method === 'POST') {
+        let buffers = [];
+        req.on('data', chunk => buffers.push(chunk));
+        req.on('end', () => {
+            try {
+                const buffer = Buffer.concat(buffers);
+                const zip = new AdmZip(buffer);
+                zip.extractAllTo(DATA_DIR, true);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+                console.log(`  📥 Imported data archive successfully`);
+            } catch (e) {
+                console.error(e);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Import failed or invalid zip' }));
+            }
+        });
+        return;
+    }
 
     // Static file serving
     let urlPath = req.url.split('?')[0]; // strip query params
@@ -239,11 +299,13 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('  Press Ctrl+C to stop.');
     console.log('');
 
-    // Auto-open browser
-    const { exec } = require('child_process');
-    const url = `http://localhost:${PORT}`;
-    const platform = process.platform;
-    if (platform === 'win32') exec(`start ${url}`);
-    else if (platform === 'darwin') exec(`open ${url}`);
-    else exec(`xdg-open ${url}`);
+    // Auto-open browser (only when NOT inside Electron)
+    if (!global.LARDER_IS_ELECTRON) {
+        const { exec } = require('child_process');
+        const url = `http://localhost:${PORT}`;
+        const platform = process.platform;
+        if (platform === 'win32') exec(`start ${url}`);
+        else if (platform === 'darwin') exec(`open ${url}`);
+        else exec(`xdg-open ${url}`);
+    }
 });
