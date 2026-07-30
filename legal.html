@@ -11,25 +11,23 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <header class="app-header">
-    <div class="header-main">
-        <a href="./" class="brand-logo" aria-label="Larder Home">
-            <img src="images/icon.png" alt="Larder Logo" class="logo-img" width="32" height="32">
-            <span class="logo-text">Larder</span>
-        </a>
-        <nav class="nav-links">
-            <a href="./" class="nav-link">Recipes</a>
-            <a href="ingredients" class="nav-link">Ingredients</a>
-            <a href="basics" class="nav-link">Basics</a>
-            <a href="reference" class="nav-link">Reference</a>
+    <nav class="top-nav">
+            <a href="./" class="brand-logo" style="text-decoration:none;">
+                <img src="images/icon.png" alt="Larder Logo" style="height: 36px; width: 36px; border-radius: 8px; object-fit: contain;">
+                LARDER
+            </a>
+            
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <a href="./" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Recipes</a>
+                <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
+                <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
+                <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
+                <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
+                    <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> <span id="themeText">Dark Mode</span>
+                </button>
+            </div>
         </nav>
-        <div class="header-actions">
-            <button class="btn secondary" id="themeToggle" aria-label="Toggle dark mode" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-                <span id="themeIcon" style="display:flex;"><i data-lucide="moon" style="width:18px;height:18px;"></i></span>
-            </button>
-        </div>
-    </div>
-</header>
 
     <div class="basics-layout">
         <!-- Sticky Sidebar TOC -->
