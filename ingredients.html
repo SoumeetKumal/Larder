@@ -26,7 +26,7 @@
                 <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
                 <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
-                    <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> <span id="themeText">Dark Mode</span>
+                    <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
             </div>
         </nav>
@@ -40,7 +40,7 @@
                 </button>
                 <div class="search-bar-wrap" id="searchBarWrap">
                     <i data-lucide="search" class="search-bar-icon"></i>
-                    <input type="text" class="search-input" id="search-input" placeholder="Search recipes...">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search ingredients...">
                     <button class="search-close" id="searchClose"><i data-lucide="x"></i></button>
                 </div>
             </div>
@@ -51,9 +51,9 @@
             </button>
 
             <!-- Filter Dropdown Panel -->
-            <div class="filter-dropdown" id="filterDropdown">
+            <div class="filter-dropdown" id="filterDropdown" style="width: 300px;">
                 <div class="filter-dropdown-header">
-                    <h4>Filter Recipes</h4>
+                    <h4>Filter Ingredients</h4>
                     <button class="filter-reset" id="filterReset">Reset All</button>
                 </div>
 
@@ -61,58 +61,6 @@
                     <div class="filter-section-title">Category</div>
                     <div class="filter-chips-scrollable" id="category-filters">
                         <!-- Categories injected here -->
-                    </div>
-                </div>
-
-                <div class="filter-section">
-                    <div class="filter-section-title">Nutrition (per serving)</div>
-                    <div class="range-slider-group">
-                        <div class="range-label">
-                            <span class="range-label-text">Calories</span>
-                            <span class="range-label-values" id="filter-cal-val">Any</span>
-                        </div>
-                        <div class="dual-range" id="slider-cal-container">
-                            <div class="range-track"></div>
-                            <div class="range-fill" id="slider-cal-fill" style="left: 0%; width: 100%;"></div>
-                            <input type="range" min="0" max="2000" step="50" value="0" id="slider-cal-min" class="macro-slider-min">
-                            <input type="range" min="0" max="2000" step="50" value="2000" id="slider-cal-max" class="macro-slider-max">
-                        </div>
-                    </div>
-                    <div class="range-slider-group">
-                        <div class="range-label">
-                            <span class="range-label-text">Carbs</span>
-                            <span class="range-label-values" id="filter-carbs-val">Any</span>
-                        </div>
-                        <div class="dual-range" id="slider-carbs-container">
-                            <div class="range-track"></div>
-                            <div class="range-fill" id="slider-carbs-fill" style="left: 0%; width: 100%;"></div>
-                            <input type="range" min="0" max="200" step="5" value="0" id="slider-carbs-min" class="macro-slider-min">
-                            <input type="range" min="0" max="200" step="5" value="200" id="slider-carbs-max" class="macro-slider-max">
-                        </div>
-                    </div>
-                    <div class="range-slider-group">
-                        <div class="range-label">
-                            <span class="range-label-text">Protein</span>
-                            <span class="range-label-values" id="filter-protein-val">Any</span>
-                        </div>
-                        <div class="dual-range" id="slider-protein-container">
-                            <div class="range-track"></div>
-                            <div class="range-fill" id="slider-protein-fill" style="left: 0%; width: 100%;"></div>
-                            <input type="range" min="0" max="150" step="5" value="0" id="slider-protein-min" class="macro-slider-min">
-                            <input type="range" min="0" max="150" step="5" value="150" id="slider-protein-max" class="macro-slider-max">
-                        </div>
-                    </div>
-                    <div class="range-slider-group">
-                        <div class="range-label">
-                            <span class="range-label-text">Fat</span>
-                            <span class="range-label-values" id="filter-fat-val">Any</span>
-                        </div>
-                        <div class="dual-range" id="slider-fat-container">
-                            <div class="range-track"></div>
-                            <div class="range-fill" id="slider-fat-fill" style="left: 0%; width: 100%;"></div>
-                            <input type="range" min="0" max="150" step="5" value="0" id="slider-fat-min" class="macro-slider-min">
-                            <input type="range" min="0" max="150" step="5" value="150" id="slider-fat-max" class="macro-slider-max">
-                        </div>
                     </div>
                 </div>
             </div>
