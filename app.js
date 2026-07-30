@@ -433,22 +433,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             return `
-            <div class="card ${themeClass}" data-id="${itemId}" role="listitem" tabindex="0" aria-label="View: ${title}">
-                <div class="card-img-wrapper">
-                    <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" class="recipe-img${!recipe.imageUrl ? ' logo-placeholder' : ''}" loading="lazy" style="${!recipe.imageUrl ? 'object-fit: contain; padding: 2rem;' : ''}">
+            <div class="recipe-card ${themeClass}" data-id="${itemId}" role="listitem" tabindex="0" aria-label="View: ${title}">
+                <div class="recipe-image">
+                    <div class="recipe-image-inner">
+                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
+                    </div>
                 </div>
                 <div class="recipe-content">
                     <span class="recipe-category">${recipe.category || 'Recipe'}</span>
-                    <h2 class="recipe-title">${title}</h2>
+                    <h3 class="recipe-title">${title}</h3>
                     <p class="recipe-desc">${recipe.description || ''}</p>
-                    ${(yield_ || energy) ? `<div class="recipe-card-meta"><span><i data-lucide="users" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i>${yield_}</span><span><i data-lucide="flame" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i>${energy} kcal</span></div>` : ''}
+                    ${(yield_ || energy) ? `<div class="recipe-meta">
+                        ${yield_ ? `<span class="recipe-meta-item"><i data-lucide="users" style="width: 14px; height: 14px;"></i> ${yield_}</span>` : ''}
+                        ${energy ? `<span class="recipe-meta-item"><i data-lucide="flame" style="width: 14px; height: 14px;"></i> ${energy} kcal</span>` : ''}
+                    </div>` : ''}
                 </div>
             </div>`;
         }).join('');
 
         if (window.lucide) window.lucide.createIcons();
 
-        document.querySelectorAll('.card, .ingredient-card').forEach(card => {
+        document.querySelectorAll('.recipe-card, .ingredient-card').forEach(card => {
             card.addEventListener('click', () => openModal(card.dataset.id));
             card.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
