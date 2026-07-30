@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 237 237" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-367.61811,-2077.788088)">
+        <g transform="matrix(1,0,0,1,-0,1390.43003)">
+            <g id="Plate" transform="matrix(2.900126,0,0,2.900126,314.46107,634.201018)">
+                <path d="M59.055,18.329C81.532,18.329 99.781,36.578 99.781,59.055C99.781,81.532 81.532,99.781 59.055,99.781C36.578,99.781 18.329,81.532 18.329,59.055C18.329,36.578 36.578,18.329 59.055,18.329ZM59.055,28.844C75.729,28.844 89.267,42.381 89.267,59.055C89.267,75.729 75.729,89.267 59.055,89.267C42.381,89.267 28.844,75.729 28.844,59.055C28.844,42.381 42.381,28.844 59.055,28.844ZM59.055,30.263C74.946,30.263 87.847,43.164 87.847,59.055C87.847,74.946 74.946,87.847 59.055,87.847C43.164,87.847 30.263,74.946 30.263,59.055C30.263,43.164 43.164,30.263 59.055,30.263Z" style="fill:rgb(89,89,89);"/>
+            </g>
+        </g>
+    </g>
+</svg>

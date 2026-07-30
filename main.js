@@ -72,7 +72,7 @@ function createWindow() {
             symbolColor: '#f9fafb', // Matches var(--text-primary)
             height: 38
         },
-        icon: path.join(__dirname, 'images', 'icon.png'),
+        icon: path.join(__dirname, 'build', 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true
@@ -86,15 +86,36 @@ function createWindow() {
     });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     try {
         initializeDataDirectory();
         startServerInProcess();
 
-        // Give the server a moment to bind the port, then open the window
-        setTimeout(() => {
-            createWindow();
-        }, 500);
+        // Wait for the server to actually be ready before opening the window
+        const http = require('http');
+        const waitForServer = () => new Promise((resolve) => {
+            let attempts = 0;
+            const maxAttempts = 50; // 50 × 200ms = 10 seconds max
+            const check = () => {
+                attempts++;
+                const req = http.get('http://localhost:8000/api/recipes', { headers: { 'Authorization': 'Bearer larder_local_sync_8f92k' } }, (res) => {
+                    res.resume(); // drain the response
+                    resolve();
+                });
+                req.on('error', () => {
+                    if (attempts < maxAttempts) {
+                        setTimeout(check, 200);
+                    } else {
+                        resolve(); // open window anyway after timeout
+                    }
+                });
+                req.setTimeout(500, () => { req.destroy(); });
+            };
+            check();
+        });
+
+        await waitForServer();
+        createWindow();
     } catch (err) {
         dialog.showErrorBox('Larder Error', 'Failed to start: ' + err.message);
         app.quit();

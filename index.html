@@ -1,102 +1,246 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Larder</title>
+    <link rel="shortcut icon" href="images/icon.ico">
     <link rel="icon" type="image/png" href="images/icon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <link rel="apple-touch-icon" href="images/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">
-            <img src="images/icon.png" alt="Larder Logo" width="22" height="22">
-            Larder
-        </div>
-        <div class="nav-controls">
-            <input type="text" id="search-input" class="search-input" placeholder="Search recipes..." aria-label="Search recipes">
-            <a href="./" class="nav-link">Recipes</a>
-            <a href="ingredients" class="nav-link">Ingredients</a>
-            <a href="basics" class="nav-link">Basics</a>
-            <a href="reference" class="nav-link">Reference</a>
-            <a href="cms" class="nav-link">Manage</a>
-        </div>
-    </nav>
+    <div class="container">
+        <nav class="top-nav">
+            <a href="./" class="brand-logo" style="text-decoration:none;">
+                <img src="images/icon.png" alt="Larder Logo" style="height: 36px; width: 36px; border-radius: 8px; object-fit: contain;">
+                LARDER
+            </a>
+            
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <a href="./" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Recipes</a>
+                <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
+                <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
+                <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
+                <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
+                    <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> <span id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </nav>
 
-    <!-- Category Filters & Macros Toggle -->
-    <div class="filters-bar">
-        <div class="category-filters" id="category-filters"></div>
-        <button id="toggle-macro-filters" class="btn secondary" aria-expanded="false" aria-controls="macro-filters-panel" aria-label="Toggle nutritional macro filters">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: text-bottom;" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Macro Filters
-        </button>
-    </div>
+        <!-- Filter Toolbar -->
+        <div class="filter-toolbar" id="mainFilterToolbar">
+            <span class="toolbar-title" id="results-count">0 Recipes</span>
+            <div style="position: relative; display: flex; align-items: center;">
+                <button class="search-trigger" id="searchTrigger" aria-label="Search">
+                    <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+                </button>
+                <div class="search-bar-wrap" id="searchBarWrap">
+                    <i data-lucide="search" class="search-bar-icon"></i>
+                    <input type="text" class="search-input" id="search-input" placeholder="Search recipes...">
+                    <button class="search-close" id="searchClose"><i data-lucide="x"></i></button>
+                </div>
+            </div>
 
-    <!-- Macro Filters Panel -->
-    <div id="macro-filters-panel" class="macro-filters-panel hidden" role="region" aria-label="Nutritional filters">
-        <div class="macro-filters-header">
-            <span>Nutritional Filters</span>
-            <span class="macro-filters-note">Per Serving</span>
+            <button class="filter-trigger" id="filterTrigger" aria-label="Filter">
+                <i data-lucide="sliders-horizontal" style="width: 20px; height: 20px;"></i>
+                <span class="filter-badge" id="filterBadge" style="display:none;">0</span>
+            </button>
+
+            <!-- Filter Dropdown Panel -->
+            <div class="filter-dropdown" id="filterDropdown">
+                <div class="filter-dropdown-header">
+                    <h4>Filter Recipes</h4>
+                    <button class="filter-reset" id="filterReset">Reset All</button>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-section-title">Category</div>
+                    <div class="filter-chips-scrollable" id="category-filters">
+                        <!-- Categories injected here -->
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-section-title">Nutrition (per serving)</div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Calories</span>
+                            <span class="range-label-values" id="filter-cal-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-cal-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-cal-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="2000" step="50" value="0" id="slider-cal-min" class="macro-slider-min">
+                            <input type="range" min="0" max="2000" step="50" value="2000" id="slider-cal-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Carbs</span>
+                            <span class="range-label-values" id="filter-carbs-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-carbs-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-carbs-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="200" step="5" value="0" id="slider-carbs-min" class="macro-slider-min">
+                            <input type="range" min="0" max="200" step="5" value="200" id="slider-carbs-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Protein</span>
+                            <span class="range-label-values" id="filter-protein-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-protein-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-protein-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="150" step="5" value="0" id="slider-protein-min" class="macro-slider-min">
+                            <input type="range" min="0" max="150" step="5" value="150" id="slider-protein-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Fat</span>
+                            <span class="range-label-values" id="filter-fat-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-fat-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-fat-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="150" step="5" value="0" id="slider-fat-min" class="macro-slider-min">
+                            <input type="range" min="0" max="150" step="5" value="150" id="slider-fat-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="macro-filters-grid">
-            <div class="macro-filter-group">
-                <label>Calories <span class="filter-val-label" id="filter-cal-val">Any</span></label>
-                <div id="slider-cal" class="editorial-slider"></div>
+
+        <main role="main">
+            <div id="recipe-grid" class="grid-3" role="list" aria-label="Recipe cards">
+                <div class="empty-state">Loading...</div>
             </div>
-            <div class="macro-filter-group">
-                <label>Carbs <span class="filter-val-label" id="filter-carbs-val">Any</span></label>
-                <div id="slider-carbs" class="editorial-slider"></div>
+        </main>
+
+        <!-- Pagination Bar -->
+        <div class="pagination-bar" id="paginationBar">
+            <div class="pagination-left">
+                <label for="itemsPerPage">Show</label>
+                <select class="per-page-select" id="itemsPerPage">
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+                <label>per page</label>
             </div>
-            <div class="macro-filter-group">
-                <label>Protein <span class="filter-val-label" id="filter-protein-val">Any</span></label>
-                <div id="slider-protein" class="editorial-slider"></div>
+            <div class="pagination-center" id="pagination-info">
+                Showing <strong>0</strong> recipes
             </div>
-            <div class="macro-filter-group">
-                <label>Fat <span class="filter-val-label" id="filter-fat-val">Any</span></label>
-                <div id="slider-fat" class="editorial-slider"></div>
+            <div class="pagination-right">
+                <button class="page-btn" id="page-prev" disabled aria-label="Previous page"><i data-lucide="chevron-left"></i></button>
+                <div class="flex-row" style="gap: 0.25rem;" id="pagination-numbers">
+                    <button class="page-num active">1</button>
+                </div>
+                <button class="page-btn" id="page-next" disabled aria-label="Next page"><i data-lucide="chevron-right"></i></button>
             </div>
         </div>
-        <button id="reset-filters" class="btn secondary" aria-label="Clear all nutritional filters" style="margin-top: 0.5rem;">Clear All</button>
     </div>
-    <main class="container" role="main">
-        <div id="recipe-grid" class="recipe-grid" role="list" aria-label="Recipe cards">
-            <div class="empty-state">Loading...</div>
-        </div>
-    </main>
 
     <!-- Modal for Recipe Details -->
     <div id="recipe-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content" id="modal-container">
-            <button class="close-btn" aria-label="Close modal">&times;</button>
+            <button class="close-btn" id="modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>
             <div id="modal-body"></div>
         </div>
     </div>
 
-    <script>
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
-        }
-    </script>
-
     <div id="gdpr-banner" class="gdpr-banner hidden no-print">
         <div class="gdpr-content">
             <p>Larder uses local storage solely to save your display preferences. We do not track or collect personal data.</p>
-            <button id="gdpr-accept" class="btn primary">Got it</button>
+            <button id="gdpr-accept" class="btn btn-primary">Got it</button>
         </div>
     </div>
 
-    <footer class="site-footer no-print">
+    <footer class="site-footer no-print" style="text-align: center; margin-top: 4rem; padding-bottom: 2rem; color: var(--text-muted); font-size: 0.9rem;">
         <span>© <span id="current-year">2026</span> Larder. All rights reserved.</span>
-        <div class="footer-links">
+        <div class="footer-links" style="display:flex; justify-content:center; gap: 1rem; margin-top:0.5rem;">
             <a href="legal#disclaimer">Disclaimer</a>
             <a href="legal#terms">Terms</a>
             <a href="legal#privacy">Privacy</a>
         </div>
     </footer>
-    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <g id="icon-fish" transform="matrix(1,0,0,1,-10933.857373,-9237.481341)">
+            <g transform="matrix(0.809995,0,0,0.809995,9274.564488,6623.758681)">
+                <g transform="matrix(2.142035,0,0,2.142035,2018.854364,3146.858484)">
+                    <path d="M44.459,79.176C44.463,76.843 44.124,72.856 52.88,73.591C60.632,74.242 61.158,77.553 61.158,77.553C61.158,77.553 63.049,76.043 65.784,77.553C67.548,75.858 68.416,73.124 73.556,72.202C74.063,70.18 77.068,68.558 80.208,66.913C82.392,65.768 83.065,63.692 86.062,64.135C91.869,64.994 94.977,72.479 102.284,71.309C101.013,70.395 100.051,67.238 99.952,63.727C99.908,62.191 100.465,61.441 101.8,59.434C102.743,58.016 103.268,56.284 104.77,52.227C103.251,51.372 94.697,55.12 92.228,56.678C90.127,58.004 86.638,59.044 85.165,58.386C83.693,57.728 82.625,56.881 83.393,52.73C78.898,52.866 77.167,49.802 77.167,49.802C77.167,49.802 70.68,51.104 68.676,45.046C62.618,45.187 62.316,40.619 62.316,40.619C62.316,40.619 55.214,44.234 54.767,37.771C53.077,37.422 49.956,43.503 43.089,37.339C41.347,38.411 40.211,43.257 35.277,38.786C34.373,41.953 32.75,45.326 30.368,46.809C27.985,48.292 16.804,52.3 15.074,54.397C13.119,56.766 13.635,57.909 15.717,60.684C18.088,63.846 24,65.158 26.223,67.434C31.542,72.882 38.209,72.775 44.459,79.176ZM20.41,54.047C21.535,54.047 22.448,54.822 22.448,55.777C22.448,56.732 21.535,57.507 20.41,57.507C19.286,57.507 18.373,56.732 18.373,55.777C18.373,54.822 19.286,54.047 20.41,54.047Z" />
+                </g>
+            </g>
+        </g>
+        <g id="icon-muffin" transform="matrix(1,0,0,1,-15578.495736,-9199.839546)">
+            <g transform="matrix(0.809995,0,0,0.809995,13904.541347,6622.758681)">
+                <g transform="matrix(2.561865,0,0,2.561865,1992.663827,3083.050774)">
+                    <path d="M33.644,64.214C35.072,64.883 36.734,65.267 38.507,65.267C40.975,65.267 43.227,64.524 44.932,63.302C46.638,64.524 48.89,65.267 51.357,65.267C54.114,65.267 56.601,64.339 58.359,62.853C60.117,64.339 62.604,65.267 65.361,65.267C67.134,65.267 68.796,64.883 70.224,64.214L67.484,79.146C66.537,84.308 64.759,88.844 61.403,88.844L42.465,88.844C39.109,88.844 37.95,84.952 36.384,79.146L33.644,64.214ZM48.412,43.278C48.389,43.445 48.377,43.617 48.377,43.791C48.377,45.848 50.048,47.519 52.106,47.519C54.163,47.519 55.833,45.849 55.834,43.792C58.669,44.984 60.672,47.274 60.959,49.953C62.279,49.41 63.776,49.103 65.361,49.103C70.68,49.103 74.998,52.557 74.998,56.811C74.998,61.064 70.68,64.518 65.361,64.518C62.604,64.518 60.117,63.591 58.359,62.105C56.601,63.591 54.114,64.518 51.357,64.518C48.89,64.518 46.638,63.775 44.932,62.554C43.227,63.775 40.975,64.518 38.507,64.518C33.188,64.518 28.87,61.064 28.87,56.811C28.87,52.557 33.188,49.103 38.507,49.103C39.667,49.103 40.779,49.267 41.809,49.568C42.315,46.602 44.934,44.171 48.412,43.278ZM51.258,41.508C51.222,41.484 51.203,41.441 51.21,41.398C51.216,41.355 51.247,41.32 51.289,41.309C51.531,41.235 51.787,41.2 52.052,41.2C53.665,41.2 54.976,42.51 54.976,44.124C54.976,45.738 53.665,47.048 52.052,47.048C50.438,47.048 49.127,45.738 49.127,44.124C49.127,43.051 49.706,42.112 50.569,41.603C50.635,41.565 50.718,41.574 50.775,41.624C50.906,41.738 51.019,41.837 51.106,41.913C51.179,41.978 51.281,42.046 51.371,41.962C51.43,41.908 51.529,41.871 51.492,41.784C51.468,41.729 51.356,41.607 51.258,41.508ZM48.083,39.357C47.952,39.268 47.875,39.118 47.878,38.96C47.881,38.801 47.964,38.655 48.098,38.57C48.151,38.536 48.198,38.507 48.234,38.484C48.274,38.459 48.328,38.466 48.36,38.501L51.388,41.756C51.405,41.774 51.401,41.783 51.4,41.793C51.399,41.807 51.391,41.82 51.38,41.839C51.38,41.839 51.38,41.839 51.38,41.839C51.357,41.876 51.318,41.902 51.274,41.908C51.23,41.915 51.186,41.901 51.153,41.871C50.822,41.571 49.953,40.786 49.449,40.352C49.096,40.048 48.522,39.649 48.083,39.357Z" />
+                </g>
+            </g>
+        </g>
+        <g id="icon-squid" transform="matrix(1,0,0,1,-10923.742649,-9232.608109)">
+            <g transform="matrix(0.809995,0,0,0.809995,9274.564488,6623.758681)">
+                <g transform="matrix(2.365273,0,0,2.365273,2027.448454,3112.961907)">
+                    <path d="M3.645,67.09C3.547,66.655 3.992,66.291 3.992,66.291C3.992,66.291 11.892,55.456 14.177,52.502C16.964,49.994 20.596,49.956 22.684,51.104C25.348,52.568 30.125,55.103 32.057,57.53C45.195,55.595 52.608,56.961 56.697,57.843C57.527,58.099 56.589,59.783 56.973,60.38C57.356,60.977 57.961,60.641 58.199,60.924C58.436,61.208 58.012,61.405 58.399,62.081C59.463,62.258 61.342,60.39 61.777,60.38C62.419,60.296 62.728,60.17 64.717,62.081C71.909,62.693 74.812,61.217 79.284,57.041C83.207,53.38 81.921,47.295 92.374,45.602C89.922,47.926 87.57,44.195 82.521,57.843C86.298,53.058 92.811,52.795 97.3,51.573C101.364,50.467 102.157,46.563 103.173,45.769C102.762,47.226 101.619,49.424 99.82,51.72C97.1,54.207 88.804,54.138 86.287,58.487C86.644,58.708 90.776,59.623 91.926,60.38C90.805,60.469 85.254,58.715 83.566,61.425C85.051,60.796 89.935,62.918 92.821,63.217C95.494,63.493 97.161,63.77 100.882,63.217C98.627,64.934 96.276,64.593 94.047,64.505C90.191,64.353 82.086,62.884 81.482,65.283C81.482,65.291 81.48,65.299 81.477,65.306C80.731,67.157 81.43,68.77 81.474,68.869L81.477,68.874C82.034,71.305 90.178,69.828 94.047,69.675C96.276,69.587 98.627,69.246 100.882,70.964C97.161,70.41 95.494,70.687 92.821,70.964C89.935,71.262 85.051,73.384 83.566,72.755C85.254,75.465 90.805,73.711 91.926,73.8C90.776,74.557 86.644,75.472 86.287,75.693C88.804,80.042 97.1,79.973 99.82,82.46C101.619,84.756 102.762,86.954 103.173,88.411C102.157,87.617 101.364,83.713 97.3,82.607C92.811,81.386 86.298,81.122 82.521,76.337C87.57,89.985 89.922,86.254 92.374,88.578C81.921,86.885 83.207,80.801 79.284,77.139C74.812,72.963 71.909,71.487 64.717,72.099C62.728,74.01 62.419,73.884 61.777,73.8C61.342,73.791 59.463,71.922 58.399,72.099C58.012,72.775 58.436,72.972 58.199,73.256C57.961,73.539 57.356,73.203 56.973,73.8C56.589,74.397 57.624,75.733 56.597,75.97C52.702,76.869 45.195,78.585 32.057,76.65C30.125,79.077 25.348,81.612 22.684,83.077C20.596,84.224 16.964,84.186 14.177,81.678C11.892,78.724 3.992,67.889 3.992,67.889C3.992,67.889 3.547,67.525 3.645,67.09Z"/>
+                </g>
+            </g>
+        </g>
+        <g id="icon-onion" transform="matrix(1,0,0,1,-6335.438568,-9182.185994)">
+            <g transform="matrix(0.809995,0,0,0.809995,4644.545824,6623.758681)">
+                <g transform="matrix(2.055834,0,0,1.872932,2000.5696,3141.174501)">
+                    <path d="M60.872,50.973C60.872,50.973 42.302,58.123 42.302,69.789C42.302,80.037 50.623,88.358 60.872,88.358C71.12,88.358 79.441,80.037 79.441,69.789C79.441,58.123 60.872,50.973 60.872,50.973ZM60.967,49.083C60.824,49.192 56.627,50.973 56.627,50.973C56.627,50.973 53.35,24.253 51.705,20.516C50.098,16.866 49.995,11.711 51.705,15.593C53.059,18.67 59.652,35.591 59.832,38.975C60.771,37.074 57.445,12.264 58.267,9.467C59.043,6.826 64.3,34.399 63.845,40.32C63.787,40.617 63.74,40.888 63.703,41.128C63.771,40.941 63.818,40.667 63.845,40.32C65.073,33.944 70.873,15.057 72.21,17.736C73.393,20.106 63.582,45.151 64.853,51.1C62.708,49.986 61.069,49.166 60.967,49.083C60.971,49.079 60.971,49.078 60.968,49.078C60.963,49.078 60.962,49.079 60.967,49.083Z"/>
+                </g>
+            </g>
+        </g>
+        <g id="icon-tomato" transform="matrix(1,0,0,1,-6322.488848,-9211.18234)">
+            <g transform="matrix(0.809995,0,0,0.809995,4644.545824,6623.758681)">
+                <g transform="matrix(1.234576,0,0,1.234576,2048.892476,3188.136217)">
+                    <path d="M60.503,31.91L64.813,5.051L69.098,5.87L62.822,34.124C63.503,32.774 64.335,31.408 65.31,30.071C70.282,23.251 77.102,19.742 80.53,22.241C77.4,24.375 73.251,28.311 69.658,33.241C68.473,34.865 67.41,36.514 66.479,38.125C69.533,36.987 72.813,36.369 76.225,36.369C92.71,36.369 106.095,50.799 106.095,68.572C106.095,86.346 92.71,100.776 76.225,100.776C71.167,100.776 67.445,101.19 62.223,100.776C56.792,101.294 53.279,100.776 48.221,100.776C31.736,100.776 18.351,86.346 18.351,68.572C18.351,50.799 31.736,36.369 48.221,36.369C49.053,36.369 49.878,36.405 50.692,36.477C47.765,33.472 44.551,31.266 42.045,30.144C45.163,27.379 51.17,29.032 55.572,33.819C55.308,32.036 54.943,30.176 54.464,28.296C52.961,22.384 50.573,17.188 48.46,14.043C52.572,12.997 57.599,18.79 59.679,26.97C60.11,28.663 60.381,30.327 60.503,31.91Z"/>
+                </g>
+            </g>
+        </g>
+        <g id="icon-nut" transform="matrix(1,0,0,1,-6333.714116,-9204.229069)">
+            <g transform="matrix(0.809995,0,0,0.809995,4644.545824,6623.758681)">
+                <g transform="matrix(1.635568,0,0,1.635568,2027.981674,3158.178483)">
+                    <path d="M39.431,53.946C39.277,54.942 39.197,55.963 39.197,57.002C39.197,82.408 59.055,90.877 59.055,90.877C59.055,90.877 78.913,82.408 78.913,57.002C78.913,55.967 78.834,54.951 78.681,53.958C75.303,54.489 65.045,56.023 59.385,56.023C53.642,56.023 42.902,54.475 39.431,53.946ZM58.464,27.238C45.52,27.465 35.11,35.085 35.11,44.439C35.11,47.241 36.063,49.997 37.878,52.469C38.147,52.83 38.547,53.071 38.992,53.14C41.881,53.588 53.373,55.285 59.385,55.285C65.486,55.285 76.927,53.502 79.339,53.115C79.637,53.067 79.905,52.907 80.088,52.667C81.997,50.143 83,47.315 83,44.439C83,35.426 73.335,28.022 61.054,27.292C60.898,26.646 60.49,25.517 59.694,23.554C58.276,20.057 56.197,16.371 55.157,16.938C54.118,17.505 53.078,17.316 53.834,19.018C53.873,19.104 57.517,22.227 58.464,27.238L58.464,27.238Z"/>
+                </g>
+            </g>
+        </g>
+        <g id="icon-lobster" transform="matrix(1,0,0,1,-10926.138372,-9213.616341)">
+            <g transform="matrix(0.809995,0,0,0.809995,9274.564488,6623.758681)">
+                <g transform="matrix(2.492335,0,0,2.492335,1995.544482,3112.965795)">
+                    <path d="M76.154,63.703C75.842,63.912 75.749,64.382 75.993,64.499C79.194,66.027 88.176,68.184 95.356,72.875C85.022,68.495 75.465,66.338 74.088,65.861C70.385,68.8 67.83,70.647 65.516,71.143C66.842,72.809 67.492,75.847 66.649,76.441C70.833,76.732 73.817,82.314 73.817,82.314C73.817,82.314 77.716,80.308 83.164,79.566C88.429,74.711 94.583,73.603 102.502,75.197C97.725,76.662 91.942,79.251 91.942,79.251C91.942,79.251 86.694,81.442 85.495,83.384C87.892,83.246 99.148,82.29 107.104,77.948C91.442,99.279 73.427,88.013 73.427,88.013C73.427,88.013 64.783,83.248 64.5,79.251C62.04,78.593 60.623,74.154 59.706,73.135C59.549,72.96 59.139,72.789 59.139,73.024C60.082,76.094 59.044,78.5 60.011,80.902C65.36,83.249 64.941,87.439 64.941,87.439C64.941,87.439 60.391,83.609 58.522,81.669C57.763,78.675 57.521,74.779 57.641,73.135C56.248,73.43 55.37,73.328 53.92,73.135C55.02,80.695 54.69,81.302 54.669,83.107C61.315,86.607 63.271,92.425 63.508,93.468C60.889,91.239 55.027,85.435 53.459,84.598C53.01,81.673 52.102,79.01 52.1,72.774C50.472,72.775 50.064,72.615 50.064,72.615C50.064,72.615 49.377,79.385 48.662,82.834C53.35,86.322 52.269,91.168 52.432,92.146C49.517,86.551 48.048,85.751 47.061,83.988C47.566,80.404 48.37,74.005 48.219,71.893C47.696,72.039 46.581,70.745 46.151,71.317C45.616,75.094 44.064,76.467 43.123,79.057C45.695,83.176 44.574,87.509 44.446,88.373C43.792,86.991 42.292,80.929 41.469,79.057C42.726,76.473 43.718,72.641 44.446,71.143C44.45,69.672 42.018,69.994 42.018,69.994C42.018,69.994 41.282,70.659 40.862,70.568C39.645,70.124 39.593,69.869 39.042,69.994C38.297,69.952 38.124,70.568 37.61,70.568C36.449,70.457 36.408,70.228 35.765,69.689C34.51,70.186 34.727,70.372 34.086,70.355C33.501,70.339 32.992,69.244 32.375,69.439C30.309,70.096 23.381,74.451 21.213,74.764C18.139,75.193 18.594,71.473 19.426,71.143C19.37,70.536 18.331,70.763 18.264,69.113C17.952,68.233 19.27,67.697 18.772,67.331C17.689,66.536 16.676,65.311 18.231,63.668C16.676,62.025 17.689,60.801 18.772,60.005C19.27,59.639 17.952,59.103 18.264,58.223C18.331,56.573 19.37,56.8 19.426,56.193C18.594,55.864 18.139,52.144 21.213,52.573C23.381,52.886 30.309,57.241 32.375,57.897C32.992,58.093 33.501,56.998 34.086,56.982C34.727,56.964 34.51,57.15 35.765,57.647C36.408,57.108 36.449,56.88 37.61,56.769C38.124,56.769 38.297,57.384 39.042,57.342C39.593,57.467 39.645,57.212 40.862,56.769C41.282,56.677 42.018,57.342 42.018,57.342C42.018,57.342 44.45,57.664 44.446,56.193C43.718,54.696 42.726,50.864 41.469,48.279C42.292,46.407 43.792,40.345 44.446,38.963C44.574,39.827 45.695,44.16 43.123,48.279C44.064,50.87 45.616,52.242 46.151,56.02C46.581,56.592 47.696,55.297 48.219,55.443C48.37,53.331 47.566,46.932 47.061,43.349C48.048,41.585 49.517,40.786 52.432,35.191C52.269,36.169 53.35,41.014 48.662,44.502C49.377,47.952 50.064,54.722 50.064,54.722C50.064,54.722 50.472,54.561 52.1,54.562C52.102,48.326 53.01,45.664 53.459,42.738C55.027,41.901 60.889,36.097 63.508,33.868C63.271,34.912 61.315,40.73 54.669,44.229C54.69,46.034 55.02,46.641 53.92,54.201C55.37,54.008 56.248,53.906 57.641,54.201C57.521,52.557 57.763,48.661 58.522,45.667C60.391,43.727 64.941,39.897 64.941,39.897C64.941,39.897 65.36,44.087 60.011,46.434C59.044,48.836 60.082,51.243 59.139,54.312C59.139,54.548 59.549,54.376 59.706,54.201C60.623,53.182 62.04,48.743 64.5,48.085C64.783,44.088 73.427,39.323 73.427,39.323C73.427,39.323 91.442,28.058 107.104,49.388C99.148,45.046 87.892,44.09 85.495,43.952C86.694,45.894 91.942,48.085 91.942,48.085C91.942,48.085 97.725,50.675 102.502,52.139C94.583,53.733 88.429,52.625 83.164,47.77C77.716,47.028 73.817,45.023 73.817,45.023C73.817,45.023 70.833,50.605 66.649,50.895C67.492,51.489 66.842,54.527 65.516,56.193C67.83,56.689 70.385,58.536 74.088,61.475C75.465,60.999 85.022,58.841 95.356,54.461C88.176,59.152 79.194,61.309 75.993,62.838C75.749,62.954 75.842,63.424 76.154,63.634C76.154,63.634 76.256,63.651 76.217,63.668C76.256,63.685 76.154,63.703 76.154,63.703Z"/>
+                </g>
+            </g>
+        </g>
+        <g id="icon-mortar" transform="matrix(1,0,0,1,-13266.332072,-9207.37019)">
+            <g transform="matrix(0.809995,0,0,0.809995,11589.413175,6623.758681)">
+                <g transform="matrix(2.048778,0,0,2.048778,2011.592709,3124.055833)">
+                    <path d="M43.209,83.85L41.031,83.85C40.551,83.85 40.161,84.24 40.161,84.72L40.161,90.227C40.161,90.707 40.551,91.097 41.031,91.097L70.371,91.097C70.851,91.097 71.241,90.707 71.241,90.227L71.241,84.72C71.241,84.24 70.851,83.85 70.371,83.85L68.192,83.85C75.829,79.747 80.983,72.001 80.983,63.128C80.983,62.185 80.924,61.243 80.806,60.306C80.767,60.012 80.517,59.792 80.22,59.792C75.269,59.792 36.133,59.792 31.182,59.792C30.885,59.792 30.634,60.012 30.596,60.306C30.478,61.243 30.418,62.185 30.418,63.128C30.418,72.001 35.572,79.747 43.209,83.85ZM60.677,49.66L67.025,34.22C67.722,32.525 69.597,31.641 71.348,32.182C71.742,32.304 72.146,32.429 72.541,32.551C74.292,33.091 75.342,34.878 74.962,36.671L72.207,49.66L80.393,49.66C81.019,49.66 81.62,49.909 82.063,50.352C82.506,50.795 82.755,51.396 82.755,52.022C82.755,54.158 82.755,57.154 82.755,58.409C82.755,58.566 82.693,58.716 82.582,58.827C82.471,58.938 82.321,59 82.164,59C76.68,59 34.722,59 29.238,59C29.081,59 28.931,58.938 28.82,58.827C28.709,58.716 28.647,58.566 28.647,58.409C28.647,57.154 28.647,54.158 28.647,52.022C28.647,51.396 28.896,50.795 29.339,50.352C29.782,49.909 30.383,49.66 31.009,49.66L60.677,49.66Z"/>
+                </g>
+            </g>
+        </g>
+    </defs>
+</svg>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            const cmsLink = document.getElementById('cms-link');
+            if (cmsLink) cmsLink.style.display = 'none';
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

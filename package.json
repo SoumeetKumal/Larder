@@ -13,7 +13,7 @@
   "build": {
     "appId": "com.larder.cms",
     "productName": "Larder",
-    "icon": "images/icon.png",
+    "icon": "build/icon.png",
     "directories": {
       "output": "dist"
     },
@@ -66,6 +66,7 @@
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
-    "adm-zip": "^0.6.0"
+    "adm-zip": "^0.6.0",
+    "jsdom": "^29.1.1"
   }
 }

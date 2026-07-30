@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 99 76" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-13262.212257,-9227.840342)">
+        <g transform="matrix(0.809995,0,0,0.809995,11589.413175,6623.758681)">
+            <g id="Stock-Icon" serif:id="Stock Icon" transform="matrix(2.052431,0,0,2.052431,2010.467394,3160.799371)">
+                <path d="M80.947,43.099L85.634,43.099L83.256,48.873L80.947,48.873L80.947,60.746C80.947,68.031 75.391,71.539 68.549,71.539L43.752,71.539C36.909,71.539 31.353,67.612 31.353,60.746L31.353,48.873L29.044,48.873L26.666,43.099L31.353,43.099L31.353,39.899L80.947,39.899L80.947,43.099ZM51.658,28.693L41.864,28.693C35.25,28.693 31.726,31.851 31.422,35.822L80.878,35.822C80.574,31.851 77.994,28.693 71.379,28.693L60.642,28.693L60.642,27.535C60.642,26.896 60.123,26.377 59.484,26.377L52.816,26.377C52.177,26.377 51.658,26.896 51.658,27.535L51.658,28.693Z" style="fill:white;"/>
+            </g>
+        </g>
+    </g>
+</svg>

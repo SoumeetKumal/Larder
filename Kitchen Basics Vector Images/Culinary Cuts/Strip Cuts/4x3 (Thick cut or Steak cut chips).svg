@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 249 178" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-1468.996063,-974.839157)">
+        <g transform="matrix(0.962446,0,0,0.600049,78.661378,-259.289968)">
+            <g id="Pont-Neuf-1x1x6-8cm-to-2x2x8cm--1-3-x1-3-x2.5--3--to-3-4-x3-4-x3---Thick-cut-or-Steak-cut-chips-" serif:id="Pont Neuf 1x1x6-8cm to 2x2x8cm, 1/3&quot;x1/3&quot;x2.5&quot;-3&quot; to 3/4&quot;x3/4&quot;x3&quot; (Thick cut or Steak cut chips)" transform="matrix(1.713087,0,0,2.723688,1406.237101,2186.769016)">
+                <g id="Top" transform="matrix(5.548977,-3.203703,0.937002,0.540978,95.957994,-81.190913)">
+                    <path d="M0,62.19C0,61.739 -0.053,61.372 -0.119,61.372L-23.503,61.372C-23.569,61.372 -23.622,61.739 -23.622,62.19L-23.622,81.011C-23.622,81.463 -23.569,81.829 -23.503,81.829L-0.119,81.829C-0.053,81.829 0,81.463 0,81.011L0,62.19Z" style="fill:rgb(89,89,89);"/>
+                </g>
+                <g id="Side" transform="matrix(0.803463,0.46388,0,1.085866,-15.573535,-16.223151)">
+                    <path d="M70.866,21.276C70.866,20.824 70.496,20.457 70.04,20.457L48.07,20.457C47.614,20.457 47.244,20.824 47.244,21.276L47.244,40.096C47.244,40.548 47.614,40.915 48.07,40.915L70.04,40.915C70.496,40.915 70.866,40.548 70.866,40.096L70.866,21.276Z" style="fill:rgb(89,89,89);"/>
+                </g>
+                <g id="Front" transform="matrix(5.548977,-3.203703,0,1.081087,-351.491645,177.652047)">
+                    <path d="M94.488,82.647C94.488,82.196 94.435,81.829 94.369,81.829L70.985,81.829C70.919,81.829 70.866,82.196 70.866,82.647L70.866,101.468C70.866,101.92 70.919,102.286 70.985,102.286L94.369,102.286C94.435,102.286 94.488,101.92 94.488,101.468L94.488,82.647Z" style="fill:rgb(89,89,89);"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

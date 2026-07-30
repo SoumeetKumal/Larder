@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 178 81" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-1135.334646,-1723.798899)">
+        <g transform="matrix(1,0,0,1,0,728.806082)">
+            <g id="Mixing-Bowl" serif:id="Mixing Bowl" transform="matrix(2.564419,0,0,2.218574,1073.142814,907.861524)">
+                <path d="M73.522,73.177L44.068,73.177L44.068,74.297C44.068,74.938 45.285,75.459 46.783,75.459L70.806,75.459C72.305,75.459 73.522,74.938 73.522,74.297L73.522,73.177ZM26.959,42.12C26.921,42.785 26.901,43.451 26.901,44.117C26.901,55.866 32.837,66.745 42.52,72.74L75.07,72.74C84.752,66.745 90.688,55.866 90.688,44.117C90.688,43.451 90.669,42.785 90.631,42.12L26.959,42.12ZM93.338,40.495C93.338,39.821 92.791,39.274 92.117,39.274L25.473,39.274C24.799,39.274 24.252,39.821 24.252,40.495C24.252,41.169 24.799,41.716 25.473,41.716L92.117,41.716C92.791,41.716 93.338,41.169 93.338,40.495Z" style="fill:rgb(89,89,89);"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,49 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reference — Larder</title>
+    <title>Reference & Substitutions — Larder</title>
     <link rel="icon" type="image/png" href="images/icon.png">
+    <link rel="apple-touch-icon" href="images/icon.png">
     <link rel="stylesheet" href="styles.css">
-    <style>
-        .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; font-size: 0.9rem; }
-        .ref-table th {
-            text-align: left; font-size: 0.7rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text-muted); padding: 0.6rem 0.8rem;
-            border-bottom: 2px solid var(--border);
-        }
-        .ref-table td {
-            padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border);
-            color: var(--text-secondary); font-weight: 300;
-        }
-        .ref-table tr:hover td { background: var(--bg-hover); }
-        .ref-table td:first-child { color: var(--text-primary); font-weight: 500; }
-        .ref-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-        .ref-table th.num { text-align: right; }
-        .sub-table-label { font-size: 0.85rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
-        @media (max-width: 768px) {
-            .ref-table { font-size: 0.8rem; }
-            .ref-table th, .ref-table td { padding: 0.4rem 0.5rem; }
-            .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">
-            <img src="images/icon.png" alt="Larder Logo" width="22" height="22">
-            Larder
-        </div>
-        <div class="nav-links">
+    <header class="app-header">
+    <div class="header-main">
+        <a href="./" class="brand-logo" aria-label="Larder Home">
+            <img src="images/icon.png" alt="Larder Logo" class="logo-img" width="32" height="32">
+            <span class="logo-text">Larder</span>
+        </a>
+        <nav class="nav-links">
             <a href="./" class="nav-link">Recipes</a>
             <a href="ingredients" class="nav-link">Ingredients</a>
             <a href="basics" class="nav-link">Basics</a>
-            <a href="reference" class="nav-link">Reference</a>
-            <a href="cms" class="nav-link">Manage</a>
+            <a href="reference" class="nav-link active">Reference</a>
+        </nav>
+        <div class="header-actions">
+            <button class="btn secondary" id="themeToggle" aria-label="Toggle dark mode" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                <span id="themeIcon" style="display:flex;"><i data-lucide="moon" style="width:18px;height:18px;"></i></span>
+            </button>
         </div>
-    </nav>
+    </div>
+</header>
 
     <div class="basics-layout">
         <!-- Sticky Sidebar TOC -->
@@ -436,5 +422,29 @@
             document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
         }
     </script>
+
+    <script>
+        const htmlTag = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        function setTheme(theme) {
+            htmlTag.setAttribute('data-theme', theme);
+            localStorage.setItem('larder_theme', theme);
+            if (themeIcon) {
+                themeIcon.innerHTML = theme === 'dark' ? '<i data-lucide="sun" style="width: 18px; height: 18px;"></i>' : '<i data-lucide="moon" style="width: 18px; height: 18px;"></i>';
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+        const savedTheme = localStorage.getItem('larder_theme');
+        if (savedTheme) { setTheme(savedTheme); }
+        else { setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                setTheme(htmlTag.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+            });
+        }
+        if (window.lucide) window.lucide.createIcons();
+    </script>
 </body>
+
 </html>
