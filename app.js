@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         buildModalContent();
 
-        modal.classList.remove('hidden');
+        modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         if (closeBtn) closeBtn.focus();
         
@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeModal() {
-        modal.classList.add('hidden');
+        modal.classList.remove('active');
         document.body.style.overflow = '';
         if (lastFocusedElement) {
             lastFocusedElement.focus();
@@ -761,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', (e) => { 
-        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
             closeModal(); 
         }
     });

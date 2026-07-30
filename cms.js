@@ -36,11 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmTitle.textContent = title;
             confirmMessage.textContent = message;
             confirmOkBtn.textContent = okLabel;
-            confirmDialog.classList.remove('hidden');
+            confirmDialog.classList.add('active');
             document.body.style.overflow = 'hidden';
 
             function cleanup() {
-                confirmDialog.classList.add('hidden');
+                confirmDialog.classList.remove('active');
                 document.body.style.overflow = '';
                 confirmOkBtn.removeEventListener('click', onOk);
                 confirmCancelBtn.removeEventListener('click', onCancel);
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     renderModalSelectedItems();
-                    assignModal.classList.remove('hidden');
+                    assignModal.classList.add('active');
                 });
             });
 
@@ -564,12 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             btnCancel.onclick = () => {
-                assignModal.classList.add('hidden');
+                assignModal.classList.remove('active');
             };
             
             btnClear.onclick = () => {
                 mealPlans = mealPlans.filter(p => !(p.date === activeDate && p.slot === activeSlotName));
-                assignModal.classList.add('hidden');
+                assignModal.classList.remove('active');
                 renderCMSList();
             };
             
@@ -619,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-                assignModal.classList.add('hidden');
+                assignModal.classList.remove('active');
                 renderCMSList();
             };
             
@@ -1220,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('recipe-id').value = Date.now().toString();
             createIngredientRow();
         }
-        modal.classList.remove('hidden');
+        modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
@@ -1324,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('profile-averagePrice').value = ing.averagePrice || '';
         document.getElementById('profile-priceCurrency').value = ing.priceCurrency || 'MUR';
 
-        foodModal.classList.remove('hidden');
+        foodModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
@@ -1379,12 +1379,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function closeModal() {
-        modal.classList.add('hidden');
+        modal.classList.remove('active');
         document.body.style.overflow = '';
     }
 
     function closeFoodModal() {
-        foodModal.classList.add('hidden');
+        foodModal.classList.remove('active');
         document.body.style.overflow = '';
     }
 
