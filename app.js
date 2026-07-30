@@ -485,122 +485,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderIngredientsHTML(recipe, scale) {
         if (!recipe.ingredients || recipe.ingredients.length === 0) return '';
         
-        let html = '<table class="nm-recipe-table"><colgroup><col style="width: 50%"><col style="width: 50%"></colgroup>';
+        let html = '<table class="recipe-table"><colgroup><col style="width: 50%"><col style="width: 25%"><col style="width: 25%"></colgroup>';
         
         html += recipe.ingredients.map(ing => {
             if (ing.item.startsWith('## ')) {
-                return `<tr><td colspan="2" style="border-bottom: none;"><h4 class="nm-component-header">${ing.item.substring(3)}</h4></td></tr>`;
+                return `<tr><td colspan="3" style="border-bottom: none;"><h4 style="margin-top: 1rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${ing.item.substring(3)}</h4></td></tr>`;
             }
 
             const profile = recipesData.find(r => r.entryType === 'ingredient' && ing.item.toLowerCase().includes(r.title.toLowerCase()));
             const itemNameHtml = profile 
-                ? `<button class="ingredient-link" data-id="${profile.id}" style="background:none;border:none;padding:0;color:var(--text-primary);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${ing.item}</button>`
-                : `<span style="padding-right: 5px;">${ing.item}</span>`;
+                ? `<button class="ingredient-link" data-id="${profile.id}" style="background:none;border:none;padding:0;color:var(--text-main);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s; text-align: left;" onmouseover="this.style.color='var(--accent-sea)'" onmouseout="this.style.color='var(--text-main)'">${ing.item}</button>`
+                : `<span style="font-weight: 500;">${ing.item}</span>`;
 
-            let amountStr = '';
-            let met = scaleAmount(ing.metric, scale);
-            let imp = scaleAmount(ing.imperial, scale);
-            if (met && imp) amountStr = `${met} (${imp})`;
-            else if (met) amountStr = met;
-            else if (imp) amountStr = imp;
+            let displayAmt = '-';
+            let parsedAmount = parseFloat(ing.amount);
+            if (!isNaN(parsedAmount)) {
+                let scaled = parsedAmount * scale;
+                // keep up to 2 decimal places if needed
+                displayAmt = (Math.round(scaled * 100) / 100) + (ing.unit ? ' ' + ing.unit : '');
+            } else if (ing.amount) {
+                displayAmt = ing.amount; 
+            }
 
-            return `
-            <tr>
-                <td>${itemNameHtml}</td>
-                <td>${amountStr}</td>
-            </tr>`;
+            return `<tr><td>${itemNameHtml}</td><td>${displayAmt}</td><td></td></tr>`;
         }).join('');
-            
+        
         html += '</table>';
         return html;
-    }
-
-    let lastFocusedElement = null;
-
-    function openModal(id) {
-        lastFocusedElement = document.activeElement;
-        currentRecipe = recipesData.find(r => (r.id === id || r.foodId === id));
-        if (!currentRecipe) return;
-        currentScale = 1;
-
-        const recipe = currentRecipe;
-        const themeClass = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
-        modalContainer.className = `modal-content new-modal ${themeClass}`;
-
-        buildModalContent();
-
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        if (closeBtn) closeBtn.focus();
-        
-        if (window.lucide) window.lucide.createIcons();
-    }
-
-    function getStandardMacros(recipe) {
-        if (!recipe.macros && typeof recipe.calories === 'undefined') return null;
-        
-        let parseStr = (str) => {
-            if (typeof str === 'number') return { num: str, unit: 'g' };
-            if (!str) return { num: 0, unit: '' };
-            let match = String(str).match(/^(\d*\.?\d+)\s*(.*)/);
-            if (match) return { num: parseFloat(match[1]), unit: match[2] };
-            return { num: 0, unit: '' };
-        };
-
-        let e = recipe.macros ? parseStr(recipe.macros.energy) : { num: recipe.calories || 0, unit: 'kcal' };
-        let c = recipe.macros ? parseStr(recipe.macros.carbohydrate) : { num: recipe.carbsG || 0, unit: 'g' };
-        let p = recipe.macros ? parseStr(recipe.macros.protein) : { num: recipe.proteinG || 0, unit: 'g' };
-        let f = recipe.macros ? parseStr(recipe.macros.fat) : { num: recipe.fatG || 0, unit: 'g' };
-
-        let m = recipe.macros || {};
-        let refType = m.macroReference?.type || 'per_serving';
-        let refAmt = m.macroReference?.referenceAmount || '';
-
-        let yieldNum = 1;
-        if (m.yield) {
-            let match = m.yield.match(/^(\d*\.?\d+)/);
-            if (match) yieldNum = parseFloat(match[1]) || 1;
-        }
-
-        let divisor = 1;
-        let suffix = '';
-
-        if (refType === 'per_serving') {
-            divisor = 1;
-            suffix = ' / serving';
-        } else if (refType === 'total') {
-            divisor = yieldNum;
-            suffix = ' / serving';
-        } else if (refType === 'per_100g') {
-            divisor = 1;
-            suffix = ' / 100g';
-        } else if (refType === 'per_x_g') {
-            divisor = 1;
-            suffix = ` / ${refAmt}g`;
-        }
-
-        let calc = (val) => {
-            if (val.num === 0 && !val.unit) return '-';
-            let res = val.num / divisor;
-            res = Math.round(res * 10) / 10;
-            return `${res}${val.unit}`;
-        };
-
-        return {
-            normalized: {
-                energy: e.num / divisor,
-                carbs: c.num / divisor,
-                protein: p.num / divisor,
-                fat: f.num / divisor
-            },
-            display: {
-                energy: m.energy ? calc(e) : '-',
-                carbs: m.carbohydrate ? calc(c) : '-',
-                protein: m.protein ? calc(p) : '-',
-                fat: m.fat ? calc(f) : '-'
-            },
-            referenceLabel: suffix.replace(' / ', '')
-        };
     }
 
     function buildModalContent() {
@@ -650,11 +561,11 @@ document.addEventListener('DOMContentLoaded', () => {
             stepsHtml = recipe.steps.map((step) => {
                 if (step.startsWith('## ')) {
                     stepNum = 1;
-                    return `<h4 class="nm-component-header">${step.substring(3)}</h4>`;
+                    return `<h4 style="margin-top: 1.5rem; color: var(--text-main); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${step.substring(3)}</h4>`;
                 }
                 const html = `
-                <div class="nm-step">
-                    <div class="nm-step-number">${stepNum}</div>
+                <div class="recipe-step">
+                    <span class="step-number">${stepNum}</span>
                     <p>${step}</p>
                 </div>`;
                 stepNum++;
@@ -664,70 +575,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let footerHtml = '';
         if (recipe.note || recipe.variations) {
-            footerHtml = '<div class="nm-footer">';
-            if (recipe.note) footerHtml += `<div style="flex:1"><div class="nm-footer-label">NOTE</div><div class="nm-footer-text">${recipe.note}</div></div>`;
-            if (recipe.variations) footerHtml += `<div style="flex:1"><div class="nm-footer-label">VARIATIONS</div><div class="nm-footer-text">${recipe.variations}</div></div>`;
+            footerHtml = '<div class="recipe-footer-col">';
+            if (recipe.note) {
+                footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
+                    <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">${recipe.note}</p>
+                </div>`;
+            }
+            if (recipe.variations) {
+                footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
+                    <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">${recipe.variations}</p>
+                </div>`;
+            }
             footerHtml += '</div>';
         }
 
         const iconTag = recipe.iconTag || 'icon-fish';
-
+        
+        let headerColor = 'var(--accent-sea)';
+        if (recipe.category === 'Dessert') headerColor = 'var(--accent-bake)';
+        else if (recipe.category === 'Breakfast') headerColor = 'var(--accent-stock)';
+        
+        // Remove standard header wrapper and inject the custom modal structure 
+        // Note: index.html already has `<div class="modal-content" id="modal-container">` and `<button class="modal-close" id="modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>` inside it, and `<div id="modal-body">`.
+        // BUT our `modalBody.innerHTML = ...` targets `#modal-body`. 
+        // Wait, in visual_direction.html, the structure is:
+        // .modal-content
+        //   .modal-header
+        //   .modal-body
+        
+        // So we can put .modal-header AND .modal-body inside `#modal-body`.
+        
+        modalBody.style.padding = "0"; // reset padding since we use columns
+        modalBody.style.display = "flex";
+        modalBody.style.flexDirection = "column"; // we will put header, then body flex
+        
         modalBody.innerHTML = `
-            <div class="nm-header">
-                <div class="nm-actions no-print" style="margin-bottom:1rem; display:flex; justify-content:flex-end; gap:0.5rem;">
-                    <button class="btn btn-ghost" onclick="window.print()" aria-label="Print Recipe" style="padding:0.5rem; display:flex; align-items:center; gap:0.25rem;">
-                        <i data-lucide="printer" style="width:16px;height:16px;"></i> Print
-                    </button>
+            <div class="modal-header">
+                <div class="modal-actions no-print">
+                    <button class="icon-btn" aria-label="Print Recipe" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px;"></i></button>
                 </div>
-                <h1 class="nm-title">${recipe.title}</h1>
-                <p class="nm-desc">${recipe.description || ''}</p>
+                <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${recipe.title}</h2>
+                <p class="recipe-full-desc">${recipe.description || ''}</p>
             </div>
-
-            <div class="nm-body">
-                <div class="nm-left">
-                    <div class="nm-section-pill">
-                        <i data-lucide="list" style="width:16px;height:16px;"></i>
-                        Ingredients
-                    </div>
-                    <div id="ingredients-wrapper">${ingredientsHtml}</div>
-                </div>
-                
-                <div class="nm-right">
-                    <div class="nm-stat-block">
-                        <div class="nm-stat-title">Stats</div>
-                        <div class="nm-stat-group" style="flex:1; justify-content: space-around;">
-                            <div class="nm-stat-item">
-                                <span class="nm-stat-label">Info</span>
-                                <span class="nm-stat-value">${stdMacros ? stdMacros.display.energy : '-'}</span>
-                            </div>
-                            <div class="nm-stat-item">
-                                <span class="nm-stat-label">Serves</span>
-                                <span class="nm-stat-value" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <button class="nm-multiplier-btn scaler-btn" data-scale="${currentScale <= 1 ? 0.5 : 1}"><i data-lucide="minus" style="pointer-events:none;width:14px;height:14px;"></i></button>
+            
+            <div class="modal-body" style="padding: 0; display: grid; grid-template-columns: 1fr 2fr;">
+                <!-- Stats Row -->
+                <div class="recipe-ingredients-col" style="padding: 1.5rem 1rem 1rem 2rem; border-bottom: 1px solid var(--border); border-right: none;">
+                    <div class="stat-block" style="border-top: 3px solid ${headerColor}; width: 100%; justify-content: flex-start;">
+                        <span class="stat-block-title">Info</span>
+                        <div class="stat-group">
+                            <div class="stat-item"><span class="stat-label">Serves</span>
+                                <span class="stat-value" style="display: flex; align-items: center; gap: 0.5rem;" id="ingredients-wrapper-controls">
+                                    <button class="multiplier-btn scaler-btn" data-scale="${currentScale <= 1 ? 0.5 : 1}" style="width: 24px; height: 24px;"><i data-lucide="minus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
                                     ${recipe.macros?.yield || '-'}
-                                    <button class="nm-multiplier-btn scaler-btn" data-scale="${currentScale >= 1 ? 2 : 1}"><i data-lucide="plus" style="pointer-events:none;width:14px;height:14px;"></i></button>
+                                    <button class="multiplier-btn scaler-btn" data-scale="${currentScale >= 1 ? 2 : 1}" style="width: 24px; height: 24px;"><i data-lucide="plus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
                                 </span>
                             </div>
-                            <div class="nm-stat-item">
-                                <span class="nm-stat-label">Time</span>
-                                <span class="nm-stat-value">${recipe.time || '-'}</span>
-                            </div>
+                            <div class="stat-item"><span class="stat-label">Time</span><span class="stat-value">${recipe.time || '-'}</span></div>
                         </div>
                     </div>
-
-                    <div class="nm-section-pill">
-                        <i data-lucide="utensils" style="width:16px;height:16px;"></i>
-                        <span style="position:relative; top:1px;">Instructions</span>
+                </div>
+                
+                <div class="recipe-instructions-col" style="padding: 1.5rem 2rem 1rem 1rem; border-bottom: 1px solid var(--border);">
+                    <div class="stat-block" style="border-top: 3px solid ${headerColor}; width: 100%; justify-content: flex-start;">
+                        <span class="stat-block-title">Per Serving</span>
+                        <div class="stat-group" style="gap: 3rem; align-items: center;">
+                            <div class="stat-item"><span class="stat-label">Energy</span><span class="stat-value" style="color: ${headerColor};">${stdMacros ? stdMacros.display.energy : '-'}</span></div>
+                            <div class="stat-item"><span class="stat-label">Carb</span><span class="stat-value">${stdMacros ? stdMacros.display.carb : '-'}</span></div>
+                            <div class="stat-item"><span class="stat-label">Protein</span><span class="stat-value">${stdMacros ? stdMacros.display.protein : '-'}</span></div>
+                            <div class="stat-item"><span class="stat-label">Fat</span><span class="stat-value">${stdMacros ? stdMacros.display.fat : '-'}</span></div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Content Row -->
+                <div class="recipe-ingredients-col" style="padding-top: 1rem;" id="ingredients-wrapper">
+                    ${ingredientsHtml}
+                </div>
+                
+                <div class="recipe-instructions-col" style="padding-top: 1rem;">
+                    <h3 class="section-pill" style="color: ${headerColor}; border-color: ${headerColor};">
+                        <i data-lucide="utensils" style="width: 18px; height: 18px;"></i> <span style="position: relative; top: 1px;">Instructions</span>
+                    </h3>
                     ${stepsHtml}
                 </div>
+                
+                ${footerHtml}
             </div>
-            ${footerHtml}
         `;
 
         attachModalListeners();
     }
-
     function attachModalListeners() {
         const ingredientLinks = modalBody.querySelectorAll('.ingredient-link, .ingredient-recipe-link');
         ingredientLinks.forEach(btn => {
