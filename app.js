@@ -432,6 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const themeClass = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
             const yield_ = recipe.macros?.yield || '';
             const energy = recipe.macros?.energy || recipe.calories || '';
+            const yieldNum = yield_ ? (parseFloat(String(yield_).replace(',', '.')) || yield_) : '';
+            const energyNum = (typeof energy === 'number' && !isNaN(energy)) ? energy : (parseFloat(String(energy)) || '');
             const itemId = recipe.id || recipe.foodId;
             
             if (isIngredientsPage || recipe.entryType === 'ingredient') {
@@ -463,9 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="recipe-category">${recipe.category || 'Recipe'}</span>
                     <h3 class="recipe-title">${title}</h3>
                     <p class="recipe-desc">${recipe.description || ''}</p>
-                    ${(yield_ || energy) ? `<div class="recipe-meta">
-                        ${yield_ ? `<span class="recipe-meta-item"><i data-lucide="users" style="width: 14px; height: 14px;"></i> ${yield_}</span>` : ''}
-                        ${energy ? `<span class="recipe-meta-item"><i data-lucide="flame" style="width: 14px; height: 14px;"></i> ${energy} kcal</span>` : ''}
+                    ${(yieldNum || energyNum) ? `<div class="recipe-meta">
+                        ${yieldNum ? `<span class="recipe-meta-item"><i data-lucide="users" style="width: 14px; height: 14px;"></i> ${yieldNum}</span>` : ''}
+                        ${energyNum ? `<span class="recipe-meta-item"><i data-lucide="flame" style="width: 14px; height: 14px;"></i> ${energyNum} kcal</span>` : ''}
                     </div>` : ''}
                 </div>
             </div>`;
