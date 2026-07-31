@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchQuery = '';
     let currentRecipe = null;
     let currentScale = 1;
+    let lastFocusedElement = null;
     
     const isIngredientsPage = window.location.pathname.includes('ingredients');
 
@@ -519,6 +520,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return html;
     }
 
+    function getStandardMacros(recipe) {
+        if (!recipe.macros && typeof recipe.calories === 'undefined') return null;
+        
+        let parseStr = (str) => {
+            if (typeof str === 'number') return { num: str, unit: 'g' };
+            if (!str) return { num: 0, unit: '' };
+            let match = String(str).match(/^(\d*\.?\d+)\s*(.*)/);
+            if (match) return { num: parseFloat(match[1]), unit: match[2] };
+            return { num: 0, unit: '' };
+        };
+
+        let e = recipe.macros ? parseStr(recipe.macros.energy) : { num: recipe.calories || 0, unit: 'kcal' };
+        let c = recipe.macros ? parseStr(recipe.macros.carbohydrate) : { num: recipe.carbsG || 0, unit: 'g' };
+        let p = recipe.macros ? parseStr(recipe.macros.protein) : { num: recipe.proteinG || 0, unit: 'g' };
+        let f = recipe.macros ? parseStr(recipe.macros.fat) : { num: recipe.fatG || 0, unit: 'g' };
+
+        let m = recipe.macros || {};
+        let refType = m.macroReference?.type || 'per_serving';
+        let refAmt = m.macroReference?.referenceAmount || '';
+
+        let yieldNum = 1;
+        if (m.yield) {
+            let match = m.yield.match(/^(\d*\.?\d+)/);
+            if (match) yieldNum = parseFloat(match[1]) || 1;
+        }
+
+        let divisor = 1;
+        let suffix = '';
+
+        if (refType === 'per_serving') {
+            divisor = 1;
+            suffix = ' / serving';
+        } else if (refType === 'total') {
+            divisor = yieldNum;
+            suffix = ' / serving';
+        } else if (refType === 'per_100g') {
+            divisor = 1;
+            suffix = ' / 100g';
+        } else if (refType === 'per_x_g') {
+            divisor = 1;
+            suffix = ` / ${refAmt}g`;
+        }
+
+        let calc = (val) => {
+            if (val.num === 0 && !val.unit) return '-';
+            let res = val.num / divisor;
+            res = Math.round(res * 10) / 10;
+            return `${res}${val.unit}`;
+        };
+
+        return {
+            normalized: {
+                energy: e.num / divisor,
+                carbs: c.num / divisor,
+                protein: p.num / divisor,
+                fat: f.num / divisor
+            },
+            display: {
+                energy: m.energy ? calc(e) : '-',
+                carbs: m.carbohydrate ? calc(c) : '-',
+                protein: m.protein ? calc(p) : '-',
+                fat: m.fat ? calc(f) : '-'
+            },
+            referenceLabel: suffix.replace(' / ', '') // "serving", "100g", "50g"
+        };
+    }
+
     function buildModalContent() {
         const recipe = currentRecipe;
 
@@ -692,6 +760,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
+    }
+
+    function openModal(id) {
+        const recipe = recipesData.find(r => String(r.id || r.foodId) === String(id));
+        if (!recipe) return;
+        currentRecipe = recipe;
+        currentScale = 1;
+        lastFocusedElement = document.activeElement;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        buildModalContent();
     }
 
     function closeModal() {
