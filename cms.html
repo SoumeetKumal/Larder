@@ -30,9 +30,9 @@
 
     <main class="cms-dashboard">
         <div class="cms-header">
-            <div>
-                <h1 class="cms-title">Larder CMS</h1>
-                <p class="cms-status" id="status-text">Connecting...</p>
+            <div class="cms-header-title">
+                <h1>Larder CMS</h1>
+                <div class="cms-header-status" id="status-text">Connecting...</div>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
                 <input type="text" id="cms-search" placeholder="Search..." style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); min-width: 200px; display: none;">
@@ -58,7 +58,7 @@
     <div id="cms-editor-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn cms-close">&times;</span>
-            <h2 id="editor-title" class="cms-section-title" style="margin-top:0;">Add Recipe</h2>
+            <h2 id="editor-title" class="cms-editor-title" style="margin-top:0;">Add Recipe</h2>
             <form id="recipe-form" class="recipe-form">
                 <input type="hidden" id="recipe-id">
                 
@@ -183,7 +183,7 @@
     <div id="cms-food-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn food-close">&times;</span>
-            <h2 id="food-editor-title" class="cms-section-title" style="margin-top:0;">Edit Ingredient Profile</h2>
+            <h2 id="food-editor-title" class="cms-editor-title" style="margin-top:0;">Edit Ingredient Profile</h2>
             <form id="ingredient-profile-form" class="recipe-form">
                 <input type="hidden" id="profile-food-id">
 

@@ -52,6 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderGrid();
         });
     }
+    document.addEventListener('click', (e) => {
+        if (searchBarWrap && !searchBarWrap.contains(e.target) && !searchTrigger.contains(e.target)) {
+            searchBarWrap.classList.remove('active');
+            searchInput.value = '';
+        }
+    });
 
     const filterTrigger = document.getElementById('filterTrigger');
     const filterDropdown = document.getElementById('filterDropdown');
@@ -844,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="recipe-full-desc">${recipe.description || ''}</p>
             </div>
             
-            <div class="modal-body" style="padding: 0; display: grid; grid-template-columns: 1fr 2fr;">
+            <div class="modal-body" style="padding: 0;">
                 <!-- Stats Row -->
                 <div class="recipe-ingredients-col" style="padding: 1.5rem 1rem 1rem 2rem; border-bottom: 1px solid var(--border); border-right: none;">
                     <div class="stat-block" style="border-top: 3px solid ${headerColor}; width: 100%; justify-content: flex-start;">
