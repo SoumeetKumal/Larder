@@ -643,28 +643,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Nutrition rows ---
         const row = (name, val, unit) => `<div class="nutrient-row"><span>${name}</span><span>${typeof val === 'number' && !isNaN(val) && val > 0 ? (Math.round(val * 100) / 100) + ' ' + unit : '-'}</span></div>`;
         const vitaminRows = [
-            ['Vitamin A', recipe.vitaminAMcg, 'mcg'],
-            ['Vitamin C', recipe.vitaminCMg, 'mg'],
-            ['Vitamin D', recipe.vitaminDMcg, 'mcg'],
-            ['Vitamin E', recipe.vitaminEMg, 'mg'],
-            ['Vitamin K', recipe.vitaminKMcg, 'mcg'],
-            ['Thiamin (B1)', recipe.thiaminMg, 'mg'],
-            ['Riboflavin (B2)', recipe.riboflavinMg, 'mg'],
-            ['Niacin (B3)', recipe.niacinMg, 'mg'],
-            ['Vitamin B6', recipe.vitaminB6Mg, 'mg'],
-            ['Folate (B9)', recipe.folateMcg, 'mcg'],
-            ['Vitamin B12', recipe.vitaminB12Mcg, 'mcg']
+            ['Vitamin A', 'vitaminAMcg', 'mcg'],
+            ['Vitamin C', 'vitaminCMg', 'mg'],
+            ['Vitamin D', 'vitaminDMcg', 'mcg'],
+            ['Vitamin E', 'vitaminEMg', 'mg'],
+            ['Vitamin K', 'vitaminKMcg', 'mcg'],
+            ['Thiamin (B1)', 'thiaminMg', 'mg'],
+            ['Riboflavin (B2)', 'riboflavinMg', 'mg'],
+            ['Niacin (B3)', 'niacinMg', 'mg'],
+            ['Vitamin B6', 'vitaminB6Mg', 'mg'],
+            ['Folate (B9)', 'folateMcg', 'mcg'],
+            ['Vitamin B12', 'vitaminB12Mcg', 'mcg']
         ];
         const mineralRows = [
-            ['Calcium', recipe.calciumMg, 'mg'],
-            ['Iron', recipe.ironMg, 'mg'],
-            ['Magnesium', recipe.magnesiumMg, 'mg'],
-            ['Phosphorus', recipe.phosphorusMg, 'mg'],
-            ['Potassium', recipe.potassiumMg, 'mg'],
-            ['Sodium', recipe.sodiumMg, 'mg'],
-            ['Zinc', recipe.zincMg, 'mg'],
-            ['Copper', recipe.copperMg, 'mg'],
-            ['Selenium', recipe.seleniumMcg, 'mcg']
+            ['Calcium', 'calciumMg', 'mg'],
+            ['Iron', 'ironMg', 'mg'],
+            ['Magnesium', 'magnesiumMg', 'mg'],
+            ['Phosphorus', 'phosphorusMg', 'mg'],
+            ['Potassium', 'potassiumMg', 'mg'],
+            ['Sodium', 'sodiumMg', 'mg'],
+            ['Zinc', 'zincMg', 'mg'],
+            ['Copper', 'copperMg', 'mg'],
+            ['Selenium', 'seleniumMcg', 'mcg']
         ];
         const vitaminsRowsHtml = vitaminRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
         const mineralsRowsHtml = mineralRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
