@@ -24,7 +24,6 @@
                 <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
                 <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
                 <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
-                <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
@@ -177,14 +176,12 @@
             <a href="ingredients">Ingredients</a>
             <a href="basics">Basics</a>
             <a href="reference">Reference</a>
-            <a href="cms">Manage</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#conversions">Conversions</a>
-            <a href="reference#oils">Oil Reference</a>
-            <a href="reference#flour">Flour Guide</a>
-            <a href="reference#bakeware">Pan Sizes</a>
+            <a href="reference#tab-conversions">Conversions</a>
+            <a href="reference#tab-ingredients">Ingredient Guides</a>
+            <a href="reference#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
@@ -266,10 +263,6 @@
 
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            const cmsLink = document.getElementById('cms-link');
-            if (cmsLink) cmsLink.style.display = 'none';
-        }
     </script>
     <script src="app.js"></script>
 </body>

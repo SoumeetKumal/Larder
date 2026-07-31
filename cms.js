@@ -7,21 +7,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('cms-editor-modal');
     const form = document.getElementById('recipe-form');
     const closeBtn = modal.querySelector('.cms-close');
-    const editorTitle = document.getElementById('editor-title');
     const ingContainer = document.getElementById('ingredients-container');
     const addIngBtn = document.getElementById('add-ing-btn');
+    const stepsContainer = document.getElementById('steps-container');
+    const addStepBtn = document.getElementById('add-step-btn');
     const macroRefSelect = document.getElementById('macro-reference');
     const macroRefAmountGroup = document.getElementById('macro-ref-amount-group');
-    const recipeFieldsGroup = document.getElementById('recipe-fields-group');
+    const cmsDeleteBtn = document.getElementById('cms-delete-btn');
+    const cancelRecipeBtn = document.getElementById('cancel-recipe-btn');
+    const recipeStatusSelect = document.getElementById('recipe-status');
 
     // Ingredient Profile Modal
     const foodModal = document.getElementById('cms-food-modal');
     const profileForm = document.getElementById('ingredient-profile-form');
     const foodCloseBtn = foodModal.querySelector('.food-close');
-    const foodEditorTitle = document.getElementById('food-editor-title');
+    const foodDeleteBtn = document.getElementById('cms-food-delete-btn');
+    const cancelFoodBtn = document.getElementById('cancel-food-btn');
 
     function slugify(name) {
         return name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    }
+
+    function splitAmount(value) {
+        if (!value) return { num: '', unit: '' };
+        const str = String(value).trim();
+        const match = str.match(/^(\d*\.?\d+)\s*(.*)/);
+        if (match) return { num: match[1], unit: match[2] };
+        return { num: '', unit: str };
+    }
+
+    function composeAmount(num, unit) {
+        num = (num || '').trim();
+        unit = (unit || '').trim();
+        if (!num) return '';
+        return unit ? `${num} ${unit}` : num;
+    }
+
+    function setMacroField(id, value, defaultUnit) {
+        const input = document.getElementById(id);
+        const unitSpan = document.querySelector(`.cms-macro-unit[data-for="${id}"]`);
+        if (!input) return;
+        const parts = splitAmount(value);
+        input.value = parts.num || '';
+        if (unitSpan) unitSpan.textContent = parts.unit || defaultUnit || '';
+    }
+
+    function getMacroValue(id, defaultUnit) {
+        const input = document.getElementById(id);
+        const unitSpan = document.querySelector(`.cms-macro-unit[data-for="${id}"]`);
+        if (!input || !input.value.trim()) return '';
+        const unit = unitSpan ? unitSpan.textContent.trim() : (defaultUnit || '');
+        return composeAmount(input.value.trim(), unit);
+    }
+
+    function getCategoryIcon(cat) {
+        const c = (cat || '').toLowerCase();
+        if (c.includes('seafood') || c.includes('fish') || c.includes('shell')) return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 26, h: 13 };
+        if (c.includes('vegetable') || c.includes('veg')) return { accent: 'var(--accent-veg)', href: '#icon-tomato', vb: '0 0 88 96', w: 22, h: 24 };
+        if (c.includes('meat') || c.includes('poultry') || c.includes('lamb') || c.includes('beef') || c.includes('pork')) return { accent: 'var(--accent-meat)', href: '#icon-mortar', vb: '0 0 90 99', w: 20, h: 22 };
+        if (c.includes('grain') || c.includes('pasta') || c.includes('bread') || c.includes('rice') || c.includes('stock')) return { accent: 'var(--accent-stock)', href: '#icon-nut', vb: '0 0 119 122', w: 24, h: 24 };
+        if (c.includes('baking') || c.includes('dessert') || c.includes('sweet') || c.includes('pastry')) return { accent: 'var(--accent-bake)', href: '#icon-muffin', vb: '0 0 137 131', w: 26, h: 24 };
+        if (c.includes('fruit') || c.includes('jam') || c.includes('jelly') || c.includes('pickle')) return { accent: 'var(--accent-jam)', href: '#icon-tomato', vb: '0 0 88 96', w: 22, h: 24 };
+        return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 26, h: 13 };
     }
 
     // --- Custom Confirmation Dialog ---
@@ -888,230 +935,154 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentCMSTab === 'food') {
-            const filteredIngredients = ingredients.filter(ing => 
-                ing.name.toLowerCase().includes(cmsSearchQuery) || 
+            const filteredIngredients = ingredients.filter(ing =>
+                ing.name.toLowerCase().includes(cmsSearchQuery) ||
                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
             );
 
-            const tableHTML = `
-                <div id="bulk-action-bar" class="bulk-action-bar" style="display:none;">
-                    <span class="selected-count" id="selected-count">0</span> selected
-                    <button id="delete-selected-btn" class="btn danger" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Delete Selected</button>
-                </div>
-                <div style="overflow-x: auto; margin-bottom: 1rem;">
-                    <table class="food-table">
+            if (filteredIngredients.length === 0) {
+                listContainer.innerHTML = `<div class="empty-state">No ingredients found. Click "Add Ingredient" to create one!</div>`;
+                addBtn.style.display = 'none';
+                return;
+            }
+
+            listContainer.innerHTML = `
+                <div class="cms-table-wrapper">
+                    <table class="cms-table">
                         <thead>
                             <tr>
-                                <th class="select-col"><input type="checkbox" class="f-select" id="select-all-foods" title="Select all"></th>
-                                <th style="width: 15%;">Name</th>
-                                <th style="width: 12%;">ID</th>
-                                <th style="width: 10%;">Category</th>
-                                <th style="width: 6%;">Size</th>
-                                <th style="width: 5%;">Unit</th>
-                                <th style="width: 6%;">kCal</th>
-                                <th style="width: 6%;">Protein</th>
-                                <th style="width: 6%;">Fat</th>
-                                <th style="width: 6%;">Carbs</th>
-                                <th style="width: 6%;">Fiber</th>
-                                <th style="width: 6%;">Sugar</th>
-                                <th>Notes</th>
-                                <th style="width: 6%;"></th>
+                                <th>Ingredient</th>
+                                <th style="width: 240px;">Category</th>
+                                <th style="width: 130px;">Status</th>
+                                <th style="width: 110px; text-align: right;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="food-table-body">
-                            ${filteredIngredients.length === 0 ? `<tr><td colspan="14" style="text-align: center; padding: 1rem;">No ingredients match.</td></tr>` : ''}
-                            ${filteredIngredients.map((ing, i) => `
-                                <tr data-index="${ingredients.indexOf(ing)}">
-                                    <td class="select-col"><input type="checkbox" class="f-select f-row-select" data-index="${ingredients.indexOf(ing)}"></td>
-                                    <td><input type="text" class="f-name" value="${(ing.name || '').replace(/"/g, '&quot;')}"></td>
-                                    <td><input type="text" class="f-id" value="${(ing.foodId || '').replace(/"/g, '&quot;')}" placeholder="auto"></td>
-                                    <td><input type="text" class="f-cat" value="${(ing.category || '').replace(/"/g, '&quot;')}"></td>
-                                    <td><input type="number" step="any" class="f-size" value="${ing.servingSizeG || 0}"></td>
-                                    <td><input type="text" class="f-unit" value="${(ing.servingUnit || 'g').replace(/"/g, '&quot;')}"></td>
-                                    <td><input type="number" step="any" class="f-kcal" value="${ing.calories || 0}"></td>
-                                    <td><input type="number" step="any" class="f-pro" value="${ing.proteinG || 0}"></td>
-                                    <td><input type="number" step="any" class="f-fat" value="${ing.fatG || 0}"></td>
-                                    <td><input type="number" step="any" class="f-carbs" value="${ing.carbsG || 0}"></td>
-                                    <td><input type="number" step="any" class="f-fiber" value="${ing.fiberG || 0}"></td>
-                                    <td><input type="number" step="any" class="f-sugar" value="${ing.sugarG || 0}"></td>
-                                    <td><input type="text" class="f-notes" value="${(ing.notes || '').replace(/"/g, '&quot;')}"></td>
-                                    <td style="text-align: center; white-space: nowrap;">
-                                        <button class="btn secondary edit-profile-btn" data-id="${ing.foodId}" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;" title="Edit culinary profile">📝</button>
-                                        <button class="btn danger delete-food-row" data-index="${i}" style="padding: 0.2rem 0.5rem;">&times;</button>
+                        <tbody>
+                            ${filteredIngredients.map(ing => {
+                                const vis = getCategoryIcon(ing.category);
+                                const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+                                return `
+                                <tr>
+                                    <td>
+                                        <div class="cms-td-title">
+                                            <div class="cms-td-icon">
+                                                <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+                                            </div>
+                                            <div>
+                                                <div>${ing.name || 'Unnamed ingredient'}</div>
+                                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${serving}</div>
+                                            </div>
+                                        </div>
                                     </td>
-                                </tr>
-                            `).join('')}
+                                    <td>${ing.category || '—'}</td>
+                                    <td><span class="cms-badge published">Published</span></td>
+                                    <td class="cms-actions-cell">
+                                        <button class="cms-btn-icon food-edit-btn" data-id="${ing.foodId}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                        <button class="cms-btn-icon delete food-delete-btn" data-id="${ing.foodId}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button id="add-food-row-btn" class="btn secondary">+ Add Row</button>
-                    <button id="save-foods-btn" class="btn primary">Save Changes</button>
+                    <button id="add-food-btn" class="btn primary"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Ingredient</button>
                 </div>
             `;
-            listContainer.innerHTML = tableHTML;
             addBtn.style.display = 'none';
+            if (window.lucide) window.lucide.createIcons();
 
-            document.getElementById('add-food-row-btn').addEventListener('click', () => {
-                ingredients.push({
-                    name: '', foodId: '', category: '', servingSizeG: 100, servingUnit: 'g',
-                    calories: 0, proteinG: 0, fatG: 0, carbsG: 0, fiberG: 0, sugarG: 0, notes: ''
-                });
-                renderCMSList();
+            document.getElementById('add-food-btn').addEventListener('click', () => openProfileEditor());
+
+            document.querySelectorAll('.food-edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
             });
 
-            document.getElementById('save-foods-btn').addEventListener('click', async () => {
-                const rows = document.querySelectorAll('#food-table-body tr[data-index]');
-                const updatedIngredients = [];
-                let hasError = false;
-
-                rows.forEach(row => {
-                    const name = row.querySelector('.f-name').value.trim();
-                    let foodId = row.querySelector('.f-id').value.trim();
-                    if (!name) return;
-                    if (!foodId) foodId = slugify(name);
-                    
-                    if (updatedIngredients.some(f => f.foodId === foodId)) {
-                        alert(`Duplicate ID found: ${foodId}. Please fix.`);
-                        hasError = true;
-                    }
-
-                    // Preserve existing profile data if present
-                    const existing = ingredients.find(f => f.foodId === foodId);
-
-                    updatedIngredients.push({
-                        // Spread all existing fields first (preserves micronutrients, profile, pricing, etc.)
-                        ...(existing || {}),
-                        // Then overwrite with table values
-                        foodId: foodId,
-                        name: name,
-                        category: row.querySelector('.f-cat').value.trim(),
-                        servingSizeG: parseFloat(row.querySelector('.f-size').value) || 0,
-                        servingUnit: row.querySelector('.f-unit').value.trim() || 'g',
-                        calories: parseFloat(row.querySelector('.f-kcal').value) || 0,
-                        proteinG: parseFloat(row.querySelector('.f-pro').value) || 0,
-                        fatG: parseFloat(row.querySelector('.f-fat').value) || 0,
-                        carbsG: parseFloat(row.querySelector('.f-carbs').value) || 0,
-                        fiberG: parseFloat(row.querySelector('.f-fiber').value) || 0,
-                        sugarG: parseFloat(row.querySelector('.f-sugar').value) || 0,
-                        notes: row.querySelector('.f-notes').value.trim(),
-                    });
-                });
-
-                if (hasError) return;
-                
-                ingredients = updatedIngredients;
-                await saveIngredients();
-                renderCMSList();
-            });
-
-            // --- Ingredient Selection & Deletion ---
-            const selectAllCheckbox = document.getElementById('select-all-foods');
-            const rowCheckboxes = document.querySelectorAll('.f-row-select');
-            const bulkActionBar = document.getElementById('bulk-action-bar');
-            const selectedCountSpan = document.getElementById('selected-count');
-            
-            function updateBulkActionBar() {
-                const checkedCount = document.querySelectorAll('.f-row-select:checked').length;
-                selectedCountSpan.textContent = checkedCount;
-                bulkActionBar.style.display = checkedCount > 0 ? 'flex' : 'none';
-                selectAllCheckbox.checked = checkedCount > 0 && checkedCount === rowCheckboxes.length;
-            }
-
-            selectAllCheckbox.addEventListener('change', (e) => {
-                const isChecked = e.target.checked;
-                rowCheckboxes.forEach(cb => cb.checked = isChecked);
-                updateBulkActionBar();
-            });
-
-            rowCheckboxes.forEach(cb => {
-                cb.addEventListener('change', updateBulkActionBar);
-            });
-
-            document.getElementById('delete-selected-btn').addEventListener('click', async () => {
-                const checkedBoxes = Array.from(document.querySelectorAll('.f-row-select:checked'));
-                if (checkedBoxes.length === 0) return;
-                
-                const confirmed = await showConfirmDialog(
-                    'Delete Selected',
-                    `Are you sure you want to delete ${checkedBoxes.length} ingredient(s)? This action cannot be undone.`,
-                    `Delete ${checkedBoxes.length} Items`
-                );
-                
-                if (confirmed) {
-                    // Collect indices to delete in reverse order to avoid shifting issues
-                    const indicesToDelete = checkedBoxes
-                        .map(cb => parseInt(cb.dataset.index, 10))
-                        .sort((a, b) => b - a);
-                        
-                    indicesToDelete.forEach(index => {
-                        ingredients.splice(index, 1);
-                    });
-                    
-                    renderCMSList();
-                    // Auto-save when items are deleted? The original logic didn't, but let's leave it as is 
-                    // (the user must click Save Changes, just like single row delete).
-                }
-            });
-
-            document.querySelectorAll('.delete-food-row').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const row = e.target.closest('tr');
-                    const index = parseInt(row.dataset.index, 10);
-                    const name = row.querySelector('.f-name').value || 'this ingredient';
-                    
+            document.querySelectorAll('.food-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const foodId = btn.dataset.id;
+                    const ing = ingredients.find(f => f.foodId === foodId);
+                    const name = ing ? ing.name : 'this ingredient';
                     const confirmed = await showConfirmDialog(
                         'Delete Ingredient',
-                        `Are you sure you want to delete "${name}"?`,
+                        `Are you sure you want to delete "${name}"? This action cannot be undone.`,
                         'Delete'
                     );
-                    
                     if (confirmed) {
-                        ingredients.splice(index, 1);
+                        ingredients = ingredients.filter(f => f.foodId !== foodId);
                         renderCMSList();
+                        await saveIngredients();
+                        statusText.innerHTML = `<span class="status-dot"></span> Ingredient deleted`;
                     }
                 });
-            });
-
-            document.querySelectorAll('.f-name').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const row = e.target.closest('tr');
-                    const idInput = row.querySelector('.f-id');
-                    if (!idInput.value.trim()) {
-                        idInput.value = slugify(e.target.value);
-                    }
-                });
-            });
-
-            document.querySelectorAll('.edit-profile-btn').forEach(btn => {
-                btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
             });
             return;
         }
 
         addBtn.style.display = 'block';
-        addBtn.textContent = '+ Add Recipe';
+        addBtn.innerHTML = '<i data-lucide="plus" style="width: 18px; height: 18px;"></i> Add Recipe';
         let filtered = recipes.filter(r => r.entryType !== 'ingredient');
 
+        if (cmsSearchQuery) {
+            filtered = filtered.filter(r =>
+                (r.title || '').toLowerCase().includes(cmsSearchQuery) ||
+                (r.category || '').toLowerCase().includes(cmsSearchQuery) ||
+                (r.description || '').toLowerCase().includes(cmsSearchQuery)
+            );
+        }
+
         if (filtered.length === 0) {
-            listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "+ Add Recipe" to start!</div>`;
+            listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "Add Recipe" to start!</div>`;
             return;
         }
 
-        listContainer.innerHTML = filtered.map(recipe => {
-            const theme = `theme-${recipe.category ? recipe.category.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')[0] : 'default'}`;
-            return `
-            <div class="cms-recipe-item ${theme}">
-                <div>
-                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--accent-current, var(--accent-default)); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 0.3rem;">${recipe.category || 'Recipe'}</span>
-                    <strong style="font-size: 1.1rem; font-weight: 600;">${recipe.title}</strong>
-                </div>
-                <div class="cms-recipe-actions">
-                    <button class="btn secondary edit-btn" data-id="${recipe.id}">Edit</button>
-                    <button class="btn danger delete-btn" data-id="${recipe.id}">Delete</button>
-                </div>
+        listContainer.innerHTML = `
+            <div class="cms-table-wrapper">
+                <table class="cms-table">
+                    <thead>
+                        <tr>
+                            <th>Title & Category</th>
+                            <th style="width: 100px;">Servings</th>
+                            <th style="width: 120px;">Energy</th>
+                            <th style="width: 130px;">Status</th>
+                            <th style="width: 110px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(recipe => {
+                            const vis = getCategoryIcon(recipe.category);
+                            const yieldStr = recipe.macros?.yield || '';
+                            const yieldNum = yieldStr ? (parseFloat(String(yieldStr).replace(',', '.')) || yieldStr) : '';
+                            const energyStr = recipe.macros?.energy || recipe.calories || '';
+                            const energyNum = (typeof energyStr === 'number' && !isNaN(energyStr)) ? energyStr : (parseFloat(String(energyStr)) || '');
+                            const iconTile = recipe.imageUrl
+                                ? `<img class="cms-thumb" src="${recipe.imageUrl}" alt="">`
+                                : `<svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
+                            return `
+                            <tr>
+                                <td>
+                                    <div class="cms-td-title">
+                                        <div class="cms-td-icon">${iconTile}</div>
+                                        <div>
+                                            <div>${recipe.title}</div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${recipe.category || 'Recipe'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${yieldNum || '—'}</td>
+                                <td>${energyNum ? energyNum + ' kcal' : '—'}</td>
+                                <td><span class="cms-badge published">Published</span></td>
+                                <td class="cms-actions-cell">
+                                    <button class="cms-btn-icon edit-btn" data-id="${recipe.id}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                    <button class="cms-btn-icon delete delete-btn" data-id="${recipe.id}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
             </div>`;
-        }).join('');
+
+        if (window.lucide) window.lucide.createIcons();
 
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', () => openEditor(btn.dataset.id));
@@ -1143,25 +1114,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Ingredient Rows ---
     function createIngredientRow(item = '', metric = '', imperial = '', foodId = '') {
+        const isHeader = String(item).startsWith('## ');
         const div = document.createElement('div');
-        div.className = 'cms-ing-row form-row';
+        div.dataset.foodId = foodId || '';
+        div.dataset.origMetric = metric || '';
+        div.dataset.origImperial = imperial || '';
+
+        if (isHeader) {
+            div.className = 'cms-ingredient-header-row';
+            div.style.display = 'grid';
+            div.style.gridTemplateColumns = '1fr auto';
+            div.style.gap = '0.75rem';
+            div.style.alignItems = 'center';
+            div.style.padding = '0.5rem 0';
+            div.style.borderBottom = '1px solid var(--border)';
+            div.innerHTML = `
+                <input type="text" data-field="name" class="seamless-input" value="${String(item).replace(/^##\s*/, '').replace(/"/g, '&quot;')}" placeholder="Section header..." style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-main);">
+                <button type="button" class="cms-btn-icon delete" aria-label="Remove" title="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+            `;
+            div.querySelector('.delete').addEventListener('click', () => div.remove());
+            ingContainer.appendChild(div);
+            return;
+        }
+
+        const m = splitAmount(metric);
+        const imp = splitAmount(imperial);
+        const metricUnits = ['g', 'kg', 'ml', 'L'];
+        const imperialUnits = ['cups', 'tbsp', 'tsp', 'whole', 'cans', 'cloves', 'sprigs', 'pinch', 'medium', 'small', 'large', 'slice', 'piece'];
+        div.className = 'cms-ingredient-row';
         div.innerHTML = `
-            <div class="form-group" style="flex: 2;"><input type="text" list="ingredient-suggestions" placeholder="Item name" value="${item.replace(/"/g, '&quot;')}"></div>
-            <div class="form-group" style="flex: 1;"><input type="text" placeholder="foodId" value="${foodId.replace(/"/g, '&quot;')}"></div>
-            <div class="form-group" style="flex: 1;"><input type="text" placeholder="Metric" value="${metric.replace(/"/g, '&quot;')}"></div>
-            <div class="form-group" style="flex: 1;"><input type="text" placeholder="Imperial" value="${imperial.replace(/"/g, '&quot;')}"></div>
-            <div class="form-group" style="flex: 0 0 auto;"><button type="button" class="btn danger">&times;</button></div>
+            <div class="cms-unit-group">
+                <input type="text" data-field="metric-num" value="${m.num.replace(/"/g, '&quot;')}" placeholder="Amount">
+                <select data-field="metric-unit">${metricUnits.map(u => `<option${m.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
+            </div>
+            <input type="text" data-field="name" class="seamless-input" list="ingredient-suggestions" value="${String(item).replace(/"/g, '&quot;')}" placeholder="Ingredient name" style="font-weight: 500; font-size: 0.95rem;">
+            <div class="cms-unit-group">
+                <input type="text" data-field="imperial-num" value="${imp.num.replace(/"/g, '&quot;')}" placeholder="Amount">
+                <select data-field="imperial-unit">${imperialUnits.map(u => `<option${imp.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
+            </div>
+            <button type="button" class="cms-btn-icon delete" aria-label="Remove" title="Remove ingredient"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
         `;
-        div.querySelector('.btn.danger').addEventListener('click', () => div.remove());
-        
+        const addMissingUnit = (sel, unit) => {
+            if (unit && ![...sel.options].some(o => o.value === unit)) {
+                const opt = document.createElement('option');
+                opt.value = unit; opt.textContent = unit; opt.selected = true;
+                sel.appendChild(opt);
+            }
+        };
+        addMissingUnit(div.querySelector('[data-field="metric-unit"]'), m.unit);
+        addMissingUnit(div.querySelector('[data-field="imperial-unit"]'), imp.unit);
+        div.querySelector('.delete').addEventListener('click', () => div.remove());
+
         // Auto-fill foodId based on item name
-        const nameInput = div.querySelectorAll('input')[0];
-        const foodIdInput = div.querySelectorAll('input')[1];
+        const nameInput = div.querySelector('[data-field="name"]');
         nameInput.addEventListener('change', () => {
-            if (!foodIdInput.value) {
+            if (!div.dataset.foodId) {
                 const guess = slugify(nameInput.value);
                 if (ingredients.some(f => f.foodId === guess)) {
-                    foodIdInput.value = guess;
+                    div.dataset.foodId = guess;
                 }
             }
         });
@@ -1169,15 +1179,47 @@ document.addEventListener('DOMContentLoaded', () => {
         ingContainer.appendChild(div);
     }
 
+    // --- Step Rows ---
+    function renumberSteps() {
+        let n = 1;
+        stepsContainer.querySelectorAll('.cms-step-row').forEach(row => {
+            if (row.querySelector('textarea')) {
+                row.querySelector('.step-number').textContent = n++;
+            }
+        });
+    }
+
+    function createStepRow(text = '') {
+        const div = document.createElement('div');
+        div.className = 'cms-step-row';
+        const isHeader = String(text).startsWith('## ');
+        if (isHeader) {
+            div.innerHTML = `
+                <input type="text" data-field="step" class="seamless-input" value="${String(text).replace(/^##\s*/, '').replace(/"/g, '&quot;')}" placeholder="Section header..." style="flex-grow: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                <button type="button" class="cms-btn-icon delete" aria-label="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+            `;
+        } else {
+            const num = stepsContainer.querySelectorAll('.cms-step-row textarea').length + 1;
+            div.innerHTML = `
+                <span class="step-number">${num}</span>
+                <textarea class="seamless-input seamless-textarea" data-field="step" placeholder="Step..." style="min-height: 50px;">${String(text).replace(/"/g, '&quot;')}</textarea>
+                <button type="button" class="cms-btn-icon delete" aria-label="Remove step" title="Remove step"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+            `;
+        }
+        div.querySelector('.delete').addEventListener('click', () => { div.remove(); renumberSteps(); });
+        stepsContainer.appendChild(div);
+    }
+
     addIngBtn.addEventListener('click', () => createIngredientRow());
+    addStepBtn.addEventListener('click', () => createStepRow());
 
     // --- Recipe Editor ---
     function openEditor(id = null) {
         ingContainer.innerHTML = '';
+        stepsContainer.innerHTML = '';
 
         if (id) {
             const recipe = recipes.find(r => r.id === id);
-            editorTitle.textContent = 'Edit Recipe';
             document.getElementById('recipe-id').value = recipe.id;
             document.getElementById('recipe-title').value = recipe.title;
             document.getElementById('recipe-category').value = recipe.category || 'Default';
@@ -1185,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('recipe-icon').value = recipe.iconTag || '';
             document.getElementById('recipe-desc').value = recipe.description || '';
             document.getElementById('recipe-image').value = recipe.imageUrl || '';
+            if (recipeStatusSelect) recipeStatusSelect.value = recipe.status === 'draft' ? 'draft' : 'published';
 
             if (recipe.macros) {
                 if (recipe.macros.macroReference) {
@@ -1196,13 +1239,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 macroRefSelect.dispatchEvent(new Event('change'));
                 document.getElementById('macro-yield').value = recipe.macros.yield || '';
-                document.getElementById('macro-energy').value = recipe.macros.energy || '';
-                document.getElementById('macro-carbs').value = recipe.macros.carbohydrate || '';
-                document.getElementById('macro-protein').value = recipe.macros.protein || '';
-                document.getElementById('macro-fat').value = recipe.macros.fat || '';
+                setMacroField('macro-energy', recipe.macros.energy, 'kCal');
+                setMacroField('macro-carbs', recipe.macros.carbohydrate, 'g');
+                setMacroField('macro-protein', recipe.macros.protein, 'g');
+                setMacroField('macro-fat', recipe.macros.fat, 'g');
             } else {
                 document.getElementById('macro-reference').value = 'per_serving';
                 macroRefSelect.dispatchEvent(new Event('change'));
+                setMacroField('macro-energy', '', 'kCal');
+                setMacroField('macro-carbs', '', 'g');
+                setMacroField('macro-protein', '', 'g');
+                setMacroField('macro-fat', '', 'g');
+                document.getElementById('macro-yield').value = '';
             }
 
             if (recipe.ingredients?.length > 0) {
@@ -1211,15 +1259,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 createIngredientRow();
             }
 
-            document.getElementById('recipe-steps').value = (recipe.steps || []).join('\n');
+            (recipe.steps || []).forEach(step => createStepRow(step));
             document.getElementById('recipe-note').value = recipe.note || '';
             document.getElementById('recipe-variations').value = recipe.variations || '';
+            if (cmsDeleteBtn) cmsDeleteBtn.style.display = '';
         } else {
-            editorTitle.textContent = 'Add New Recipe';
             form.reset();
             document.getElementById('recipe-id').value = Date.now().toString();
+            setMacroField('macro-energy', '', 'kCal');
+            setMacroField('macro-carbs', '', 'g');
+            setMacroField('macro-protein', '', 'g');
+            setMacroField('macro-fat', '', 'g');
+            if (recipeStatusSelect) recipeStatusSelect.value = 'published';
             createIngredientRow();
+            if (cmsDeleteBtn) cmsDeleteBtn.style.display = 'none';
         }
+        if (window.lucide) window.lucide.createIcons();
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -1227,11 +1282,25 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const ingRows = Array.from(ingContainer.querySelectorAll('.cms-ing-row'));
+        const ingRows = Array.from(ingContainer.querySelectorAll('.cms-ingredient-row, .cms-ingredient-header-row'));
         const recipeIngredients = ingRows.map(row => {
-            const inputs = row.querySelectorAll('input');
-            return { item: inputs[0].value, foodId: inputs[1].value, metric: inputs[2].value, imperial: inputs[3].value };
-        }).filter(ing => ing.item.trim() !== '');
+            if (row.classList.contains('cms-ingredient-header-row')) {
+                const name = row.querySelector('[data-field="name"]').value.trim();
+                if (!name) return null;
+                return { item: '## ' + name, foodId: '', metric: '', imperial: '' };
+            }
+            const mNum = row.querySelector('[data-field="metric-num"]').value.trim();
+            const mUnit = row.querySelector('[data-field="metric-unit"]').value.trim();
+            const iNum = row.querySelector('[data-field="imperial-num"]').value.trim();
+            const iUnit = row.querySelector('[data-field="imperial-unit"]').value.trim();
+            const origM = row.dataset.origMetric || '';
+            const origI = row.dataset.origImperial || '';
+            const metric = mNum ? (mUnit ? `${mNum}${mUnit}` : mNum) : origM;
+            const imperial = iNum ? (iUnit ? `${iNum} ${iUnit}` : iNum) : origI;
+            const item = row.querySelector('[data-field="name"]').value.trim();
+            if (!item) return null;
+            return { item, foodId: row.dataset.foodId || '', metric, imperial };
+        }).filter(Boolean);
 
         // Validate foodIds (skip for components marked with ##)
         for (let ing of recipeIngredients) {
@@ -1240,6 +1309,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
+
+        const stepRows = Array.from(stepsContainer.querySelectorAll('.cms-step-row'));
+        const steps = stepRows.map(row => {
+            const field = row.querySelector('[data-field="step"]');
+            const text = field.value.trim();
+            if (!text) return null;
+            return row.querySelector('textarea') ? text : '## ' + text;
+        }).filter(Boolean);
 
         const newRecipe = {
             id: document.getElementById('recipe-id').value,
@@ -1250,19 +1327,20 @@ document.addEventListener('DOMContentLoaded', () => {
             iconTag: document.getElementById('recipe-icon').value,
             description: document.getElementById('recipe-desc').value,
             imageUrl: document.getElementById('recipe-image').value,
+            status: recipeStatusSelect ? recipeStatusSelect.value : 'published',
             macros: {
                 macroReference: {
                     type: document.getElementById('macro-reference').value,
                     referenceAmount: document.getElementById('macro-ref-amount').value
                 },
                 yield: document.getElementById('macro-yield').value,
-                energy: document.getElementById('macro-energy').value,
-                carbohydrate: document.getElementById('macro-carbs').value,
-                protein: document.getElementById('macro-protein').value,
-                fat: document.getElementById('macro-fat').value
+                energy: getMacroValue('macro-energy', 'kCal'),
+                carbohydrate: getMacroValue('macro-carbs', 'g'),
+                protein: getMacroValue('macro-protein', 'g'),
+                fat: getMacroValue('macro-fat', 'g')
             },
             ingredients: recipeIngredients,
-            steps: document.getElementById('recipe-steps').value.split('\n').filter(l => l.trim()),
+            steps,
             note: document.getElementById('recipe-note').value,
             variations: document.getElementById('recipe-variations').value
         };
@@ -1278,18 +1356,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Ingredient Profile Editor ---
     function openProfileEditor(foodId) {
-        const ing = ingredients.find(f => f.foodId === foodId);
-        if (!ing) {
-            alert('Save your spreadsheet changes first before editing a profile.');
+        const ing = foodId ? ingredients.find(f => f.foodId === foodId) : null;
+        if (foodId && !ing) {
+            alert('Ingredient not found. It may have been deleted.');
             return;
         }
+        const details = (ing && ing.ingredientDetails) || {};
 
-        foodEditorTitle.textContent = `Edit Profile: ${ing.name}`;
-        document.getElementById('profile-food-id').value = ing.foodId;
-        document.getElementById('profile-description').value = ing.description || '';
-        document.getElementById('profile-image').value = ing.imageUrl || '';
+        document.getElementById('profile-food-id').value = ing ? ing.foodId : '';
+        document.getElementById('profile-name').value = (ing && ing.name) || '';
+        document.getElementById('profile-scientificName').value = (ing && ing.scientificName) || '';
+        document.getElementById('profile-category').value = (ing && ing.category) || '';
+        document.getElementById('profile-description').value = (ing && ing.description) || '';
+        document.getElementById('profile-image').value = (ing && ing.imageUrl) || '';
+        document.getElementById('profile-calories').value = (ing && ing.calories) || '';
+        document.getElementById('profile-proteinG').value = (ing && ing.proteinG) || '';
+        document.getElementById('profile-fatG').value = (ing && ing.fatG) || '';
+        document.getElementById('profile-carbsG').value = (ing && ing.carbsG) || '';
 
-        const details = ing.ingredientDetails || {};
+        // Reset tabs to Overview
+        const ingTabs = document.getElementById('cmsIngTabs');
+        if (ingTabs) {
+            ingTabs.querySelectorAll('.ing-tab').forEach(t => t.classList.remove('active'));
+            ingTabs.querySelector('.ing-tab[data-tab="overview"]').classList.add('active');
+        }
+        const ingPanels = document.querySelectorAll('#cms-food-modal .ing-tab-panel');
+        ingPanels.forEach(p => {
+            p.classList.remove('active');
+            if (p.dataset.panel === 'overview') p.classList.add('active');
+        });
+
         document.getElementById('profile-storage').value = details.storage || '';
         document.getElementById('profile-flavour').value = details.flavour || '';
         document.getElementById('profile-pairings').value = details.pairings || '';
@@ -1297,32 +1393,32 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('profile-preparations').value = details.preparations || '';
 
         // Vitamins
-        document.getElementById('profile-vitaminAMcg').value = ing.vitaminAMcg || '';
-        document.getElementById('profile-vitaminCMg').value = ing.vitaminCMg || '';
-        document.getElementById('profile-vitaminDMcg').value = ing.vitaminDMcg || '';
-        document.getElementById('profile-vitaminEMg').value = ing.vitaminEMg || '';
-        document.getElementById('profile-vitaminKMcg').value = ing.vitaminKMcg || '';
-        document.getElementById('profile-thiaminMg').value = ing.thiaminMg || '';
-        document.getElementById('profile-riboflavinMg').value = ing.riboflavinMg || '';
-        document.getElementById('profile-niacinMg').value = ing.niacinMg || '';
-        document.getElementById('profile-vitaminB6Mg').value = ing.vitaminB6Mg || '';
-        document.getElementById('profile-folateMcg').value = ing.folateMcg || '';
-        document.getElementById('profile-vitaminB12Mcg').value = ing.vitaminB12Mcg || '';
+        document.getElementById('profile-vitaminAMcg').value = (ing && ing.vitaminAMcg) || '';
+        document.getElementById('profile-vitaminCMg').value = (ing && ing.vitaminCMg) || '';
+        document.getElementById('profile-vitaminDMcg').value = (ing && ing.vitaminDMcg) || '';
+        document.getElementById('profile-vitaminEMg').value = (ing && ing.vitaminEMg) || '';
+        document.getElementById('profile-vitaminKMcg').value = (ing && ing.vitaminKMcg) || '';
+        document.getElementById('profile-thiaminMg').value = (ing && ing.thiaminMg) || '';
+        document.getElementById('profile-riboflavinMg').value = (ing && ing.riboflavinMg) || '';
+        document.getElementById('profile-niacinMg').value = (ing && ing.niacinMg) || '';
+        document.getElementById('profile-vitaminB6Mg').value = (ing && ing.vitaminB6Mg) || '';
+        document.getElementById('profile-folateMcg').value = (ing && ing.folateMcg) || '';
+        document.getElementById('profile-vitaminB12Mcg').value = (ing && ing.vitaminB12Mcg) || '';
 
         // Minerals
-        document.getElementById('profile-calciumMg').value = ing.calciumMg || '';
-        document.getElementById('profile-ironMg').value = ing.ironMg || '';
-        document.getElementById('profile-magnesiumMg').value = ing.magnesiumMg || '';
-        document.getElementById('profile-phosphorusMg').value = ing.phosphorusMg || '';
-        document.getElementById('profile-potassiumMg').value = ing.potassiumMg || '';
-        document.getElementById('profile-sodiumMg').value = ing.sodiumMg || '';
-        document.getElementById('profile-zincMg').value = ing.zincMg || '';
-        document.getElementById('profile-copperMg').value = ing.copperMg || '';
-        document.getElementById('profile-seleniumMcg').value = ing.seleniumMcg || '';
+        document.getElementById('profile-calciumMg').value = (ing && ing.calciumMg) || '';
+        document.getElementById('profile-ironMg').value = (ing && ing.ironMg) || '';
+        document.getElementById('profile-magnesiumMg').value = (ing && ing.magnesiumMg) || '';
+        document.getElementById('profile-phosphorusMg').value = (ing && ing.phosphorusMg) || '';
+        document.getElementById('profile-potassiumMg').value = (ing && ing.potassiumMg) || '';
+        document.getElementById('profile-sodiumMg').value = (ing && ing.sodiumMg) || '';
+        document.getElementById('profile-zincMg').value = (ing && ing.zincMg) || '';
+        document.getElementById('profile-copperMg').value = (ing && ing.copperMg) || '';
+        document.getElementById('profile-seleniumMcg').value = (ing && ing.seleniumMcg) || '';
 
         // Pricing
-        document.getElementById('profile-averagePrice').value = ing.averagePrice || '';
-        document.getElementById('profile-priceCurrency').value = ing.priceCurrency || 'MUR';
+        document.getElementById('profile-averagePrice').value = (ing && ing.averagePrice) || '';
+        document.getElementById('profile-priceCurrency').value = (ing && ing.priceCurrency) || 'MUR';
 
         foodModal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -1332,11 +1428,44 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const foodId = document.getElementById('profile-food-id').value;
-        const idx = ingredients.findIndex(f => f.foodId === foodId);
-        if (idx < 0) return;
+        let idx = ingredients.findIndex(f => f.foodId === foodId);
+        if (idx < 0) {
+            const name = document.getElementById('profile-name').value.trim();
+            if (!name) {
+                alert('Please enter an ingredient name.');
+                return;
+            }
+            let newFoodId = slugify(name);
+            let suffix = 1;
+            while (ingredients.some(f => f.foodId === newFoodId)) {
+                newFoodId = slugify(name) + '-' + (++suffix);
+            }
+            ingredients.push({
+                foodId: newFoodId,
+                name: name,
+                servingSizeG: 100,
+                servingUnit: 'g',
+                category: '',
+                calories: 0,
+                proteinG: 0,
+                fatG: 0,
+                carbsG: 0,
+                fiberG: 0,
+                sugarG: 0
+            });
+            idx = ingredients.length - 1;
+            document.getElementById('profile-food-id').value = newFoodId;
+        }
 
+        ingredients[idx].name = document.getElementById('profile-name').value.trim() || ingredients[idx].name;
+        ingredients[idx].scientificName = document.getElementById('profile-scientificName').value.trim() || '';
+        ingredients[idx].category = document.getElementById('profile-category').value.trim() || '';
         ingredients[idx].description = document.getElementById('profile-description').value.trim();
         ingredients[idx].imageUrl = document.getElementById('profile-image').value.trim();
+        ingredients[idx].calories = parseFloat(document.getElementById('profile-calories').value) || 0;
+        ingredients[idx].proteinG = parseFloat(document.getElementById('profile-proteinG').value) || 0;
+        ingredients[idx].fatG = parseFloat(document.getElementById('profile-fatG').value) || 0;
+        ingredients[idx].carbsG = parseFloat(document.getElementById('profile-carbsG').value) || 0;
         ingredients[idx].ingredientDetails = {
             storage: document.getElementById('profile-storage').value.trim(),
             flavour: document.getElementById('profile-flavour').value.trim(),
@@ -1375,6 +1504,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         closeFoodModal();
         await saveIngredients();
+        renderCMSList();
         statusText.innerHTML = `<span class="status-dot"></span> Saved profile for ${ingredients[idx].name}`;
     });
 
@@ -1392,7 +1522,53 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     foodCloseBtn.addEventListener('click', closeFoodModal);
     foodModal.addEventListener('click', (e) => { if (e.target === foodModal) closeFoodModal(); });
-    
+    if (cancelRecipeBtn) cancelRecipeBtn.addEventListener('click', closeModal);
+    if (cancelFoodBtn) cancelFoodBtn.addEventListener('click', closeFoodModal);
+
+    if (cmsDeleteBtn) cmsDeleteBtn.addEventListener('click', async () => {
+        const recipeId = document.getElementById('recipe-id').value;
+        if (!recipeId) return;
+        const confirmed = await showConfirmDialog('Delete this recipe?', 'This will permanently remove the recipe from your database.');
+        if (!confirmed) return;
+        const idx = recipes.findIndex(r => r.id === recipeId);
+        if (idx >= 0) {
+            recipes.splice(idx, 1);
+            await saveRecipes();
+            closeModal();
+            renderCMSList();
+            statusText.innerHTML = `<span class="status-dot"></span> Recipe deleted`;
+        }
+    });
+
+    if (foodDeleteBtn) foodDeleteBtn.addEventListener('click', async () => {
+        const foodId = document.getElementById('profile-food-id').value;
+        if (!foodId) return;
+        const confirmed = await showConfirmDialog('Delete this ingredient profile?', 'This will permanently remove the profile from your database.');
+        if (!confirmed) return;
+        const idx = ingredients.findIndex(f => f.foodId === foodId);
+        if (idx >= 0) {
+            ingredients.splice(idx, 1);
+            await saveIngredients();
+            closeFoodModal();
+            renderCMSList();
+            statusText.innerHTML = `<span class="status-dot"></span> Profile deleted`;
+        }
+    });
+
+    const ingTabs = document.getElementById('cmsIngTabs');
+    if (ingTabs) {
+        ingTabs.addEventListener('click', (e) => {
+            const tab = e.target.closest('.ing-tab');
+            if (!tab) return;
+            ingTabs.querySelectorAll('.ing-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const target = tab.dataset.tab;
+            foodModal.querySelectorAll('.ing-tab-panel').forEach(p => {
+                p.classList.toggle('active', p.dataset.panel === target);
+            });
+        });
+    }
+
     document.addEventListener('keydown', (e) => { 
         if (e.key === 'Escape') {
             closeModal(); 

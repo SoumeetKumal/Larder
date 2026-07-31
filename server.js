@@ -30,6 +30,13 @@ const defaultFiles = {
     'shoppinglists.json': '[]',
     'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
 };
+Object.entries(defaultFiles).forEach(([file, content]) => {
+    const p = path.join(DATA_DIR, file);
+    if (!fs.existsSync(p)) {
+        fs.writeFileSync(p, content, 'utf8');
+        console.log(`  🌱 Seeded ${file}`);
+    }
+});
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -241,6 +248,7 @@ const server = http.createServer((req, res) => {
 
     // Static file serving
     let urlPath = req.url.split('?')[0]; // strip query params
+    try { urlPath = decodeURIComponent(urlPath); } catch (e) { /* keep as-is on malformed input */ }
     if (urlPath === '/') urlPath = '/index.html';
     let filePath = path.join(ROOT, urlPath);
 

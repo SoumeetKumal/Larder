@@ -11,7 +11,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <nav class="top-nav">
+    <div class="container" style="padding-bottom: 4rem;">
+        <nav class="top-nav">
             <a href="./" class="brand-logo" style="text-decoration:none;">
                 <img src="images/icon.png" alt="Larder Logo" style="height: 36px; width: 36px; border-radius: 8px; object-fit: contain;">
                 LARDER
@@ -22,39 +23,73 @@
                 <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
                 <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
                 <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
-                <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
             </div>
         </nav>
 
-    
-        <div class="container" style="padding-bottom: 4rem;">
-            <section class="section">
+        <section class="section">
                 <div class="section-header" style="margin-bottom: 1rem;">
                     <h2>Kitchen Basics</h2>
                     <p>A comprehensive visual guide to culinary equipment and techniques.</p>
                 </div>
 
+        <div class="vd-tabbar" role="tablist" aria-label="Kitchen Basics topics">
+            <button class="vd-tab" id="tab-btn-knives-cookware" role="tab" aria-selected="true" aria-controls="tab-knives-cookware" tabindex="0">Knives &amp; Cookware</button>
+            <button class="vd-tab" id="tab-btn-appliances-tableware" role="tab" aria-selected="false" aria-controls="tab-appliances-tableware" tabindex="-1">Appliances &amp; Tableware</button>
+            <button class="vd-tab" id="tab-btn-skills-methods" role="tab" aria-selected="false" aria-controls="tab-skills-methods" tabindex="-1">Skills &amp; Methods</button>
+        </div>
+
+        <div class="vd-tab-panel is-active" id="tab-knives-cookware" role="tabpanel" aria-labelledby="tab-btn-knives-cookware">
 
         <!-- 01. Knives -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">01</span><h3>Knives & Accessories</h3><p>Essential blades for every task</p></div>
         <div class="vd-kb-grid vd-kb-grid-knives">
-            <div class="vd-kb-card vd-kb-card-tall" data-origin="Germany / France" data-use-case="Slicing, dicing, chopping, and mincing vegetables, meat, and fish." data-tips="Always use a pinch grip for best control. Hone regularly to maintain the edge."><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Chef Knife.svg" alt="Chef Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Chef Knife <span class="vd-kb-badge">8–12"</span></h4><p class="vd-kb-desc">Primary multi-purpose knife.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall" data-origin="Japan" data-use-case="Slicing, dicing, and mincing. The flat edge makes it great for push cuts." data-tips="The 'granton' edge (dimples) helps prevent food from sticking to the blade."><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Santoku Knife.svg" alt="Santoku Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Santoku <span class="vd-kb-badge">5–8"</span></h4><p class="vd-kb-desc">Japanese all-purpose knife.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Paring Knife.svg" alt="Paring Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Paring Knife <span class="vd-kb-badge">2.5–4"</span></h4><p class="vd-kb-desc">For intricate tasks and peeling.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Serrated Knife.svg" alt="Serrated Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Serrated <span class="vd-kb-badge">8–10"</span></h4><p class="vd-kb-desc">Ideal for bread and tomatoes.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Cleaver.svg" alt="Cleaver"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Cleaver <span class="vd-kb-badge">6"</span></h4><p class="vd-kb-desc">Heavy duty chopping.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Boning Knife.svg" alt="Boning Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Boning <span class="vd-kb-badge">5–6"</span></h4><p class="vd-kb-desc">Removing bones from meat.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Filleting Knife.svg" alt="Filleting Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Filleting <span class="vd-kb-badge">6–9"</span></h4><p class="vd-kb-desc">Flexible blade for fish.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Carving Knife.svg" alt="Carving Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Carving <span class="vd-kb-badge">8–14"</span></h4><p class="vd-kb-desc">Slicing cooked meats.</p></div></div>
-            <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Chinese Chef Knife.svg" alt="Chinese Chef Knife"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Chinese Chef <span class="vd-kb-badge">7–8"</span></h4><p class="vd-kb-desc">Versatile vegetable cleaver.</p></div></div>
             <!-- Accessories -->
             <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Knife Accessories/Cutting Board.svg" alt="Cutting Board"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Cutting Board</h4></div></div>
             <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Knife Accessories/Honing Steel.svg" alt="Honing Steel"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Honing Steel</h4></div></div>
             <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Knife Accessories/Whetstone.svg" alt="Whetstone"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Whetstone</h4></div></div>
             <div class="vd-kb-card vd-kb-card-tall"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knives/Knife Accessories/Carving Fork.svg" alt="Carving Fork"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Carving Fork</h4></div></div>
+        </div>
+
+        <div class="vd-kb-prose">
+            <p>Knives are essential in food preparation for most people who cook almost everywhere in the world. Choosing which knives to buy can be difficult from the abundant choices — different shapes, sizes, blade materials and handle materials. Here is a quick look at some common knife shapes and their uses.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="utensils" style="width: 14px; height: 14px;"></i></span> Common Knife Shapes</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Knife</th>
+                        <th class="num">Size</th>
+                        <th>Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-origin="Germany / France" data-use-case="Slicing, dicing, chopping, and mincing vegetables, meat, and fish." data-tips="Always use a pinch grip for best control. Hone regularly to maintain the edge."><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Chef Knife.svg" alt="Chef Knife">Chef Knife</span></td><td class="num">20–30 cm / 8–12"</td><td>General purpose.</td></tr>
+                    <tr data-origin="Japan" data-use-case="Slicing, dicing, and mincing. The flat edge makes it great for push cuts." data-tips="The 'granton' edge (dimples) helps prevent food from sticking to the blade."><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Santoku Knife.svg" alt="Santoku Knife">Santoku Knife</span></td><td class="num">8–12"</td><td>Similar to Chef Knife, general purpose.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Paring Knife.svg" alt="Paring Knife">Paring Knife</span></td><td class="num">6–10 cm / 2.5–4"</td><td>Small tasks, to peel and to core.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Serrated Knife.svg" alt="Serrated Knife">Serrated Knife</span></td><td class="num">13–20 cm / 5–8"</td><td>Item with hard exterior and soft interior, such as bread.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Cleaver.svg" alt="Cleaver">Cleaver</span></td><td class="num">20–25 cm / 8–10"</td><td>Tough edge, split bones, dense cartilage and thick meat.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Chinese Chef Knife.svg" alt="Chinese Chef Knife">Chinese Chef Knife</span></td><td class="num">15 cm / 6"</td><td>General purpose.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Boning Knife.svg" alt="Boning Knife">Boning Knife</span></td><td class="num">18–22 cm / 7–8.5"</td><td>Thin flexible blade, remove bones from meat.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Filleting Knife.svg" alt="Filleting Knife">Filleting Knife</span></td><td class="num">12–15 cm / 5–6"</td><td>Very flexible, fillet and prepare fish.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Knives/Carving Knife.svg" alt="Carving Knife">Carving Knife</span></td><td class="num">15–28 cm / 6–11"</td><td>Thinner than Chef Knife, cut slices of meat.</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="vd-kb-prose">
+            <p>Blades are made of various materials including carbon steel, stainless steel, ceramics and plastics. Steel blades are generally considered better as they can be sharpened easily using a sharpening stone or whetstone and honed using a honing rod. Dull blades can be frustrating to use and are dangerous, as they can slip when failing to cut through, resulting in injury.</p>
+            <p>Handle materials should be chosen based on how safe they are. When handling a lot of greasy or slippery items, textured handles provide more grip. Common handle materials include wood, micarta and metal.</p>
+            <p>Cutting boards are usually made of plastic or wood — use a damp towel to prevent slipping. A meat fork holds meat when carving. A honing steel straightens the edge of a knife but does not sharpen it; a sharpening stone or whetstone sharpens the edge — the higher the grit number, the finer the finish.</p>
+            <p>Avoid putting knives close to each other to prevent dulling. Instead, store knives in knife blocks, on a magnetic strip, or in a knife roll.</p>
         </div>
 
         <!-- 02. Utensils -->
@@ -83,20 +118,77 @@
             <div class="vd-kb-card vd-kb-card-compact"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Utensils/Bamboo Steamer.svg" alt="Bamboo Steamer"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Bamboo Steamer</h4></div></div>
         </div>
 
+        <div class="vd-kb-prose">
+            <p>Utensils are the tools used along with cookware and bakeware that make tasks easier. Basic and useful utensils include lids, wooden spoons, wok spatulas and spoons, ladles, box graters, tongs, mixing bowls, balloon whisks, silicone spatulas and brushes, measuring cups and jugs, kitchen scales, thermometers, rolling pins, can openers, peelers, colanders, bamboo steamers, square grill racks, and baking paper, aluminium foil or cling film.</p>
+        </div>
+
         <!-- 03. Pans & Pots -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">03</span><h3>Pans & Pots</h3><p>Vessels for stovetop cooking</p></div>
-        <div class="vd-kb-grid vd-kb-grid-pans">
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Fry Pan.svg" alt="Fry Pan"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Fry Pan <span class="vd-kb-badge">ø 14-32 cm</span></h4><p class="vd-kb-desc">For searing as it allows steam to escape for browning.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Sauté Pan.svg" alt="Sauté Pan"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Sauté Pan <span class="vd-kb-badge">ø 14-32 cm</span></h4><p class="vd-kb-desc">For reducing liquids as it provides large surface area.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Sauce Pan.svg" alt="Sauce Pan"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Sauce Pan <span class="vd-kb-badge">ø 16-22 cm</span></h4><p class="vd-kb-desc">Heating liquids as straight edge prevents quick evaporation.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Saucier.svg" alt="Saucier"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Saucier <span class="vd-kb-badge">ø 17-24 cm</span></h4><p class="vd-kb-desc">For applications that needs whisking and stirring.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Stock Pot.svg" alt="Stock Pot"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Stock Pot <span class="vd-kb-badge">ø 28 cm</span></h4><p class="vd-kb-desc">Height is same as diameter. For simmering in a lot of liquid.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Soup Pot.svg" alt="Soup Pot"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Soup Pot <span class="vd-kb-badge">ø 22 cm</span></h4><p class="vd-kb-desc">Taller than it is wide. For soups that requires little evaporation.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Stew Pot.svg" alt="Stew Pot"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Stew Pot <span class="vd-kb-badge">ø 28 cm</span></h4><p class="vd-kb-desc">Height is just over ½ diameter. For soups and stew.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Rondeau.svg" alt="Rondeau"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Rondeau <span class="vd-kb-badge">ø 28 cm</span></h4><p class="vd-kb-desc">Height is about 1/3 diameter. For shallow frying, searing, and braising.</p></div></div>
-            <div class="vd-kb-card" data-origin="Han Dynasty, China" data-use-case="Searing, pan-frying, baking, broiling, roasting. Naturally non-stick when seasoned." data-tips="Do not soak in water or wash with harsh soap. Dry immediately and oil after use to prevent rust."><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Cast Iron Skillet.svg" alt="Cast Iron Skillet"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Cast Iron Skillet <span class="vd-kb-badge">ø 15-50 cm</span></h4><p class="vd-kb-desc">Usually made from cast iron. For searing.</p></div></div>
-            <div class="vd-kb-card" data-origin="China" data-use-case="Stir-frying, steaming, pan-frying, deep-frying, poaching, boiling, braising, and smoking." data-tips="Requires a very high heat source. Carbon steel woks must be seasoned properly before first use."><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Pans and Pots/Wok.svg" alt="Wok"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Wok <span class="vd-kb-badge">ø 20-36 cm</span></h4><p class="vd-kb-desc">For active cooking such as stir fry.</p></div></div>
+
+        <div class="vd-kb-prose">
+            <p>Before buying pans, it is important to consider what kind of food it will be used for cooking, the number of people it will be used for, and the capacity of the stove and oven. Cookware material is an important consideration as it has a drastic impact when cooking.</p>
         </div>
+
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="flame" style="width: 14px; height: 14px;"></i></span> Cookware Materials</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Advantages</th>
+                        <th>Disadvantages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Aluminium</td><td>Relatively cheap, good heat conductor and lightweight.</td><td>Reactive and can be stained. Anodised type is more stable.</td></tr>
+                    <tr><td>Stainless Steel</td><td>Good heat conductor, non-reactive and low maintenance.</td><td>Relatively expensive and uneven heating surface.</td></tr>
+                    <tr><td>Carbon Steel</td><td>Relatively cheap, great heat conductor, non-stick after seasoning.</td><td>High maintenance and highly reactive with acidic foods.</td></tr>
+                    <tr><td>Cast Iron</td><td>Relatively cheap, great heat conductor and retainer. Oven safe.</td><td>High maintenance and highly reactive with acidic foods.</td></tr>
+                    <tr><td>Copper</td><td>Great heat conductor and even heat retention.</td><td>Expensive, high maintenance and highly reactive.</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="vd-kb-table-note">Enamel, non-stick and ceramic refer to the coating only. Ceramic can withstand high heat but falls short in its non-stick properties. Enamel coating on cast iron helps with maintenance and allows cooking with acidic food without worrying too much.</p>
+        </div>
+
+        <div class="vd-kb-prose">
+            <p>Handle attachment affects heat transfer from the pan to the handle. Handles with similar material, albeit less heat conductive than the pan, are preferred. Riveted attachments tend to be sturdy and reduce heat transfer, while welded attachments produce a smoother finish with less food build-up. One-piece pans are seamless and often ergonomic, but transfer more heat to the handles.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="cooking-pot" style="width: 14px; height: 14px;"></i></span> Common Pans &amp; Pots</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Vessel</th>
+                        <th class="num">Size</th>
+                        <th>Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Fry Pan.svg" alt="Fry Pan">Fry Pan</span></td><td class="num">ø 14–32 cm / 5–14"</td><td>For searing as it allows steam to escape for browning.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Sauce Pan.svg" alt="Sauce Pan">Sauce Pan</span></td><td class="num">ø 16–22 cm / 6–9" (1.2–2.5 L)</td><td>Heating liquids as straight edge prevents quick evaporation.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Sauté Pan.svg" alt="Sauté Pan">Sauté Pan</span></td><td class="num">ø 14–32 cm / 5–14"</td><td>For reducing liquids as it provides large surface area.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Saucier.svg" alt="Saucier">Saucier</span></td><td class="num">ø 17–24 cm / 7–9.5" (1–2.8 L)</td><td>For applications that need whisking and stirring.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Rondeau.svg" alt="Rondeau">Rondeau</span></td><td class="num">ø 28 cm (h 9.5 cm / 3.7")</td><td>Height about 1/3 diameter. For shallow frying, searing and braising.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Stew Pot.svg" alt="Stew Pot">Stew Pot</span></td><td class="num">ø 28 cm (h 16.5 cm / 6.5")</td><td>Height just over ½ diameter. For soups and stew.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Stock Pot.svg" alt="Stock Pot">Stock Pot</span></td><td class="num">ø 28 cm (h 28 cm / 11")</td><td>Height same as diameter. For simmering in a lot of liquid.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Soup Pot.svg" alt="Soup Pot">Soup Pot</span></td><td class="num">ø 22 cm (h 27 cm / 8.7")</td><td>Taller than it is wide. For soups that require little evaporation.</td></tr>
+                    <tr data-origin="Han Dynasty, China" data-use-case="Searing, pan-frying, baking, broiling, roasting. Naturally non-stick when seasoned." data-tips="Do not soak in water or wash with harsh soap. Dry immediately and oil after use to prevent rust."><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Cast Iron Skillet.svg" alt="Skillet">Skillet</span></td><td class="num">ø 15–50 cm / 6–20"</td><td>Usually made from cast iron. For searing.</td></tr>
+                    <tr data-origin="China" data-use-case="Stir-frying, steaming, pan-frying, deep-frying, poaching, boiling, braising, and smoking." data-tips="Requires a very high heat source. Carbon steel woks must be seasoned properly before first use."><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Pans and Pots/Wok.svg" alt="Wok">Wok</span></td><td class="num">ø 20–36 cm / 8–14"</td><td>For active cooking such as stir fry.</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        </div>
+
+        <div class="vd-tab-panel" id="tab-appliances-tableware" role="tabpanel" aria-labelledby="tab-btn-appliances-tableware">
 
         <!-- 04. Bakeware -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">04</span><h3>Bakeware</h3><p>Oven-safe cooking vessels</p></div>
@@ -109,6 +201,10 @@
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Bakeware/Casserole Dish.svg" alt="Casserole Dish"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Casserole Dish</h4></div></div>
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Bakeware/Pizza Stone.svg" alt="Pizza Stone"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Pizza Stone</h4></div></div>
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Bakeware/Roasting Rack.svg" alt="Roasting Rack"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Roasting Rack</h4></div></div>
+        </div>
+
+        <div class="vd-kb-prose">
+            <p>Bakeware selection can be very personalised based on what the individual intends to bake. Consider the types and sizes of the bakeware appropriate to the recipe and the final product. Common trays and pans include baking trays, roasting trays and racks, round cake pans, loaf pans, tart pans, baking and casserole dishes, muffin tins and pizza stones.</p>
         </div>
 
         <!-- 05. Kitchen Appliances -->
@@ -124,6 +220,10 @@
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Kitchen Appliances/Spice Grinder.svg" alt="Spice Grinder"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Spice Grinder</h4></div></div>
         </div>
 
+        <div class="vd-kb-prose">
+            <p>Most people are familiar with common kitchen appliances, and some — such as the refrigerator — have become indispensable to the everyday person, not just for those who cook. Important and useful appliances include the refrigerator, stovetop, oven, kettle, microwave, rice cooker, blender or food processor or spice grinder, and sous vide.</p>
+        </div>
+
         <!-- 06. Tableware -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">06</span><h3>Tableware</h3><p>Dining essentials</p></div>
         <div class="vd-kb-grid vd-kb-grid-pans">
@@ -133,17 +233,36 @@
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Tableware/Glass, Mug, Cup.svg" alt="Glass, Mug, Cup"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Glass, Mug, Cup</h4></div></div>
         </div>
 
+        <div class="vd-kb-prose">
+            <p>Tableware can vary greatly among cultures and is not always used at the table, but what is referred to here all serves the same purpose — to eat. Some of the most widespread tableware are plates, bowls, glasses, mugs and cups, and forks, spoons, knives and chopsticks.</p>
+        </div>
+        </div>
+
+        <div class="vd-tab-panel" id="tab-skills-methods" role="tabpanel" aria-labelledby="tab-btn-skills-methods">
+
         <!-- 07. Knife Skills -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">07</span><h3>Knife Skills</h3><p>Techniques for safe cutting</p></div>
-        <div class="vd-kb-grid vd-kb-grid-pans" style="margin-bottom: 2rem;">
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knife Skills/Pinch Grip.svg" alt="Pinch Grip"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Pinch Grip</h4><p class="vd-kb-desc">Optimal blade control.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knife Skills/Chop.svg" alt="Chop"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Chop</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knife Skills/Slice.svg" alt="Slice"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Slice</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knife Skills/Back Slice.svg" alt="Back Slice"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Back Slice</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Knife Skills/Rock Chop.svg" alt="Rock Chop"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Rock Chop</h4></div></div>
+        <div class="vd-kb-prose">
+            <p>A fair amount of time spent when cooking involves cutting ingredients. Getting comfortable using a knife properly will make it quicker, safer and more enjoyable to cook regularly. The two most important things to learn are to always use a sharp knife and to make sure to stabilise the cutting board. A dull knife requires more force to use and increases the chance of accidents, while not doing a great job at making the intended cuts.</p>
+            <p>Some cutting boards come with non-slip rubber feet, but most do not. Use a damp cloth, a damp kitchen towel, or non-slip shelf liner cut to size to make sure the cutting board will not move around.</p>
         </div>
-        <h4 style="margin-bottom: 1rem; color: var(--text-main);">The Claw Grip Sequence</h4>
-        <div class="vd-kb-claw-seq">
+
+        <div class="vd-kb-divider">Grips</div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Pinch Grip.svg" alt="Pinch Grip"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Pinch Grip</h4>
+                <p>Place the middle finger behind the knife bolster or guard, with the ring and little finger around the handle, while pinching the blade with the thumb and forefinger. This is safe even with slightly damp hands and provides optimal blade control.</p>
+            </div>
+        </div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Claw Grip/1 Holding the Ingredient.svg" alt="Claw Grip"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Claw Grip</h4>
+                <p>Hold on to the ingredient with the thumb and fingers, and keep the fingertips curled inward to avoid getting hit by the knife's blade. The side of the blade should rest against the furthest knuckle and stay perpendicular to the cutting board. The blade should not go higher than the guiding knuckle when cutting, regardless of the type of technique and size of ingredient used — with a few exceptions such as peeling, cutting some large vegetables to a more manageable size, and deboning meat.</p>
+            </div>
+        </div>
+        <div class="vd-kb-claw-seq" style="margin-bottom: 1rem;">
             <div class="vd-kb-claw-step">
                 <img src="Kitchen Basics Vector Images/Knife Skills/Claw Grip/1 Holding the Ingredient.svg" alt="Holding Ingredient">
                 <div><strong>1. Hold</strong><br><span style="font-size:0.85rem; color:var(--text-muted)">Fingers tucked in</span></div>
@@ -158,16 +277,50 @@
             </div>
         </div>
 
+        <div class="vd-kb-divider">Cutting Techniques</div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Slice.svg" alt="Slice"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Slice</h4>
+                <p>Food is cut lengthwise uniformly. The tip of the blade rests on the cutting board and the knife is angled upwards before slicing downward and forward into the food while keeping the tip of the blade in contact with the cutting board.</p>
+            </div>
+        </div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Chop.svg" alt="Chop"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Chop</h4>
+                <p>Similar to slicing but the whole blade is lifted up and cuts are made by downward and upward motion. It is not to be confused with the culinary cut <em>rough chop</em>, where food is cut into rough cubes that are similar in size.</p>
+            </div>
+        </div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Back Slice.svg" alt="Back Slice"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Back Slice</h4>
+                <p>Useful in making fine slices of herbs where other techniques can crush the ingredient instead of cutting. The tip of the blade is placed at an upward angle lower than the slicing technique and the knife is only pulled backward to make the cut.</p>
+            </div>
+        </div>
+        <div class="vd-kb-tech">
+            <div class="vd-kb-tech-img"><img src="Kitchen Basics Vector Images/Knife Skills/Rock Chop.svg" alt="Rock Chop"></div>
+            <div class="vd-kb-tech-text">
+                <h4>Rock Chop</h4>
+                <p>Used to finely mince herbs, garlic, ginger and other similar ingredients. The tip of the knife is placed at one side of the ingredient and is held securely with the free hand, and the knife is rocked up and down until the ingredient is minced to the desired size. Occasionally, the ingredients will need to be re-gathered.</p>
+            </div>
+        </div>
+
         <!-- 08. Culinary Cuts -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">08</span><h3>Culinary Cuts</h3><p>Standardized vegetable shapes</p></div>
         
+        <div class="vd-kb-prose">
+            <p>For the general home cook, it is not very important to know the exact measurements of every culinary cut, but it is useful to know at least some of the cuts to make uniform shapes and sizes in order to cook the ingredients as uniformly as possible — which in some cases can make or break the dish.</p>
+        </div>
+
         <div class="vd-kb-divider">Cube Cuts</div>
         <div class="vd-kb-grid vd-kb-grid-pans">
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/Fine Brunoise.svg" alt="Fine Brunoise"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Fine Brunoise <span class="vd-kb-badge">0.2 cm</span></h4></div></div>
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/Brunoise.svg" alt="Brunoise"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Brunoise/Fine Dice <span class="vd-kb-badge">0.3 cm</span></h4></div></div>
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/Small Dice.svg" alt="Small Dice"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Small Dice/Macédoine <span class="vd-kb-badge">0.5 cm</span></h4></div></div>
             <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/Medium Dice.svg" alt="Medium Dice"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Medium Dice/Parmentier <span class="vd-kb-badge">1.3 cm</span></h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/4 Carré.svg" alt="4 Carré"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Large Dice/Carré <span class="vd-kb-badge">2 cm</span></h4></div></div>
+            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Culinary Cuts/Cube Cuts/4 (Carré).svg" alt="4 Carré"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Large Dice/Carré <span class="vd-kb-badge">2 cm</span></h4></div></div>
         </div>
 
         <div class="vd-kb-divider">Strip Cuts</div>
@@ -188,36 +341,84 @@
 
         <!-- 09. Cooking Methods -->
         <div class="vd-kb-subheader"><span class="vd-kb-num">09</span><h3>Cooking Methods</h3><p>Heat application techniques</p></div>
-        
-        <div class="vd-kb-divider">Dry Heat</div>
-        <div class="vd-kb-grid vd-kb-grid-pans">
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Saute.svg" alt="Sauté"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Sauté</h4><p class="vd-kb-desc">Small amount of fat. High heat. Food often left to brown to develop a fond.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Pan Fry.svg" alt="Pan Fry"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Pan Fry</h4><p class="vd-kb-desc">Very small amount of fat. Medium heat for even cooking.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Shallow Fry.svg" alt="Shallow Fry"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Shallow Fry</h4><p class="vd-kb-desc">Food is partly submerged in cooking fat and turned over during cooking.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Deep Fry.svg" alt="Deep Fry"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Deep Fry</h4><p class="vd-kb-desc">Food is fully submerged in cooking fat until fully cooked.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Stir Fry.svg" alt="Stir Fry"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Stir Fry</h4><p class="vd-kb-desc">Small amount of fat. Very high heat. Food stirred and tossed quickly.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Bake Roast.svg" alt="Bake/Roast"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Bake/Roast</h4><p class="vd-kb-desc">Indirect and evenly distributed heat around the food.</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Broil Grill.svg" alt="Broil/Grill"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Broil/Grill</h4><p class="vd-kb-desc">Direct heat from either the top (broil) or bottom (grill).</p></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Smoke.svg" alt="Smoke"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Smoke</h4><p class="vd-kb-desc">Food is exposed to smoke from smouldering material(s), usually wood chips.</p></div></div>
+
+        <div class="vd-kb-prose">
+            <p>There are numerous ways to cook food, and which method(s) to choose will depend on the ingredients being used, the final dish that needs to be achieved, the equipment available and personal preference. There are two main categories of cooking methods — dry heat cooking and moist heat cooking — as well as combination cooking, which combines the two.</p>
         </div>
 
-        <div class="vd-kb-divider">Wet Heat</div>
-        <div class="vd-kb-grid vd-kb-grid-pans">
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Boil.svg" alt="Boil"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Boil</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Simmer.svg" alt="Simmer"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Simmer</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Scald.svg" alt="Scald"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Scald</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Blanch, Scald, Poach, Simmer and Boil.svg" alt="Temperature Scale"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Blanch/Poach</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Steam.svg" alt="Steam"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Steam</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Steep Infuse.svg" alt="Steep/Infuse"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Steep/Infuse</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Sous Vide.svg" alt="Sous Vide"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Sous Vide</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Bain-marie.svg" alt="Bain-Marie"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Bain-Marie</h4></div></div>
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="sun" style="width: 14px; height: 14px;"></i></span> Dry Heat Cooking</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Stir Fry.svg" alt="Stir Fry">Stir Fry</span></td><td>Small amount of fat. Very high heat. Food stirred and tossed quickly.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Saute.svg" alt="Sauté">Sauté</span></td><td>Small amount of fat. High heat. Food often left to brown to develop a fond.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Pan Fry.svg" alt="Pan Fry">Pan Fry</span></td><td>Very small amount of fat. Medium heat for even cooking.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Sweat.svg" alt="Sweat">Sweat</span></td><td>Small amount of fat. Low heat, often with added salt to draw moisture out without any browning.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Bain-marie.svg" alt="Bain-marie">Bain-marie / Double Boiler</span></td><td>Simmering water in a saucepan or pot and a bowl with the ingredient(s) on top. To melt or cook delicate ingredients.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Shallow Fry.svg" alt="Shallow Fry">Shallow Fry</span></td><td>Food is partly submerged in cooking fat and turned over during cooking to cook other side(s).</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Deep Fry.svg" alt="Deep Fry">Deep Fry</span></td><td>Food is fully submerged in cooking fat until fully cooked.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Smoke.svg" alt="Smoke">Smoke</span></td><td>Food is exposed to smoke from smouldering material(s), usually wood or wood chips.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Bake Roast.svg" alt="Bake/Roast">Bake / Roast</span></td><td>Indirect and evenly distributed heat around the food. Baking is usually done at a lower temperature compared to roasting.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Broil Grill.svg" alt="Broil/Grill">Broil / Grill</span></td><td>Direct heat from either the top (broil) or bottom (grill) and food needs to be turned over to cook the other side(s).</td></tr>
+                </tbody>
+            </table>
+            </div>
         </div>
 
-        <div class="vd-kb-divider">Combination</div>
-        <div class="vd-kb-grid vd-kb-grid-pans">
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Braise.svg" alt="Braise"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Braise</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Stew.svg" alt="Stew"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Stew</h4></div></div>
-            <div class="vd-kb-card"><div class="vd-kb-img"><img src="Kitchen Basics Vector Images/Cooking Methods/Sweat.svg" alt="Sweat"></div><div class="vd-kb-info"><h4 class="vd-kb-title">Sweat</h4></div></div>
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="droplets" style="width: 14px; height: 14px;"></i></span> Moist Heat Cooking</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Steam.svg" alt="Steam">Steam</span></td><td>Simmering water in a saucepan or pot and a steamer on top. Bamboo steamers absorb excess moisture while metal steamers do not.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Blanch, Scald, Poach, Simmer and Boil.svg" alt="Blanch">Blanch</span></td><td>Food is boiled briefly and cooled down immediately into iced water or under cold running water to stop the cooking process.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Scald.svg" alt="Scald">Scald</span></td><td>The liquid is heated until small bubbles start to form (around 83°C for milk).</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Blanch, Scald, Poach, Simmer and Boil.svg" alt="Poach">Poach</span></td><td>Food is cooked fully submerged in hot liquid, usually water (around 70–80°C).</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Simmer.svg" alt="Simmer">Simmer</span></td><td>Food is cooked fully submerged in very hot liquid, usually water (around 85–95°C). Small and infrequent bubbles will appear.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Boil.svg" alt="Boil">Boil</span></td><td>Food is cooked fully submerged in very hot liquid, usually water (around 100°C). Large and very frequent bubbles will appear.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Steep Infuse.svg" alt="Steep/Infuse">Steep / Infuse</span></td><td>The ingredient is soaked in liquid, usually water, to extract flavours or to soften the item. Infusion is the extraction into the liquid, often water, oil, or alcohol.</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="vd-ref-table-wrap vd-kb-content">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="combine" style="width: 14px; height: 14px;"></i></span> Combination Cooking</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Braise.svg" alt="Braise">Braise</span></td><td>Food is pan fried or sautéed at high temperature and then liquid up to 1/3 the height of the ingredients is added and cooked slowly.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Stew.svg" alt="Stew">Stew</span></td><td>Food may or may not be pan fried or sautéed at high temperature and then liquid fully covering the ingredients is added and cooked slowly.</td></tr>
+                    <tr><td><span class="vd-ref-name"><img class="vd-ref-thumb" src="Kitchen Basics Vector Images/Cooking Methods/Sous Vide.svg" alt="Sous Vide">Sous Vide</span></td><td>Food is vacuum-sealed and cooked in water at a constant temperature. Food such as steak requires a quick sear after sous vide.</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
         </div>
 
     </section>
@@ -239,14 +440,12 @@
             <a href="ingredients">Ingredients</a>
             <a href="basics">Basics</a>
             <a href="reference">Reference</a>
-            <a href="cms">Manage</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#conversions">Conversions</a>
-            <a href="reference#oils">Oil Reference</a>
-            <a href="reference#flour">Flour Guide</a>
-            <a href="reference#bakeware">Pan Sizes</a>
+            <a href="reference#tab-conversions">Conversions</a>
+            <a href="reference#tab-ingredients">Ingredient Guides</a>
+            <a href="reference#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
@@ -304,20 +503,37 @@
         
         const cards = document.querySelectorAll('.vd-kb-card');
         
-        const openModal = (card) => {
+        const openModal = (src) => {
             // Extract core info
-            const imgSrc = card.querySelector('img').src;
-            const imgAlt = card.querySelector('img').alt;
+            const img = src.querySelector('img');
+            const imgSrc = img.src;
+            const imgAlt = img.alt;
             
-            // Reconstruct title including badge if exists
-            const titleHtml = card.querySelector('.vd-kb-title').innerHTML;
-            const descElSource = card.querySelector('.vd-kb-desc');
-            const descText = descElSource ? descElSource.textContent : '';
+            let titleHtml = '';
+            let descText = '';
+            let origin, useCase, tips;
             
-            // Extract rich data attributes
-            const origin = card.dataset.origin;
-            const useCase = card.dataset.useCase;
-            const tips = card.dataset.tips;
+            if (src.classList.contains('vd-kb-card')) {
+                // Reconstruct title including badge if exists
+                titleHtml = src.querySelector('.vd-kb-title').innerHTML;
+                const descElSource = src.querySelector('.vd-kb-desc');
+                descText = descElSource ? descElSource.textContent : '';
+                origin = src.dataset.origin;
+                useCase = src.dataset.useCase;
+                tips = src.dataset.tips;
+            } else {
+                // Table row: name from .vd-ref-name text, size badge from .num cell
+                const nameEl = src.querySelector('.vd-ref-name');
+                titleHtml = nameEl.textContent.trim();
+                const numEl = src.querySelector('.num');
+                const numText = numEl ? numEl.textContent.trim() : '';
+                if (numText) titleHtml += ' <span class="vd-kb-badge">' + numText + '</span>';
+                const cells = src.querySelectorAll('td');
+                descText = cells[cells.length - 1].textContent.trim();
+                origin = src.dataset.origin;
+                useCase = src.dataset.useCase;
+                tips = src.dataset.tips;
+            }
             
             // Populate Modal
             imgEl.src = imgSrc;
@@ -352,9 +568,25 @@
             document.body.style.overflow = '';
         };
         
+        const bindModal = (el) => {
+            el.setAttribute('role', 'button');
+            el.setAttribute('tabindex', '0');
+            el.addEventListener('click', () => openModal(el));
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openModal(el);
+                }
+            });
+        };
+        
         // Attach Event Listeners
-        cards.forEach(card => {
-            card.addEventListener('click', () => openModal(card));
+        cards.forEach(bindModal);
+        document.querySelectorAll('.vd-ref-table tbody tr').forEach(row => {
+            if (row.querySelector('.vd-ref-thumb')) {
+                row.classList.add('vd-clickable');
+                bindModal(row);
+            }
         });
         
         closeBtn.addEventListener('click', closeModal);
@@ -368,34 +600,51 @@
 </script>
 
     <script>
-        // Scroll-spy for sidebar navigation
+        // Kitchen Basics tab controller
         document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('.sidebar-link');
-            const sections = document.querySelectorAll('.basics-section');
+            const tabs = Array.from(document.querySelectorAll('.vd-tab'));
+            const panels = Array.from(document.querySelectorAll('.vd-tab-panel'));
+            const storageKey = 'larder_basics_tab';
 
-            // Smooth scroll on click
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const target = document.querySelector(link.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const activate = (tab, updateHash) => {
+                tabs.forEach(t => {
+                    const on = t === tab;
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                    t.tabIndex = on ? 0 : -1;
+                });
+                panels.forEach(p => {
+                    p.classList.toggle('is-active', p.id === tab.getAttribute('aria-controls'));
+                });
+                try { localStorage.setItem(storageKey, tab.id); } catch (e) {}
+                if (updateHash) {
+                    history.replaceState(null, '', '#' + tab.getAttribute('aria-controls'));
+                }
+            };
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => activate(tab, true));
+                tab.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        activate(tab, true);
                     }
                 });
             });
 
-            // Intersection Observer for scroll-spy
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        links.forEach(l => l.classList.remove('active'));
-                        const activeLink = document.querySelector(`.sidebar-link[data-section="${entry.target.id}"]`);
-                        if (activeLink) activeLink.classList.add('active');
-                    }
-                });
-            }, { rootMargin: '-20% 0px -60% 0px' });
-
-            sections.forEach(section => observer.observe(section));
+            let initial = null;
+            const hash = location.hash.replace('#', '');
+            if (hash) {
+                const byHash = tabs.find(t => t.getAttribute('aria-controls') === hash);
+                if (byHash) initial = byHash;
+            }
+            if (!initial) {
+                try {
+                    const saved = localStorage.getItem(storageKey);
+                    if (saved) initial = tabs.find(t => t.id === saved);
+                } catch (e) {}
+            }
+            if (initial) activate(initial, false);
+            else activate(tabs[0], false);
         });
     </script>
 
@@ -419,12 +668,6 @@
                 });
             }
         })();
-    </script>
-
-    <script>
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
-        }
     </script>
 
     <script>

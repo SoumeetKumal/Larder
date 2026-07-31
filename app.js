@@ -524,17 +524,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<button class="ingredient-link" data-id="${profile.id}" style="background:none;border:none;padding:0;color:var(--text-main);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s; text-align: left;" onmouseover="this.style.color='var(--accent-sea)'" onmouseout="this.style.color='var(--text-main)'">${ing.item}</button>`
                 : `<span style="font-weight: 500;">${ing.item}</span>`;
 
-            let displayAmt = '-';
-            let parsedAmount = parseFloat(ing.amount);
-            if (!isNaN(parsedAmount)) {
-                let scaled = parsedAmount * scale;
-                // keep up to 2 decimal places if needed
-                displayAmt = (Math.round(scaled * 100) / 100) + (ing.unit ? ' ' + ing.unit : '');
-            } else if (ing.amount) {
-                displayAmt = ing.amount; 
+            let metricAmt = ing.metric ? scaleAmount(ing.metric, scale) : '';
+            let imperialAmt = ing.imperial ? scaleAmount(ing.imperial, scale) : '';
+
+            if (!metricAmt && !imperialAmt) {
+                let parsedAmount = parseFloat(ing.amount);
+                if (!isNaN(parsedAmount)) {
+                    let scaled = parsedAmount * scale;
+                    metricAmt = (Math.round(scaled * 100) / 100) + (ing.unit ? ' ' + ing.unit : '');
+                } else if (ing.amount) {
+                    metricAmt = ing.amount;
+                } else {
+                    metricAmt = '-';
+                }
             }
 
-            return `<tr><td>${itemNameHtml}</td><td>${displayAmt}</td><td></td></tr>`;
+            return `<tr><td>${itemNameHtml}</td><td>${metricAmt}</td><td>${imperialAmt}</td></tr>`;
         }).join('');
         
         html += '</table>';
@@ -875,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="stat-block-title">Per Serving</span>
                         <div class="stat-group" style="gap: 3rem; align-items: center;">
                             <div class="stat-item"><span class="stat-label">Energy</span><span class="stat-value" style="color: ${headerColor};">${stdMacros ? stdMacros.display.energy : '-'}</span></div>
-                            <div class="stat-item"><span class="stat-label">Carb</span><span class="stat-value">${stdMacros ? stdMacros.display.carb : '-'}</span></div>
+                            <div class="stat-item"><span class="stat-label">Carb</span><span class="stat-value">${stdMacros ? stdMacros.display.carbs : '-'}</span></div>
                             <div class="stat-item"><span class="stat-label">Protein</span><span class="stat-value">${stdMacros ? stdMacros.display.protein : '-'}</span></div>
                             <div class="stat-item"><span class="stat-label">Fat</span><span class="stat-value">${stdMacros ? stdMacros.display.fat : '-'}</span></div>
                         </div>

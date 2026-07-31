@@ -11,7 +11,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <nav class="top-nav">
+    <div class="container" style="padding-bottom: 4rem;">
+        <nav class="top-nav">
             <a href="./" class="brand-logo" style="text-decoration:none;">
                 <img src="images/icon.png" alt="Larder Logo" style="height: 36px; width: 36px; border-radius: 8px; object-fit: contain;">
                 LARDER
@@ -22,21 +23,30 @@
                 <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
                 <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
                 <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
-                <a href="cms" class="btn btn-ghost" id="cms-link" style="padding: 0.5rem 1rem;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
             </div>
         </nav>
 
-    
-        <div class="container" style="padding-bottom: 4rem;">
-            <section class="section">
+        <section class="section">
                 <div class="section-header" style="margin-bottom: 1rem;">
                     <h2>Reference & Pantry</h2>
                     <p>Conversion tables, ingredient guides, and pantry management.</p>
                 </div>
 
+        <div class="vd-tabbar" role="tablist" aria-label="Reference topics">
+            <button class="vd-tab" id="tab-btn-abbreviations" role="tab" aria-selected="true" aria-controls="tab-abbreviations" tabindex="0">Abbreviations</button>
+            <button class="vd-tab" id="tab-btn-conversions" role="tab" aria-selected="false" aria-controls="tab-conversions" tabindex="-1">Conversions</button>
+            <button class="vd-tab" id="tab-btn-ingredients" role="tab" aria-selected="false" aria-controls="tab-ingredients" tabindex="-1">Ingredients</button>
+            <button class="vd-tab" id="tab-btn-bakeware" role="tab" aria-selected="false" aria-controls="tab-bakeware" tabindex="-1">Bakeware</button>
+        </div>
+
+        <div class="vd-tab-panel is-active" id="tab-abbreviations" role="tabpanel" aria-labelledby="tab-btn-abbreviations">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Abbreviations &amp; Symbols</h2>
+            <p>Common abbreviations, symbols, and notation used across the site.</p>
+        </div>
 
         <div class="grid-2">
             <!-- Abbreviations Table -->
@@ -119,13 +129,13 @@
                 </div>
             </div>
         </div>
-    </section>
+        </div>
 
-    <!-- SECTION: REFERENCE TABLE SHOWCASE -->
-    <section class="section">
+        <div class="vd-tab-panel" id="tab-conversions" role="tabpanel" aria-labelledby="tab-btn-conversions">
+<section class="vd-ref-group" id="conversions">
         <div class="section-header" style="margin-bottom: 1rem;">
-            <h2>Component Showcase: Reference Table</h2>
-            <p>How structured data tables appear across the app — featuring the Volume & Weight conversion table.</p>
+            <h2>Volume &amp; Weight Conversions</h2>
+            <p>Conversion tables for volume, weight, and common dry ingredients.</p>
         </div>
 
         <div class="vd-ref-table-wrap">
@@ -158,157 +168,366 @@
                 </tbody>
             </table>
             </div>
-            <p style="font-size: 0.72rem; color: var(--text-muted); padding: 0.75rem 1.25rem 1rem; line-height: 1.5;">* Some values have been rounded for ease of use. Australian tablespoon is 20 ml. US cup ≈ 236.6 ml, US liquid pint ≈ 473.2 ml, Imperial fl oz ≈ 28.4 ml vs US fl oz ≈ 29.6 ml.</p>
+            <p style="font-size: 0.72rem; color: var(--text-muted); padding: 0.75rem 1.25rem 1rem; line-height: 1.5;">* Some values have been rounded for ease of use. The most common variant of measurement is shown. Noteworthy mentions: Australian tablespoon is 20 ml, US cup is approximately 236.6 ml, US liquid pint is approximately 473.2 ml, US liquid gallon is approximately 3785.4 ml, and Imperial fluid ounce is approximately 28.4 ml compared to US fluid ounce which is approximately 29.6 ml.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap" style="margin-top: 2rem;">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="weight" style="width: 14px; height: 14px;"></i></span> Weight Conversions</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th class="num">Grams (g)</th>
+                        <th class="num">Ounces (oz)*</th>
+                        <th class="num">Pounds (lb)*</th>
+                        <th>Common Ingredients**</th>
+                        <th>Dry Volume</th>
+                        <th class="num">Millilitres (ml)</th>
+                        <th class="num">Grams (g)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="num">1</td><td class="num">1/30</td><td class="num">1/450</td><td>AP Flour</td><td>1 cup</td><td class="num">250</td><td class="num">120–130</td></tr>
+                    <tr><td class="num">10</td><td class="num">1/3</td><td class="num">1/45</td><td>Bread Flour</td><td>1 cup</td><td class="num">250</td><td class="num">120–145</td></tr>
+                    <tr><td class="num">15</td><td class="num">1/2</td><td class="num">1/32</td><td>Rice, uncooked</td><td>1 cup</td><td class="num">250</td><td class="num">200–210</td></tr>
+                    <tr><td class="num">30</td><td class="num">1</td><td class="num">1/16</td><td>White Sugar</td><td>1 cup</td><td class="num">250</td><td class="num">195–205</td></tr>
+                    <tr><td class="num">125</td><td class="num">4 3/8</td><td class="num">1/4</td><td>Brown Sugar</td><td>1 cup</td><td class="num">250</td><td class="num">210–220</td></tr>
+                    <tr><td class="num">250</td><td class="num">8 7/8</td><td class="num">1/2</td><td>Butter</td><td>1 cup</td><td class="num">250</td><td class="num">220–230</td></tr>
+                    <tr><td class="num">500</td><td class="num">17 5/8</td><td class="num">1 1/8</td><td>Yogurt</td><td>1 cup</td><td class="num">250</td><td class="num">220–250</td></tr>
+                    <tr><td class="num">1000 (1 kg)</td><td class="num">35 1/4</td><td class="num">2 1/4</td><td>Cocoa Powder</td><td>1 tablespoon</td><td class="num">15</td><td class="num">5–7</td></tr>
+                    <tr><td class="num">1360*</td><td class="num">48</td><td class="num">3</td><td>Oil</td><td>1 tablespoon</td><td class="num">15</td><td class="num">12–14</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); padding: 0.75rem 1.25rem 1rem; line-height: 1.5;">* Some values have been rounded for ease of use. Ounce is approximately 28.4 g and pound is approximately 453.6 g. ** Use weight measurements whenever precision is required as dry volume is used for estimation only.</p>
         </div>
     </section>
 
-</div>
-
-<!-- SECTION: PANTRY SHOWCASE -->
-<div class="container" style="padding-bottom: 4rem;">
-    <section class="section">
-        <div class="section-header" style="margin-bottom: 2rem;">
-            <h2>Component Showcase: Pantry</h2>
-            <p>Smart inventory management components with status indicators.</p>
+<section class="vd-ref-group" id="length">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Length Conversion</h2>
+            <p>Convert between centimetres and inches.</p>
         </div>
-        <div class="vd-pantry-grid">
-            <!-- Item 1 -->
-            <div class="vd-pantry-card">
-                <div class="vd-pantry-header">
-                    <div class="vd-pantry-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 21-5-5-5 5"/><path d="m17 3-5 5-5-5"/></svg>
-                    </div>
-                    <span class="vd-pantry-status in-stock">In Stock</span>
-                </div>
-                <div class="vd-pantry-info">
-                    <h4>Penne Pasta</h4>
-                    <p>Dry Goods</p>
-                </div>
-                <div class="vd-pantry-tracker">
-                    <div class="vd-pantry-progress"><div class="vd-pantry-bar" style="width: 75%;"></div></div>
-                    <span class="vd-pantry-qty">750g remaining</span>
-                </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem;">Formula to convert centimetres to inches: (Length in cm) / 2.54.<br>Formula to convert inches to centimetres: (Length in inches) × 2.54.</p>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="ruler" style="width: 14px; height: 14px;"></i></span> Length Conversions</h3>
             </div>
-            <!-- Item 2 -->
-            <div class="vd-pantry-card">
-                <div class="vd-pantry-header">
-                    <div class="vd-pantry-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="16" x="8" y="6" rx="2"/><path d="M8 10h8"/><path d="M12 2v4"/></svg>
-                    </div>
-                    <span class="vd-pantry-status low-stock">Low Stock</span>
-                </div>
-                <div class="vd-pantry-info">
-                    <h4>Extra Virgin Olive Oil</h4>
-                    <p>Oils & Vinegars</p>
-                </div>
-                <div class="vd-pantry-tracker">
-                    <div class="vd-pantry-progress"><div class="vd-pantry-bar" style="width: 20%;"></div></div>
-                    <span class="vd-pantry-qty">150ml remaining</span>
-                </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th class="num">Centimetres (cm)</th>
+                        <th class="num">Inches (")</th>
+                        <th class="num">Centimetres (cm)</th>
+                        <th class="num">Inches (")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="num">0.1</td><td class="num">3/64</td><td class="num">15.0</td><td class="num">6</td></tr>
+                    <tr><td class="num">0.3</td><td class="num">1/8</td><td class="num">17.5</td><td class="num">7</td></tr>
+                    <tr><td class="num">0.6</td><td class="num">1/4</td><td class="num">20.0</td><td class="num">8</td></tr>
+                    <tr><td class="num">1.2</td><td class="num">1/2</td><td class="num">22.5</td><td class="num">9</td></tr>
+                    <tr><td class="num">2.5</td><td class="num">1</td><td class="num">25</td><td class="num">10</td></tr>
+                    <tr><td class="num">5.0</td><td class="num">2</td><td class="num">30.5</td><td class="num">12 (1 foot)</td></tr>
+                    <tr><td class="num">10.0</td><td class="num">4</td><td class="num">61.0</td><td class="num">2 feet (ft)</td></tr>
+                </tbody>
+            </table>
             </div>
-            <!-- Item 3 -->
-            <div class="vd-pantry-card">
-                <div class="vd-pantry-header">
-                    <div class="vd-pantry-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                    </div>
-                    <span class="vd-pantry-status out-of-stock">Out of Stock</span>
-                </div>
-                <div class="vd-pantry-info">
-                    <h4>Crushed Tomatoes</h4>
-                    <p>Canned Goods</p>
-                </div>
-                <div class="vd-pantry-tracker">
-                    <div class="vd-pantry-progress"><div class="vd-pantry-bar" style="width: 0%;"></div></div>
-                    <span class="vd-pantry-qty">0 cans remaining</span>
-                </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); padding: 0.75rem 1.25rem 1rem; line-height: 1.5;">Values in inches have been rounded to the closest fraction.</p>
+        </div>
+    </section>
+
+<section class="vd-ref-group" id="temperature">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Temperature Conversion</h2>
+            <p>Convert between gas marks, Celsius, and Fahrenheit.</p>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem;">Formula to convert Celsius to Fahrenheit: (Temperature in °C × 9/5) + 32.<br>Formula to convert Fahrenheit to Celsius: (Temperature in °F × 5/9) − 32.</p>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="thermometer" style="width: 14px; height: 14px;"></i></span> Oven Temperatures</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Gas Mark</th>
+                        <th class="num">Celsius (°C)</th>
+                        <th class="num">Fahrenheit (°F)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>— (Freezer)</td><td class="num">−18</td><td class="num">0</td></tr>
+                    <tr><td>—</td><td class="num">0</td><td class="num">32</td></tr>
+                    <tr><td>—</td><td class="num">35</td><td class="num">95</td></tr>
+                    <tr><td>—</td><td class="num">70</td><td class="num">158</td></tr>
+                    <tr><td>— (Boiling)</td><td class="num">100</td><td class="num">212</td></tr>
+                    <tr><td>1 — Very Cool</td><td class="num">135</td><td class="num">275</td></tr>
+                    <tr><td>2 — Cool</td><td class="num">150</td><td class="num">302</td></tr>
+                    <tr><td>3 — Warm</td><td class="num">165</td><td class="num">329</td></tr>
+                    <tr><td>3–4</td><td class="num">180</td><td class="num">356</td></tr>
+                    <tr><td>4 — Moderate</td><td class="num">190</td><td class="num">374</td></tr>
+                    <tr><td>5 — Moderate</td><td class="num">200</td><td class="num">392</td></tr>
+                    <tr><td>6 — Moderately Hot</td><td class="num">220</td><td class="num">428</td></tr>
+                    <tr><td>6–7</td><td class="num">230</td><td class="num">446</td></tr>
+                    <tr><td>7 — Hot</td><td class="num">245</td><td class="num">473</td></tr>
+                    <tr><td>8 — Hot</td><td class="num">260</td><td class="num">500</td></tr>
+                    <tr><td>9 — Hot</td><td class="num">—</td><td class="num">—</td></tr>
+                    <tr><td>10 — Very Hot</td><td class="num">—</td><td class="num">—</td></tr>
+                </tbody>
+            </table>
             </div>
         </div>
     </section>
-</div>
-
-<!-- SECTION: SHOPPING LIST SHOWCASE -->
-<div class="container" style="padding-bottom: 4rem;">
-    <section class="section">
-        <div class="section-header" style="margin-bottom: 2rem;">
-            <h2>Component Showcase: Shopping List</h2>
-            <p>Smart checklist grouped by supermarket aisle.</p>
         </div>
-        <div class="vd-shop-container">
-            <div class="vd-shop-group">
-                <div class="vd-shop-group-header">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Produce
-                </div>
-                <div class="vd-shop-item checked">
-                    <div class="vd-shop-checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="vd-shop-item-details">
-                        <div class="vd-shop-item-title">Garlic</div>
-                        <div class="vd-shop-item-meta">
-                            <span class="vd-shop-qty">2 cloves</span>
-                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Tuna Pasta</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="vd-shop-item">
-                    <div class="vd-shop-checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="vd-shop-item-details">
-                        <div class="vd-shop-item-title">Cherry Tomatoes</div>
-                        <div class="vd-shop-item-meta">
-                            <span class="vd-shop-qty">250g</span>
-                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Tuna Pasta</span>
-                        </div>
-                    </div>
-                </div>
+
+        <div class="vd-tab-panel" id="tab-ingredients" role="tabpanel" aria-labelledby="tab-btn-ingredients">
+<section class="vd-ref-group" id="oils">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Oil Reference</h2>
+            <p>Smoke points and best uses for common cooking oils and fats.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="droplet" style="width: 14px; height: 14px;"></i></span> Oils &amp; Fats</h3>
             </div>
-            <div class="vd-shop-group">
-                <div class="vd-shop-group-header">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Meat & Seafood
-                </div>
-                <div class="vd-shop-item">
-                    <div class="vd-shop-checkbox"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="vd-shop-item-details">
-                        <div class="vd-shop-item-title">Canned Tuna (in olive oil)</div>
-                        <div class="vd-shop-item-meta">
-                            <span class="vd-shop-qty">1 tin (160g)</span>
-                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Tuna Pasta</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Type of Oil / Fat</th>
+                        <th class="num">Smoke Point</th>
+                        <th>Best Uses</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Almond oil</td><td class="num">221°C / 430°F</td><td>Bake, sauces, flavouring</td></tr>
+                    <tr><td>Avocado oil</td><td class="num">271°C / 520°F</td><td>Fry, sauté, dip, salad</td></tr>
+                    <tr><td>Butter</td><td class="num">150°C / 302°F</td><td>Cook, bake, condiment, sauces, flavouring</td></tr>
+                    <tr><td>Ghee, clarified butter</td><td class="num">190–250°C / 374–482°F</td><td>Deep-fry, sauté, condiment, flavouring</td></tr>
+                    <tr><td>Canola oil</td><td class="num">204°C / 399°F</td><td>Fry, bake, salad</td></tr>
+                    <tr><td>Coconut oil (virgin)</td><td class="num">177°C / 351°F</td><td>Deep-fry, sauté, condiment, flavouring</td></tr>
+                    <tr><td>Coconut oil (virgin)</td><td class="num">107°C / 225°F</td><td>Candy, sweets, whipped toppings</td></tr>
+                    <tr><td>Corn oil</td><td class="num">236°C / 457°F</td><td>Fry, bake, salad, shortening, margarine</td></tr>
+                    <tr><td>Cottonseed oil</td><td class="num">216°C / 421°F</td><td>Shortening, salad, margarine</td></tr>
+                    <tr><td>Flaxseed oil (linseed oil)</td><td class="num">107°C / 225°F</td><td>Salad, nutritional supplement</td></tr>
+                    <tr><td>Grapeseed oil</td><td class="num">204°C / 399°F</td><td>Cook, salad, margarine</td></tr>
+                    <tr><td>Hemp oil</td><td class="num">230°C / 446°F</td><td>Cook, salad</td></tr>
+                    <tr><td>Mustard oil</td><td class="num">215°C / 419°F</td><td>Cook, bake, condiment</td></tr>
+                    <tr><td>Margarine, soft</td><td class="num">121°C / 250°F</td><td>Deep-fry, salad</td></tr>
+                    <tr><td>Macadamia oil</td><td class="num">254°C / 489°F</td><td>Cooking, salad, margarine</td></tr>
+                    <tr><td>Olive oil (extra virgin)</td><td class="num">231°C / 448°F</td><td>Cook, flavouring, shortening</td></tr>
+                    <tr><td>Olive oil (virgin)</td><td class="num">160°C / 320°F</td><td>Cook, salad, margarine</td></tr>
+                    <tr><td>Palm oil</td><td class="num">232°C / 450°F</td><td>Cook, salad</td></tr>
+                    <tr><td>Peanut oil</td><td class="num">241°C / 466°F</td><td>Cook</td></tr>
+                    <tr><td>Pumpkin seed oil</td><td class="num">265°C / 509°F</td><td>Deep-fry</td></tr>
+                    <tr><td>Rice bran oil</td><td class="num">246°C / 475°F</td><td>Cook, salad, margarine</td></tr>
+                    <tr><td>Sesame oil (unrefined)</td><td class="num">177°C / 351°F</td><td>Cook, salad, margarine, shortening</td></tr>
+                    <tr><td>Sesame oil (semi-refined)</td><td class="num">232°C / 450°F</td><td>Cook</td></tr>
+                    <tr><td>Soybean oil</td><td class="num">254°C / 489°F</td><td>Salad, cold dishes</td></tr>
+                    <tr><td>Sunflower oil</td><td class="num">227°C / 440°F</td><td>Cook, salad, margarine</td></tr>
+                    <tr><td>Walnut oil (semi-refined)</td><td class="num">204°C / 399°F</td><td>Salad, cold dishes</td></tr>
+                </tbody>
+            </table>
             </div>
         </div>
-        </section>
-</div>
+    </section>
 
+<section class="vd-ref-group" id="flour">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Flour Guide</h2>
+            <p>Protein content and water absorption by flour type.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="wheat" style="width: 14px; height: 14px;"></i></span> Flour Types</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th>Flour Type</th>
+                        <th class="num">Protein Content</th>
+                        <th>Water Absorption</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>All Purpose Flour</td><td class="num">11.7%</td><td>Moderate</td></tr>
+                    <tr><td>Bread Flour</td><td class="num">12.7%</td><td>High</td></tr>
+                    <tr><td>Cake Flour</td><td class="num">9.4%</td><td>Low</td></tr>
+                    <tr><td>Caputo "00" Bread Flour</td><td class="num">12.5%</td><td>Low</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </section>
+
+<section class="vd-ref-group" id="specific-gravity">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Specific Gravity</h2>
+            <p>Sugar content and potential alcohol by specific gravity.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="flask-conical" style="width: 14px; height: 14px;"></i></span> Specific Gravity</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th class="num">Specific Gravity</th>
+                        <th class="num">Approximate Sugar Content (g)</th>
+                        <th class="num">Potential Alcohol (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="num">1.040</td><td class="num">390</td><td class="num">—</td></tr>
+                    <tr><td class="num">1.080</td><td class="num">760</td><td class="num">5.1</td></tr>
+                    <tr><td class="num">1.100</td><td class="num">980</td><td class="num">10.6</td></tr>
+                    <tr><td class="num">1.120</td><td class="num">1170</td><td class="num">13.4</td></tr>
+                    <tr><td class="num">1.130</td><td class="num">1280</td><td class="num">16.2</td></tr>
+                    <tr><td class="num">1.140</td><td class="num">1370</td><td class="num">17.5</td></tr>
+                    <tr><td class="num">—</td><td class="num">—</td><td class="num">18.9</td></tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </section>
+        </div>
+
+        <div class="vd-tab-panel" id="tab-bakeware" role="tabpanel" aria-labelledby="tab-btn-bakeware">
+<section class="vd-ref-group" id="bakeware">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h2>Pan &amp; Dish Size</h2>
+            <p>Common pan and dish dimensions by capacity.</p>
+        </div>
+
+        <div class="vd-ref-table-wrap">
+            <div class="vd-ref-table-header">
+                <h3><span class="table-icon"><i data-lucide="cake" style="width: 14px; height: 14px;"></i></span> Pan Sizes</h3>
+            </div>
+            <div class="vd-ref-table-scroll">
+            <table class="vd-ref-table">
+                <thead>
+                    <tr>
+                        <th class="num">Volume</th>
+                        <th>Pan or Dish Type</th>
+                        <th class="num">Dimensions (cm)</th>
+                        <th class="num">Dimensions (in)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="num">¼–½ cup (60–120 ml)</td><td>Muffin</td><td class="num">7 × 3</td><td class="num">2¾ × 1⅛</td></tr>
+                    <tr><td class="num"></td><td>Muffin</td><td class="num">7 × 4</td><td class="num">2¾ × 1½</td></tr>
+                    <tr><td class="num">4 cups (1000 ml)</td><td>Round</td><td class="num">15 × 5</td><td class="num">6 × 2</td></tr>
+                    <tr><td class="num"></td><td>Round</td><td class="num">20–23 × 4</td><td class="num">8–9 × 1½</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">20 × 20 × 5</td><td class="num">8 × 8 × 2</td></tr>
+                    <tr><td class="num"></td><td>Loaf</td><td class="num">20 × 10 × 6</td><td class="num">8 × 4 × 2½</td></tr>
+                    <tr><td class="num"></td><td>Rectangle</td><td class="num">23 × 23 × 4</td><td class="num">9 × 9 × 1½</td></tr>
+                    <tr><td class="num"></td><td>Bundt</td><td class="num">28 × 18 × 5</td><td class="num">11 × 7 × 2</td></tr>
+                    <tr><td class="num"></td><td>Pie Dish</td><td class="num">19 × 8</td><td class="num">7½ × 3</td></tr>
+                    <tr><td class="num"></td><td>Loaf</td><td class="num">23 × 5</td><td class="num">9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Loaf</td><td class="num">25 × 4</td><td class="num">10 × 1½</td></tr>
+                    <tr><td class="num">6 cups (1500 ml)</td><td>Round</td><td class="num">20 × 5</td><td class="num">8 × 2</td></tr>
+                    <tr><td class="num"></td><td>Round</td><td class="num">23 × 4</td><td class="num">9 × 1½</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">20 × 20 × 4</td><td class="num">8 × 8 × 1½</td></tr>
+                    <tr><td class="num"></td><td>Bundt</td><td class="num">19 × 8</td><td class="num">7½ × 3</td></tr>
+                    <tr><td class="num"></td><td>Muffin Cake Pan</td><td class="num">22 × 11 × 6</td><td class="num">8½ × 4½ × 2½</td></tr>
+                    <tr><td class="num"></td><td>Three Loaf</td><td class="num">Three 13 × 5</td><td class="num">Three 5 × 2</td></tr>
+                    <tr><td class="num"></td><td>Two</td><td class="num">Two 3 × 1¼</td><td class="num">Two 3 × 1¼</td></tr>
+                    <tr><td class="num"></td><td>Two</td><td class="num">Two 31 × 20 × 5</td><td class="num">Two 12 × 8 × 2</td></tr>
+                    <tr><td class="num">8 cups (2000 ml)</td><td>Bundt</td><td class="num">23 × 5</td><td class="num">9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">20 × 20 × 5</td><td class="num">8 × 8 × 2</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">23 × 23 × 4</td><td class="num">9 × 9 × 1½</td></tr>
+                    <tr><td class="num"></td><td>Loaf</td><td class="num">23 × 13 × 8</td><td class="num">9 × 5 × 3</td></tr>
+                    <tr><td class="num"></td><td>Baking Dish</td><td class="num">28 × 18 × 4</td><td class="num">11 × 7 × 1½</td></tr>
+                    <tr><td class="num">10 cups (2500 ml)</td><td>Round</td><td class="num">Two 20 × 5</td><td class="num">Two 8 × 2</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">23 × 23 × 5</td><td class="num">9 × 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Rectangle</td><td class="num">28 × 18 × 5</td><td class="num">11 × 7 × 2</td></tr>
+                    <tr><td class="num"></td><td>Rectangle</td><td class="num">33 × 23 × 5</td><td class="num">13 × 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Springform</td><td class="num">20–23 × 6</td><td class="num">8–9 × 2½</td></tr>
+                    <tr><td class="num"></td><td>Jellyroll</td><td class="num">27 × 39 × 3</td><td class="num">10½ × 15½ × 1</td></tr>
+                    <tr><td class="num"></td><td>Jellyroll</td><td class="num">30 × 19 × 5</td><td class="num">11¾ × 7½ × 2</td></tr>
+                    <tr><td class="num">12 cups (3000 ml)</td><td>Round</td><td class="num">Two 23 × 5</td><td class="num">Two 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">25 × 25 × 5</td><td class="num">10 × 10 × 2</td></tr>
+                    <tr><td class="num"></td><td>Loaf</td><td class="num">20 × 10 × 6</td><td class="num">8 × 4 × 2½</td></tr>
+                    <tr><td class="num"></td><td>Springform</td><td class="num">23 × 8</td><td class="num">9 × 3</td></tr>
+                    <tr><td class="num"></td><td>Bundt</td><td class="num">25 × 9</td><td class="num">10 × 3½</td></tr>
+                    <tr><td class="num"></td><td>Jellyroll</td><td class="num">32 × 45 × 3</td><td class="num">12½ × 17½ × 1</td></tr>
+                    <tr><td class="num">14 cups (3500 ml)</td><td>Loaf</td><td class="num">33 × 23 × 5</td><td class="num">13 × 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Rectangle</td><td class="num">23 × 8</td><td class="num">9 × 3</td></tr>
+                    <tr><td class="num">16 cups (4000 ml)</td><td>Tube</td><td class="num">Two 23 × 5</td><td class="num">Two 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Round</td><td class="num">Two 20 × 5</td><td class="num">Two 8 × 2</td></tr>
+                    <tr><td class="num"></td><td>Square</td><td class="num">36 × 25 × 5</td><td class="num">14 × 10 × 2</td></tr>
+                    <tr><td class="num"></td><td>Rectangle</td><td class="num">33 × 23 × 5</td><td class="num">13 × 9 × 2</td></tr>
+                    <tr><td class="num"></td><td>Tube</td><td class="num">25 × 10</td><td class="num">10 × 4</td></tr>
+                    <tr><td class="num">18 cups (4500 ml)</td><td>Springform</td><td class="num">23 × 9</td><td class="num">9 × 3½</td></tr>
+                    <tr><td class="num"></td><td>Tube</td><td class="num">28 × 13</td><td class="num">11 × 5</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); padding: 0.75rem 1.25rem 1rem; line-height: 1.5;">Some values have been rounded for ease of use. All measurements are estimates to help choose the correct pan or dish and may differ depending on the product.</p>
+        </div>
+    </section>
+        </div>
+
+    </section>
+</div>
 
     <script>
-        // Scroll-spy for sidebar navigation
+        // Reference tab controller
         document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('.sidebar-link');
-            const sections = document.querySelectorAll('.basics-section');
+            const tabs = Array.from(document.querySelectorAll('.vd-tab'));
+            const panels = Array.from(document.querySelectorAll('.vd-tab-panel'));
+            const storageKey = 'larder_ref_tab';
 
-            // Smooth scroll on click
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const target = document.querySelector(link.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const activate = (tab, updateHash) => {
+                tabs.forEach(t => {
+                    const on = t === tab;
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                    t.tabIndex = on ? 0 : -1;
+                });
+                panels.forEach(p => {
+                    p.classList.toggle('is-active', p.id === tab.getAttribute('aria-controls'));
+                });
+                try { localStorage.setItem(storageKey, tab.id); } catch (e) {}
+                if (updateHash) {
+                    history.replaceState(null, '', '#' + tab.getAttribute('aria-controls'));
+                }
+            };
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => activate(tab, true));
+                tab.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        activate(tab, true);
                     }
                 });
             });
 
-            // Intersection Observer for scroll-spy
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        links.forEach(l => l.classList.remove('active'));
-                        const activeLink = document.querySelector(`.sidebar-link[data-section="${entry.target.id}"]`);
-                        if (activeLink) activeLink.classList.add('active');
-                    }
-                });
-            }, { rootMargin: '-20% 0px -60% 0px' });
-
-            sections.forEach(section => observer.observe(section));
+            let initial = null;
+            const hash = location.hash.replace('#', '');
+            if (hash) {
+                const byHash = tabs.find(t => t.getAttribute('aria-controls') === hash);
+                if (byHash) initial = byHash;
+            }
+            if (!initial) {
+                try {
+                    const saved = localStorage.getItem(storageKey);
+                    if (saved) initial = tabs.find(t => t.id === saved);
+                } catch (e) {}
+            }
+            if (initial) activate(initial, false);
+            else activate(tabs[0], false);
         });
     </script>
 
@@ -332,14 +551,12 @@
             <a href="ingredients">Ingredients</a>
             <a href="basics">Basics</a>
             <a href="reference">Reference</a>
-            <a href="cms">Manage</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#conversions">Conversions</a>
-            <a href="reference#oils">Oil Reference</a>
-            <a href="reference#flour">Flour Guide</a>
-            <a href="reference#bakeware">Pan Sizes</a>
+            <a href="reference#tab-conversions">Conversions</a>
+            <a href="reference#tab-ingredients">Ingredient Guides</a>
+            <a href="reference#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
@@ -372,12 +589,6 @@
                 });
             }
         })();
-    </script>
-
-    <script>
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            document.querySelectorAll('a[href="cms"]').forEach(el => el.style.display = 'none');
-        }
     </script>
 
     <script>
