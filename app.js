@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsCount = document.getElementById('results-count');
 
     let recipesData = [];
+    let recipeIndex = [];
     let currentCategory = 'All';
     let searchQuery = '';
     let currentRecipe = null;
@@ -148,6 +149,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
             });
+
+        if (isIngredientsPage) {
+            fetch('/api/recipes', { headers })
+                .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                .then(data => { recipeIndex = data; })
+                .catch(() => {
+                    fetch('data/recipes.json')
+                        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                        .then(data => { recipeIndex = data; })
+                        .catch(() => { recipeIndex = []; });
+                });
+        }
     }
 
     loadRecipes();
@@ -587,41 +600,172 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    function getCategoryVisual(category) {
+        const cat = (category || '').toLowerCase();
+        if (cat.includes('seafood') || cat.includes('fish') || cat.includes('shell')) return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 32, h: 16 };
+        if (cat.includes('vegetable') || cat.includes('veg')) return { accent: 'var(--accent-veg)', href: '#icon-tomato', vb: '0 0 88 96', w: 32, h: 35 };
+        if (cat.includes('meat') || cat.includes('poultry')) return { accent: 'var(--accent-meat)', href: '#icon-mortar', vb: '0 0 90 99', w: 22, h: 24 };
+        if (cat.includes('grain') || cat.includes('pasta') || cat.includes('bread') || cat.includes('rice')) return { accent: 'var(--accent-stock)', href: '#icon-nut', vb: '0 0 119 122', w: 28, h: 28 };
+        if (cat.includes('baking') || cat.includes('dessert') || cat.includes('sweet')) return { accent: 'var(--accent-bake)', href: '#icon-muffin', vb: '0 0 137 131', w: 32, h: 30 };
+        if (cat.includes('fruit')) return { accent: 'var(--accent-jam)', href: '#icon-tomato', vb: '0 0 88 96', w: 32, h: 35 };
+        return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 32, h: 16 };
+    }
+
+    function buildIngredientModalContent(recipe) {
+        const title = (recipe.name || recipe.title || '').trim();
+        const category = recipe.category || 'Other';
+        const vis = getCategoryVisual(category);
+        const accent = vis.accent;
+
+        const fmtG = (v) => (typeof v === 'number' && !isNaN(v)) ? (Math.round(v * 10) / 10) + 'g' : '-';
+        const kcalVal = (typeof recipe.calories === 'number' && !isNaN(recipe.calories)) ? recipe.calories : '-';
+
+        const serving = `${recipe.servingSizeG || 100}${recipe.servingUnit || 'g'}`;
+        const desc = recipe.notes || recipe.description || '';
+
+        // --- Used In Recipes ---
+        const recipeSource = (recipeIndex.length ? recipeIndex : recipesData).filter(r => Array.isArray(r.ingredients) && r.ingredients.length);
+        const usedIn = recipeSource
+            .filter(r => r.ingredients.some(ing =>
+                String(ing.foodId).toLowerCase() === String(recipe.foodId).toLowerCase()
+                || (ing.item || '').toLowerCase().includes(title.toLowerCase())
+            ))
+            .map(r => r.title)
+            .slice(0, 8);
+        const usedInHtml = usedIn.length ? `
+                <div style="margin-top: 1.25rem;">
+                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem;">Used In Recipes</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${usedIn.map(name => `<span class="ing-recipe-chip">${name}</span>`).join('')}
+                    </div>
+                </div>` : '';
+
+        // --- Nutrition rows ---
+        const row = (name, val, unit) => `<div class="nutrient-row"><span>${name}</span><span>${typeof val === 'number' && !isNaN(val) && val > 0 ? (Math.round(val * 100) / 100) + ' ' + unit : '-'}</span></div>`;
+        const vitaminRows = [
+            ['Vitamin A', recipe.vitaminAMcg, 'mcg'],
+            ['Vitamin C', recipe.vitaminCMg, 'mg'],
+            ['Vitamin D', recipe.vitaminDMcg, 'mcg'],
+            ['Vitamin E', recipe.vitaminEMg, 'mg'],
+            ['Vitamin K', recipe.vitaminKMcg, 'mcg'],
+            ['Thiamin (B1)', recipe.thiaminMg, 'mg'],
+            ['Riboflavin (B2)', recipe.riboflavinMg, 'mg'],
+            ['Niacin (B3)', recipe.niacinMg, 'mg'],
+            ['Vitamin B6', recipe.vitaminB6Mg, 'mg'],
+            ['Folate (B9)', recipe.folateMcg, 'mcg'],
+            ['Vitamin B12', recipe.vitaminB12Mcg, 'mcg']
+        ];
+        const mineralRows = [
+            ['Calcium', recipe.calciumMg, 'mg'],
+            ['Iron', recipe.ironMg, 'mg'],
+            ['Magnesium', recipe.magnesiumMg, 'mg'],
+            ['Phosphorus', recipe.phosphorusMg, 'mg'],
+            ['Potassium', recipe.potassiumMg, 'mg'],
+            ['Sodium', recipe.sodiumMg, 'mg'],
+            ['Zinc', recipe.zincMg, 'mg'],
+            ['Copper', recipe.copperMg, 'mg'],
+            ['Selenium', recipe.seleniumMcg, 'mcg']
+        ];
+        const vitaminsRowsHtml = vitaminRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
+        const mineralsRowsHtml = mineralRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
+
+        const fold = (icon, label, rowsHtml) => rowsHtml.length ? `
+                    <details class="ing-fold">
+                        <summary class="ing-fold-header">
+                            <span><i data-lucide="${icon}" style="width: 14px; height: 14px;"></i> ${label}</span>
+                            <i data-lucide="chevron-down" style="width: 16px; height: 16px;" class="fold-chevron"></i>
+                        </summary>
+                        <div class="ing-fold-body">
+                            ${rowsHtml.map(r => row(r[0], recipe[r[1]], r[2])).join('')}
+                        </div>
+                    </details>` : '';
+        const vitaminsFold = fold('pill', 'Vitamins', vitaminsRowsHtml);
+        const mineralsFold = fold('gem', 'Minerals', mineralsRowsHtml);
+
+        // --- Macro visual bar (per 100g ratio) ---
+        const p = Number(recipe.proteinG) || 0, f = Number(recipe.fatG) || 0, c = Number(recipe.carbsG) || 0;
+        const total = p + f + c;
+        let macroBar = '';
+        if (total > 0) {
+            const pp = Math.round(p / total * 100), fp = Math.round(f / total * 100), cp = Math.round(c / total * 100);
+            macroBar = `
+                    <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 1.25rem; background: var(--border);">
+                        <div style="width: ${pp}%; background: var(--accent-sea);" title="Protein ${pp}%"></div>
+                        <div style="width: ${fp}%; background: var(--accent-stock);" title="Fat ${fp}%"></div>
+                        <div style="width: ${cp}%; background: var(--accent-veg);" title="Carbs ${cp}%"></div>
+                    </div>`;
+        }
+
+        // --- Tabs & panels ---
+        const tabs = [];
+        const panels = [];
+
+        tabs.push('<button class="ing-tab active" data-tab="overview">Overview</button>');
+        panels.push(`<div class="ing-tab-panel active" data-panel="overview">
+                    ${desc ? `<p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;">${desc}</p>` : ''}
+                    <div class="ing-macro-bar">
+                        <div class="ing-macro-item"><span class="ing-macro-value" style="color: ${accent};">${kcalVal}</span><span class="ing-macro-label">kcal</span></div>
+                        <div class="ing-macro-divider"></div>
+                        <div class="ing-macro-item"><span class="ing-macro-value">${fmtG(recipe.proteinG)}</span><span class="ing-macro-label">Protein</span></div>
+                        <div class="ing-macro-divider"></div>
+                        <div class="ing-macro-item"><span class="ing-macro-value">${fmtG(recipe.fatG)}</span><span class="ing-macro-label">Fat</span></div>
+                        <div class="ing-macro-divider"></div>
+                        <div class="ing-macro-item"><span class="ing-macro-value">${fmtG(recipe.carbsG)}</span><span class="ing-macro-label">Carbs</span></div>
+                    </div>
+                    ${usedInHtml}
+                </div>`);
+
+        tabs.push('<button class="ing-tab" data-tab="nutrition">Nutrition</button>');
+        panels.push(`<div class="ing-tab-panel" data-panel="nutrition">
+                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem;">Per ${serving} Serving</h4>
+                    ${macroBar}
+                    ${vitaminsFold}
+                    ${mineralsFold}
+                    ${(!macroBar && !vitaminsFold && !mineralsFold) ? `<p style="color: var(--text-muted); font-size: 0.9rem;">No detailed nutrition breakdown available for this ingredient.</p>` : ''}
+                </div>`);
+
+        if (typeof recipe.averagePrice === 'number' && !isNaN(recipe.averagePrice)) {
+            tabs.push('<button class="ing-tab" data-tab="pricing">Pricing</button>');
+            panels.push(`<div class="ing-tab-panel" data-panel="pricing">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div class="ing-info-card">
+                            <span class="ing-info-label"><i data-lucide="banknote" style="width: 14px; height: 14px;"></i> Average Price</span>
+                            <span class="ing-info-value" style="font-size: 1.4rem; font-weight: 700; color: ${accent};">${recipe.priceCurrency || '₹'} ${recipe.averagePrice} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ ${recipe.servingUnit || '100g'}</span></span>
+                        </div>
+                    </div>
+                </div>`);
+        }
+
+        modalContainer.style.maxWidth = '680px';
+        modalBody.innerHTML = `
+            <div class="modal-header" style="padding-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.25rem;">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, ${accent} 15%, transparent), color-mix(in srgb, ${accent} 6%, transparent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg class="vector-icon" viewBox="${vis.vb}" style="width: ${vis.w}px; height: ${vis.h}px; fill: ${accent};"><use href="${vis.href}"></use></svg>
+                    </div>
+                    <div>
+                        <h2 class="recipe-full-title" style="margin-bottom: 0.1rem; color: ${accent};">${title.toUpperCase()}</h2>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">${category}</p>
+                    </div>
+                </div>
+                <div class="ing-tabs" id="ingTabs">
+                    ${tabs.join('')}
+                </div>
+            </div>
+            <div class="modal-body" style="display: block; padding: 1.5rem 2rem;">
+                ${panels.join('')}
+            </div>
+        `;
+
+        if (window.lucide) window.lucide.createIcons();
+        attachModalListeners();
+    }
+
     function buildModalContent() {
         const recipe = currentRecipe;
 
         if (isIngredientsPage || recipe.entryType === 'ingredient') {
-            const title = recipe.name || recipe.title;
-            const details = recipe.ingredientDetails || {};
-            
-            modalBody.innerHTML = `
-                <div class="recipe-header" style="padding: 2rem;">
-                    <h1 id="modal-title">${title}</h1>
-                    <p style="color: var(--text-muted); margin-top:0.5rem;">${recipe.description || ''}</p>
-                </div>
-                
-                <div class="macros-bar" style="margin: 0 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                    <div class="macros-item"><span class="macros-label">Serving</span><span class="macros-value">${recipe.servingSizeG || 100}${recipe.servingUnit || 'g'}</span></div>
-                    <div class="macros-divider"></div>
-                    <div class="macros-item"><span class="macros-label">Energy</span><span class="macros-value">${recipe.calories || '-'} kcal</span></div>
-                    <div class="macros-divider"></div>
-                    <div class="macros-item"><span class="macros-label">Carbs</span><span class="macros-value">${recipe.carbsG || '-'}g</span></div>
-                    <div class="macros-divider"></div>
-                    <div class="macros-item"><span class="macros-label">Protein</span><span class="macros-value">${recipe.proteinG || '-'}g</span></div>
-                    <div class="macros-divider"></div>
-                    <div class="macros-item"><span class="macros-label">Fat</span><span class="macros-value">${recipe.fatG || '-'}g</span></div>
-                </div>
-
-                <div class="ingredient-details-grid" style="display: grid; gap: 1.5rem; margin: 2.5rem 2rem; border-top: 1px solid var(--border-color); padding-top: 2rem;">
-                    ${details.storage ? `<div><h2 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Storage</h2><p style="font-size: 0.95rem; margin: 0;">${details.storage}</p></div>` : ''}
-                    ${details.flavour ? `<div><h2 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Flavour Profile</h2><p style="font-size: 0.95rem; margin: 0;">${details.flavour}</p></div>` : ''}
-                    ${details.pairings ? `<div><h2 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Pairings</h2><p style="font-size: 0.95rem; margin: 0;">${details.pairings}</p></div>` : ''}
-                    ${details.varieties ? `<div><h2 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Varieties / Types</h2><p style="font-size: 0.95rem; margin: 0;">${details.varieties}</p></div>` : ''}
-                    ${details.preparations ? `<div><h2 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform:uppercase; letter-spacing:0.05em;">Preparations</h2><p style="font-size: 0.95rem; margin: 0;">${details.preparations}</p></div>` : ''}
-                </div>
-            `;
-
-            attachModalListeners();
+            buildIngredientModalContent(recipe);
             return;
         }
 
@@ -670,6 +814,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (recipe.category === 'Dessert') headerColor = 'var(--accent-bake)';
         else if (recipe.category === 'Breakfast') headerColor = 'var(--accent-stock)';
         
+        const ingVis = getCategoryVisual(recipe.category);
+        const pillParts = ingVis.vb.split(' ').map(Number);
+        const pillW = 22, pillH = Math.round(pillW * pillParts[3] / pillParts[2]);
+        const ingredientsPillIcon = `<svg class="vector-icon" viewBox="${ingVis.vb}" style="width: ${pillW}px; height: ${pillH}px; fill: currentColor;"><use href="${ingVis.href}"></use></svg>`;
+        
         // Remove standard header wrapper and inject the custom modal structure 
         // Note: index.html already has `<div class="modal-content" id="modal-container">` and `<button class="modal-close" id="modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>` inside it, and `<div id="modal-body">`.
         // BUT our `modalBody.innerHTML = ...` targets `#modal-body`. 
@@ -680,6 +829,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // So we can put .modal-header AND .modal-body inside `#modal-body`.
         
+        modalContainer.style.maxWidth = '';
         modalBody.style.padding = "0"; // reset padding since we use columns
         modalBody.style.display = "flex";
         modalBody.style.flexDirection = "column"; // we will put header, then body flex
@@ -688,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-header">
                 <div class="modal-actions no-print">
                     <button class="icon-btn" aria-label="Print Recipe" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px;"></i></button>
+                    <button class="icon-btn" aria-label="Download PDF" onclick="window.print()"><i data-lucide="file-down" style="width: 18px; height: 18px;"></i></button>
                 </div>
                 <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${recipe.title}</h2>
                 <p class="recipe-full-desc">${recipe.description || ''}</p>
@@ -725,6 +876,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <!-- Content Row -->
                 <div class="recipe-ingredients-col" style="padding-top: 1rem;" id="ingredients-wrapper">
+                    <div style="display: flex; align-items: flex-start; flex-wrap: wrap;">
+                        <h3 class="section-pill" style="color: ${ingVis.accent}; border-color: ${ingVis.accent};">${ingredientsPillIcon} Ingredients</h3>
+                    </div>
                     ${ingredientsHtml}
                 </div>
                 
@@ -739,6 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+        if (window.lucide) window.lucide.createIcons();
         attachModalListeners();
     }
     function attachModalListeners() {
@@ -757,6 +912,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentScale = parseFloat(e.target.dataset.scale);
                     wrapper.innerHTML = renderIngredientsHTML(currentRecipe, currentScale);
                     attachModalListeners();
+                });
+            });
+        }
+
+        const ingTabBar = modalBody.querySelector('.ing-tabs');
+        if (ingTabBar) {
+            const ingPanels = modalBody.querySelectorAll('.ing-tab-panel');
+            ingTabBar.querySelectorAll('.ing-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    ingTabBar.querySelectorAll('.ing-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    ingPanels.forEach(p => {
+                        p.classList.remove('active');
+                        if (p.dataset.panel === tab.dataset.tab) p.classList.add('active');
+                    });
                 });
             });
         }

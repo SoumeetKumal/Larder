@@ -2,6 +2,10 @@ const fs = require('fs');
 
 let cmsHTML = fs.readFileSync('cms.html', 'utf8');
 
+// Ensure CMS page marker class on body for scoped CMS styles
+cmsHTML = cmsHTML.replace('<body>', '<body class="cms-page">');
+cmsHTML = cmsHTML.replace('<body class="cms-page" class="cms-page">', '<body class="cms-page">');
+
 // Replace standard nav with new cms-navbar
 cmsHTML = cmsHTML.replace(/<nav class="navbar">([\s\S]*?)<\/nav>/, `
     <nav class="cms-navbar">

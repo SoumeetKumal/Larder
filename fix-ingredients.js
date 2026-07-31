@@ -23,7 +23,7 @@ const newToolbar = `
             </button>
 
             <!-- Filter Dropdown Panel -->
-            <div class="filter-dropdown" id="filterDropdown" style="width: 300px;">
+            <div class="filter-dropdown" id="filterDropdown">
                 <div class="filter-dropdown-header">
                     <h4>Filter Ingredients</h4>
                     <button class="filter-reset" id="filterReset">Reset All</button>
