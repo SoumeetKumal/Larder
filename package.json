@@ -1,7 +1,8 @@
 {
   "name": "larder",
   "version": "1.0.0",
-  "description": "Personal Recipe Collection — Kitchen Book Inspired",
+  "description": "Larder — your personal recipe manager and kitchen companion.",
+  "author": "SoumeetKumal",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
