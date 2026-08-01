@@ -1,16 +1,24 @@
 [
   {
     "id": "1",
+    "entryType": "recipe",
     "title": "TUNA PASTA",
     "category": "Seafood",
+    "time": "25 mins",
+    "iconTag": "",
     "description": "Rich, creamy, and spicy tuna pasta",
     "imageUrl": "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80",
+    "status": "published",
     "macros": {
-      "yield": "4 Servings",
-      "energy": "638kCal",
-      "carbohydrate": "74.0g",
-      "protein": "30.2g",
-      "fat": "21.3g"
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "3",
+      "energy": "638 kCal",
+      "carbohydrate": "74.0 g",
+      "protein": "30.2 g",
+      "fat": "21.3 g"
     },
     "ingredients": [
       {
@@ -47,7 +55,7 @@
         "item": "Tomato Purée",
         "foodId": "tomato_puree",
         "metric": "375ml",
-        "imperial": "1½ cups"
+        "imperial": "1 ½ cups"
       },
       {
         "item": "Garlic, minced",
