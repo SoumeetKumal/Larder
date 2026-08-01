@@ -2216,4 +2216,24 @@
         .cms-navbar .nav-links {
             gap: 1rem;
         }
+
+        /* Mobile tap-target sizing (WCAG 2.5.5 / 2.5.8) */
+        .filter-chip {
+            min-height: 36px;
+            padding: 0.5rem 0.9rem;
+        }
+        .top-nav a,
+        .top-nav .nav-links a,
+        .cms-navbar a,
+        .cms-navbar .nav-links a {
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-icon,
+        .cms-btn-icon,
+        .search-trigger {
+            min-width: 36px;
+            min-height: 36px;
+        }
     }

@@ -14,7 +14,8 @@ const DATA_FILES = [
     'ingredients.json',
     'mealplans.json',
     'pantry.json',
-    'shoppinglists.json'
+    'shoppinglists.json',
+    'settings.json'
 ];
 
 function initializeDataDirectory() {
@@ -39,9 +40,12 @@ function initializeDataDirectory() {
                 fs.copyFileSync(srcPath, destPath);
                 console.log(`[Larder] Copied seed data: ${file}`);
             } else {
-                // Create an empty JSON array as fallback
-                fs.writeFileSync(destPath, '[]', 'utf8');
-                console.log(`[Larder] Created empty: ${file}`);
+                // Create a sensible default for this data file
+                const fallback = file === 'settings.json'
+                    ? '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
+                    : '[]';
+                fs.writeFileSync(destPath, fallback, 'utf8');
+                console.log(`[Larder] Created default: ${file}`);
             }
         }
     });

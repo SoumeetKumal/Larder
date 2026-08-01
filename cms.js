@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let mealPlans = [];
     let pantry = [];
     let shoppingLists = [];
+    let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
 
@@ -152,18 +153,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resSettings] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/pantry', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] })
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
             mealPlans = resMealPlans;
             pantry = resPantry;
             shoppingLists = resShoppingLists;
+            appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
+                ? resSettings
+                : { profiles: resSettings && Array.isArray(resSettings.profiles) ? resSettings.profiles : [] };
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
             addBtn.classList.remove('hidden');
@@ -1016,6 +1021,132 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             });
+            return;
+        }
+
+        if (currentCMSTab === 'settings') {
+            addBtn.style.display = 'none';
+            if (searchInput) searchInput.style.display = 'none';
+
+            listContainer.innerHTML = `
+                <div class="settings-container" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+                    <h2>Eater Profiles</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Configure daily macro targets for meal planning.</p>
+                    <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+                        ${appSettings.profiles.map((p, i) => `
+                            <div class="profile-card" style="background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <div class="form-group"><label>Name</label><input type="text" value="${p.name}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
+                                    <div class="form-group"><label>Calories</label><input type="number" value="${p.calories}" class="profile-input" data-index="${i}" data-field="calories" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Carbs (%)</label><input type="number" value="${p.carbs}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Protein (%)</label><input type="number" value="${p.protein}" class="profile-input" data-index="${i}" data-field="protein" style="width: 100px;"></div>
+                                    <div class="form-group"><label>Fat (%)</label><input type="number" value="${p.fat}" class="profile-input" data-index="${i}" data-field="fat" style="width: 100px;"></div>
+                                    <button class="btn delete-profile-btn" data-index="${i}" title="Remove eater" aria-label="Remove eater" style="margin-top: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn secondary" id="add-profile-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Eater</button>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn primary" id="save-settings-btn">Save Profiles</button>
+                    </div>
+
+                    <h2 style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">Data Management</h2>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="btn secondary" id="export-data-btn"><i data-lucide="download" style="width: 16px; height: 16px;"></i> Export Data (ZIP)</button>
+                        <label class="btn secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="upload" style="width: 16px; height: 16px;"></i> Import Data (ZIP)
+                            <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
+                        </label>
+                    </div>
+                    <p id="import-status" style="margin-top: 0.5rem; font-size: 0.8rem;"></p>
+                </div>
+            `;
+            if (window.lucide) window.lucide.createIcons();
+
+            document.getElementById('add-profile-btn').onclick = () => {
+                appSettings.profiles.push({ name: "New Eater", calories: 2000, carbs: 40, protein: 30, fat: 30 });
+                renderCMSList();
+            };
+
+            document.querySelectorAll('.delete-profile-btn').forEach(btn => {
+                btn.onclick = () => {
+                    appSettings.profiles.splice(btn.dataset.index, 1);
+                    renderCMSList();
+                };
+            });
+
+            document.querySelectorAll('.profile-input').forEach(input => {
+                input.onchange = (e) => {
+                    const idx = e.target.dataset.index;
+                    const field = e.target.dataset.field;
+                    let val = e.target.value;
+                    if (field !== 'name') val = parseInt(val) || 0;
+                    appSettings.profiles[idx][field] = val;
+                };
+            });
+
+            document.getElementById('save-settings-btn').onclick = async () => {
+                try {
+                    const res = await fetch('/api/settings', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(appSettings)
+                    });
+                    if (res.ok) {
+                        statusText.innerHTML = `<span class="status-dot"></span> Settings saved successfully.`;
+                    } else {
+                        throw new Error();
+                    }
+                } catch (e) {
+                    alert('Failed to save settings.');
+                }
+            };
+
+            document.getElementById('export-data-btn').onclick = async () => {
+                try {
+                    const res = await fetch('/api/export', { headers: { 'Authorization': `Bearer ${API_KEY}` } });
+                    if (!res.ok) throw new Error();
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'larder_backup.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    statusText.innerHTML = `<span class="status-dot"></span> Export downloaded.`;
+                } catch (e) {
+                    alert('Export failed.');
+                }
+            };
+
+            const importInput = document.getElementById('import-zip-input');
+            const importStatus = document.getElementById('import-status');
+            importInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                importStatus.textContent = "Importing... please wait.";
+                try {
+                    const res = await fetch('/api/import', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${API_KEY}` },
+                        body: file
+                    });
+                    if (res.ok) {
+                        importStatus.textContent = "Import successful! Reloading data...";
+                        importStatus.style.color = "var(--success-color, #4ade80)";
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        throw new Error("Server rejected import.");
+                    }
+                } catch (err) {
+                    importStatus.textContent = "Import failed. Please check the file.";
+                    importStatus.style.color = "var(--danger-color, #f87171)";
+                }
+            };
+
             return;
         }
 

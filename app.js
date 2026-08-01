@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `
                 <div class="ingredient-card" data-id="${itemId}" role="listitem" tabindex="0">
                     <div class="ingredient-card-visual" style="background: var(--surface-hover);">
-                        <img src="${recipe.imageUrl || 'images/icon.png'}" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div class="ingredient-card-body">
                         <span class="ingredient-card-category" style="color: var(--accent);">${recipe.category || 'Ingredient'}</span>
@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="recipe-card ${themeClass}" data-id="${itemId}" role="listitem" tabindex="0" aria-label="View: ${title}">
                 <div class="recipe-image">
                     <div class="recipe-image-inner">
-                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
+                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
                     </div>
                 </div>
                 <div class="recipe-content">
