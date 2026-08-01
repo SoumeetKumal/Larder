@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -70,14 +70,14 @@ function createWindow() {
         minHeight: 700,
         title: 'Larder',
         autoHideMenuBar: true,
+        // Hidden title bar: a custom, theme-aware title bar (min/max/close) is
+        // injected by preload.js on every page. The native title bar is hidden
+        // and no overlay is used, so the window controls always match the
+        // current light/dark theme while native resizing/snapping is retained.
         titleBarStyle: 'hidden',
-        titleBarOverlay: {
-            color: '#0b0f19', // Matches var(--bg-base)
-            symbolColor: '#f9fafb', // Matches var(--text-primary)
-            height: 38
-        },
         icon: path.join(__dirname, 'build', 'icon.png'),
         webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
             sandbox: true,
@@ -114,6 +114,40 @@ function createWindow() {
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
+
+    // Custom title bar window controls (frameless window)
+    ipcMain.on('window:minimize', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (win) win.minimize();
+    });
+
+    ipcMain.on('window:toggle-maximize', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (!win) return;
+        if (win.isMaximized()) {
+            win.unmaximize();
+        } else {
+            win.maximize();
+        }
+    });
+
+    ipcMain.on('window:close', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (win) win.close();
+    });
+
+    ipcMain.handle('window:is-maximized', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        return win ? win.isMaximized() : false;
+    });
+
+    const sendMaximized = (state) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('window:maximized', state);
+        }
+    };
+    mainWindow.on('maximize', () => sendMaximized(true));
+    mainWindow.on('unmaximize', () => sendMaximized(false));
 }
 
 app.whenReady().then(async () => {

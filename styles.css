@@ -2221,6 +2221,7 @@
     .vd-pantry-status.in-stock { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
     .vd-pantry-status.low-stock { background: rgba(245, 158, 11, 0.15); color: #d97706; }
     .vd-pantry-status.out-of-stock { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+    .vd-pantry-status.not-tracked { background: var(--bg-surface-hover); color: var(--text-muted); }
     .vd-pantry-info h4 { margin: 0; font-size: 1rem; color: var(--text-main); font-weight: 600; }
     .vd-pantry-info p { margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); }
     .vd-pantry-tracker { margin-top: auto; }

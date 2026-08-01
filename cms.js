@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
+    let mealWeekOffset = 0;
 
     const cmsTabs = document.getElementById('cms-tabs');
     const searchInput = document.getElementById('cms-search');
@@ -252,99 +253,244 @@ document.addEventListener('DOMContentLoaded', () => {
             const slots = ['breakfast', 'lunch', 'dinner', 'snack'];
             const today = new Date();
             const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Make Monday=1, Sunday=7
-            
-            // Get Monday of current week
+
+            // Get Monday of current week (offset in weeks, e.g. -1 = last week)
             const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
-            
-            let gridHTML = '<div class="calendar-grid">';
-            
+            startOfWeek.setDate(today.getDate() - dayOfWeek + 1 + mealWeekOffset * 7);
+
+            function macroNum(value) {
+                if (value == null) return 0;
+                const n = parseFloat(String(value).replace(/[^0-9.\-]/g, ''));
+                return isNaN(n) ? 0 : n;
+            }
+
+            function recipeMacros(recipe) {
+                const m = (recipe && recipe.macros) || {};
+                return {
+                    energy: macroNum(m.energy),
+                    carbs: macroNum(m.carbohydrate),
+                    protein: macroNum(m.protein),
+                    fat: macroNum(m.fat)
+                };
+            }
+
+            // Aggregate macros for the whole week (across all eaters for now)
+            const weekTotal = { energy: 0, carbs: 0, protein: 0, fat: 0 };
+            const weekDates = [];
             for (let i = 0; i < 7; i++) {
-                const currentDate = new Date(startOfWeek);
-                currentDate.setDate(startOfWeek.getDate() + i);
-                const dateString = currentDate.toISOString().split('T')[0];
-                const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
-                const formattedDate = currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                
-                gridHTML += `
-                <div class="calendar-day">
-                    <div class="calendar-day-header">
-                        ${dayName}
-                        <span class="calendar-day-date">${formattedDate}</span>
-                    </div>
-                `;
-                
+                const d = new Date(startOfWeek);
+                d.setDate(startOfWeek.getDate() + i);
+                weekDates.push(d);
+                const dateString = d.toISOString().split('T')[0];
                 slots.forEach(slot => {
                     const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
-                    
-                    let slotClass = '';
-                    let slotText = '';
-                    
+                    if (!plan || plan.isEatingOut || plan.type === 'eating_out') return;
+                    const mult = plan.servings || 1;
+                    (plan.items || []).forEach(item => {
+                        if (item.type === 'recipe') {
+                            const r = recipes.find(rec => rec.id === item.referenceId);
+                            const m = recipeMacros(r);
+                            weekTotal.energy += m.energy * mult;
+                            weekTotal.carbs += m.carbs * mult;
+                            weekTotal.protein += m.protein * mult;
+                            weekTotal.fat += m.fat * mult;
+                        } else if (item.type === 'ingredient') {
+                            const ing = ingredients.find(f => f.foodId === item.referenceId);
+                            if (!ing) return;
+                            const per100 = macroNum(item.amount) / 100;
+                            weekTotal.energy += (macroNum(ing.calories) * per100) * mult;
+                            weekTotal.carbs += (macroNum(ing.carbsG) * per100) * mult;
+                            weekTotal.protein += (macroNum(ing.proteinG) * per100) * mult;
+                            weekTotal.fat += (macroNum(ing.fatG) * per100) * mult;
+                        }
+                    });
+                });
+            }
+
+            const weekEnd = new Date(startOfWeek);
+            weekEnd.setDate(startOfWeek.getDate() + 6);
+            const weekLabel = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+            // Build user stat cards from profiles
+            const profiles = (appSettings.profiles && appSettings.profiles.length)
+                ? appSettings.profiles
+                : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
+            const avatarAccents = ['var(--accent-sea)', 'var(--accent-jam)', 'var(--accent-veg)', 'var(--accent-meat)', 'var(--accent-stock)', 'var(--accent-bake)'];
+
+            function macroTargets(profile) {
+                const cal = macroNum(profile.calories);
+                return {
+                    energy: cal,
+                    protein: Math.round(cal * (macroNum(profile.protein) / 100) / 4),
+                    carbs: Math.round(cal * (macroNum(profile.carbs) / 100) / 4),
+                    fat: Math.round(cal * (macroNum(profile.fat) / 100) / 9)
+                };
+            }
+
+            const statsHTML = profiles.map((profile, idx) => {
+                const accent = avatarAccents[idx % avatarAccents.length];
+                const initial = (profile.name || 'U').trim().charAt(0).toUpperCase();
+                const target = macroTargets(profile);
+                const calPct = target.energy > 0 ? Math.min(100, Math.round((weekTotal.energy / target.energy) * 100)) : 0;
+                const ringOffset = Math.max(0, 100 - calPct);
+                const proteinPct = target.protein > 0 ? Math.min(100, Math.round((weekTotal.protein / target.protein) * 100)) : 0;
+                const carbsPct = target.carbs > 0 ? Math.min(100, Math.round((weekTotal.carbs / target.carbs) * 100)) : 0;
+                const fatPct = target.fat > 0 ? Math.min(100, Math.round((weekTotal.fat / target.fat) * 100)) : 0;
+                return `
+                <div class="mp-user-stat-card">
+                    <div class="mp-user-header">
+                        <div class="mp-user-avatar" style="color: ${accent}; border-color: ${accent}; background: rgba(84,144,198,0.1);">${escapeHtml(initial)}</div>
+                        <span class="mp-user-name">${escapeHtml(profile.name)}</span>
+                    </div>
+                    <div class="mp-user-summary">
+                        <div class="progress-ring">
+                            <svg>
+                                <circle class="bg" cx="16" cy="16" r="14"></circle>
+                                <circle class="progress" cx="16" cy="16" r="14" style="stroke: ${accent}; stroke-dashoffset: ${ringOffset};"></circle>
+                            </svg>
+                        </div>
+                        <div class="mp-user-cal">
+                            <strong>${Math.round(weekTotal.energy).toLocaleString()}</strong>
+                            <span>/ ${target.energy.toLocaleString()} kcal</span>
+                        </div>
+                    </div>
+                    <div class="mp-user-details-hover">
+                        <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-main); margin-bottom: 0.75rem; border-bottom: 2px solid ${accent}; padding-bottom: 0.5rem; display: inline-block;">Macro Progress</h4>
+                        <div class="mp-macro-row">
+                            <span class="mp-macro-label"><i data-lucide="beef" style="width: 14px; height: 14px; color: var(--accent-meat);"></i> Protein</span>
+                            <div class="mp-macro-vals">
+                                <span class="mp-macro-curr">${Math.round(weekTotal.protein)}g</span>
+                                <span class="mp-macro-target">/ ${target.protein}g</span>
+                            </div>
+                        </div>
+                        <div class="mp-macro-row">
+                            <span class="mp-macro-label"><i data-lucide="wheat" style="width: 14px; height: 14px; color: var(--accent-stock);"></i> Carbs</span>
+                            <div class="mp-macro-vals">
+                                <span class="mp-macro-curr">${Math.round(weekTotal.carbs)}g</span>
+                                <span class="mp-macro-target">/ ${target.carbs}g</span>
+                            </div>
+                        </div>
+                        <div class="mp-macro-row">
+                            <span class="mp-macro-label"><i data-lucide="droplet" style="width: 14px; height: 14px; color: #D4B04A;"></i> Fat</span>
+                            <div class="mp-macro-vals">
+                                <span class="mp-macro-curr">${Math.round(weekTotal.fat)}g</span>
+                                <span class="mp-macro-target">/ ${target.fat}g</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted);">
+                            Protein ${proteinPct}% · Carbs ${carbsPct}% · Fat ${fatPct}%
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Build the mp-grid: header row + one row per slot
+            let gridHTML = '<div class="mp-dashboard">';
+            gridHTML += `
+                <div class="mp-header">
+                    <div class="mp-nav">
+                        <button class="mp-nav-btn" id="mp-prev-week" aria-label="Previous week"><i data-lucide="chevron-left" style="width: 20px; height: 20px;"></i></button>
+                        <h2>${escapeHtml(weekLabel)}</h2>
+                        <button class="mp-nav-btn" id="mp-next-week" aria-label="Next week"><i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i></button>
+                    </div>
+                    <div class="mp-stats">${statsHTML}</div>
+                </div>
+                <div class="mp-grid">`;
+
+            gridHTML += '<div></div>'; // Empty top-left corner
+            weekDates.forEach(d => {
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayNum = d.toLocaleDateString('en-US', { day: 'numeric' });
+                gridHTML += `
+                    <div class="mp-column-header">
+                        <div class="mp-day-name">${dayName}</div>
+                        <div class="mp-day-date">${dayNum}</div>
+                    </div>`;
+            });
+
+            slots.forEach(slot => {
+                gridHTML += `<div class="mp-row-label">${slot.charAt(0).toUpperCase() + slot.slice(1)}</div>`;
+                weekDates.forEach(d => {
+                    const dateString = d.toISOString().split('T')[0];
+                    const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
+                    let slotInner = '';
                     if (plan) {
                         if (plan.isEatingOut || plan.type === 'eating_out') {
-                            slotClass = 'slot-eating-out';
-                            slotText = 'Eating Out';
-                        } else {
-                            slotClass = 'slot-populated';
-                            const servingsLabel = plan.servings && plan.servings !== 1 ? `<span style="font-size: 0.55rem; color: var(--text-muted); display: block; margin-top: 2px;">×${plan.servings} servings</span>` : '';
-                            
-                            // Support old data model
-                            if (plan.type === 'recipe') {
-                                const r = recipes.find(rec => rec.id === plan.referenceId);
-                                slotText = (r ? escapeHtml(r.title) : 'Unknown Recipe') + servingsLabel;
-                            } else if (plan.items && plan.items.length > 0) {
-                                // New multi-item model
-                                const names = plan.items.map(item => escapeHtml(item.name));
-                                if (names.length <= 2) {
-                                    slotText = names.join('<br>') + servingsLabel;
-                                } else {
-                                    slotText = names.slice(0, 2).join('<br>') + `<br><span style="font-size: 0.6rem; color: var(--text-muted);">+${names.length - 2} more</span>` + servingsLabel;
-                                }
-                            }
+                            slotInner = `
+                                <div class="mp-meal-card mp-eating-out">
+                                    <i data-lucide="coffee" style="color: var(--primary); width: 20px; height: 20px;"></i>
+                                    <div class="mp-meal-title">Eating Out</div>
+                                </div>`;
+                        } else if (plan.items && plan.items.length === 1 && plan.items[0].type === 'recipe') {
+                            const r = recipes.find(rec => rec.id === plan.items[0].referenceId);
+                            const m = recipeMacros(r);
+                            const title = r ? r.title : (plan.items[0].name || 'Recipe');
+                            const img = (r && r.imageUrl)
+                                ? `<img src="${escapeHtml(r.imageUrl)}" class="mp-meal-img" onerror="this.style.display='none'">`
+                                : `<div class="mp-meal-img" style="background: var(--bg-surface-hover); display: flex; align-items: center; justify-content: center;"><i data-lucide="utensils-crossed" style="width: 16px; height: 16px; color: var(--text-muted);"></i></div>`;
+                            slotInner = `
+                                <div class="mp-meal-card">
+                                    ${img}
+                                    <div class="mp-meal-info">
+                                        <div class="mp-meal-title">${escapeHtml(title)}</div>
+                                        <div class="mp-meal-meta">${m.energy ? Math.round(m.energy) + ' kcal' : ''}${plan.servings ? ' · ×' + plan.servings : ''}</div>
+                                    </div>
+                                </div>`;
+                        } else if (plan.items && plan.items.length > 0) {
+                            const names = plan.items.map(item => escapeHtml(item.name));
+                            const shown = names.length <= 2 ? names.join(' & ') : names.slice(0, 2).join(' & ') + ` +${names.length - 2}`;
+                            slotInner = `
+                                <div class="mp-meal-card">
+                                    <div class="mp-meal-info">
+                                        <div class="mp-meal-title">${shown}</div>
+                                        <div class="mp-meal-meta">${plan.items.length} item${plan.items.length !== 1 ? 's' : ''}${plan.servings ? ' · ×' + plan.servings : ''}</div>
+                                    </div>
+                                </div>`;
                         }
                     }
-                    
-                    gridHTML += `
-                    <div class="calendar-slot ${slotClass}" data-date="${dateString}" data-slot="${slot}">
-                        <div class="calendar-slot-label">${slot}</div>
-                        <div class="calendar-slot-content">${slotText}</div>
-                    </div>
-                    `;
+                    gridHTML += `<div class="mp-slot" data-date="${dateString}" data-slot="${slot}">${slotInner}</div>`;
                 });
-                
-                gridHTML += `</div>`; // Close day
-            }
-            
-            gridHTML += '</div>';
+            });
+
+            gridHTML += '</div>'; // close mp-grid
             gridHTML += `
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button id="save-mealplan-btn" class="btn primary">Save Plan</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button id="save-mealplan-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Plan</button>
                 </div>
-            `;
-            
+            </div>`; // close mp-dashboard
+
             listContainer.innerHTML = gridHTML;
             addBtn.style.display = 'none';
-            
+
+            document.getElementById('mp-prev-week').addEventListener('click', () => {
+                mealWeekOffset -= 1;
+                renderCMSList();
+            });
+            document.getElementById('mp-next-week').addEventListener('click', () => {
+                mealWeekOffset += 1;
+                renderCMSList();
+            });
+
             // Attach slot click handlers
             const assignModal = document.getElementById('meal-assign-modal');
             const assignTitle = document.getElementById('meal-assign-title');
             const assignSubtitle = document.getElementById('meal-assign-subtitle');
-            
+
             const checkboxEatingOut = document.getElementById('meal-assign-eating-out');
             const builderSection = document.getElementById('meal-assign-builder');
-            
+
             const servingsInput = document.getElementById('meal-assign-servings');
             const servingsRow = document.getElementById('meal-assign-servings-row');
             const servingsDecrement = document.getElementById('servings-decrement');
             const servingsIncrement = document.getElementById('servings-increment');
-            
+
             const searchInput = document.getElementById('meal-assign-search');
             const suggestionsBox = document.getElementById('meal-assign-suggestions');
             const amountGroup = document.getElementById('meal-assign-amount-group');
             const amountInput = document.getElementById('meal-assign-amount');
             const unitLabel = document.getElementById('meal-assign-unit');
             const addBtnModal = document.getElementById('meal-assign-add-btn');
-            
+
             const selectedList = document.getElementById('meal-assign-selected-list');
             const btnClear = document.getElementById('meal-assign-clear');
             const btnCancel = document.getElementById('meal-assign-cancel');
@@ -352,19 +498,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const templateSaveBtn = document.getElementById('meal-template-save');
             const templateListEl = document.getElementById('meal-template-list');
             const copyDayCheckboxes = document.querySelectorAll('.copy-day-cb');
-            
+
             let activeDate = null;
             let activeSlotName = null;
             let modalSelectedItems = [];
             let currentStagedItem = null; // { type, referenceId, name, unit }
-            
+
             // Load templates from localStorage
             let mealTemplates = JSON.parse(localStorage.getItem('larder_meal_templates') || '[]');
-            
+
             function saveTemplatesToStorage() {
                 localStorage.setItem('larder_meal_templates', JSON.stringify(mealTemplates));
             }
-            
+
             function renderTemplateChips() {
                 if (mealTemplates.length === 0) {
                     templateListEl.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted); padding: 0.3rem;">No templates saved yet.</span>';
@@ -377,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="template-delete" data-idx="${idx}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 0.2rem;">&times;</button>
                     </div>
                 `).join('');
-                
+
                 // Click chip name to load
                 document.querySelectorAll('.template-chip-name').forEach(el => {
                     el.onclick = (e) => {
@@ -393,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderModalSelectedItems();
                     };
                 });
-                
+
                 // Click X to delete
                 document.querySelectorAll('.template-delete').forEach(el => {
                     el.onclick = (e) => {
@@ -404,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 });
             }
-            
+
             // Save as template
             templateSaveBtn.onclick = () => {
                 if (modalSelectedItems.length === 0 && !checkboxEatingOut.checked) {
@@ -429,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedList.innerHTML = '<li style="padding: 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No items added yet.</li>';
                     return;
                 }
-                
+
                 selectedList.innerHTML = modalSelectedItems.map((item, index) => `
                     <li style="padding: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
                         <div>
@@ -441,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="remove-item-btn" data-index="${index}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
                     </li>
                 `).join('');
-                
+
                 document.querySelectorAll('.remove-item-btn').forEach(btn => {
                     btn.onclick = (e) => {
                         const idx = parseInt(e.target.dataset.index);
@@ -450,17 +596,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 });
             }
-            
-            document.querySelectorAll('.calendar-slot').forEach(slotEl => {
+
+            document.querySelectorAll('.mp-slot').forEach(slotEl => {
                 slotEl.addEventListener('click', () => {
                     activeDate = slotEl.dataset.date;
                     activeSlotName = slotEl.dataset.slot;
-                    
+
                     assignTitle.textContent = `Plan ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
                     assignSubtitle.textContent = `For ${activeDate}`;
-                    
+
                     const existingPlan = mealPlans.find(p => p.date === activeDate && p.slot === activeSlotName);
-                    
+
                     // Reset modal state
                     searchInput.value = '';
                     suggestionsBox.style.display = 'none';
@@ -472,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     servingsInput.value = 2;
                     servingsRow.style.opacity = '1';
                     servingsRow.style.pointerEvents = 'auto';
-                    
+
                     // Reset copy-to-days checkboxes; auto-check the current day
                     const currentDayIdx = (new Date(activeDate + 'T00:00:00')).getDay();
                     // Convert JS getDay (0=Sun) to our checkbox order (0=Mon...6=Sun)
@@ -486,9 +632,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             cb.closest('label').style.opacity = '1';
                         }
                     });
-                    
+
                     renderTemplateChips();
-                    
+
+                    // Populate eater checkboxes from profiles
+                    const eatersList = document.getElementById('meal-assign-eaters-list');
+                    if (eatersList) {
+                        const eaters = (appSettings.profiles && appSettings.profiles.length) ? appSettings.profiles : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
+                        eatersList.innerHTML = eaters.map((p, i) => `
+                            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                                <input type="checkbox" class="meal-eater-cb" value="${i}" ${existingPlan && (existingPlan.eaters || []).includes(i) ? 'checked' : ''} style="accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer;">
+                                <span>${escapeHtml(p.name)}</span>
+                            </label>
+                        `).join('');
+                    }
+
                     if (existingPlan) {
                         btnClear.style.display = 'block';
                         if (existingPlan.isEatingOut) {
@@ -513,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         btnClear.style.display = 'none';
                         modalSelectedItems = [];
                     }
-                    
+
                     renderModalSelectedItems();
                     assignModal.classList.add('active');
                 });
@@ -551,8 +709,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     suggestionsBox.style.display = 'none';
                     return;
                 }
-                
-                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query)).map(r => ({ ...r, _type: 'recipe' }));
+
+                // Read macro filters
+                const maxCal = parseFloat(document.getElementById('meal-assign-max-cal')?.value) || 0;
+                const minPro = parseFloat(document.getElementById('meal-assign-min-pro')?.value) || 0;
+                const maxCarb = parseFloat(document.getElementById('meal-assign-max-carb')?.value) || 0;
+                const maxFat = parseFloat(document.getElementById('meal-assign-max-fat')?.value) || 0;
+
+                const matchesMacros = (r) => {
+                    const m = recipeMacros(r);
+                    if (maxCal && m.energy > maxCal) return false;
+                    if (minPro && m.protein < minPro) return false;
+                    if (maxCarb && m.carbs > maxCarb) return false;
+                    if (maxFat && m.fat > maxFat) return false;
+                    return true;
+                };
+
+                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query) && matchesMacros(r)).map(r => ({ ...r, _type: 'recipe' }));
                 const matchedIngredients = ingredients.filter(i => i.name.toLowerCase().includes(query)).map(i => ({ ...i, _type: 'ingredient' }));
                 
                 const combined = [...matchedRecipes, ...matchedIngredients].slice(0, 15); // Top 15
@@ -636,12 +809,18 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             btnConfirm.onclick = () => {
-                // Build the list of dates to apply to
+                // Build the list of dates to apply to (within the currently viewed week)
                 const today = new Date();
                 const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
                 const startOfWeek = new Date(today);
-                startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
-                
+                startOfWeek.setDate(today.getDate() - dayOfWeek + 1 + mealWeekOffset * 7);
+
+                // Collect selected eaters
+                const selectedEaters = [];
+                document.querySelectorAll('.meal-eater-cb').forEach(cb => {
+                    if (cb.checked) selectedEaters.push(parseInt(cb.value));
+                });
+
                 // Collect all target dates: the active date + any checked copy-to days
                 const targetDates = [activeDate];
                 copyDayCheckboxes.forEach(cb => {
@@ -665,6 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             slot: activeSlotName,
                             isEatingOut: true,
                             items: [],
+                            eaters: selectedEaters,
                             servings: 1,
                             isConsumed: false
                         });
@@ -675,6 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             slot: activeSlotName,
                             isEatingOut: false,
                             items: JSON.parse(JSON.stringify(modalSelectedItems)),
+                            eaters: selectedEaters,
                             servings: parseInt(servingsInput.value) || 1,
                             isConsumed: false
                         });
@@ -709,69 +890,107 @@ document.addEventListener('DOMContentLoaded', () => {
                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
             );
 
-            const tableHTML = `
-                <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-                    Check "Tracked" to actively subtract these items from your shopping lists based on stock.
+            const cardsHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
+                    </div>
                 </div>
-                <div style="overflow-x: auto; margin-bottom: 1rem;">
-                    <table class="food-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 8%; text-align: center;">Tracked</th>
-                                <th style="width: 40%;">Ingredient</th>
-                                <th style="width: 15%;">Stock Qty</th>
-                                <th style="width: 10%;">Unit</th>
-                                <th>Category</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pantry-table-body">
-                            ${filteredIngredients.length === 0 ? `<tr><td colspan="5" style="text-align: center; padding: 1rem;">No ingredients match.</td></tr>` : ''}
-                            ${filteredIngredients.map((ing, i) => {
-                                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
-                                return `
-                                <tr data-foodid="${escapeHtml(ing.foodId)}">
-                                    <td style="text-align: center;"><input type="checkbox" class="p-track f-select" ${pItem.isTracked ? 'checked' : ''}></td>
-                                    <td style="font-weight: 600;">${escapeHtml(ing.name)}</td>
-                                    <td><input type="number" step="any" class="p-qty" value="${pItem.quantity}" ${!pItem.isTracked ? 'disabled opacity="0.5"' : ''}></td>
-                                    <td style="color: var(--text-muted);">${escapeHtml(ing.servingUnit || 'g')}</td>
-                                    <td style="color: var(--text-muted);">${escapeHtml(ing.category || '')}</td>
-                                </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+                <div class="vd-pantry-grid" id="pantry-grid">
+                    ${filteredIngredients.length === 0 ? `<div class="empty-state">No ingredients match. Add ingredients first.</div>` : ''}
+                    ${filteredIngredients.map((ing) => {
+                        const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
+                        const qty = pItem.quantity || 0;
+                        const unit = ing.servingUnit || 'g';
+                        const isTracked = !!pItem.isTracked;
+                        let statusClass = 'not-tracked';
+                        let statusLabel = 'Not Tracked';
+                        if (isTracked) {
+                            if (qty <= 0) { statusClass = 'out-of-stock'; statusLabel = 'Out of Stock'; }
+                            else if (qty < 10) { statusClass = 'low-stock'; statusLabel = 'Low Stock'; }
+                            else { statusClass = 'in-stock'; statusLabel = 'In Stock'; }
+                        }
+                        const pct = !isTracked ? 0 : Math.min(100, Math.round((qty / 100) * 100));
+                        const vis = getCategoryIcon(ing.category);
+                        const unitLabel = unit || 'g';
+                        return `
+                        <div class="vd-pantry-card" data-foodid="${escapeHtml(ing.foodId)}">
+                            <div class="vd-pantry-header">
+                                <div class="vd-pantry-icon">
+                                    <svg viewBox="${vis.vb}" style="width:22px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+                                </div>
+                                <button type="button" class="vd-pantry-status ${statusClass} p-track" role="checkbox" aria-checked="${isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${statusLabel}</button>
+                            </div>
+                            <div class="vd-pantry-info">
+                                <h4>${escapeHtml(ing.name)}</h4>
+                                <p>${escapeHtml(ing.category || 'Uncategorized')}</p>
+                            </div>
+                            <div class="vd-pantry-tracker">
+                                <div class="vd-pantry-progress"><div class="vd-pantry-bar" style="width: ${pct}%;"></div></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                        <input type="number" step="any" min="0" class="p-qty" value="${qty}" ${!isTracked ? 'disabled' : ''} aria-label="Quantity" style="width: 64px; padding: 0.3rem 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem;">
+                                        <span class="vd-pantry-qty" style="font-size: 0.75rem;">${escapeHtml(unitLabel)}</span>
+                                    </div>
+                                    <span class="vd-pantry-qty">${Math.round(qty)}${escapeHtml(unitLabel)} left</span>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
                 </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button id="save-pantry-btn" class="btn primary">Save Pantry</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button id="save-pantry-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Pantry</button>
                 </div>
             `;
-            listContainer.innerHTML = tableHTML;
+            listContainer.innerHTML = cardsHTML;
             addBtn.style.display = 'none';
 
-            // Toggle quantity input based on track checkbox
-            document.querySelectorAll('.p-track').forEach(cb => {
-                cb.addEventListener('change', (e) => {
-                    const row = e.target.closest('tr');
-                    const qtyInput = row.querySelector('.p-qty');
-                    if (e.target.checked) {
+            // Toggle tracking via status badge; toggle quantity input accordingly
+            function refreshTrackState(btn) {
+                const card = btn.closest('.vd-pantry-card');
+                const isTracked = btn.dataset.tracked === '1';
+                const qtyInput = card.querySelector('.p-qty');
+                if (isTracked) {
+                    qtyInput.removeAttribute('disabled');
+                } else {
+                    qtyInput.setAttribute('disabled', 'true');
+                }
+            }
+            document.querySelectorAll('.p-track').forEach(btn => {
+                const card = btn.closest('.vd-pantry-card');
+                const pItem = pantry.find(p => p.foodId === card.dataset.foodid);
+                btn.dataset.tracked = (pItem && pItem.isTracked) ? '1' : '0';
+                refreshTrackState(btn);
+                btn.addEventListener('click', () => {
+                    const wasTracked = btn.dataset.tracked === '1';
+                    btn.dataset.tracked = wasTracked ? '0' : '1';
+                    const isTracked = !wasTracked;
+                    const qtyInput = btn.closest('.vd-pantry-card').querySelector('.p-qty');
+                    if (isTracked) {
+                        btn.textContent = qtyInput.value > 0 ? 'In Stock' : 'Low Stock';
+                        btn.className = 'vd-pantry-status ' + (qtyInput.value > 0 ? 'in-stock' : 'low-stock') + ' p-track';
                         qtyInput.removeAttribute('disabled');
-                        qtyInput.style.opacity = '1';
                     } else {
+                        btn.textContent = 'Not Tracked';
+                        btn.className = 'vd-pantry-status not-tracked p-track';
                         qtyInput.setAttribute('disabled', 'true');
-                        qtyInput.style.opacity = '0.5';
                     }
+                    btn.setAttribute('aria-checked', isTracked ? 'true' : 'false');
+                    refreshTrackState(btn);
                 });
             });
 
             document.getElementById('save-pantry-btn').addEventListener('click', async () => {
-                const rows = document.querySelectorAll('#pantry-table-body tr[data-foodid]');
+                const cards = document.querySelectorAll('#pantry-grid .vd-pantry-card');
                 const updatedPantry = [];
 
-                rows.forEach(row => {
-                    const foodId = row.dataset.foodid;
-                    const isTracked = row.querySelector('.p-track').checked;
-                    const quantity = parseFloat(row.querySelector('.p-qty').value) || 0;
-                    
+                cards.forEach(card => {
+                    const foodId = card.dataset.foodid;
+                    const btn = card.querySelector('.p-track');
+                    const isTracked = btn.dataset.tracked === '1';
+                    const quantity = parseFloat(card.querySelector('.p-qty').value) || 0;
+
                     if (isTracked || quantity > 0) {
                         updatedPantry.push({ foodId, isTracked, quantity });
                     }
@@ -825,10 +1044,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetPlans = mealPlans.filter(p => validDates.includes(p.date) && !p.isEatingOut && p.type !== 'eating_out');
                 
                 // 3. Aggregate required ingredients
-                const requiredMap = new Map(); // foodId -> { name, requiredQty, unit }
+                const requiredMap = new Map(); // foodId -> { name, requiredQty, unit, recipes:Set }
                 
                 targetPlans.forEach(plan => {
                     const servingsMultiplier = plan.servings || 1;
+                    
+                    // Parse an amount string like "320g", "125ml", "1 tsp", "2 1/2 cups" into { qty, unit }
+                    const parseAmount = (str) => {
+                        if (typeof str === 'number') return { qty: str, unit: 'g' };
+                        if (!str) return { qty: 0, unit: 'g' };
+                        const m = str.trim().match(/^([\d\s./-]+)\s*([a-zA-Zµ]+)?$/);
+                        if (!m) return { qty: 0, unit: 'g' };
+                        let qty = 0;
+                        const parts = m[1].trim().split(/[\s-]+/);
+                        for (const part of parts) {
+                            if (!part) continue;
+                            if (part.includes('/')) {
+                                const frac = part.split('/');
+                                qty += (parseFloat(frac[0]) || 0) / (parseFloat(frac[1]) || 1);
+                            } else {
+                                qty += parseFloat(part) || 0;
+                            }
+                        }
+                        return { qty, unit: m[2] || 'g' };
+                    };
                     
                     // Backwards compatibility for old format
                     let itemsToProcess = plan.items || [];
@@ -844,16 +1083,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             recipe.ingredients.forEach(ing => {
                                 if (!ing.foodId) return;
                                 
-                                const scaledAmount = (parseFloat(ing.amount) || 0) * servingsMultiplier;
+                                const parsed = parseAmount(ing.metric || ing.amount);
+                                const scaledAmount = parsed.qty * servingsMultiplier;
                                 const existing = requiredMap.get(ing.foodId);
                                 if (existing) {
                                     existing.requiredQty += scaledAmount;
+                                    if (recipe.title) existing.recipes.add(recipe.title);
                                 } else {
                                     const foodRef = ingredients.find(f => f.foodId === ing.foodId);
                                     requiredMap.set(ing.foodId, {
-                                        name: foodRef ? foodRef.name : (ing.name || 'Unknown'),
+                                        name: foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown'),
                                         requiredQty: scaledAmount,
-                                        unit: ing.unit || 'g'
+                                        unit: parsed.unit,
+                                        recipes: recipe.title ? new Set([recipe.title]) : new Set()
                                     });
                                 }
                             });
@@ -867,7 +1109,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 requiredMap.set(item.referenceId, {
                                     name: foodRef ? foodRef.name : item.name,
                                     requiredQty: scaledAmount,
-                                    unit: item.unit || 'g'
+                                    unit: item.unit || 'g',
+                                    recipes: new Set()
                                 });
                             }
                         }
@@ -885,11 +1128,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     if (deficit > 0) {
+                        const foodRef = ingredients.find(f => f.foodId === foodId);
                         shoppingList.push({
                             foodId,
                             name: data.name,
                             amount: Math.ceil(deficit),
                             unit: data.unit,
+                            category: (foodRef && foodRef.category) || 'Other',
+                            recipes: Array.from(data.recipes || []),
                             checked: false
                         });
                     }
@@ -906,41 +1152,55 @@ document.addEventListener('DOMContentLoaded', () => {
                     resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
                     return;
                 }
-                
-                let listHTML = `
-                <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
-                    <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Shopping List</h3>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-                `;
-                
-                list.forEach((item, index) => {
-                    listHTML += `
-                        <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
-                            <input type="checkbox" class="sl-checkbox f-select" id="sl-item-${index}">
-                            <label for="sl-item-${index}" style="cursor: pointer; flex: 1; font-weight: 600;">${escapeHtml(item.name)}</label>
-                            <span style="color: var(--text-secondary);">${escapeHtml(item.amount)} ${escapeHtml(item.unit)}</span>
-                        </li>
-                    `;
+
+                // Group items by category
+                const groups = {};
+                list.forEach(item => {
+                    const cat = item.category || 'Other';
+                    if (!groups[cat]) groups[cat] = [];
+                    groups[cat].push(item);
                 });
-                
-                listHTML += `</ul></div>`;
+
+                let listHTML = `<div class="vd-shop-container">`;
+                Object.entries(groups).forEach(([cat, items]) => {
+                    listHTML += `<div class="vd-shop-group">`;
+                    listHTML += `
+                        <div class="vd-shop-group-header">
+                            <i data-lucide="shopping-basket" style="width: 16px; height: 16px;"></i> ${escapeHtml(cat)}
+                        </div>`;
+                    items.forEach((item) => {
+                        const recipeTags = (item.recipes || []).slice(0, 3).map(r => `
+                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> ${escapeHtml(r)}</span>
+                        `).join('');
+                        listHTML += `
+                        <div class="vd-shop-item" data-foodid="${escapeHtml(item.foodId)}">
+                            <div class="vd-shop-checkbox" role="checkbox" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="vd-shop-item-details">
+                                <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
+                                <div class="vd-shop-item-meta">
+                                    <span class="vd-shop-qty">${escapeHtml(item.amount)} ${escapeHtml(item.unit)}</span>
+                                    ${recipeTags}
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    listHTML += `</div>`;
+                });
+                listHTML += `</div>`;
                 resultsContainer.innerHTML = listHTML;
-                
-                // Strike-through logic
-                document.querySelectorAll('.sl-checkbox').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        const label = e.target.nextElementSibling;
-                        const qty = label.nextElementSibling;
-                        if (e.target.checked) {
-                            label.style.textDecoration = 'line-through';
-                            label.style.color = 'var(--text-muted)';
-                            qty.style.textDecoration = 'line-through';
-                            qty.style.color = 'var(--text-muted)';
-                        } else {
-                            label.style.textDecoration = 'none';
-                            label.style.color = 'inherit';
-                            qty.style.textDecoration = 'none';
-                            qty.style.color = 'var(--text-secondary)';
+                if (window.lucide) window.lucide.createIcons();
+
+                // Toggle check state
+                document.querySelectorAll('.vd-shop-item').forEach(row => {
+                    const checkbox = row.querySelector('.vd-shop-checkbox');
+                    checkbox.addEventListener('click', () => {
+                        row.classList.toggle('checked');
+                        checkbox.setAttribute('aria-checked', row.classList.contains('checked') ? 'true' : 'false');
+                    });
+                    checkbox.addEventListener('keydown', (e) => {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            checkbox.click();
                         }
                     });
                 });
@@ -1038,124 +1298,237 @@ document.addEventListener('DOMContentLoaded', () => {
             addBtn.style.display = 'none';
             if (searchInput) searchInput.style.display = 'none';
 
-            listContainer.innerHTML = `
-                <div class="settings-container" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
-                    <h2>Eater Profiles</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Configure daily macro targets for meal planning.</p>
-                    <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
-                        ${appSettings.profiles.map((p, i) => `
-                            <div class="profile-card" style="background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
-                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                    <div class="form-group"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
-                                    <div class="form-group"><label>Calories</label><input type="number" value="${p.calories}" class="profile-input" data-index="${i}" data-field="calories" style="width: 100px;"></div>
-                                    <div class="form-group"><label>Carbs (%)</label><input type="number" value="${p.carbs}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 100px;"></div>
-                                    <div class="form-group"><label>Protein (%)</label><input type="number" value="${p.protein}" class="profile-input" data-index="${i}" data-field="protein" style="width: 100px;"></div>
-                                    <div class="form-group"><label>Fat (%)</label><input type="number" value="${p.fat}" class="profile-input" data-index="${i}" data-field="fat" style="width: 100px;"></div>
-                                    <button class="btn delete-profile-btn" data-index="${i}" title="Remove eater" aria-label="Remove eater" style="margin-top: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <button class="btn secondary" id="add-profile-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Eater</button>
-                    <div style="margin-top: 1rem;">
-                        <button class="btn primary" id="save-settings-btn">Save Profiles</button>
-                    </div>
+            const profiles = (appSettings.profiles && Array.isArray(appSettings.profiles)) ? appSettings.profiles : [];
+            const prefs = appSettings.preferences || {};
+            const automation = appSettings.automation || {};
+            const dietaryChips = [
+                { id: 'vegetarian', label: 'Vegetarian' },
+                { id: 'vegan', label: 'Vegan' },
+                { id: 'pescatarian', label: 'Pescatarian' },
+                { id: 'glutenFree', label: 'Gluten-Free' },
+                { id: 'keto', label: 'Keto' },
+                { id: 'paleo', label: 'Paleo' }
+            ];
 
-                    <h2 style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">Data Management</h2>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-                        <button class="btn secondary" id="export-data-btn"><i data-lucide="download" style="width: 16px; height: 16px;"></i> Export Data (ZIP)</button>
-                        <label class="btn secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i data-lucide="upload" style="width: 16px; height: 16px;"></i> Import Data (ZIP)
-                            <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
-                        </label>
+            listContainer.innerHTML = `
+                <div class="vd-settings-layout">
+                    <div class="vd-settings-nav">
+                        <div class="vd-settings-nav-item active" data-settings-view="eaters"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Eaters</div>
+                        <div class="vd-settings-nav-item" data-settings-view="preferences"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Preferences</div>
+                        <div class="vd-settings-nav-item" data-settings-view="data"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Data</div>
                     </div>
-                    <p id="import-status" style="margin-top: 0.5rem; font-size: 0.8rem;"></p>
+                    <div class="vd-settings-panel" id="settings-panel"></div>
                 </div>
             `;
-            if (window.lucide) window.lucide.createIcons();
 
-            document.getElementById('add-profile-btn').onclick = () => {
-                appSettings.profiles.push({ name: "New Eater", calories: 2000, carbs: 40, protein: 30, fat: 30 });
-                renderCMSList();
-            };
+            const settingsPanel = document.getElementById('settings-panel');
 
-            document.querySelectorAll('.delete-profile-btn').forEach(btn => {
-                btn.onclick = () => {
-                    appSettings.profiles.splice(btn.dataset.index, 1);
-                    renderCMSList();
-                };
-            });
+            function renderSettingsPanel(view) {
+                document.querySelectorAll('.vd-settings-nav-item').forEach(n => n.classList.toggle('active', n.dataset.settingsView === view));
 
-            document.querySelectorAll('.profile-input').forEach(input => {
-                input.onchange = (e) => {
-                    const idx = e.target.dataset.index;
-                    const field = e.target.dataset.field;
-                    let val = e.target.value;
-                    if (field !== 'name') val = parseInt(val) || 0;
-                    appSettings.profiles[idx][field] = val;
-                };
-            });
+                if (view === 'eaters') {
+                    settingsPanel.innerHTML = `
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Eater Profiles</h3>
+                            <p class="vd-settings-desc">Configure daily calorie and macro targets for meal planning.</p>
+                            <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
+                                ${profiles.length === 0 ? '<p style="color: var(--text-muted); font-size: 0.9rem;">No eaters yet. Add one to get started.</p>' : ''}
+                                ${profiles.map((p, i) => `
+                                    <div class="profile-card" style="background: var(--bg-base); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border);">
+                                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                                            <div class="form-group"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
+                                            <div class="form-group"><label>Calories / day</label><input type="number" value="${p.calories ?? 2000}" class="profile-input" data-index="${i}" data-field="calories" style="width: 110px;"></div>
+                                            <div class="form-group"><label>Carbs %</label><input type="number" value="${p.carbs ?? 40}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 90px;"></div>
+                                            <div class="form-group"><label>Protein %</label><input type="number" value="${p.protein ?? 30}" class="profile-input" data-index="${i}" data-field="protein" style="width: 90px;"></div>
+                                            <div class="form-group"><label>Fat %</label><input type="number" value="${p.fat ?? 30}" class="profile-input" data-index="${i}" data-field="fat" style="width: 90px;"></div>
+                                            <button class="btn delete-profile-btn" data-index="${i}" title="Remove eater" aria-label="Remove eater" style="margin-left: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="btn secondary" id="add-profile-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Eater</button>
+                                <button class="btn primary" id="save-settings-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Eaters</button>
+                            </div>
+                        </div>
+                    `;
+                    if (window.lucide) window.lucide.createIcons();
 
-            document.getElementById('save-settings-btn').onclick = async () => {
-                try {
-                    const res = await fetch('/api/settings', {
-                        method: 'PUT',
-                        headers: HEADERS,
-                        body: JSON.stringify(appSettings)
+                    document.getElementById('add-profile-btn').onclick = () => {
+                        appSettings.profiles.push({ name: "New Eater", calories: 2000, carbs: 40, protein: 30, fat: 30 });
+                        renderSettingsPanel('eaters');
+                    };
+
+                    document.querySelectorAll('.delete-profile-btn').forEach(btn => {
+                        btn.onclick = () => {
+                            appSettings.profiles.splice(btn.dataset.index, 1);
+                            renderSettingsPanel('eaters');
+                        };
                     });
+
+                    document.querySelectorAll('.profile-input').forEach(input => {
+                        input.onchange = (e) => {
+                            const idx = e.target.dataset.index;
+                            const field = e.target.dataset.field;
+                            let val = e.target.value;
+                            if (field !== 'name') val = parseFloat(val) || 0;
+                            appSettings.profiles[idx][field] = val;
+                        };
+                    });
+
+                    document.getElementById('save-settings-btn').onclick = saveSettings;
+                    return;
+                }
+
+                if (view === 'preferences') {
+                    settingsPanel.innerHTML = `
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Dietary Preferences</h3>
+                            <p class="vd-settings-desc">Select your dietary requirements to personalize recipe recommendations.</p>
+                            <div class="vd-settings-chips">
+                                ${dietaryChips.map(c => `
+                                    <div class="vd-settings-chip ${(prefs.dietary || []).includes(c.id) ? 'selected' : ''}" data-pref="${c.id}">
+                                        ${(prefs.dietary || []).includes(c.id) ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                                        ${c.label}
+                                    </div>`).join('')}
+                            </div>
+                        </div>
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Automation</h3>
+                            <p class="vd-settings-desc">Manage how the app assists you with planning and shopping.</p>
+                            <div class="vd-settings-toggle-row">
+                                <div class="vd-settings-toggle-info">
+                                    <h5>Auto-generate Shopping List</h5>
+                                    <p>Automatically add missing ingredients to your list when planning a recipe.</p>
+                                </div>
+                                <div class="vd-settings-switch ${automation.autoShoppingList ? 'active' : ''}" data-toggle="autoShoppingList"></div>
+                            </div>
+                            <div class="vd-settings-toggle-row">
+                                <div class="vd-settings-toggle-info">
+                                    <h5>Meal Plan Reminders</h5>
+                                    <p>Show a reminder when meals are due for the day.</p>
+                                </div>
+                                <div class="vd-settings-switch ${automation.reminders ? 'active' : ''}" data-toggle="reminders"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <button class="btn primary" id="save-prefs-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Preferences</button>
+                        </div>
+                    `;
+                    if (window.lucide) window.lucide.createIcons();
+
+                    document.querySelectorAll('.vd-settings-chip').forEach(chip => {
+                        chip.onclick = () => {
+                            const prefId = chip.dataset.pref;
+                            const arr = prefs.dietary || (prefs.dietary = []);
+                            const idx = arr.indexOf(prefId);
+                            if (idx >= 0) arr.splice(idx, 1);
+                            else arr.push(prefId);
+                            renderSettingsPanel('preferences');
+                        };
+                    });
+
+                    document.querySelectorAll('.vd-settings-switch').forEach(sw => {
+                        sw.onclick = () => {
+                            sw.classList.toggle('active');
+                        };
+                    });
+
+                    document.getElementById('save-prefs-btn').onclick = saveSettings;
+                    return;
+                }
+
+                if (view === 'data') {
+                    settingsPanel.innerHTML = `
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Data Management</h3>
+                            <p class="vd-settings-desc">Export a full backup of your recipes, ingredients, meal plans, pantry, shopping lists, and settings — or restore them from a backup file.</p>
+                            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                                <button class="btn secondary" id="export-data-btn"><i data-lucide="download" style="width: 16px; height: 16px;"></i> Export Data (ZIP)</button>
+                                <label class="btn secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                    <i data-lucide="upload" style="width: 16px; height: 16px;"></i> Import Data (ZIP)
+                                    <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
+                                </label>
+                            </div>
+                            <p id="import-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
+                        </div>
+                    `;
+                    if (window.lucide) window.lucide.createIcons();
+
+                    document.getElementById('export-data-btn').onclick = async () => {
+                        try {
+                            const res = await fetch('/api/export', { headers: { 'Authorization': `Bearer ${API_KEY}` } });
+                            if (!res.ok) throw new Error();
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'larder_backup.zip';
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            URL.revokeObjectURL(url);
+                            statusText.innerHTML = `<span class="status-dot"></span> Export downloaded.`;
+                        } catch (e) {
+                            alert('Export failed.');
+                        }
+                    };
+
+                    const importInput = document.getElementById('import-zip-input');
+                    const importStatus = document.getElementById('import-status');
+                    importInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        importStatus.textContent = "Importing... please wait.";
+                        try {
+                            const res = await fetch('/api/import', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${API_KEY}` },
+                                body: file
+                            });
+                            if (res.ok) {
+                                importStatus.textContent = "Import successful! Reloading data...";
+                                importStatus.style.color = "var(--success-color, #4ade80)";
+                                setTimeout(() => window.location.reload(), 1500);
+                            } else {
+                                throw new Error("Server rejected import.");
+                            }
+                        } catch (err) {
+                            importStatus.textContent = "Import failed. Please check the file.";
+                            importStatus.style.color = "var(--danger-color, #f87171)";
+                        }
+                    };
+                    return;
+                }
+            }
+
+            function saveSettings() {
+                appSettings.preferences = prefs;
+                appSettings.automation = automation;
+                // Gather toggle states
+                document.querySelectorAll('.vd-settings-switch').forEach(sw => {
+                    automation[sw.dataset.toggle] = sw.classList.contains('active');
+                });
+                fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: HEADERS,
+                    body: JSON.stringify(appSettings)
+                }).then(res => {
                     if (res.ok) {
                         statusText.innerHTML = `<span class="status-dot"></span> Settings saved successfully.`;
                     } else {
                         throw new Error();
                     }
-                } catch (e) {
+                }).catch(() => {
                     alert('Failed to save settings.');
-                }
-            };
+                });
+            }
 
-            document.getElementById('export-data-btn').onclick = async () => {
-                try {
-                    const res = await fetch('/api/export', { headers: { 'Authorization': `Bearer ${API_KEY}` } });
-                    if (!res.ok) throw new Error();
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'larder_backup.zip';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                    statusText.innerHTML = `<span class="status-dot"></span> Export downloaded.`;
-                } catch (e) {
-                    alert('Export failed.');
-                }
-            };
+            renderSettingsPanel('eaters');
 
-            const importInput = document.getElementById('import-zip-input');
-            const importStatus = document.getElementById('import-status');
-            importInput.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                importStatus.textContent = "Importing... please wait.";
-                try {
-                    const res = await fetch('/api/import', {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${API_KEY}` },
-                        body: file
-                    });
-                    if (res.ok) {
-                        importStatus.textContent = "Import successful! Reloading data...";
-                        importStatus.style.color = "var(--success-color, #4ade80)";
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        throw new Error("Server rejected import.");
-                    }
-                } catch (err) {
-                    importStatus.textContent = "Import failed. Please check the file.";
-                    importStatus.style.color = "var(--danger-color, #f87171)";
-                }
-            };
+            document.querySelectorAll('.vd-settings-nav-item').forEach(item => {
+                item.addEventListener('click', () => renderSettingsPanel(item.dataset.settingsView));
+            });
 
             return;
         }

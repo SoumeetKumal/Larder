@@ -271,7 +271,46 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
-    if (req.url === '/api/settings' && handleGenericFileAPI(req, res, SETTINGS_PATH, 'settings')) return;
+
+    // --- API: settings (object payload, unlike the array-based files above) ---
+    if (req.url === '/api/settings' && req.method === 'GET') {
+        fs.readFile(SETTINGS_PATH, 'utf8', (err, data) => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end('{"profiles": []}');
+                    return;
+                }
+                sendJson(res, 500, { error: 'Could not read settings.json' });
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(data);
+        });
+        return;
+    }
+    if (req.url === '/api/settings' && req.method === 'PUT') {
+        collectBody(req).then(body => {
+            try {
+                const parsed = JSON.parse(body.toString('utf8'));
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Expected an object');
+                const formatted = JSON.stringify(parsed, null, 2);
+                fs.writeFile(SETTINGS_PATH, formatted, 'utf8', (err) => {
+                    if (err) {
+                        sendJson(res, 500, { error: 'Could not write settings.json' });
+                        return;
+                    }
+                    sendJson(res, 200, { success: true });
+                    console.log(`  💾 Saved settings to settings.json`);
+                });
+            } catch (e) {
+                sendJson(res, 400, { error: 'Invalid JSON or payload must be an object' });
+            }
+        }).catch(() => {
+            sendJson(res, 413, { error: 'Request body too large' });
+        });
+        return;
+    }
 
     if (req.url === '/api/export' && req.method === 'GET') {
         try {
