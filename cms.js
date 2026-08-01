@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Escape user-controlled text before it reaches innerHTML templates (XSS).
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     const addBtn = document.getElementById('add-recipe-btn');
     const statusText = document.getElementById('status-text');
     const listContainer = document.getElementById('cms-recipe-list');
@@ -223,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateIngredientSuggestions() {
         const datalist = document.getElementById('ingredient-suggestions');
         if (!datalist) return;
-        datalist.innerHTML = ingredients.map(f => `<option value="${f.name}">`).join('');
+        datalist.innerHTML = ingredients.map(f => `<option value="${escapeHtml(f.name)}">`).join('');
     }
 
     function renderCMSList() {
@@ -281,10 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             // Support old data model
                             if (plan.type === 'recipe') {
                                 const r = recipes.find(rec => rec.id === plan.referenceId);
-                                slotText = (r ? r.title : 'Unknown Recipe') + servingsLabel;
+                                slotText = (r ? escapeHtml(r.title) : 'Unknown Recipe') + servingsLabel;
                             } else if (plan.items && plan.items.length > 0) {
                                 // New multi-item model
-                                const names = plan.items.map(item => item.name);
+                                const names = plan.items.map(item => escapeHtml(item.name));
                                 if (names.length <= 2) {
                                     slotText = names.join('<br>') + servingsLabel;
                                 } else {
@@ -362,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 templateListEl.innerHTML = mealTemplates.map((t, idx) => `
                     <div style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface); font-size: 0.75rem; cursor: pointer;" class="template-chip" data-idx="${idx}">
-                        <span class="template-chip-name" data-idx="${idx}" style="font-weight: 600;">${t.name}</span>
+                        <span class="template-chip-name" data-idx="${idx}" style="font-weight: 600;">${escapeHtml(t.name)}</span>
                         <span style="color: var(--text-muted);">(${t.items.length} item${t.items.length !== 1 ? 's' : ''}, ×${t.servings})</span>
                         <button class="template-delete" data-idx="${idx}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 0.2rem;">&times;</button>
                     </div>
@@ -423,9 +433,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 selectedList.innerHTML = modalSelectedItems.map((item, index) => `
                     <li style="padding: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
                         <div>
-                            <span style="font-weight: 600; color: var(--text-primary);">${item.name}</span>
+                            <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(item.name)}</span>
                             <span style="color: var(--text-muted); margin-left: 0.5rem;">
-                                ${item.type === 'ingredient' ? `${item.amount} ${item.unit}` : '(Recipe)'}
+                                ${item.type === 'ingredient' ? `${escapeHtml(item.amount)} ${escapeHtml(item.unit)}` : '(Recipe)'}
                             </span>
                         </div>
                         <button class="remove-item-btn" data-index="${index}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
@@ -552,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     suggestionsBox.innerHTML = combined.map((item, idx) => `
                         <div class="autocomplete-item" data-idx="${idx}" style="padding: 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem;">
-                            <span style="font-weight: 600;">${item._type === 'recipe' ? item.title : item.name}</span>
+                            <span style="font-weight: 600;">${escapeHtml(item._type === 'recipe' ? item.title : item.name)}</span>
                             <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
                         </div>
                     `).join('');
@@ -719,12 +729,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${filteredIngredients.map((ing, i) => {
                                 const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
                                 return `
-                                <tr data-foodid="${ing.foodId}">
+                                <tr data-foodid="${escapeHtml(ing.foodId)}">
                                     <td style="text-align: center;"><input type="checkbox" class="p-track f-select" ${pItem.isTracked ? 'checked' : ''}></td>
-                                    <td style="font-weight: 600;">${ing.name}</td>
+                                    <td style="font-weight: 600;">${escapeHtml(ing.name)}</td>
                                     <td><input type="number" step="any" class="p-qty" value="${pItem.quantity}" ${!pItem.isTracked ? 'disabled opacity="0.5"' : ''}></td>
-                                    <td style="color: var(--text-muted);">${ing.servingUnit || 'g'}</td>
-                                    <td style="color: var(--text-muted);">${ing.category || ''}</td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(ing.servingUnit || 'g')}</td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(ing.category || '')}</td>
                                 </tr>
                                 `;
                             }).join('')}
@@ -907,8 +917,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     listHTML += `
                         <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
                             <input type="checkbox" class="sl-checkbox f-select" id="sl-item-${index}">
-                            <label for="sl-item-${index}" style="cursor: pointer; flex: 1; font-weight: 600;">${item.name}</label>
-                            <span style="color: var(--text-secondary);">${item.amount} ${item.unit}</span>
+                            <label for="sl-item-${index}" style="cursor: pointer; flex: 1; font-weight: 600;">${escapeHtml(item.name)}</label>
+                            <span style="color: var(--text-secondary);">${escapeHtml(item.amount)} ${escapeHtml(item.unit)}</span>
                         </li>
                     `;
                 });
@@ -974,16 +984,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
                                             </div>
                                             <div>
-                                                <div>${ing.name || 'Unnamed ingredient'}</div>
-                                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${serving}</div>
+                                                <div>${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
+                                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>${ing.category || '—'}</td>
+                                    <td>${escapeHtml(ing.category || '—')}</td>
                                     <td><span class="cms-badge published">Published</span></td>
                                     <td class="cms-actions-cell">
-                                        <button class="cms-btn-icon food-edit-btn" data-id="${ing.foodId}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                        <button class="cms-btn-icon delete food-delete-btn" data-id="${ing.foodId}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                        <button class="cms-btn-icon food-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                        <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete"><i data-lucide="trash-2"></i></button>
                                     </td>
                                 </tr>`;
                             }).join('')}
@@ -1036,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${appSettings.profiles.map((p, i) => `
                             <div class="profile-card" style="background: var(--bg-card); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
                                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                    <div class="form-group"><label>Name</label><input type="text" value="${p.name}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
+                                    <div class="form-group"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
                                     <div class="form-group"><label>Calories</label><input type="number" value="${p.calories}" class="profile-input" data-index="${i}" data-field="calories" style="width: 100px;"></div>
                                     <div class="form-group"><label>Carbs (%)</label><input type="number" value="${p.carbs}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 100px;"></div>
                                     <div class="form-group"><label>Protein (%)</label><input type="number" value="${p.protein}" class="profile-input" data-index="${i}" data-field="protein" style="width: 100px;"></div>
@@ -1187,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const energyStr = recipe.macros?.energy || recipe.calories || '';
                             const energyNum = (typeof energyStr === 'number' && !isNaN(energyStr)) ? energyStr : (parseFloat(String(energyStr)) || '');
                             const iconTile = recipe.imageUrl
-                                ? `<img class="cms-thumb" src="${recipe.imageUrl}" alt="">`
+                                ? `<img class="cms-thumb" src="${escapeHtml(recipe.imageUrl)}" alt="">`
                                 : `<svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
                             return `
                             <tr>
@@ -1195,17 +1205,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div class="cms-td-title">
                                         <div class="cms-td-icon">${iconTile}</div>
                                         <div>
-                                            <div>${recipe.title}</div>
-                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${recipe.category || 'Recipe'}</div>
+                                            <div>${escapeHtml(recipe.title)}</div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(recipe.category || 'Recipe')}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td>${yieldNum || '—'}</td>
-                                <td>${energyNum ? energyNum + ' kcal' : '—'}</td>
+                                <td>${escapeHtml(yieldNum) || '—'}</td>
+                                <td>${energyNum ? escapeHtml(energyNum) + ' kcal' : '—'}</td>
                                 <td><span class="cms-badge published">Published</span></td>
                                 <td class="cms-actions-cell">
-                                    <button class="cms-btn-icon edit-btn" data-id="${recipe.id}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                    <button class="cms-btn-icon delete delete-btn" data-id="${recipe.id}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                    <button class="cms-btn-icon edit-btn" data-id="${escapeHtml(recipe.id)}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                    <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete"><i data-lucide="trash-2"></i></button>
                                 </td>
                             </tr>`;
                         }).join('')}
@@ -1260,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.style.padding = '0.5rem 0';
             div.style.borderBottom = '1px solid var(--border)';
             div.innerHTML = `
-                <input type="text" data-field="name" class="seamless-input" value="${String(item).replace(/^##\s*/, '').replace(/"/g, '&quot;')}" placeholder="Section header..." style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-main);">
+                <input type="text" data-field="name" class="seamless-input" value="${escapeHtml(String(item).replace(/^##\s*/, ''))}" placeholder="Section header..." style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-main);">
                 <button type="button" class="cms-btn-icon delete" aria-label="Remove" title="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
             `;
             div.querySelector('.delete').addEventListener('click', () => div.remove());
@@ -1275,12 +1285,12 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = 'cms-ingredient-row';
         div.innerHTML = `
             <div class="cms-unit-group">
-                <input type="text" data-field="metric-num" value="${m.num.replace(/"/g, '&quot;')}" placeholder="Amount">
+                <input type="text" data-field="metric-num" value="${escapeHtml(m.num)}" placeholder="Amount">
                 <select data-field="metric-unit">${metricUnits.map(u => `<option${m.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
             </div>
-            <input type="text" data-field="name" class="seamless-input" list="ingredient-suggestions" value="${String(item).replace(/"/g, '&quot;')}" placeholder="Ingredient name" style="font-weight: 500; font-size: 0.95rem;">
+            <input type="text" data-field="name" class="seamless-input" list="ingredient-suggestions" value="${escapeHtml(String(item))}" placeholder="Ingredient name" style="font-weight: 500; font-size: 0.95rem;">
             <div class="cms-unit-group">
-                <input type="text" data-field="imperial-num" value="${imp.num.replace(/"/g, '&quot;')}" placeholder="Amount">
+                <input type="text" data-field="imperial-num" value="${escapeHtml(imp.num)}" placeholder="Amount">
                 <select data-field="imperial-unit">${imperialUnits.map(u => `<option${imp.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
             </div>
             <button type="button" class="cms-btn-icon delete" aria-label="Remove" title="Remove ingredient"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
@@ -1326,14 +1336,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const isHeader = String(text).startsWith('## ');
         if (isHeader) {
             div.innerHTML = `
-                <input type="text" data-field="step" class="seamless-input" value="${String(text).replace(/^##\s*/, '').replace(/"/g, '&quot;')}" placeholder="Section header..." style="flex-grow: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                <input type="text" data-field="step" class="seamless-input" value="${escapeHtml(String(text).replace(/^##\s*/, ''))}" placeholder="Section header..." style="flex-grow: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
                 <button type="button" class="cms-btn-icon delete" aria-label="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
             `;
         } else {
             const num = stepsContainer.querySelectorAll('.cms-step-row textarea').length + 1;
             div.innerHTML = `
                 <span class="step-number">${num}</span>
-                <textarea class="seamless-input seamless-textarea" data-field="step" placeholder="Step..." style="min-height: 50px;">${String(text).replace(/"/g, '&quot;')}</textarea>
+                <textarea class="seamless-input seamless-textarea" data-field="step" placeholder="Step..." style="min-height: 50px;">${escapeHtml(String(text))}</textarea>
                 <button type="button" class="cms-btn-icon delete" aria-label="Remove step" title="Remove step"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
             `;
         }
@@ -1636,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeFoodModal();
         await saveIngredients();
         renderCMSList();
-        statusText.innerHTML = `<span class="status-dot"></span> Saved profile for ${ingredients[idx].name}`;
+        statusText.innerHTML = `<span class="status-dot"></span> Saved profile for ${escapeHtml(ingredients[idx].name)}`;
     });
 
     function closeModal() {

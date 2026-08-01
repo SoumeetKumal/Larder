@@ -970,6 +970,8 @@
         .serving-multiplier { display: inline-flex; align-items: center; gap: 1rem; padding: 0.25rem; border: 1px solid var(--border); border-radius: 2rem; margin-bottom: 1.5rem; margin-left: 1rem; vertical-align: top; }
         .multiplier-btn { background: var(--bg-surface-hover); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); }
         .multiplier-btn:hover { background: var(--border); }
+        .multiplier-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .multiplier-btn:disabled:hover { background: var(--bg-surface-hover); }
         .multiplier-value { font-weight: 600; font-size: 0.9rem; }
         
         .recipe-callout { padding: 1.5rem; border-radius: var(--border-radius); background-color: var(--bg-surface-hover); border-left: 4px solid var(--primary); }

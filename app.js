@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Escape user-controlled text before it reaches innerHTML templates (XSS).
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // --- Theme Logic ---
     const htmlTag = document.documentElement;
     const themeToggle = document.getElementById('themeToggle');
@@ -317,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (cat.toLowerCase() === 'vegetable') iconStr = '<svg class="vector-icon" viewBox="0 0 88 96" style="width: 11px; height: 12px; fill: currentColor;"><use href="#icon-tomato"></use></svg> ';
             else if (cat.toLowerCase() === 'baking') iconStr = '<svg class="vector-icon" viewBox="0 0 137 131" style="width: 13px; height: 12px; fill: currentColor;"><use href="#icon-muffin"></use></svg> ';
             
-            return `<button class="filter-chip ${cat === currentCategory ? 'active' : ''}" data-category="${cat}">${iconStr}${cat}</button>`;
+            return `<button class="filter-chip ${cat === currentCategory ? 'active' : ''}" data-category="${escapeHtml(cat)}">${iconStr}${escapeHtml(cat)}</button>`;
         }).join('');
 
         document.querySelectorAll('.filter-chip').forEach(btn => {
@@ -437,37 +447,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemId = recipe.id || recipe.foodId;
             
             if (isIngredientsPage || recipe.entryType === 'ingredient') {
+                const safeTitle = escapeHtml(title);
+                const safeCategory = escapeHtml(recipe.category || 'Ingredient');
+                const safeImage = escapeHtml(recipe.imageUrl || 'images/icon.png');
+                const safeId = escapeHtml(itemId);
+                const safeEnergy = escapeHtml(energy);
+                const safeProtein = escapeHtml(recipe.proteinG);
+                const safeFat = escapeHtml(recipe.fatG);
                 return `
-                <div class="ingredient-card" data-id="${itemId}" role="listitem" tabindex="0">
+                <div class="ingredient-card" data-id="${safeId}" role="listitem" tabindex="0">
                     <div class="ingredient-card-visual" style="background: var(--surface-hover);">
-                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div class="ingredient-card-body">
-                        <span class="ingredient-card-category" style="color: var(--accent);">${recipe.category || 'Ingredient'}</span>
-                        <h3 class="ingredient-card-name">${title}</h3>
+                        <span class="ingredient-card-category" style="color: var(--accent);">${safeCategory}</span>
+                        <h3 class="ingredient-card-name">${safeTitle}</h3>
                         <div class="ingredient-card-macros">
-                            <span class="macro-pill macro-cal">${energy || '-'} kcal</span>
-                            <span class="macro-pill macro-pro">${recipe.proteinG || '-'}g P</span>
-                            <span class="macro-pill macro-fat">${recipe.fatG || '-'}g F</span>
+                            <span class="macro-pill macro-cal">${escapeHtml(energy) || '-'} kcal</span>
+                            <span class="macro-pill macro-pro">${escapeHtml(recipe.proteinG) || '-'}g P</span>
+                            <span class="macro-pill macro-fat">${escapeHtml(recipe.fatG) || '-'}g F</span>
                         </div>
                     </div>
                 </div>`;
             }
 
+            const safeTitle = escapeHtml(title);
+            const safeCategory = escapeHtml(recipe.category || 'Recipe');
+            const safeImage = escapeHtml(recipe.imageUrl || 'images/icon.png');
+            const safeId = escapeHtml(itemId);
+            const safeDesc = escapeHtml(recipe.description || '');
+            const safeYield = escapeHtml(yieldNum);
+            const safeEnergy = escapeHtml(energyNum);
+
             return `
-            <div class="recipe-card ${themeClass}" data-id="${itemId}" role="listitem" tabindex="0" aria-label="View: ${title}">
+            <div class="recipe-card ${themeClass}" data-id="${safeId}" role="listitem" tabindex="0" aria-label="View: ${safeTitle}">
                 <div class="recipe-image">
                     <div class="recipe-image-inner">
-                        <img src="${recipe.imageUrl || 'images/icon.png'}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
+                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
                     </div>
                 </div>
                 <div class="recipe-content">
-                    <span class="recipe-category">${recipe.category || 'Recipe'}</span>
-                    <h3 class="recipe-title">${title}</h3>
-                    <p class="recipe-desc">${recipe.description || ''}</p>
+                    <span class="recipe-category">${safeCategory}</span>
+                    <h3 class="recipe-title">${safeTitle}</h3>
+                    <p class="recipe-desc">${safeDesc}</p>
                     ${(yieldNum || energyNum) ? `<div class="recipe-meta">
-                        ${yieldNum ? `<span class="recipe-meta-item"><i data-lucide="users" style="width: 14px; height: 14px;"></i> ${yieldNum}</span>` : ''}
-                        ${energyNum ? `<span class="recipe-meta-item"><i data-lucide="flame" style="width: 14px; height: 14px;"></i> ${energyNum} kcal</span>` : ''}
+                        ${yieldNum ? `<span class="recipe-meta-item"><i data-lucide="users" style="width: 14px; height: 14px;"></i> ${safeYield}</span>` : ''}
+                        ${energyNum ? `<span class="recipe-meta-item"><i data-lucide="flame" style="width: 14px; height: 14px;"></i> ${safeEnergy} kcal</span>` : ''}
                     </div>` : ''}
                 </div>
             </div>`;
@@ -515,14 +540,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '<table class="recipe-table"><colgroup><col style="width: 50%"><col style="width: 25%"><col style="width: 25%"></colgroup>';
         
         html += recipe.ingredients.map(ing => {
+            const safeItem = escapeHtml(ing.item);
             if (ing.item.startsWith('## ')) {
-                return `<tr><td colspan="3" style="border-bottom: none;"><h4 style="margin-top: 1rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${ing.item.substring(3)}</h4></td></tr>`;
+                return `<tr><td colspan="3" style="border-bottom: none;"><h4 style="margin-top: 1rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${escapeHtml(ing.item.substring(3))}</h4></td></tr>`;
             }
 
             const profile = recipesData.find(r => r.entryType === 'ingredient' && ing.item.toLowerCase().includes(r.title.toLowerCase()));
             const itemNameHtml = profile 
-                ? `<button class="ingredient-link" data-id="${profile.id}" style="background:none;border:none;padding:0;color:var(--text-main);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s; text-align: left;" onmouseover="this.style.color='var(--accent-sea)'" onmouseout="this.style.color='var(--text-main)'">${ing.item}</button>`
-                : `<span style="font-weight: 500;">${ing.item}</span>`;
+                ? `<button class="ingredient-link" data-id="${escapeHtml(profile.id)}" style="background:none;border:none;padding:0;color:var(--text-main);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s; text-align: left;" onmouseover="this.style.color='var(--accent-sea)'" onmouseout="this.style.color='var(--text-main)'">${safeItem}</button>`
+                : `<span style="font-weight: 500;">${safeItem}</span>`;
 
             let metricAmt = ing.metric ? scaleAmount(ing.metric, scale) : '';
             let imperialAmt = ing.imperial ? scaleAmount(ing.imperial, scale) : '';
@@ -539,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            return `<tr><td>${itemNameHtml}</td><td>${metricAmt}</td><td>${imperialAmt}</td></tr>`;
+            return `<tr><td>${itemNameHtml}</td><td>${escapeHtml(metricAmt)}</td><td>${escapeHtml(imperialAmt)}</td></tr>`;
         }).join('');
         
         html += '</table>';
@@ -666,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="margin-top: 1.25rem;">
                     <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem;">Used In Recipes</h4>
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        ${usedIn.map(name => `<span class="ing-recipe-chip">${name}</span>`).join('')}
+                        ${usedIn.map(name => `<span class="ing-recipe-chip">${escapeHtml(name)}</span>`).join('')}
                     </div>
                 </div>` : '';
 
@@ -732,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabs.push('<button class="ing-tab active" data-tab="overview">Overview</button>');
         panels.push(`<div class="ing-tab-panel active" data-panel="overview">
-                    ${desc ? `<p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;">${desc}</p>` : ''}
+                    ${desc ? `<p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem;">${escapeHtml(desc)}</p>` : ''}
                     <div class="ing-macro-bar">
                         <div class="ing-macro-item"><span class="ing-macro-value" style="color: ${accent};">${kcalVal}</span><span class="ing-macro-label">kcal</span></div>
                         <div class="ing-macro-divider"></div>
@@ -747,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabs.push('<button class="ing-tab" data-tab="nutrition">Nutrition</button>');
         panels.push(`<div class="ing-tab-panel" data-panel="nutrition">
-                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem;">Per ${serving} Serving</h4>
+                    <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem;">Per ${escapeHtml(serving)} Serving</h4>
                     ${macroBar}
                     ${vitaminsFold}
                     ${mineralsFold}
@@ -760,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="ing-info-card">
                             <span class="ing-info-label"><i data-lucide="banknote" style="width: 14px; height: 14px;"></i> Average Price</span>
-                            <span class="ing-info-value" style="font-size: 1.4rem; font-weight: 700; color: ${accent};">${recipe.priceCurrency || '₹'} ${recipe.averagePrice} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ ${recipe.servingUnit || '100g'}</span></span>
+                            <span class="ing-info-value" style="font-size: 1.4rem; font-weight: 700; color: ${accent};">${escapeHtml(recipe.priceCurrency || '₹')} ${recipe.averagePrice} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ ${escapeHtml(recipe.servingUnit || '100g')}</span></span>
                         </div>
                     </div>
                 </div>`);
@@ -774,8 +800,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg class="vector-icon" viewBox="${vis.vb}" style="width: ${vis.w}px; height: ${vis.h}px; fill: ${accent};"><use href="${vis.href}"></use></svg>
                     </div>
                     <div>
-                        <h2 class="recipe-full-title" style="margin-bottom: 0.1rem; color: ${accent};">${title.toUpperCase()}</h2>
-                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">${category}</p>
+                        <h2 class="recipe-full-title" style="margin-bottom: 0.1rem; color: ${accent};">${escapeHtml(title.toUpperCase())}</h2>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(category)}</p>
                     </div>
                 </div>
                 <div class="ing-tabs" id="ingTabs">
@@ -806,18 +832,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const scaledServes = (baseYield != null) ? fmtAmount(baseYield * currentScale) : null;
         const recipeTime = getRecipeTime(recipe);
 
+        // Servings stepper: adjust by exactly one serving, never below 1
+        let minusScale = null, plusScale = null, minusDisabled = true, plusDisabled = false;
+        if (baseYield != null && baseYield > 0) {
+            const curServings = baseYield * currentScale;
+            minusScale = Math.max(1, curServings - 1) / baseYield;
+            plusScale = (curServings + 1) / baseYield;
+            minusDisabled = curServings <= 1;
+            plusDisabled = curServings >= 100;
+        }
+
         let stepsHtml = '';
         if (recipe.steps?.length > 0) {
             let stepNum = 1;
             stepsHtml = recipe.steps.map((step) => {
                 if (step.startsWith('## ')) {
                     stepNum = 1;
-                    return `<h4 style="margin-top: 1.5rem; color: var(--text-main); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${step.substring(3)}</h4>`;
+                    return `<h4 style="margin-top: 1.5rem; color: var(--text-main); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${escapeHtml(step.substring(3))}</h4>`;
                 }
                 const html = `
                 <div class="recipe-step">
                     <span class="step-number">${stepNum}</span>
-                    <p>${step}</p>
+                    <p>${escapeHtml(step)}</p>
                 </div>`;
                 stepNum++;
                 return html;
@@ -830,13 +866,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (recipe.note) {
                 footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
                     <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
-                    <p style="font-size: 0.9rem; line-height: 1.6;">${recipe.note}</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">${escapeHtml(recipe.note)}</p>
                 </div>`;
             }
             if (recipe.variations) {
                 footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
                     <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
-                    <p style="font-size: 0.9rem; line-height: 1.6;">${recipe.variations}</p>
+                    <p style="font-size: 0.9rem; line-height: 1.6;">${escapeHtml(recipe.variations)}</p>
                 </div>`;
             }
             footerHtml += '</div>';
@@ -874,8 +910,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="icon-btn" aria-label="Print Recipe" title="Print Recipe" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px;"></i></button>
                     <button class="icon-btn" aria-label="Download PDF" title="Download as PDF" onclick="window.print()"><i data-lucide="file-down" style="width: 18px; height: 18px;"></i></button>
                 </div>
-                <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${recipe.title}</h2>
-                <p class="recipe-full-desc">${recipe.description || ''}</p>
+                <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${escapeHtml(recipe.title)}</h2>
+                <p class="recipe-full-desc">${escapeHtml(recipe.description || '')}</p>
             </div>
             
             <div class="modal-body" style="padding: 0;">
@@ -886,12 +922,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="stat-group">
                             <div class="stat-item"><span class="stat-label">Serves</span>
                                 <span class="stat-value" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <button class="multiplier-btn scaler-btn" data-scale="${Math.max(0.25, currentScale / 2)}" title="Decrease servings" aria-label="Decrease servings" style="width: 24px; height: 24px;"><i data-lucide="minus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
+                                    <button class="multiplier-btn scaler-btn" data-scale="${minusScale}" title="Decrease servings" aria-label="Decrease servings" ${minusDisabled ? 'disabled' : ''} style="width: 24px; height: 24px;"><i data-lucide="minus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
                                     ${scaledServes != null ? scaledServes : '-'}
-                                    <button class="multiplier-btn scaler-btn" data-scale="${Math.min(16, currentScale * 2)}" title="Increase servings" aria-label="Increase servings" style="width: 24px; height: 24px;"><i data-lucide="plus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
+                                    <button class="multiplier-btn scaler-btn" data-scale="${plusScale}" title="Increase servings" aria-label="Increase servings" ${plusDisabled ? 'disabled' : ''} style="width: 24px; height: 24px;"><i data-lucide="plus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
                                 </span>
                             </div>
-                            ${recipeTime ? `<div class="stat-item"><span class="stat-label">Time</span><span class="stat-value">${recipeTime}</span></div>` : ''}
+                            ${recipeTime ? `<div class="stat-item"><span class="stat-label">Time</span><span class="stat-value">${escapeHtml(recipeTime)}</span></div>` : ''}
                         </div>
                     </div>
                 </div>

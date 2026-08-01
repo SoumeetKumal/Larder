@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -79,7 +79,33 @@ function createWindow() {
         icon: path.join(__dirname, 'build', 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            sandbox: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false
+        }
+    });
+
+    // A compromised renderer must not be able to open windows or navigate the
+    // app away from the local server (e.g. to file:// or a phishing site).
+    // External links are handed to the OS browser instead.
+    const isTrustedLocalUrl = (url) =>
+        url.startsWith('http://localhost:8000/') ||
+        url.startsWith('http://127.0.0.1:8000/');
+
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (/^https?:\/\//i.test(url)) {
+            shell.openExternal(url);
+        }
+        return { action: 'deny' };
+    });
+
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        if (!isTrustedLocalUrl(url)) {
+            event.preventDefault();
+            if (/^https?:\/\//i.test(url)) {
+                shell.openExternal(url);
+            }
         }
     });
 
