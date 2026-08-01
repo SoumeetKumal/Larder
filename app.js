@@ -613,6 +613,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    function getYieldNumber(recipe) {
+        const y = recipe && recipe.macros ? recipe.macros.yield : null;
+        if (!y) return null;
+        const m = String(y).match(/(\d*\.?\d+)/);
+        return m ? parseFloat(m[1]) : null;
+    }
+
+    function fmtAmount(v) {
+        if (v == null || isNaN(v)) return null;
+        return Math.round(v * 10) / 10;
+    }
+
+    function getRecipeTime(recipe) {
+        if (recipe && recipe.time && String(recipe.time).trim()) return String(recipe.time).trim();
+        return null;
+    }
+
     function getCategoryVisual(category) {
         const cat = (category || '').toLowerCase();
         if (cat.includes('seafood') || cat.includes('fish') || cat.includes('shell')) return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 32, h: 16 };
@@ -785,6 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let stdMacros = getStandardMacros(recipe);
         let ingredientsHtml = renderIngredientsHTML(recipe, currentScale);
 
+        const baseYield = getYieldNumber(recipe);
+        const scaledServes = (baseYield != null) ? fmtAmount(baseYield * currentScale) : null;
+        const recipeTime = getRecipeTime(recipe);
+
         let stepsHtml = '';
         if (recipe.steps?.length > 0) {
             let stepNum = 1;
@@ -850,8 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modalBody.innerHTML = `
             <div class="modal-header">
                 <div class="modal-actions no-print">
-                    <button class="icon-btn" aria-label="Print Recipe" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px;"></i></button>
-                    <button class="icon-btn" aria-label="Download PDF" onclick="window.print()"><i data-lucide="file-down" style="width: 18px; height: 18px;"></i></button>
+                    <button class="icon-btn" aria-label="Print Recipe" title="Print Recipe" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px;"></i></button>
+                    <button class="icon-btn" aria-label="Download PDF" title="Download as PDF" onclick="window.print()"><i data-lucide="file-down" style="width: 18px; height: 18px;"></i></button>
                 </div>
                 <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${recipe.title}</h2>
                 <p class="recipe-full-desc">${recipe.description || ''}</p>
@@ -864,13 +885,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="stat-block-title">Info</span>
                         <div class="stat-group">
                             <div class="stat-item"><span class="stat-label">Serves</span>
-                                <span class="stat-value" style="display: flex; align-items: center; gap: 0.5rem;" id="ingredients-wrapper-controls">
-                                    <button class="multiplier-btn scaler-btn" data-scale="${currentScale <= 1 ? 0.5 : 1}" style="width: 24px; height: 24px;"><i data-lucide="minus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
-                                    ${recipe.macros?.yield || '-'}
-                                    <button class="multiplier-btn scaler-btn" data-scale="${currentScale >= 1 ? 2 : 1}" style="width: 24px; height: 24px;"><i data-lucide="plus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
+                                <span class="stat-value" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <button class="multiplier-btn scaler-btn" data-scale="${Math.max(0.25, currentScale / 2)}" title="Decrease servings" aria-label="Decrease servings" style="width: 24px; height: 24px;"><i data-lucide="minus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
+                                    ${scaledServes != null ? scaledServes : '-'}
+                                    <button class="multiplier-btn scaler-btn" data-scale="${Math.min(16, currentScale * 2)}" title="Increase servings" aria-label="Increase servings" style="width: 24px; height: 24px;"><i data-lucide="plus" style="pointer-events:none; width: 12px; height: 12px;"></i></button>
                                 </span>
                             </div>
-                            <div class="stat-item"><span class="stat-label">Time</span><span class="stat-value">${recipe.time || '-'}</span></div>
+                            ${recipeTime ? `<div class="stat-item"><span class="stat-label">Time</span><span class="stat-value">${recipeTime}</span></div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -883,6 +904,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="stat-item"><span class="stat-label">Carb</span><span class="stat-value">${stdMacros ? stdMacros.display.carbs : '-'}</span></div>
                             <div class="stat-item"><span class="stat-label">Protein</span><span class="stat-value">${stdMacros ? stdMacros.display.protein : '-'}</span></div>
                             <div class="stat-item"><span class="stat-label">Fat</span><span class="stat-value">${stdMacros ? stdMacros.display.fat : '-'}</span></div>
+                            <div class="stat-item" style="justify-content: center; align-items: center; padding-top: 0.75rem;">
+                                <button class="nutrition-info-btn" aria-label="View Full Nutrition" title="More nutrition info" style="background:var(--bg-surface-hover); border:1px solid var(--border); cursor:pointer; color:var(--text-muted); display:flex; padding: 0.4rem; border-radius: 50%; transition: all 0.2s ease;" onmouseover="this.style.borderColor='${headerColor}'; this.style.color='${headerColor}';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-muted)';">
+                                    <i data-lucide="info" style="width: 16px; height: 16px; pointer-events: none;"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -918,15 +944,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        const wrapper = document.getElementById('ingredients-wrapper');
-        if (wrapper) {
-            wrapper.querySelectorAll('.scaler-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    currentScale = parseFloat(e.target.dataset.scale);
-                    wrapper.innerHTML = renderIngredientsHTML(currentRecipe, currentScale);
-                    attachModalListeners();
-                });
+        modalBody.querySelectorAll('.scaler-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const scale = parseFloat(e.currentTarget.dataset.scale);
+                if (!isNaN(scale) && scale > 0) {
+                    currentScale = scale;
+                    buildModalContent();
+                }
             });
+        });
+
+        const nutBtn = modalBody.querySelector('.nutrition-info-btn');
+        if (nutBtn) {
+            nutBtn.addEventListener('click', () => openNutritionDrawer(currentRecipe));
         }
 
         const ingTabBar = modalBody.querySelector('.ing-tabs');
@@ -945,6 +975,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let nutritionDrawerReady = false;
+    function ensureNutritionDrawer() {
+        if (nutritionDrawerReady) return;
+        nutritionDrawerReady = true;
+        const overlay = document.createElement('div');
+        overlay.className = 'drawer-overlay';
+        overlay.id = 'nutritionDrawerOverlay';
+        const drawer = document.createElement('div');
+        drawer.className = 'nutrition-drawer';
+        drawer.id = 'nutritionDrawer';
+        drawer.innerHTML = '<div class="drawer-header"><h3>Nutrition Facts</h3><button class="modal-close" aria-label="Close nutrition facts" title="Close" style="position: static; flex-shrink: 0;"><i data-lucide="x"></i></button></div><div class="drawer-content" id="nutritionDrawerContent"></div>';
+        document.body.appendChild(overlay);
+        document.body.appendChild(drawer);
+        drawer.querySelector('.modal-close').addEventListener('click', closeNutritionDrawer);
+        overlay.addEventListener('click', closeNutritionDrawer);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNutritionDrawer(); });
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    function openNutritionDrawer(recipe) {
+        ensureNutritionDrawer();
+        const content = document.getElementById('nutritionDrawerContent');
+        const sm = getStandardMacros(recipe);
+        const norm = sm ? sm.normalized : null;
+
+        const rows = [];
+        const addRow = (cls, label, value, pct) => {
+            rows.push('<div class="nut-row ' + cls + '"><span>' + label + (value != null ? ' <span class="nut-value">' + value + '</span>' : '') + '</span>' + (pct != null ? '<span class="nut-pct">' + pct + '%</span>' : '') + '</div>');
+        };
+
+        if (norm && (norm.energy || norm.fat || norm.carbs || norm.protein)) {
+            if (norm.energy) addRow('main', 'Calories', fmtAmount(norm.energy) + ' kcal', null);
+            if (norm.fat) addRow('main', 'Total Fat', fmtAmount(norm.fat) + 'g', Math.round(norm.fat / 78 * 100));
+            if (norm.carbs) addRow('main', 'Total Carbohydrates', fmtAmount(norm.carbs) + 'g', Math.round(norm.carbs / 275 * 100));
+            if (norm.protein) addRow('main', 'Protein', fmtAmount(norm.protein) + 'g', Math.round(norm.protein / 50 * 100));
+        }
+
+        content.innerHTML = rows.length
+            ? '<p style="font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; margin-bottom: 0;">Amount Per Serving</p><div class="nutrition-card">' + rows.join('') + '</div><p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1.5rem; line-height: 1.5;">* The % Daily Value (DV) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice.</p>'
+            : '<p style="color: var(--text-muted); line-height: 1.6;">No detailed nutrition breakdown available for this recipe.</p>';
+
+        document.getElementById('nutritionDrawer').classList.add('active');
+        document.getElementById('nutritionDrawerOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeNutritionDrawer() {
+        const d = document.getElementById('nutritionDrawer');
+        const o = document.getElementById('nutritionDrawerOverlay');
+        if (d) d.classList.remove('active');
+        if (o) o.classList.remove('active');
+        if (!modal.classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    }
+
     function openModal(id) {
         const recipe = recipesData.find(r => String(r.id || r.foodId) === String(id));
         if (!recipe) return;
@@ -958,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeModal() {
         modal.classList.remove('active');
+        closeNutritionDrawer();
         document.body.style.overflow = '';
         if (lastFocusedElement) {
             lastFocusedElement.focus();

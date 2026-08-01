@@ -2237,3 +2237,213 @@
             min-height: 36px;
         }
     }
+
+    /* ===== Print / PDF styles (recipe modal) ===== */
+    @media print {
+        @page {
+            margin: 1.5cm 1.8cm;
+            size: A4;
+        }
+
+        * {
+            color: #1a1a1a !important;
+            background: #fff !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        html, body {
+            background: #fff !important;
+            font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            overflow: visible !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Hide everything except the open recipe modal */
+        .top-nav,
+        .filter-toolbar,
+        .filter-dropdown,
+        #recipe-grid,
+        .pagination-bar,
+        .site-footer,
+        .vd-footer,
+        .gdpr-banner,
+        .modal-close,
+        .modal-actions,
+        .icon-btn,
+        .search-wrap,
+        .search-bar-wrap,
+        .theme-toggle,
+        .nutrition-drawer,
+        .drawer-overlay,
+        .scaler-btn,
+        .multiplier-btn,
+        .nutrition-info-btn,
+        .no-print {
+            display: none !important;
+        }
+
+        /* Turn the fixed overlay into static flow so it fills the page */
+        #recipe-modal.modal-overlay,
+        #recipe-modal.modal-overlay.active {
+            display: block !important;
+            position: static !important;
+            background: #fff !important;
+            z-index: auto !important;
+            overflow: visible !important;
+            backdrop-filter: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #modal-container.modal-content {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            max-height: none !important;
+            overflow: visible !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            transform: none !important;
+            background: #fff !important;
+        }
+
+        #modal-body {
+            overflow: visible !important;
+            padding: 0 !important;
+            display: block !important;
+            background: #fff !important;
+        }
+
+        /* Header */
+        .modal-header {
+            text-align: center;
+            padding: 0 0 1.2rem !important;
+            position: relative !important;
+        }
+        .recipe-full-title {
+            font-size: 20pt;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+        .recipe-full-desc {
+            color: #555 !important;
+            font-style: italic;
+            margin: 0;
+        }
+
+        /* Stack columns full width, remove borders */
+        .recipe-ingredients-col,
+        .recipe-instructions-col {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0.75rem 0 !important;
+            border: none !important;
+        }
+
+        /* Info + per-serving stat blocks */
+        .stat-block {
+            border: 1px solid #ddd !important;
+            border-top: 2px solid #1a1a1a !important;
+            border-radius: 0 !important;
+            width: 100% !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 0.5rem !important;
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+        .stat-block-title {
+            border-right: 1px dashed #ccc !important;
+            border-bottom: none !important;
+            padding-right: 1rem !important;
+            margin-right: 1rem !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+            width: auto !important;
+            letter-spacing: 1px;
+            color: #666 !important;
+        }
+        .stat-group {
+            flex-wrap: wrap;
+            gap: 1.5rem !important;
+        }
+        .stat-value {
+            font-weight: 700;
+            color: #1a1a1a !important;
+        }
+
+        /* Section pills */
+        .section-pill {
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 1.2rem 0 0.5rem !important;
+            font-size: 11pt;
+            letter-spacing: 1px;
+        }
+        .section-pill svg {
+            display: none !important;
+        }
+
+        /* Ingredients table */
+        .recipe-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .recipe-table td {
+            padding: 0.3rem 0.4rem;
+            border-bottom: 1px solid #e5e5e5 !important;
+            vertical-align: top;
+        }
+
+        /* Steps */
+        .recipe-step {
+            padding: 0.3rem 0;
+        }
+        .recipe-step p {
+            margin: 0;
+        }
+        .step-number {
+            font-weight: 700;
+            color: #1a1a1a !important;
+        }
+
+        /* Note / variations callouts */
+        .recipe-footer-col {
+            padding: 0.5rem 0 0 !important;
+            gap: 1rem !important;
+        }
+        .recipe-callout {
+            border-left: 3px solid #1a1a1a !important;
+            border-radius: 0 !important;
+            padding: 0.75rem 1rem !important;
+        }
+        .callout-title {
+            color: #1a1a1a !important;
+            letter-spacing: 1px;
+        }
+        .callout-title i {
+            display: none !important;
+        }
+
+        /* Avoid orphaned headings */
+        h3, h4 {
+            break-after: avoid;
+        }
+        .recipe-step,
+        .recipe-table tr {
+            break-inside: avoid;
+        }
+    }
