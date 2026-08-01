@@ -62,6 +62,58 @@
                         <!-- Categories injected here -->
                     </div>
                 </div>
+
+                <div class="filter-section">
+                    <div class="filter-section-title">Nutrition (per serving)</div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Calories</span>
+                            <span class="range-label-values" id="filter-cal-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-cal-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-cal-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="2000" step="50" value="0" id="slider-cal-min" class="macro-slider-min">
+                            <input type="range" min="0" max="2000" step="50" value="2000" id="slider-cal-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Carbs</span>
+                            <span class="range-label-values" id="filter-carbs-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-carbs-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-carbs-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="200" step="5" value="0" id="slider-carbs-min" class="macro-slider-min">
+                            <input type="range" min="0" max="200" step="5" value="200" id="slider-carbs-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Protein</span>
+                            <span class="range-label-values" id="filter-protein-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-protein-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-protein-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="150" step="5" value="0" id="slider-protein-min" class="macro-slider-min">
+                            <input type="range" min="0" max="150" step="5" value="150" id="slider-protein-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Fat</span>
+                            <span class="range-label-values" id="filter-fat-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-fat-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-fat-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="150" step="5" value="0" id="slider-fat-min" class="macro-slider-min">
+                            <input type="range" min="0" max="150" step="5" value="150" id="slider-fat-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -116,7 +168,7 @@
                 <img src="images/icon.png" alt="Larder Logo">
                 Larder
             </div>
-            <p>Your personal recipe manager, meal planner, and kitchen companion — built for home cooks who love to organise, experiment, and eat well.</p>
+            <p>Your personal recipe manager and kitchen companion — built for home cooks who love to organise, experiment, and eat well.</p>
         </div>
         <div class="vd-footer-col">
             <h4>Navigate</h4>

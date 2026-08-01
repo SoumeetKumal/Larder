@@ -118,7 +118,7 @@
         }
 
         .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-        .grid-3, .recipe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+        .grid-3, .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 2rem; }
 
         /* Pagination Bar */
         .pagination-bar {
@@ -648,6 +648,21 @@
         }
         .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
         .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-chip.active .tag-count { color: rgba(255,255,255,0.8); }
+        .tag-count {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-surface-hover);
+            border-radius: 50px;
+            padding: 0 0.4rem;
+            line-height: 1.3;
+        }
+        .filter-empty-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0;
+        }
 
         /* Tag Search Input */
         .tag-search-wrap {
@@ -820,7 +835,87 @@
             border-radius: 50px;
             line-height: 1;
             width: fit-content;
+            background: var(--primary-light);
+            color: var(--primary);
         }
+
+        /* Category theme accents (colour-coded pills) */
+        .theme-sea .recipe-category { background: color-mix(in srgb, var(--accent-sea) 18%, white); color: var(--accent-sea); }
+        .theme-veg .recipe-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .theme-meat .recipe-category { background: color-mix(in srgb, var(--accent-meat) 18%, white); color: var(--accent-meat); }
+        .theme-stock .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .theme-bake .recipe-category { background: color-mix(in srgb, var(--accent-bake) 25%, white); color: #b05a6c; }
+        .theme-jam .recipe-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+        .theme-seafood .recipe-category { background: color-mix(in srgb, var(--accent-sea) 18%, white); color: var(--accent-sea); }
+        .theme-vegetable .recipe-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .theme-vegetables .recipe-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .theme-baking .recipe-category { background: color-mix(in srgb, var(--accent-bake) 25%, white); color: #b05a6c; }
+        .theme-dessert .recipe-category { background: color-mix(in srgb, var(--accent-bake) 25%, white); color: #b05a6c; }
+        .theme-desserts .recipe-category { background: color-mix(in srgb, var(--accent-bake) 25%, white); color: #b05a6c; }
+        .theme-fruit .recipe-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+        .theme-fats-oils .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .theme-nuts-seeds .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .theme-legumes .recipe-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .theme-grains .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .theme-spice .recipe-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+        .theme-spices .recipe-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+        .theme-herbs .recipe-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .theme-condiments .recipe-category { background: color-mix(in srgb, var(--accent-meat) 18%, white); color: var(--accent-meat); }
+        .theme-beverages .recipe-category { background: color-mix(in srgb, var(--accent-sea) 18%, white); color: var(--accent-sea); }
+        .theme-dairy .recipe-category { background: color-mix(in srgb, var(--accent-sea) 18%, white); color: var(--accent-sea); }
+        .theme-uncategorized .recipe-category { background: var(--primary-light); color: var(--primary); }
+        .theme-carbs .recipe-category,
+        .theme-noodles .recipe-category,
+        .theme-cereal .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .theme-protein .recipe-category,
+        .theme-meat .recipe-category,
+        .theme-snacks .recipe-category { background: color-mix(in srgb, var(--accent-meat) 18%, white); color: var(--accent-meat); }
+        .theme-supplements .recipe-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+        .theme-other .recipe-category { background: var(--primary-light); color: var(--primary); }
+        .theme-nutsseeds .recipe-category,
+        .theme-fatsoil .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+
+        [data-theme="dark"] .theme-stock .recipe-category,
+        [data-theme="dark"] .theme-bake .recipe-category,
+        [data-theme="dark"] .theme-dessert .recipe-category,
+        [data-theme="dark"] .theme-desserts .recipe-category,
+        [data-theme="dark"] .theme-fats-oils .recipe-category,
+        [data-theme="dark"] .theme-nuts-seeds .recipe-category,
+        [data-theme="dark"] .theme-grains .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, #131B1D); color: var(--accent-stock); }
+
+        [data-theme="dark"] .theme-veg .recipe-category,
+        [data-theme="dark"] .theme-vegetable .recipe-category,
+        [data-theme="dark"] .theme-vegetables .recipe-category,
+        [data-theme="dark"] .theme-legumes .recipe-category,
+        [data-theme="dark"] .theme-herbs .recipe-category { background: color-mix(in srgb, var(--accent-veg) 22%, #131B1D); }
+
+        [data-theme="dark"] .theme-sea .recipe-category,
+        [data-theme="dark"] .theme-seafood .recipe-category,
+        [data-theme="dark"] .theme-beverages .recipe-category,
+        [data-theme="dark"] .theme-dairy .recipe-category { background: color-mix(in srgb, var(--accent-sea) 22%, #131B1D); }
+
+        [data-theme="dark"] .theme-meat .recipe-category,
+        [data-theme="dark"] .theme-condiments .recipe-category { background: color-mix(in srgb, var(--accent-meat) 22%, #131B1D); }
+
+        [data-theme="dark"] .theme-jam .recipe-category,
+        [data-theme="dark"] .theme-fruit .recipe-category,
+        [data-theme="dark"] .theme-spice .recipe-category,
+        [data-theme="dark"] .theme-spices .recipe-category,
+        [data-theme="dark"] .theme-supplements .recipe-category { background: color-mix(in srgb, var(--accent-jam) 22%, #131B1D); }
+
+        [data-theme="dark"] .theme-stock .recipe-category,
+        [data-theme="dark"] .theme-carbs .recipe-category,
+        [data-theme="dark"] .theme-noodles .recipe-category,
+        [data-theme="dark"] .theme-cereal .recipe-category,
+        [data-theme="dark"] .theme-nutsseeds .recipe-category,
+        [data-theme="dark"] .theme-fatsoil .recipe-category { background: color-mix(in srgb, var(--accent-stock) 25%, #131B1D); color: var(--accent-stock); }
+
+        [data-theme="dark"] .theme-meat .recipe-category,
+        [data-theme="dark"] .theme-protein .recipe-category,
+        [data-theme="dark"] .theme-snacks .recipe-category { background: color-mix(in srgb, var(--accent-meat) 22%, #131B1D); }
+
+        [data-theme="dark"] .theme-other .recipe-category,
+        [data-theme="dark"] .theme-uncategorized .recipe-category { background: color-mix(in srgb, var(--primary) 20%, #131B1D); color: var(--primary-light); }
 
         .recipe-title {
             font-size: 1.25rem;
@@ -1044,7 +1139,63 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            line-height: 1;
+            width: fit-content;
+            background: var(--primary-light);
+            color: var(--primary);
         }
+        .ingredient-card.theme-sea .ingredient-card-category,
+        .ingredient-card.theme-seafood .ingredient-card-category,
+        .ingredient-card.theme-beverages .ingredient-card-category,
+        .ingredient-card.theme-dairy .ingredient-card-category { background: color-mix(in srgb, var(--accent-sea) 18%, white); color: var(--accent-sea); }
+        .ingredient-card.theme-veg .ingredient-card-category,
+        .ingredient-card.theme-vegetable .ingredient-card-category,
+        .ingredient-card.theme-vegetables .ingredient-card-category,
+        .ingredient-card.theme-legumes .ingredient-card-category,
+        .ingredient-card.theme-herbs .ingredient-card-category { background: color-mix(in srgb, var(--accent-veg) 18%, white); color: var(--accent-veg); }
+        .ingredient-card.theme-meat .ingredient-card-category,
+        .ingredient-card.theme-condiments .ingredient-card-category { background: color-mix(in srgb, var(--accent-meat) 18%, white); color: var(--accent-meat); }
+        .ingredient-card.theme-stock .ingredient-card-category,
+        .ingredient-card.theme-fats-oils .ingredient-card-category,
+        .ingredient-card.theme-nuts-seeds .ingredient-card-category,
+        .ingredient-card.theme-grains .ingredient-card-category { background: color-mix(in srgb, var(--accent-stock) 25%, white); color: #9a6b2f; }
+        .ingredient-card.theme-bake .ingredient-card-category,
+        .ingredient-card.theme-baking .ingredient-card-category,
+        .ingredient-card.theme-dessert .ingredient-card-category,
+        .ingredient-card.theme-desserts .ingredient-card-category { background: color-mix(in srgb, var(--accent-bake) 25%, white); color: #b05a6c; }
+        .ingredient-card.theme-jam .ingredient-card-category,
+        .ingredient-card.theme-fruit .ingredient-card-category,
+        .ingredient-card.theme-spice .ingredient-card-category,
+        .ingredient-card.theme-spices .ingredient-card-category { background: color-mix(in srgb, var(--accent-jam) 18%, white); color: var(--accent-jam); }
+
+        [data-theme="dark"] .ingredient-card.theme-sea .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-seafood .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-beverages .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-dairy .ingredient-card-category { background: color-mix(in srgb, var(--accent-sea) 22%, #131B1D); }
+        [data-theme="dark"] .ingredient-card.theme-veg .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-vegetable .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-vegetables .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-legumes .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-herbs .ingredient-card-category { background: color-mix(in srgb, var(--accent-veg) 22%, #131B1D); }
+        [data-theme="dark"] .ingredient-card.theme-meat .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-condiments .ingredient-card-category { background: color-mix(in srgb, var(--accent-meat) 22%, #131B1D); }
+        [data-theme="dark"] .ingredient-card.theme-stock .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-fats-oils .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-nuts-seeds .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-grains .ingredient-card-category { background: color-mix(in srgb, var(--accent-stock) 25%, #131B1D); color: var(--accent-stock); }
+        [data-theme="dark"] .ingredient-card.theme-bake .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-baking .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-dessert .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-desserts .ingredient-card-category { background: color-mix(in srgb, var(--accent-bake) 25%, #131B1D); color: var(--accent-bake); }
+        [data-theme="dark"] .ingredient-card.theme-jam .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-fruit .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-spice .ingredient-card-category,
+        [data-theme="dark"] .ingredient-card.theme-spices .ingredient-card-category { background: color-mix(in srgb, var(--accent-jam) 22%, #131B1D); }
         .ingredient-card-name {
             font-size: 1.15rem;
             font-weight: 800;

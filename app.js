@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#39;');
     }
 
+    // Parse recipe.time strings ("25 mins", "1 hr 30 mins", "45 minutes") into minutes.
+    function parseTimeToMinutes(timeStr) {
+        if (!timeStr) return null;
+        const s = String(timeStr).toLowerCase();
+        let total = 0;
+        const hrMatch = s.match(/(\d+)\s*(?:hr|hrs|hour|hours)/);
+        const minMatch = s.match(/(\d+)\s*(?:min|mins|minute|minutes)/);
+        if (hrMatch) total += parseInt(hrMatch[1], 10) * 60;
+        if (minMatch) total += parseInt(minMatch[1], 10);
+        return total > 0 ? total : null;
+    }
+
     // --- Theme Logic ---
     const htmlTag = document.documentElement;
     const themeToggle = document.getElementById('themeToggle');
@@ -104,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRecipe = null;
     let currentScale = 1;
     let lastFocusedElement = null;
+    let selectedTags = new Set();
     
     const isIngredientsPage = window.location.pathname.includes('ingredients');
 
@@ -194,14 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
         cal: { min: null, max: null },
         carbs: { min: null, max: null },
         protein: { min: null, max: null },
-        fat: { min: null, max: null }
+        fat: { min: null, max: null },
+        time: { min: null, max: null }
     };
 
     const sliderConfigs = {
         cal: { min: 0, max: 2000, step: 50 },
         carbs: { min: 0, max: 200, step: 5 },
         protein: { min: 0, max: 150, step: 5 },
-        fat: { min: 0, max: 150, step: 5 }
+        fat: { min: 0, max: 150, step: 5 },
+        time: { min: 0, max: 180, step: 5 }
     };
 
     function updateMacroBadge() {
@@ -210,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(macroFilters).forEach(k => {
             if (macroFilters[k].min !== null || macroFilters[k].max !== null) count++;
         });
+        count += selectedTags.size;
         if (filterBadge) {
             filterBadge.textContent = count;
             filterBadge.style.display = count > 0 ? 'flex' : 'none';
@@ -250,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 macroFilters[key].min = isMinModified ? minVal : null;
                 macroFilters[key].max = isMaxModified ? maxVal : null;
 
-                const unit = key === 'cal' ? ' kcal' : 'g';
+                const unit = key === 'cal' ? ' kcal' : key === 'time' ? ' min' : 'g';
                 
                 if (isMinModified && isMaxModified) {
                     valDisplay.textContent = `${minVal}${unit} – ${maxVal}${unit}`;
@@ -298,6 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             const firstChip = document.querySelector('.filter-chip[data-category="All"]');
             if (firstChip) firstChip.classList.add('active');
+            selectedTags.clear();
+            const tagSearchInputEl = document.getElementById('tagSearchInput');
+            if (tagSearchInputEl) tagSearchInputEl.value = '';
+            renderTagChips();
             updateMacroBadge();
             currentPage = 1;
             renderGrid();
@@ -311,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         renderFilters();
+        renderTagChips();
         renderGrid();
     }
 
@@ -342,6 +363,74 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Derive a small, data-backed tag set for each item so the Tags section
+    // stays functional even when entries carry no explicit tags field.
+    function getRecipeTags(recipe) {
+        const tags = [];
+        const std = getStandardMacros(recipe);
+        if (std) {
+            const n = std.normalized;
+            if (n.protein >= 20) tags.push('High Protein');
+            if (n.carbs >= 20) tags.push('Carbs');
+            if (n.fat >= 20) tags.push('High Fat');
+            if (n.energy >= 500) tags.push('High Energy');
+        }
+        const minutes = parseTimeToMinutes(recipe.time);
+        if (minutes !== null && minutes <= 30) tags.push('Quick Meal');
+        if (minutes !== null && minutes >= 60) tags.push('Long Cook');
+        const cat = (recipe.category || '').toLowerCase();
+        if (cat === 'seafood') tags.push('Seafood');
+        if (cat === 'vegetable') tags.push('Vegetarian');
+        if (cat === 'baking') tags.push('Baking');
+        return tags;
+    }
+
+    function renderTagChips() {
+        const tagChipsEl = document.getElementById('tagChips');
+        const tagSearchInputEl = document.getElementById('tagSearchInput');
+        if (!tagChipsEl) return;
+
+        const relevantRecipes = isIngredientsPage
+            ? recipesData
+            : recipesData.filter(r => r.entryType !== 'ingredient');
+
+        const tagCounts = {};
+        relevantRecipes.forEach(r => {
+            getRecipeTags(r).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+        });
+
+        const query = (tagSearchInputEl ? tagSearchInputEl.value : '').toLowerCase();
+        const tags = Object.keys(tagCounts)
+            .filter(t => !query || t.toLowerCase().includes(query))
+            .sort();
+
+        tagChipsEl.innerHTML = tags.map(tag => {
+            const active = selectedTags.has(tag);
+            return `<button class="filter-chip${active ? ' active' : ''}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}<span class="tag-count">${tagCounts[tag]}</span></button>`;
+        }).join('') || `<span class="filter-empty-hint">No matching tags</span>`;
+
+        tagChipsEl.querySelectorAll('.filter-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tag = btn.dataset.tag;
+                if (selectedTags.has(tag)) {
+                    selectedTags.delete(tag);
+                    btn.classList.remove('active');
+                } else {
+                    selectedTags.add(tag);
+                    btn.classList.add('active');
+                }
+                updateMacroBadge();
+                currentPage = 1;
+                renderGrid();
+            });
+        });
+
+        if (tagSearchInputEl && !tagSearchInputEl.dataset.bound) {
+            tagSearchInputEl.dataset.bound = '1';
+            tagSearchInputEl.addEventListener('input', renderTagChips);
+        }
+    }
+
     function renderGrid() {
         let filtered = recipesData;
         
@@ -357,16 +446,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (searchQuery) {
             filtered = filtered.filter(r => {
-                const titleMatch = r.title.toLowerCase().includes(searchQuery);
-                const descMatch = (r.description || '').toLowerCase().includes(searchQuery);
-                const ingMatch = (r.ingredients || []).some(ing => ing.item.toLowerCase().includes(searchQuery));
+                const titleMatch = (r.title || r.name || '').toLowerCase().includes(searchQuery);
+                const descMatch = (r.description || r.notes || '').toLowerCase().includes(searchQuery);
+                const ingMatch = (r.ingredients || []).some(ing => (ing.item || '').toLowerCase().includes(searchQuery));
                 return titleMatch || descMatch || ingMatch;
             });
         }
 
+        // Apply Tag Filters (AND semantics)
+        if (selectedTags.size > 0) {
+            filtered = filtered.filter(r => {
+                const tags = getRecipeTags(r);
+                return [...selectedTags].every(t => tags.includes(t));
+            });
+        }
+
+        // Apply Time Filter (independent of macros; recipes may have time but no macros)
+        if (macroFilters.time.min !== null || macroFilters.time.max !== null) {
+            filtered = filtered.filter(r => {
+                const minutes = parseTimeToMinutes(r.time);
+                if (minutes === null) return false;
+                if (macroFilters.time.min !== null && minutes < macroFilters.time.min) return false;
+                if (macroFilters.time.max !== null && minutes > macroFilters.time.max) return false;
+                return true;
+            });
+        }
+
         // Apply Macro Filters
-        const hasAnyFilter = Object.values(macroFilters).some(f => f.min !== null || f.max !== null);
-        if (hasAnyFilter) {
+        const hasAnyMacroFilter = ['cal', 'carbs', 'protein', 'fat'].some(k =>
+            macroFilters[k].min !== null || macroFilters[k].max !== null);
+        if (hasAnyMacroFilter) {
             filtered = filtered.filter(r => {
                 const std = getStandardMacros(r);
                 if (!std) return false;
@@ -455,12 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeProtein = escapeHtml(recipe.proteinG);
                 const safeFat = escapeHtml(recipe.fatG);
                 return `
-                <div class="ingredient-card" data-id="${safeId}" role="listitem" tabindex="0">
+                <div class="ingredient-card ${themeClass}" data-id="${safeId}" role="listitem" tabindex="0">
                     <div class="ingredient-card-visual" style="background: var(--surface-hover);">
                         <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div class="ingredient-card-body">
-                        <span class="ingredient-card-category" style="color: var(--accent);">${safeCategory}</span>
+                        <span class="ingredient-card-category">${safeCategory}</span>
                         <h3 class="ingredient-card-name">${safeTitle}</h3>
                         <div class="ingredient-card-macros">
                             <span class="macro-pill macro-cal">${escapeHtml(energy) || '-'} kcal</span>

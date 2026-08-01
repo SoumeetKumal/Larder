@@ -64,6 +64,33 @@
                 </div>
 
                 <div class="filter-section">
+                    <div class="filter-section-title">Tags</div>
+                    <div class="tag-search-wrap">
+                        <i data-lucide="search" class="tag-search-icon"></i>
+                        <input type="text" class="tag-search-input" id="tagSearchInput" placeholder="Search tags...">
+                    </div>
+                    <div class="filter-chips" id="tagChips">
+                        <!-- Tags injected here -->
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-section-title">Prep + Cook Time</div>
+                    <div class="range-slider-group">
+                        <div class="range-label">
+                            <span class="range-label-text">Time</span>
+                            <span class="range-label-values" id="filter-time-val">Any</span>
+                        </div>
+                        <div class="dual-range" id="slider-time-container">
+                            <div class="range-track"></div>
+                            <div class="range-fill" id="slider-time-fill" style="left: 0%; width: 100%;"></div>
+                            <input type="range" min="0" max="180" step="5" value="0" id="slider-time-min" class="macro-slider-min">
+                            <input type="range" min="0" max="180" step="5" value="180" id="slider-time-max" class="macro-slider-max">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
                     <div class="filter-section-title">Nutrition (per serving)</div>
                     <div class="range-slider-group">
                         <div class="range-label">
@@ -168,7 +195,7 @@
                 <img src="images/icon.png" alt="Larder Logo">
                 Larder
             </div>
-            <p>Your personal recipe manager, meal planner, and kitchen companion — built for home cooks who love to organise, experiment, and eat well.</p>
+            <p>Your personal recipe manager and kitchen companion — built for home cooks who love to organise, experiment, and eat well.</p>
         </div>
         <div class="vd-footer-col">
             <h4>Navigate</h4>
