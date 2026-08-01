@@ -21,6 +21,8 @@
       "**/*",
       "!dist/**",
       "!docs/**",
+      "!data/**",
+      "!_archive/**",
       "!node_modules/.cache/**"
     ],
     "extraResources": [
