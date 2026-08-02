@@ -32,12 +32,39 @@
                 <h1>Recipes</h1>
                 <div class="cms-header-status" id="status-text"><i data-lucide="zap" style="width: 14px; height: 14px;"></i> Connecting...</div>
             </div>
-            <div class="cms-actions">
-                <div class="cms-search">
-                    <i data-lucide="search"></i>
-                    <input type="text" id="cms-search" placeholder="Search recipes, ingredients, tags...">
+            <div class="cms-actions" id="cms-actions">
+                <div class="cms-search-anchor">
+                    <button type="button" class="search-trigger" id="cms-search-trigger" title="Search" aria-label="Search">
+                        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    <div class="search-bar-wrap collapsible" id="cms-search-wrap">
+                        <i data-lucide="search" class="search-bar-icon"></i>
+                        <input type="text" class="search-input" id="cms-search" placeholder="Search recipes, ingredients, tags...">
+                        <button class="search-close" id="cms-search-close" aria-label="Clear search"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
+                    </div>
                 </div>
-                <button class="btn primary" id="add-recipe-btn" style="display: flex; align-items: center; gap: 0.5rem; height: 42px;"><i data-lucide="plus" style="width: 18px; height: 18px;"></i> Add Entry</button>
+                <button type="button" class="filter-trigger" id="cms-filter-trigger" title="Filters" aria-label="Filters">
+                    <i data-lucide="sliders-horizontal" style="width: 18px; height: 18px;"></i>
+                    <span class="filter-badge" id="cms-filter-badge">0</span>
+                </button>
+                <button type="button" class="filter-trigger" id="cms-view-toggle" title="Toggle grid/list view" aria-label="Toggle view">
+                    <i data-lucide="layout-grid" style="width: 18px; height: 18px;" id="cms-view-toggle-icon"></i>
+                </button>
+                <button class="btn primary add-circle-btn" id="add-recipe-btn" title="Add" aria-label="Add"><i data-lucide="plus" style="width: 18px; height: 18px;"></i><span id="add-btn-label" style="display: none;">Add Recipe</span></button>
+                <div class="global-filter-dropdown" id="cms-filter-dropdown">
+                    <div class="filter-dropdown-header">
+                        <h4>Filters</h4>
+                        <button type="button" class="filter-reset" id="cms-filter-reset">Reset</button>
+                    </div>
+                    <div class="filter-section">
+                        <div class="filter-section-title">Category</div>
+                        <div class="filter-chips" id="cms-filter-category-chips"></div>
+                    </div>
+                    <div class="filter-section">
+                        <div class="filter-section-title">Status</div>
+                        <div class="filter-chips" id="cms-filter-status-chips"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -80,7 +107,12 @@
                                     <input type="text" id="macro-yield" class="seamless-input stat-value" placeholder="e.g. 4 Servings" style="width: 110px; text-align: center;">
                                 </div>
                                 <div class="stat-item"><span class="stat-label">Time</span>
-                                    <input type="text" id="recipe-time" class="seamless-input stat-value" placeholder="e.g. 25 Mins" style="width: 110px; text-align: center;">
+                                    <div style="display: flex; align-items: baseline; justify-content: center; gap: 0.25rem;">
+                                        <input type="number" id="recipe-time-hours" class="seamless-input stat-value" placeholder="0" min="0" value="0" style="width: 65px; text-align: right;">
+                                        <span class="cms-macro-unit" data-for="recipe-time-hours">h</span>
+                                        <input type="number" id="recipe-time-mins" class="seamless-input stat-value" placeholder="0" min="0" max="59" value="0" style="width: 65px; text-align: right;">
+                                        <span class="cms-macro-unit" data-for="recipe-time-mins">min</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -114,6 +146,7 @@
                                     </div>
                                 </div>
                             </div>
+                            <button type="button" id="macro-auto-calc-btn" class="btn secondary" style="margin-left: auto; padding: 0.4rem 0.8rem; font-size: 0.78rem;"><i data-lucide="calculator" style="width: 14px; height: 14px;"></i> Auto-calc from ingredients</button>
                         </div>
                     </div>
 
@@ -400,12 +433,15 @@
     <div id="meal-assign-modal" class="slide-panel-overlay">
         <div class="slide-panel" onclick="event.stopPropagation()">
             <div class="slide-panel-header">
-                <h3 id="meal-assign-title" style="margin: 0; color: var(--text-main);">Assign Meal</h3>
+                <div>
+                    <h3 id="meal-assign-title" style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 700;">Assign Meal</h3>
+                    <span id="meal-assign-subtitle" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Select options for this slot</span>
+                </div>
                 <button class="modal-close" id="meal-assign-cancel" aria-label="Close panel" style="position: static; transform: none;"><i data-lucide="x"></i></button>
             </div>
             <div class="slide-panel-body">
                 <div style="margin-bottom: 1.5rem; text-align: center;">
-                    <span id="meal-assign-subtitle" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Select options for this slot</span>
+                    <span id="meal-assign-slot-pill" style="font-size: 0.75rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--primary-light); border: 1px solid var(--primary); padding: 0.3rem 0.9rem; border-radius: 20px;">—</span>
                 </div>
 
                 <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-surface-hover); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
@@ -424,7 +460,7 @@
                     <label for="meal-assign-servings" style="font-weight: 600; font-size: 0.85rem;">Servings</label>
                     <div style="display: flex; align-items: center; gap: 0.6rem;">
                         <button type="button" id="servings-decrement" class="btn secondary" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">−</button>
-                        <input type="number" id="meal-assign-servings" value="2" min="1" max="20" style="width: 56px; text-align: center; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.9rem;">
+                        <input type="number" id="meal-assign-servings" value="1" min="1" max="20" style="width: 56px; text-align: center; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.9rem;">
                         <button type="button" id="servings-increment" class="btn secondary" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">+</button>
                     </div>
                 </div>

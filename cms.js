@@ -98,6 +98,70 @@ document.addEventListener('DOMContentLoaded', () => {
         return composeAmount(input.value.trim(), unit);
     }
 
+    // --- Time helpers (compose/parse "1 hr 30 mins", "25 mins") ---
+    function parseTimeToHM(timeStr) {
+        const s = String(timeStr || '').toLowerCase();
+        const h = s.match(/(\d+(?:\.\d+)?)\s*(?:hr|hrs|hour|hours)/);
+        const m = s.match(/(\d+)\s*(?:min|mins|minute|minutes)/);
+        return {
+            hours: h ? Math.round(parseFloat(h[1])) : 0,
+            mins: m ? parseInt(m[1], 10) : 0
+        };
+    }
+    function composeTimeString(hours, mins) {
+        hours = parseInt(hours, 10) || 0;
+        mins = parseInt(mins, 10) || 0;
+        if (hours === 0 && mins === 0) return '';
+        const parts = [];
+        if (hours > 0) parts.push(hours === 1 ? '1 hr' : `${hours} hrs`);
+        if (mins > 0) parts.push(mins === 1 ? '1 min' : `${mins} mins`);
+        return parts.join(' ');
+    }
+
+    // --- Auto-calc recipe macros by summing DB ingredient macros ---
+    function recalcMacrosFromIngredients() {
+        if (!ingContainer) return;
+        const rows = ingContainer.querySelectorAll('.cms-ingredient-row');
+        const totals = { energy: 0, carbs: 0, protein: 0, fat: 0 };
+        const unitToG = { g: 1, kg: 1000, ml: 1, L: 1000 };
+        const imperialG = { tbsp: 15, tsp: 5, cups: 240, cup: 240, whole: 100, can: 200, cans: 200, cloves: 5, sprig: 1, sprigs: 1, pinch: 0.3, medium: 100, small: 50, large: 120, slice: 30, piece: 50 };
+        rows.forEach(row => {
+            const foodId = row.dataset.foodId;
+            if (!foodId) return;
+            const f = ingredients.find(x => x.foodId === foodId);
+            if (!f) return;
+            let grams = 0;
+            const mNum = parseFloat((row.querySelector('[data-field="metric-num"]') || {}).value);
+            const mUnit = row.querySelector('[data-field="metric-unit"]') ? row.querySelector('[data-field="metric-unit"]').value : '';
+            if (mNum > 0 && unitToG[mUnit] != null) grams = mNum * unitToG[mUnit];
+            if (!grams) {
+                const iNum = parseFloat((row.querySelector('[data-field="imperial-num"]') || {}).value);
+                const iUnit = row.querySelector('[data-field="imperial-unit"]') ? row.querySelector('[data-field="imperial-unit"]').value : '';
+                if (iNum > 0 && imperialG[iUnit] != null) grams = iNum * imperialG[iUnit];
+            }
+            if (grams <= 0) return;
+            const divisor = (f.servingUnit === 'g' || f.servingUnit === 'ml') ? (parseFloat(f.servingSizeG) || 100) : 100;
+            totals.energy += (parseFloat(f.calories) || 0) / divisor * grams;
+            totals.carbs += (parseFloat(f.carbsG) || 0) / divisor * grams;
+            totals.protein += (parseFloat(f.proteinG) || 0) / divisor * grams;
+            totals.fat += (parseFloat(f.fatG) || 0) / divisor * grams;
+        });
+
+        const refSelect = document.getElementById('macro-reference');
+        const refType = refSelect ? refSelect.value : 'per_serving';
+        const yieldVal = document.getElementById('macro-yield').value;
+        let divisor = 1;
+        if (refType === 'per_serving') {
+            const m = String(yieldVal).match(/(\d+(?:\.\d+)?)/);
+            if (m && parseFloat(m[1]) > 0) divisor = parseFloat(m[1]);
+        }
+        const round1 = v => Math.round(v / divisor * 10) / 10;
+        setMacroField('macro-energy', String(round1(totals.energy)), 'kCal');
+        setMacroField('macro-carbs', String(round1(totals.carbs)), 'g');
+        setMacroField('macro-protein', String(round1(totals.protein)), 'g');
+        setMacroField('macro-fat', String(round1(totals.fat)), 'g');
+    }
+
     function getCategoryIcon(cat) {
         const c = (cat || '').toLowerCase();
         if (c.includes('seafood') || c.includes('fish') || c.includes('shell')) return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 26, h: 13 };
@@ -158,13 +222,85 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
     let mealWeekOffset = 0;
+    let cmsCategoryFilter = 'All';
+    let cmsStatusFilter = 'All';
+    let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
 
     const cmsTabs = document.getElementById('cms-tabs');
     const searchInput = document.getElementById('cms-search');
+    const searchTrigger = document.getElementById('cms-search-trigger');
+    const searchBarWrap = document.getElementById('cms-search-wrap');
+    const searchClose = document.getElementById('cms-search-close');
+    const viewToggle = document.getElementById('cms-view-toggle');
+    const filterTrigger = document.getElementById('cms-filter-trigger');
+    const filterDropdown = document.getElementById('cms-filter-dropdown');
+    const filterBadge = document.getElementById('cms-filter-badge');
+    const filterChips = document.getElementById('cms-filter-category-chips');
+    const filterStatusChips = document.getElementById('cms-filter-status-chips');
+    const filterReset = document.getElementById('cms-filter-reset');
+
+    // Keeps the span inside #add-recipe-btn (avoids wiping it via innerHTML).
+    function setAddBtnLabel(text) {
+        const span = document.getElementById('add-btn-label');
+        if (span) span.textContent = text;
+        else addBtn.lastChild && addBtn.removeChild(addBtn.lastChild);
+    }
 
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             cmsSearchQuery = e.target.value.toLowerCase();
+            renderCMSList();
+        });
+    }
+
+    // Icon-expanding search bar (mirrors index.html behaviour).
+    if (searchTrigger && searchBarWrap) {
+        searchTrigger.addEventListener('click', () => {
+            searchBarWrap.classList.add('active');
+            searchTrigger.style.opacity = '0';
+            searchInput.focus();
+        });
+    }
+    if (searchClose && searchInput) {
+        searchClose.addEventListener('click', () => {
+            searchBarWrap.classList.remove('active');
+            searchTrigger.style.opacity = '';
+            searchInput.value = '';
+            cmsSearchQuery = '';
+            renderCMSList();
+        });
+    }
+    document.addEventListener('click', (e) => {
+        if (searchBarWrap && searchTrigger && !searchBarWrap.contains(e.target) && !searchTrigger.contains(e.target)) {
+            searchBarWrap.classList.remove('active');
+            searchTrigger.style.opacity = '';
+        }
+    });
+
+    // Grid / List view toggle for the recipe & ingredient tabs.
+    if (viewToggle) {
+        viewToggle.addEventListener('click', () => {
+            cmsListView = cmsListView === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('larder_cms_view', cmsListView);
+            renderCMSList();
+        });
+    }
+    // Filter trigger toggles the dropdown panel.
+    if (filterTrigger) {
+        filterTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (filterDropdown) filterDropdown.classList.toggle('active');
+        });
+    }
+    document.addEventListener('click', (e) => {
+        if (filterDropdown && filterDropdown.classList.contains('active') && !filterDropdown.contains(e.target) && e.target !== filterTrigger && !(filterTrigger && filterTrigger.contains(e.target))) {
+            filterDropdown.classList.remove('active');
+        }
+    });
+    if (filterReset) {
+        filterReset.addEventListener('click', () => {
+            cmsCategoryFilter = 'All';
+            cmsStatusFilter = 'All';
             renderCMSList();
         });
     }
@@ -258,6 +394,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function savePantry() {
+        try {
+            const res = await fetch('/api/pantry', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(pantry)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            statusText.innerHTML = `<span class="status-dot"></span> Saved pantry`;
+        } catch(e) {
+            alert('Save failed. Is the server running?');
+        }
+    }
+
     // --- Render CMS List ---
     function populateIngredientSuggestions() {
         const datalist = document.getElementById('ingredient-suggestions');
@@ -269,12 +419,72 @@ document.addEventListener('DOMContentLoaded', () => {
         populateIngredientSuggestions();
 
         // Manage search bar visibility
+        const searchAnchor = document.querySelector('.cms-search-anchor');
+        if (searchAnchor) {
+            if (['recipe', 'food', 'pantry'].includes(currentCMSTab)) {
+                searchAnchor.style.display = 'flex';
+            } else {
+                searchAnchor.style.display = 'none';
+            }
+        }
         if (searchInput) {
             if (['recipe', 'food', 'pantry'].includes(currentCMSTab)) {
                 searchInput.style.display = 'block';
             } else {
                 searchInput.style.display = 'none';
             }
+        }
+
+        // Toolbar: grid/list toggle + filter trigger shown only for recipe/food tabs.
+        const showToolbar = ['recipe', 'food'].includes(currentCMSTab);
+        if (viewToggle) viewToggle.style.display = showToolbar ? 'flex' : 'none';
+        if (filterTrigger) filterTrigger.style.display = showToolbar ? 'flex' : 'none';
+        if (filterDropdown) filterDropdown.classList.remove('active');
+
+        // View toggle icon reflects the current (grid/list) state. Rebuild the
+        // <i data-lucide> each time because lucide replaces it with an <svg>,
+        // orphaning any cached reference to the old element.
+        if (viewToggle) {
+            const iconName = cmsListView === 'grid' ? 'layout-grid' : 'list';
+            viewToggle.innerHTML = `<i data-lucide="${iconName}" style="width: 18px; height: 18px;"></i>`;
+        }
+
+        // Build category filter chips from the active tab's data.
+        if (showToolbar && filterChips) {
+            const source = currentCMSTab === 'food' ? ingredients : recipes.filter(r => r.entryType !== 'ingredient');
+            const cats = [...new Set(source.map(x => (x.category || 'Uncategorized')).filter(Boolean))].sort();
+            if (cmsCategoryFilter !== 'All' && !cats.includes(cmsCategoryFilter)) cmsCategoryFilter = 'All';
+            const chips = ['All', ...cats];
+            filterChips.innerHTML = chips.map(c =>
+                `<button type="button" class="filter-chip${c === cmsCategoryFilter ? ' active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`
+            ).join('');
+            filterChips.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    cmsCategoryFilter = chip.dataset.cat;
+                    renderCMSList();
+                });
+            });
+            if (filterBadge) {
+                const count = (cmsCategoryFilter === 'All' ? 0 : 1) + (cmsStatusFilter === 'All' ? 0 : 1);
+                filterBadge.textContent = String(count);
+                if (filterTrigger) filterTrigger.classList.toggle('has-filters', count > 0);
+            }
+        }
+
+        // Status filter chips (recipe tab only).
+        if (currentCMSTab === 'recipe' && filterStatusChips) {
+            const statuses = ['published', 'draft'];
+            if (cmsStatusFilter !== 'All' && !statuses.includes(cmsStatusFilter)) cmsStatusFilter = 'All';
+            const chips = ['All', ...statuses];
+            filterStatusChips.innerHTML = chips.map(s =>
+                `<button type="button" class="filter-chip${s === cmsStatusFilter ? ' active' : ''}" data-status="${escapeHtml(s)}">${escapeHtml(s.charAt(0).toUpperCase() + s.slice(1))}</button>`
+            ).join('');
+            filterStatusChips.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    cmsStatusFilter = chip.dataset.status;
+                    renderCMSList();
+                });
+            });
         }
 
         if (currentCMSTab === 'mealplan') {
@@ -497,6 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             listContainer.innerHTML = gridHTML;
             addBtn.style.display = 'none';
+            if (window.lucide) window.lucide.createIcons();
 
             document.getElementById('mp-prev-week').addEventListener('click', () => {
                 mealWeekOffset -= 1;
@@ -639,6 +850,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     activeSlotName = slotEl.dataset.slot;
 
                     assignTitle.textContent = `Plan ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
+                    const slotPill = document.getElementById('meal-assign-slot-pill');
+                    if (slotPill) {
+                        const dateObj = new Date(activeDate + 'T00:00:00');
+                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                        slotPill.textContent = `${dayName} · ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
+                    }
                     assignSubtitle.textContent = `For ${activeDate}`;
 
                     const existingPlan = mealPlans.find(p => p.date === activeDate && p.slot === activeSlotName);
@@ -651,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkboxEatingOut.checked = false;
                     builderSection.style.opacity = '1';
                     builderSection.style.pointerEvents = 'auto';
-                    servingsInput.value = 2;
+                    servingsInput.value = 1;
                     servingsRow.style.opacity = '1';
                     servingsRow.style.pointerEvents = 'auto';
 
@@ -837,6 +1054,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btnCancel.onclick = () => {
                 assignModal.classList.remove('active');
             };
+            // Close when clicking outside the panel (on the dimmed overlay).
+            assignModal.onclick = (e) => {
+                if (e.target === assignModal) assignModal.classList.remove('active');
+            };
             
             btnClear.onclick = () => {
                 mealPlans = mealPlans.filter(p => !(p.date === activeDate && p.slot === activeSlotName));
@@ -944,9 +1165,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">
                         Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
                     </div>
-                    <div class="pantry-view-toggle" id="pantry-view-toggle">
-                        <button type="button" data-view="cards" class="${pantryView === 'cards' ? 'active' : ''}"><i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i> Cards</button>
-                        <button type="button" data-view="table" class="${pantryView === 'table' ? 'active' : ''}"><i data-lucide="table" style="width: 14px; height: 14px;"></i> Table</button>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button type="button" class="btn secondary" id="pantry-add-item-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Item</button>
+                        <button type="button" class="pantry-view-toggle" id="pantry-view-toggle" title="${pantryView === 'cards' ? 'Switch to table view' : 'Switch to cards view'}">
+                            <i data-lucide="${pantryView === 'cards' ? 'layout-grid' : 'table'}" style="width: 16px; height: 16px;"></i>
+                        </button>
                     </div>
                 </div>
                 <div id="pantry-content">
@@ -958,14 +1181,14 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             listContainer.innerHTML = cardsHTML;
             addBtn.style.display = 'none';
+            if (window.lucide) window.lucide.createIcons();
 
-            // View toggle switches between the card and table layout.
+            // Single icon toggle switches between the card and table layout.
             const toggle = document.getElementById('pantry-view-toggle');
-            toggle.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    localStorage.setItem('larder_pantry_view', btn.dataset.view);
-                    renderCMSList();
-                });
+            toggle.addEventListener('click', () => {
+                const next = pantryView === 'cards' ? 'table' : 'cards';
+                localStorage.setItem('larder_pantry_view', next);
+                renderCMSList();
             });
 
             function renderPantryCards(items, statusInfo) {
@@ -1001,6 +1224,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="vd-pantry-qty">${Math.round(qty)}${escapeHtml(unitLabel)} left</span>
                                 </div>
                             </div>
+                            <div class="vd-pantry-card-actions">
+                                <button type="button" class="cms-btn-icon pantry-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit ingredient" aria-label="Edit"><i data-lucide="edit-2" style="width: 15px; height: 15px;"></i></button>
+                                <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                            </div>
                         </div>
                         `;
                     }).join('')}
@@ -1019,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th>Quantity</th>
                                 <th>Unit</th>
                                 <th>Track</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1041,6 +1269,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td><input type="number" step="any" min="0" class="p-qty" value="${qty}" ${!isTracked ? 'disabled' : ''} aria-label="Quantity"></td>
                                     <td style="color: var(--text-muted);">${escapeHtml(unit || 'g')}</td>
                                     <td><input type="checkbox" class="p-track-check" ${isTracked ? 'checked' : ''} aria-label="Track stock"></td>
+                                    <td>
+                                        <button type="button" class="cms-btn-icon pantry-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit ingredient" aria-label="Edit"><i data-lucide="edit-2" style="width: 15px; height: 15px;"></i></button>
+                                        <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                                    </td>
                                 </tr>`;
                             }).join('')}
                         </tbody>
@@ -1120,25 +1352,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 pantry = updatedPantry;
-                try {
-                    const res = await fetch('/api/pantry', {
-                        method: 'PUT',
-                        headers: HEADERS,
-                        body: JSON.stringify(pantry)
-                    });
-                    if (!res.ok) throw new Error('Save failed');
-                    statusText.innerHTML = `<span class="status-dot"></span> Saved pantry`;
-                } catch(e) {
-                    alert('Save failed. Is the server running?');
-                }
+                await savePantry();
+            });
+
+            // Add a new pantry item: reuse the ingredient profile editor to create a new ingredient.
+            document.getElementById('pantry-add-item-btn').addEventListener('click', () => {
+                openProfileEditor();
+            });
+
+            // Edit an existing pantry item: open the profile editor for that ingredient.
+            document.querySelectorAll('.pantry-edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
+            });
+
+            // Delete a pantry item: remove it from the ingredients DB (and pantry) after confirmation.
+            document.querySelectorAll('.pantry-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const foodId = btn.dataset.id;
+                    const ing = ingredients.find(f => f.foodId === foodId);
+                    const name = ing ? ing.name : 'this ingredient';
+                    const confirmed = await showConfirmDialog(
+                        'Remove from Pantry',
+                        `Remove "${name}" from the pantry? This deletes the ingredient profile.`,
+                        'Remove'
+                    );
+                    if (!confirmed) return;
+                    ingredients = ingredients.filter(f => f.foodId !== foodId);
+                    pantry = pantry.filter(p => p.foodId !== foodId);
+                    renderCMSList();
+                    await saveIngredients();
+                    await savePantry();
+                    statusText.innerHTML = `<span class="status-dot"></span> Removed "${name}" from pantry`;
+                });
             });
             return;
         }
 
         if (currentCMSTab === 'shopping') {
             const uiHTML = `
-                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;">
-                    <button id="generate-list-btn" class="btn primary">Generate List for This Week</button>
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+                    <button id="generate-list-btn" class="btn primary"><i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Generate List for This Week</button>
+                    <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i> <span>Save List</span></button>
+                    <button id="print-list-btn" class="btn secondary"><i data-lucide="printer" style="width: 16px; height: 16px;"></i> Print / Save PDF</button>
                     <span style="color: var(--text-muted); font-size: 0.85rem;">(Aggregates ingredients from planned recipes and subtracts tracked pantry stock)</span>
                 </div>
                 <div id="shopping-list-results" style="display: grid; gap: 1rem;">
@@ -1148,6 +1403,109 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             listContainer.innerHTML = uiHTML;
             addBtn.style.display = 'none';
+
+            const resultsContainer = document.getElementById('shopping-list-results');
+            const saveListBtn = document.getElementById('save-list-btn');
+
+            async function persistShoppingList() {
+                try {
+                    const res = await fetch('/api/shoppinglists', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(shoppingLists)
+                    });
+                    if (!res.ok) throw new Error('Save failed');
+                    const label = saveListBtn.querySelector('span');
+                    if (label) label.textContent = ' Saved';
+                    setTimeout(() => { if (label) label.textContent = ' Save List'; }, 1500);
+                } catch (e) {
+                    alert('Failed to save shopping list. Is the server running?');
+                }
+            }
+
+            function renderShoppingList(list) {
+                if (!list || list.length === 0) {
+                    resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
+                    return;
+                }
+
+                const groups = {};
+                list.forEach(item => {
+                    const cat = item.category || 'Other';
+                    if (!groups[cat]) groups[cat] = [];
+                    groups[cat].push(item);
+                });
+
+                let listHTML = `<div class="vd-shop-container" id="shopping-print-area">`;
+                Object.entries(groups).forEach(([cat, items]) => {
+                    listHTML += `<div class="vd-shop-group">`;
+                    listHTML += `
+                        <div class="vd-shop-group-header">
+                            <i data-lucide="shopping-basket" style="width: 16px; height: 16px;"></i> ${escapeHtml(cat)}
+                            <span class="vd-shop-group-count">${items.length}</span>
+                        </div>`;
+                    items.forEach((item, itemIdx) => {
+                        const recipeTags = (item.recipes || []).slice(0, 3).map(r => `
+                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> ${escapeHtml(r)}</span>
+                        `).join('');
+                        const isChecked = item.checked ? ' checked' : '';
+                        listHTML += `
+                        <div class="vd-shop-item${isChecked}" data-cat="${escapeHtml(cat)}" data-idx="${itemIdx}">
+                            <div class="vd-shop-checkbox" role="checkbox" tabindex="0" aria-checked="${item.checked ? 'true' : 'false'}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="vd-shop-item-details">
+                                <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
+                                <div class="vd-shop-item-meta">
+                                    <span class="vd-shop-qty">${escapeHtml(formatAmountDisplay(item.amount, item.unit))}</span>
+                                    ${recipeTags}
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    listHTML += `</div>`;
+                });
+                listHTML += `</div>`;
+                resultsContainer.innerHTML = listHTML;
+                if (window.lucide) window.lucide.createIcons();
+                saveListBtn.style.display = 'inline-flex';
+
+                document.querySelectorAll('.vd-shop-item').forEach(row => {
+                    const checkbox = row.querySelector('.vd-shop-checkbox');
+                    const updateChecked = () => {
+                        row.classList.toggle('checked');
+                        const isChecked = row.classList.contains('checked');
+                        checkbox.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+                        const cat = row.dataset.cat;
+                        const idx = row.dataset.idx;
+                        const group = groups[cat];
+                        if (group && group[idx]) group[idx].checked = isChecked;
+                    };
+                    checkbox.addEventListener('click', updateChecked);
+                    checkbox.addEventListener('keydown', (e) => {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            updateChecked();
+                        }
+                    });
+                });
+            }
+
+            // Load a previously saved list if one exists
+            if (Array.isArray(shoppingLists) && shoppingLists.length > 0) {
+                renderShoppingList(shoppingLists);
+            }
+
+            document.getElementById('print-list-btn').onclick = () => {
+                const area = document.getElementById('shopping-print-area');
+                if (!area) {
+                    alert('Generate a shopping list first, then print.');
+                    return;
+                }
+                document.body.classList.add('printing-shopping');
+                window.print();
+                document.body.classList.remove('printing-shopping');
+            };
+
+            document.getElementById('save-list-btn').onclick = () => persistShoppingList();
 
             function generateList() {
                 // 1. Determine "this week" range based on current calendar logic
@@ -1269,128 +1627,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('generate-list-btn').onclick = () => {
                 const list = generateList();
-                const resultsContainer = document.getElementById('shopping-list-results');
-                
-                if (list.length === 0) {
-                    resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
-                    return;
-                }
-
-                // Group items by category
-                const groups = {};
-                list.forEach(item => {
-                    const cat = item.category || 'Other';
-                    if (!groups[cat]) groups[cat] = [];
-                    groups[cat].push(item);
-                });
-
-                let listHTML = `<div class="vd-shop-container">`;
-                Object.entries(groups).forEach(([cat, items]) => {
-                    listHTML += `<div class="vd-shop-group">`;
-                    listHTML += `
-                        <div class="vd-shop-group-header">
-                            <i data-lucide="shopping-basket" style="width: 16px; height: 16px;"></i> ${escapeHtml(cat)}
-                        </div>`;
-                    items.forEach((item) => {
-                        const recipeTags = (item.recipes || []).slice(0, 3).map(r => `
-                            <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> ${escapeHtml(r)}</span>
-                        `).join('');
-                        listHTML += `
-                        <div class="vd-shop-item" data-foodid="${escapeHtml(item.foodId)}">
-                            <div class="vd-shop-checkbox" role="checkbox" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-                            <div class="vd-shop-item-details">
-                                <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
-                                <div class="vd-shop-item-meta">
-                                    <span class="vd-shop-qty">${escapeHtml(formatAmountDisplay(item.amount, item.unit))}</span>
-                                    ${recipeTags}
-                                </div>
-                            </div>
-                        </div>`;
-                    });
-                    listHTML += `</div>`;
-                });
-                listHTML += `</div>`;
-                resultsContainer.innerHTML = listHTML;
-                if (window.lucide) window.lucide.createIcons();
-
-                // Toggle check state
-                document.querySelectorAll('.vd-shop-item').forEach(row => {
-                    const checkbox = row.querySelector('.vd-shop-checkbox');
-                    checkbox.addEventListener('click', () => {
-                        row.classList.toggle('checked');
-                        checkbox.setAttribute('aria-checked', row.classList.contains('checked') ? 'true' : 'false');
-                    });
-                    checkbox.addEventListener('keydown', (e) => {
-                        if (e.key === ' ' || e.key === 'Enter') {
-                            e.preventDefault();
-                            checkbox.click();
-                        }
-                    });
-                });
+                shoppingLists = list;
+                renderShoppingList(list);
+                persistShoppingList();
             };
             
             return;
         }
 
         if (currentCMSTab === 'food') {
-            const filteredIngredients = ingredients.filter(ing =>
+            addBtn.style.display = 'flex';
+            setAddBtnLabel('Add Ingredient');
+
+            let filteredIngredients = ingredients.filter(ing =>
                 ing.name.toLowerCase().includes(cmsSearchQuery) ||
                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
             );
+            if (cmsCategoryFilter !== 'All') {
+                filteredIngredients = filteredIngredients.filter(ing => (ing.category || 'Uncategorized') === cmsCategoryFilter);
+            }
 
             if (filteredIngredients.length === 0) {
                 listContainer.innerHTML = `<div class="empty-state">No ingredients found. Click "Add Ingredient" to create one!</div>`;
-                addBtn.style.display = 'none';
                 return;
             }
 
-            listContainer.innerHTML = `
-                <div class="cms-table-wrapper">
-                    <table class="cms-table">
-                        <thead>
-                            <tr>
-                                <th>Ingredient</th>
-                                <th style="width: 240px;">Category</th>
-                                <th style="width: 130px;">Status</th>
-                                <th style="width: 110px; text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filteredIngredients.map(ing => {
-                                const vis = getCategoryIcon(ing.category);
-                                const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
-                                return `
-                                <tr>
-                                    <td>
-                                        <div class="cms-td-title">
-                                            <div class="cms-td-icon">
-                                                <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
-                                            </div>
-                                            <div>
-                                                <div>${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
-                                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>${escapeHtml(ing.category || '—')}</td>
-                                    <td><span class="cms-badge published">Published</span></td>
-                                    <td class="cms-actions-cell">
+            if (cmsListView === 'grid') {
+                listContainer.innerHTML = `
+                    <div class="cms-grid-wrapper">
+                        ${filteredIngredients.map(ing => {
+                            const vis = getCategoryIcon(ing.category);
+                            const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+                            return `
+                            <div class="cms-card" data-id="${escapeHtml(ing.foodId)}">
+                                <div class="cms-card-img-wrap">
+                                    <svg viewBox="${vis.vb}" style="width:${vis.w * 2}px;height:${vis.h * 2}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+                                </div>
+                                <div class="cms-card-body">
+                                    <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
+                                    <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}</div>
+                                    <div class="cms-card-meta"><span>${escapeHtml(serving)}</span></div>
+                                    <div class="cms-card-actions">
                                         <button class="cms-btn-icon food-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit"><i data-lucide="edit-2"></i></button>
                                         <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete"><i data-lucide="trash-2"></i></button>
-                                    </td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button id="add-food-btn" class="btn primary"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Ingredient</button>
-                </div>
-            `;
-            addBtn.style.display = 'none';
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                `;
+            } else {
+                listContainer.innerHTML = `
+                    <div class="cms-table-wrapper">
+                        <table class="cms-table">
+                            <thead>
+                                <tr>
+                                    <th>Ingredient</th>
+                                    <th style="width: 240px;">Category</th>
+                                    <th style="width: 130px;">Status</th>
+                                    <th style="width: 110px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filteredIngredients.map(ing => {
+                                    const vis = getCategoryIcon(ing.category);
+                                    const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+                                    return `
+                                    <tr>
+                                        <td>
+                                            <div class="cms-td-title">
+                                                <div class="cms-td-icon">
+                                                    <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+                                                </div>
+                                                <div>
+                                                    <div>${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
+                                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>${escapeHtml(ing.category || '—')}</td>
+                                        <td><span class="cms-badge published">Published</span></td>
+                                        <td class="cms-actions-cell">
+                                            <button class="cms-btn-icon food-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                            <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                        </td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
             if (window.lucide) window.lucide.createIcons();
-
-            document.getElementById('add-food-btn').addEventListener('click', () => openProfileEditor());
 
             document.querySelectorAll('.food-edit-btn').forEach(btn => {
                 btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
@@ -1439,6 +1767,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="vd-settings-nav-item active" data-settings-view="eaters"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Eaters</div>
                         <div class="vd-settings-nav-item" data-settings-view="preferences"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Preferences</div>
                         <div class="vd-settings-nav-item" data-settings-view="data"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Data</div>
+                        <div class="vd-settings-nav-item" data-settings-view="network"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> Network</div>
                     </div>
                     <div class="vd-settings-panel" id="settings-panel"></div>
                 </div>
@@ -1453,21 +1782,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     settingsPanel.innerHTML = `
                         <div class="vd-settings-section">
                             <h3 class="vd-settings-title">Eater Profiles</h3>
-                            <p class="vd-settings-desc">Configure daily calorie and macro targets for meal planning.</p>
+                            <p class="vd-settings-desc">Configure daily calorie and macro targets for meal planning. Percentages auto-calculate grams.</p>
                             <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
                                 ${profiles.length === 0 ? '<p style="color: var(--text-muted); font-size: 0.9rem;">No eaters yet. Add one to get started.</p>' : ''}
-                                ${profiles.map((p, i) => `
+                                ${profiles.map((p, i) => {
+                                    const calories = p.calories ?? 2000;
+                                    const carbsPct = p.carbs ?? 40;
+                                    const proteinPct = p.protein ?? 30;
+                                    const fatPct = p.fat ?? 30;
+                                    const carbG = Math.round(calories * (carbsPct / 100) / 4);
+                                    const proteinG = Math.round(calories * (proteinPct / 100) / 4);
+                                    const fatG = Math.round(calories * (fatPct / 100) / 9);
+                                    const totalPct = carbsPct + proteinPct + fatPct;
+                                    const totalPctBadge = totalPct === 100
+                                        ? '<span style="color: var(--accent-veg); font-weight: 700; font-size: 0.8rem;">✓ 100%</span>'
+                                        : `<span style="color: var(--accent-meat); font-weight: 700; font-size: 0.8rem;">Total ${totalPct}% — adjust to 100%</span>`;
+                                    return `
                                     <div class="profile-card" style="background: var(--bg-base); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border);">
-                                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-                                            <div class="form-group"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input" data-index="${i}" data-field="name" style="width: 150px;"></div>
-                                            <div class="form-group"><label>Calories / day</label><input type="number" value="${p.calories ?? 2000}" class="profile-input" data-index="${i}" data-field="calories" style="width: 110px;"></div>
-                                            <div class="form-group"><label>Carbs %</label><input type="number" value="${p.carbs ?? 40}" class="profile-input" data-index="${i}" data-field="carbs" style="width: 90px;"></div>
-                                            <div class="form-group"><label>Protein %</label><input type="number" value="${p.protein ?? 30}" class="profile-input" data-index="${i}" data-field="protein" style="width: 90px;"></div>
-                                            <div class="form-group"><label>Fat %</label><input type="number" value="${p.fat ?? 30}" class="profile-input" data-index="${i}" data-field="fat" style="width: 90px;"></div>
+                                        <div class="profile-card-header" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                                            <div class="profile-avatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; flex-shrink: 0;">${escapeHtml((p.name || 'U').trim().charAt(0).toUpperCase())}</div>
+                                            <div class="form-group" style="flex-grow: 1;"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input profile-name-input" data-index="${i}" data-field="name"></div>
+                                            <div class="form-group"><label>Calories / day</label><input type="number" min="0" step="50" value="${calories}" class="profile-input profile-calories" data-index="${i}" data-field="calories" style="width: 110px;"></div>
                                             <button class="btn delete-profile-btn" data-index="${i}" title="Remove eater" aria-label="Remove eater" style="margin-left: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                         </div>
-                                    </div>
-                                `).join('')}
+                                        <div class="profile-macro-list">
+                                            ${[['carbs', 'Carbs', carbsPct, carbG, 'var(--accent-stock)'], ['protein', 'Protein', proteinPct, proteinG, 'var(--accent-meat)'], ['fat', 'Fat', fatPct, fatG, '#D4B04A']].map(([field, label, pct, grams, color]) => `
+                                                <div class="profile-macro-row" style="display: grid; grid-template-columns: 90px 1fr 90px 70px; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.35rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; display: inline-block;"></span> ${label}</span>
+                                                    <input type="range" min="0" max="100" step="1" value="${pct}" class="profile-slider profile-input" data-index="${i}" data-field="${field}" aria-label="${label} %" style="width: 100%; accent-color: ${color}; cursor: pointer;">
+                                                    <input type="number" min="0" max="100" step="1" value="${pct}" class="profile-input profile-pct" data-index="${i}" data-field="${field}" style="width: 70px; text-align: center;">
+                                                    <span class="profile-grams" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-align: right;">${grams} g</span>
+                                                </div>`).join('')}
+                                        </div>
+                                        <div style="display: flex; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border);">${totalPctBadge}</div>
+                                    </div>`;
+                                }).join('')}
                             </div>
                             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                 <button class="btn secondary" id="add-profile-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Eater</button>
@@ -1490,14 +1839,89 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     document.querySelectorAll('.profile-input').forEach(input => {
-                        input.onchange = (e) => {
+                        const update = (e) => {
                             const idx = e.target.dataset.index;
                             const field = e.target.dataset.field;
                             let val = e.target.value;
                             if (field !== 'name') val = parseFloat(val) || 0;
+                            if (field === 'carbs' || field === 'protein' || field === 'fat') val = Math.max(0, Math.min(100, val));
                             appSettings.profiles[idx][field] = val;
+                            const card = input.closest('.profile-card');
+                            if (card) {
+                                // Auto-balance the macro percentages so the three always total 100%.
+                                if (field === 'carbs' || field === 'protein' || field === 'fat') {
+                                    autoBalanceMacros(idx, field);
+                                    ['carbs', 'protein', 'fat'].forEach(f => {
+                                        card.querySelectorAll(`.profile-input[data-field="${f}"]`).forEach(other => {
+                                            other.value = appSettings.profiles[idx][f];
+                                        });
+                                    });
+                                }
+                                // Update the avatar initial when the name changes.
+                                if (field === 'name') {
+                                    const avatar = card.querySelector('.profile-avatar');
+                                    if (avatar) avatar.textContent = (val || 'U').trim().charAt(0).toUpperCase();
+                                }
+                                // Grams depend on calories + macro %; recalc on either changing.
+                                refreshProfileGrams(card, idx);
+                            }
                         };
+                        input.oninput = update;
+                        input.onchange = update;
                     });
+
+                    // When one macro slider moves, rebalance the other two proportionally
+                    // so carbs + protein + fat always add up to 100%.
+                    function autoBalanceMacros(idx, changedField) {
+                        const p = appSettings.profiles[idx];
+                        if (!p) return;
+                        const fields = ['carbs', 'protein', 'fat'];
+                        const changedVal = Math.max(0, Math.min(100, parseFloat(p[changedField]) || 0));
+                        const others = fields.filter(f => f !== changedField);
+                        const otherTotal = others.reduce((s, f) => s + (parseFloat(p[f]) || 0), 0);
+                        const remaining = 100 - changedVal;
+                        if (remaining < 0) {
+                            p[changedField] = 100;
+                            others.forEach(f => p[f] = 0);
+                            return;
+                        }
+                        // Distribute the remaining % across the other two, keeping their ratio.
+                        let assigned = 0;
+                        others.forEach((f, k) => {
+                            if (k === others.length - 1) {
+                                p[f] = Math.max(0, Math.round(remaining - assigned));
+                            } else {
+                                const share = otherTotal > 0
+                                    ? Math.round((parseFloat(p[f]) || 0) / otherTotal * remaining)
+                                    : Math.round(remaining / others.length);
+                                p[f] = Math.max(0, share);
+                                assigned += p[f];
+                            }
+                        });
+                    }
+
+                    function refreshProfileGrams(card, idx) {
+                        const p = appSettings.profiles[idx];
+                        if (!p) return;
+                        const calories = parseFloat(p.calories) || 0;
+                        const macroFields = ['carbs', 'protein', 'fat'];
+                        const rows = card.querySelectorAll('.profile-macro-row');
+                        rows.forEach(row => {
+                            const field = row.querySelector('.profile-input.profile-slider').dataset.field;
+                            if (!macroFields.includes(field)) return;
+                            const pct = parseFloat(p[field]) || 0;
+                            const grams = Math.round(calories * (pct / 100) / (field === 'fat' ? 9 : 4));
+                            const gramsEl = row.querySelector('.profile-grams');
+                            if (gramsEl) gramsEl.textContent = grams + ' g';
+                        });
+                        const totalPct = (parseFloat(p.carbs) || 0) + (parseFloat(p.protein) || 0) + (parseFloat(p.fat) || 0);
+                        const badge = card.querySelector('.profile-card > div:last-child');
+                        if (badge) {
+                            badge.innerHTML = totalPct === 100
+                                ? '<span style="color: var(--accent-veg); font-weight: 700; font-size: 0.8rem;">✓ 100%</span>'
+                                : `<span style="color: var(--accent-meat); font-weight: 700; font-size: 0.8rem;">Total ${totalPct}% — adjust to 100%</span>`;
+                        }
+                    }
 
                     document.getElementById('save-settings-btn').onclick = saveSettings;
                     return;
@@ -1623,6 +2047,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                     return;
                 }
+
+                if (view === 'network') {
+                    const allowLan = !!(appSettings.network && appSettings.network.allowLan);
+                    settingsPanel.innerHTML = `
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Network & Sync</h3>
+                            <p class="vd-settings-desc">Allow companion apps on this Wi-Fi network (like FitTrack) to sync with Larder. When enabled, Larder listens on all network interfaces and you can point other devices at this computer's LAN address.</p>
+                            <div class="vd-settings-toggle-row">
+                                <div class="vd-settings-toggle-info">
+                                    <h5>Allow LAN access</h5>
+                                    <p>Expose the local server to other devices on this network (requires app restart).</p>
+                                </div>
+                                <div class="vd-settings-switch ${allowLan ? 'active' : ''}" data-network-toggle="allowLan"></div>
+                            </div>
+                            <p id="network-sync-url" style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);"></p>
+                        </div>
+                        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <button class="btn primary" id="save-network-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Network Settings</button>
+                        </div>
+                    `;
+                    if (window.lucide) window.lucide.createIcons();
+
+                    fetch('/api/network-info', { headers: { 'Authorization': `Bearer ${API_KEY}` } })
+                        .then(r => r.ok ? r.json() : {})
+                        .then(info => {
+                            const el = document.getElementById('network-sync-url');
+                            if (el && info && info.lanAddresses && info.lanAddresses.length) {
+                                el.innerHTML = `<strong>Sync URL:</strong> <code style="background: var(--bg-surface-hover); padding: 0.2rem 0.5rem; border-radius: 4px;">http://${escapeHtml(info.lanAddresses[0])}:${info.port || 8000}/api</code>`;
+                            }
+                        })
+                        .catch(() => {});
+
+                    document.querySelectorAll('.vd-settings-switch[data-network-toggle]').forEach(sw => {
+                        sw.onclick = () => sw.classList.toggle('active');
+                    });
+
+                    document.getElementById('save-network-btn').onclick = async () => {
+                        const allowLan = !!document.querySelector('.vd-settings-switch[data-network-toggle="allowLan"].active');
+                        appSettings.network = { ...(appSettings.network || {}), allowLan };
+                        const res = await fetch('/api/settings', {
+                            method: 'PUT',
+                            headers: HEADERS,
+                            body: JSON.stringify(appSettings)
+                        });
+                        if (res.ok) {
+                            statusText.innerHTML = `<span class="status-dot"></span> Network settings saved. Restart Larder to apply.`;
+                        } else {
+                            alert('Failed to save network settings.');
+                        }
+                    };
+                    return;
+                }
             }
 
             function saveSettings() {
@@ -1656,9 +2132,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        addBtn.style.display = 'block';
-        addBtn.innerHTML = '<i data-lucide="plus" style="width: 18px; height: 18px;"></i> Add Recipe';
+        addBtn.style.display = 'flex';
+        setAddBtnLabel('Add Recipe');
         let filtered = recipes.filter(r => r.entryType !== 'ingredient');
+
+        if (cmsCategoryFilter !== 'All') {
+            filtered = filtered.filter(r => (r.category || 'Uncategorized') === cmsCategoryFilter);
+        }
+
+        if (cmsStatusFilter !== 'All') {
+            filtered = filtered.filter(r => (r.status || 'published') === cmsStatusFilter);
+        }
 
         if (cmsSearchQuery) {
             filtered = filtered.filter(r =>
@@ -1669,63 +2153,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (filtered.length === 0) {
-            listContainer.innerHTML = `<div class="empty-state">No recipes yet. Click "Add Recipe" to start!</div>`;
+            listContainer.innerHTML = `<div class="empty-state">No recipes match. Try adjusting the search or filters.</div>`;
             return;
         }
 
-        listContainer.innerHTML = `
-            <div class="cms-table-wrapper">
-                <table class="cms-table">
-                    <thead>
-                        <tr>
-                            <th>Title & Category</th>
-                            <th style="width: 100px;">Servings</th>
-                            <th style="width: 120px;">Energy</th>
-                            <th style="width: 130px;">Status</th>
-                            <th style="width: 110px; text-align: right;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filtered.map(recipe => {
-                            const vis = getCategoryIcon(recipe.category);
-                            const yieldStr = recipe.macros?.yield || '';
-                            const yieldNum = yieldStr ? (parseFloat(String(yieldStr).replace(',', '.')) || yieldStr) : '';
-                            const energyStr = recipe.macros?.energy || recipe.calories || '';
-                            const energyNum = (typeof energyStr === 'number' && !isNaN(energyStr)) ? energyStr : (parseFloat(String(energyStr)) || '');
-                            const iconTile = recipe.imageUrl
-                                ? `<img class="cms-thumb" src="${escapeHtml(recipe.imageUrl)}" alt="">`
-                                : `<svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
-                            return `
+        if (cmsListView === 'grid') {
+            listContainer.innerHTML = `
+                <div class="cms-grid-wrapper">
+                    ${filtered.map(recipe => {
+                        const vis = getCategoryIcon(recipe.category);
+                        const yieldStr = recipe.macros?.yield || '';
+                        const energyStr = recipe.macros?.energy || recipe.calories || '';
+                        const iconTile = recipe.imageUrl
+                            ? `<img class="cms-card-img" src="${escapeHtml(recipe.imageUrl)}" alt="">`
+                            : `<svg viewBox="${vis.vb}" style="width:${vis.w * 2}px;height:${vis.h * 2}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
+                        return `
+                        <div class="cms-card" data-id="${escapeHtml(recipe.id)}" role="button" tabindex="0" title="Edit recipe">
+                            <div class="cms-card-img-wrap">${iconTile}</div>
+                            <div class="cms-card-body">
+                                <div class="cms-card-title">${escapeHtml(recipe.title)}</div>
+                                <div class="cms-card-sub">${escapeHtml(recipe.category || 'Recipe')}</div>
+                                <div class="cms-card-meta">
+                                    <span>${yieldStr ? escapeHtml(yieldStr) + ' servings' : '—'}</span>
+                                    <span>${energyStr ? escapeHtml(energyStr) : '—'}</span>
+                                    <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete" aria-label="Delete recipe" style="margin-left: auto;"><i data-lucide="trash-2"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+        } else {
+            listContainer.innerHTML = `
+                <div class="cms-table-wrapper">
+                    <table class="cms-table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div class="cms-td-title">
-                                        <div class="cms-td-icon">${iconTile}</div>
-                                        <div>
-                                            <div>${escapeHtml(recipe.title)}</div>
-                                            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(recipe.category || 'Recipe')}</div>
+                                <th>Title & Category</th>
+                                <th style="width: 100px;">Servings</th>
+                                <th style="width: 120px;">Energy</th>
+                                <th style="width: 130px;">Status</th>
+                                <th style="width: 110px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(recipe => {
+                                const vis = getCategoryIcon(recipe.category);
+                                const yieldStr = recipe.macros?.yield || '';
+                                const yieldNum = yieldStr ? (parseFloat(String(yieldStr).replace(',', '.')) || yieldStr) : '';
+                                const energyStr = recipe.macros?.energy || recipe.calories || '';
+                                const energyNum = (typeof energyStr === 'number' && !isNaN(energyStr)) ? energyStr : (parseFloat(String(energyStr)) || '');
+                                const iconTile = recipe.imageUrl
+                                    ? `<img class="cms-thumb" src="${escapeHtml(recipe.imageUrl)}" alt="">`
+                                    : `<svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
+                                return `
+                                <tr>
+                                    <td>
+                                        <div class="cms-td-title">
+                                            <div class="cms-td-icon">${iconTile}</div>
+                                            <div>
+                                                <div>${escapeHtml(recipe.title)}</div>
+                                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(recipe.category || 'Recipe')}</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>${escapeHtml(yieldNum) || '—'}</td>
-                                <td>${energyNum ? escapeHtml(energyNum) + ' kcal' : '—'}</td>
-                                <td><span class="cms-badge published">Published</span></td>
-                                <td class="cms-actions-cell">
-                                    <button class="cms-btn-icon edit-btn" data-id="${escapeHtml(recipe.id)}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                    <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete"><i data-lucide="trash-2"></i></button>
-                                </td>
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>`;
+                                    </td>
+                                    <td>${escapeHtml(yieldNum) || '—'}</td>
+                                    <td>${energyNum ? escapeHtml(energyNum) + ' kcal' : '—'}</td>
+                                    <td><span class="cms-badge published">Published</span></td>
+                                    <td class="cms-actions-cell">
+                                        <button class="cms-btn-icon edit-btn" data-id="${escapeHtml(recipe.id)}" title="Edit"><i data-lucide="edit-2"></i></button>
+                                        <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
 
         if (window.lucide) window.lucide.createIcons();
 
         document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => openEditor(btn.dataset.id));
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditor(btn.dataset.id);
+            });
+        });
+        document.querySelectorAll('.cms-card[data-id]').forEach(card => {
+            if (currentCMSTab !== 'recipe') return;
+            card.addEventListener('click', () => openEditor(card.dataset.id));
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openEditor(card.dataset.id);
+                }
+            });
         });
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
                 const recipeId = btn.dataset.id;
                 const recipe = recipes.find(r => r.id === recipeId);
                 const title = recipe ? recipe.title : 'this recipe';
@@ -1746,10 +2271,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     addBtn.addEventListener('click', () => {
-        openEditor();
+        if (currentCMSTab === 'food') {
+            openProfileEditor();
+        } else {
+            openEditor();
+        }
     });
 
     // --- Ingredient Rows ---
+    function resolveIngredientName(item, foodId) {
+        // Prefer the canonical DB name when a matching foodId exists.
+        if (foodId) {
+            const db = ingredients.find(f => f.foodId === foodId);
+            if (db && db.name) return db.name;
+        }
+        return String(item || '');
+    }
+
+    function attachIngredientAutocomplete(div, nameInput) {
+        // Dropdown restricted to DB ingredients; sets the foodId on selection.
+        const wrap = document.createElement('div');
+        wrap.className = 'cms-ing-name-wrap';
+        nameInput.parentNode.insertBefore(wrap, nameInput);
+        wrap.appendChild(nameInput);
+        const list = document.createElement('div');
+        list.className = 'cms-ing-suggestions';
+        wrap.appendChild(list);
+
+        let activeIdx = -1;
+        function hide() {
+            list.classList.remove('open');
+            activeIdx = -1;
+        }
+        function render(matches) {
+            if (matches.length === 0) {
+                list.classList.remove('open');
+                return;
+            }
+            list.innerHTML = matches.map((f, i) => `
+                <div class="cms-ing-suggestion${i === activeIdx ? ' active' : ''}" data-idx="${i}">
+                    ${escapeHtml(f.name)}
+                    <span class="cms-ing-suggestion-cat">${escapeHtml(f.category || '')}</span>
+                </div>`).join('');
+            list.classList.add('open');
+        }
+        function filter(query) {
+            if (!query) return [];
+            const q = query.toLowerCase();
+            return ingredients.filter(f =>
+                f.name.toLowerCase().includes(q) ||
+                (f.category && f.category.toLowerCase().includes(q))
+            ).slice(0, 8);
+        }
+        function apply(idx) {
+            const matches = filter(nameInput.value);
+            const f = matches[idx];
+            if (!f) return;
+            nameInput.value = f.name;
+            div.dataset.foodId = f.foodId;
+            hide();
+            recalcMacrosFromIngredients();
+        }
+
+        nameInput.addEventListener('input', () => {
+            if (!div.dataset.foodId) {
+                // Only keep the DB link when the typed name still matches the linked ingredient.
+                const linked = ingredients.find(f => f.foodId === div.dataset.foodId);
+                if (linked && linked.name !== nameInput.value) div.dataset.foodId = '';
+            }
+            const matches = filter(nameInput.value);
+            activeIdx = matches.length ? 0 : -1;
+            render(matches);
+        });
+        nameInput.addEventListener('focus', () => {
+            const matches = filter(nameInput.value);
+            activeIdx = matches.length ? 0 : -1;
+            render(matches);
+        });
+        nameInput.addEventListener('keydown', (e) => {
+            const matches = filter(nameInput.value);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIdx = (activeIdx + 1) % Math.max(1, matches.length);
+                render(matches);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIdx = (activeIdx - 1 + Math.max(1, matches.length)) % Math.max(1, matches.length);
+                render(matches);
+            } else if (e.key === 'Enter') {
+                if (list.classList.contains('open') && activeIdx >= 0) {
+                    e.preventDefault();
+                    apply(activeIdx);
+                }
+            } else if (e.key === 'Escape') {
+                hide();
+            }
+        });
+        list.addEventListener('mousedown', (e) => {
+            const item = e.target.closest('.cms-ing-suggestion');
+            if (!item) return;
+            e.preventDefault();
+            apply(parseInt(item.dataset.idx, 10));
+        });
+        document.addEventListener('click', (e) => {
+            if (!wrap.contains(e.target)) hide();
+        });
+    }
+
     function createIngredientRow(item = '', metric = '', imperial = '', foodId = '') {
         const isHeader = String(item).startsWith('## ');
         const div = document.createElement('div');
@@ -1779,12 +2407,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const metricUnits = ['g', 'kg', 'ml', 'L'];
         const imperialUnits = ['cups', 'tbsp', 'tsp', 'whole', 'cans', 'cloves', 'sprigs', 'pinch', 'medium', 'small', 'large', 'slice', 'piece'];
         div.className = 'cms-ingredient-row';
+        const displayName = resolveIngredientName(item, foodId);
         div.innerHTML = `
+            <input type="text" data-field="name" class="seamless-input" value="${escapeHtml(displayName)}" placeholder="Search ingredient..." autocomplete="off" style="font-weight: 500; font-size: 0.95rem;">
             <div class="cms-unit-group">
                 <input type="text" data-field="metric-num" value="${escapeHtml(m.num)}" placeholder="Amount">
                 <select data-field="metric-unit">${metricUnits.map(u => `<option${m.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
             </div>
-            <input type="text" data-field="name" class="seamless-input" list="ingredient-suggestions" value="${escapeHtml(String(item))}" placeholder="Ingredient name" style="font-weight: 500; font-size: 0.95rem;">
             <div class="cms-unit-group">
                 <input type="text" data-field="imperial-num" value="${escapeHtml(imp.num)}" placeholder="Amount">
                 <select data-field="imperial-unit">${imperialUnits.map(u => `<option${imp.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
@@ -1800,18 +2429,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         addMissingUnit(div.querySelector('[data-field="metric-unit"]'), m.unit);
         addMissingUnit(div.querySelector('[data-field="imperial-unit"]'), imp.unit);
-        div.querySelector('.delete').addEventListener('click', () => div.remove());
+        div.querySelector('.delete').addEventListener('click', () => { div.remove(); recalcMacrosFromIngredients(); });
 
-        // Auto-fill foodId based on item name
         const nameInput = div.querySelector('[data-field="name"]');
-        nameInput.addEventListener('change', () => {
-            if (!div.dataset.foodId) {
-                const guess = slugify(nameInput.value);
-                if (ingredients.some(f => f.foodId === guess)) {
-                    div.dataset.foodId = guess;
-                }
-            }
-        });
+        attachIngredientAutocomplete(div, nameInput);
+        // Re-run recalc as metric amounts change so the totals stay in sync.
+        div.querySelector('[data-field="metric-num"]').addEventListener('input', recalcMacrosFromIngredients);
 
         ingContainer.appendChild(div);
     }
@@ -1850,6 +2473,12 @@ document.addEventListener('DOMContentLoaded', () => {
     addIngBtn.addEventListener('click', () => createIngredientRow());
     addStepBtn.addEventListener('click', () => createStepRow());
 
+    const macroAutoCalcBtn = document.getElementById('macro-auto-calc-btn');
+    if (macroAutoCalcBtn) macroAutoCalcBtn.addEventListener('click', () => {
+        recalcMacrosFromIngredients();
+        statusText.innerHTML = `<span class="status-dot"></span> Macros recalculated from ingredient database`;
+    });
+
     // --- Recipe Editor ---
     function openEditor(id = null) {
         ingContainer.innerHTML = '';
@@ -1860,7 +2489,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('recipe-id').value = recipe.id;
             document.getElementById('recipe-title').value = recipe.title;
             document.getElementById('recipe-category').value = recipe.category || 'Default';
-            document.getElementById('recipe-time').value = recipe.time || '';
+            const t = parseTimeToHM(recipe.time);
+            document.getElementById('recipe-time-hours').value = t.hours || '';
+            document.getElementById('recipe-time-mins').value = t.mins || '';
             document.getElementById('recipe-icon').value = recipe.iconTag || '';
             document.getElementById('recipe-desc').value = recipe.description || '';
             document.getElementById('recipe-image').value = recipe.imageUrl || '';
@@ -1960,7 +2591,10 @@ document.addEventListener('DOMContentLoaded', () => {
             entryType: 'recipe',
             title: document.getElementById('recipe-title').value,
             category: document.getElementById('recipe-category').value,
-            time: document.getElementById('recipe-time').value,
+            time: composeTimeString(
+                document.getElementById('recipe-time-hours').value,
+                document.getElementById('recipe-time-mins').value
+            ),
             iconTag: document.getElementById('recipe-icon').value,
             description: document.getElementById('recipe-desc').value,
             imageUrl: document.getElementById('recipe-image').value,

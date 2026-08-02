@@ -5,6 +5,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
     }
 
+    // --- Mobile Nav Toggle ---
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle && navLinks) {
+        navToggle.addEventListener('click', () => {
+            const open = navLinks.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', (e) => {
+            if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !navToggle.contains(e.target)) {
+                navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     // Escape user-controlled text before it reaches innerHTML templates (XSS).
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -569,10 +585,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeEnergy = escapeHtml(energy);
                 const safeProtein = escapeHtml(recipe.proteinG);
                 const safeFat = escapeHtml(recipe.fatG);
+                const isFallback = !recipe.imageUrl;
                 return `
                 <div class="ingredient-card ${themeClass}" data-id="${safeId}" role="listitem" tabindex="0">
                     <div class="ingredient-card-visual" style="background: var(--surface-hover);">
-                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';this.style.objectFit='contain';this.style.padding='1.25rem';" style="width:100%;height:100%;object-fit:${isFallback ? 'contain' : 'cover'};${isFallback ? 'padding:1.25rem;' : ''}">
                     </div>
                     <div class="ingredient-card-body">
                         <span class="ingredient-card-category">${safeCategory}</span>
@@ -593,12 +610,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeDesc = escapeHtml(recipe.description || '');
             const safeYield = escapeHtml(yieldNum);
             const safeEnergy = escapeHtml(energyNum);
+            const isFallback = !recipe.imageUrl;
 
             return `
             <div class="recipe-card ${themeClass}" data-id="${safeId}" role="listitem" tabindex="0" aria-label="View: ${safeTitle}">
                 <div class="recipe-image">
                     <div class="recipe-image-inner">
-                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';" style="width: 100%; height: 100%; object-fit: ${recipe.imageUrl ? 'cover' : 'contain'}; ${!recipe.imageUrl ? 'padding: 2rem;' : ''}">
+                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';this.style.objectFit='contain';this.style.padding='1.5rem';" style="width: 100%; height: 100%; object-fit: ${isFallback ? 'contain' : 'cover'}; ${isFallback ? 'padding: 1.5rem;' : ''}">
                     </div>
                 </div>
                 <div class="recipe-content">

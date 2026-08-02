@@ -6,11 +6,55 @@ const os = require('os');
 const AdmZip = require('adm-zip');
 
 const PORT = 8000;
-// Bind to loopback only. Larder is a personal, local-first app: exposing the
-// API to the network would let any LAN peer read/overwrite data.
-const HOST = '127.0.0.1';
 const ROOT = __dirname;
 const DATA_DIR = global.LARDER_DATA_DIR || path.join(ROOT, 'data');
+// Bind to loopback only by default. Larder is a personal, local-first app:
+// exposing the API to the network would let any LAN peer read/overwrite data.
+// When settings.json has network.allowLan === true (or env LARDER_ALLOW_LAN=1),
+// the server binds to 0.0.0.0 so companion apps on the same Wi-Fi (e.g.
+// FitTrack) can sync against this machine's LAN IP. API calls still require
+// the Bearer token on every /api route.
+const ALLOW_LAN = (() => {
+    if (process.env.LARDER_ALLOW_LAN === '1') return true;
+    try {
+        const cfg = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'settings.json'), 'utf8'));
+        return !!(cfg.network && cfg.network.allowLan);
+    } catch (e) {
+        return false;
+    }
+})();
+const HOST = ALLOW_LAN ? '0.0.0.0' : '127.0.0.1';
+
+// Return this machine's LAN IPv4 addresses (for companion-app sync), sorted so
+// the most likely "real" adapter (Wi-Fi / Ethernet) comes first, with virtual
+// adapters (VirtualBox, WSL, Docker, VPN) deprioritized or filtered out.
+function getLanAddresses() {
+    const nets = os.networkInterfaces();
+    const VIRTUAL_HINTS = ['virtualbox', 'vmware', 'hyper-v', 'vethernet', 'docker', 'vbox', 'loopback', 'tailscale', 'zerotier', 'hamachi', 'wsl', 'vmware'];
+    const candidates = [];
+    Object.keys(nets).forEach(name => {
+        const lower = name.toLowerCase();
+        (nets[name] || []).forEach(a => {
+            if (a.family !== 'IPv4' || a.internal || a.address === '127.0.0.1') return;
+            const isVirtual = VIRTUAL_HINTS.some(h => lower.includes(h));
+            // WSL interfaces often look like "Local Area Connection* N" or vEthernet
+            const isWsl = lower.includes('local area connection') || /^veth/i.test(lower);
+            let score = 0;
+            if (/wi-?fi|wlan/.test(lower)) score += 4;
+            if (/ethernet/.test(lower)) score += 2;
+            if (isWsl) score -= 5;
+            if (isVirtual) score -= 5;
+            // Physical default-route style subnets rank higher than VM/VPN ranges
+            if (/^192\.168\./.test(a.address)) score += 1;
+            if (/^10\./.test(a.address)) score += 1;
+            if (/^172\.(1[6-9]|2\d|3[01])\./.test(a.address)) score += 1;
+            candidates.push({ address: a.address, score });
+        });
+    });
+    candidates.sort((x, y) => y.score - x.score);
+    return candidates.map(c => c.address);
+}
+
 const RECIPES_PATH = path.join(DATA_DIR, 'recipes.json');
 const INGREDIENTS_PATH = path.join(DATA_DIR, 'ingredients.json');
 const MEALPLANS_PATH = path.join(DATA_DIR, 'mealplans.json');
@@ -129,7 +173,8 @@ const server = http.createServer((req, res) => {
 
     // --- CORS: only echo allow-listed loopback origins; never '*' ---
     const origin = req.headers['origin'];
-    if (origin && ALLOWED_ORIGINS.has(origin)) {
+    const originAllowed = origin && (ALLOWED_ORIGINS.has(origin) || (ALLOW_LAN && /^https?:\/\/\d{1,3}(\.\d{1,3}){3}:\d+$/.test(origin)));
+    if (originAllowed) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -272,6 +317,12 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
 
+    // --- API: network info (LAN addresses for companion-app sync) ---
+    if (req.url === '/api/network-info' && req.method === 'GET') {
+        sendJson(res, 200, { port: PORT, allowLan: ALLOW_LAN, lanAddresses: getLanAddresses() });
+        return;
+    }
+
     // --- API: settings (object payload, unlike the array-based files above) ---
     if (req.url === '/api/settings' && req.method === 'GET') {
         fs.readFile(SETTINGS_PATH, 'utf8', (err, data) => {
@@ -411,7 +462,12 @@ server.listen(PORT, HOST, () => {
     console.log('  🍽️  Larder is running!');
     console.log(`  📡 Local:   http://localhost:${PORT}`);
     console.log(`  📝 CMS:     http://localhost:${PORT}/cms.html`);
-    console.log('  🔒 Bound to 127.0.0.1 only — not reachable from the network.');
+    if (ALLOW_LAN) {
+        const lanIPs = getLanAddresses();
+        console.log(`  📡 LAN:     http://${lanIPs[0] || '0.0.0.0'}:${PORT}  (LAN sync ENABLED)`);
+    } else {
+        console.log('  🔒 Bound to 127.0.0.1 only — not reachable from the network.');
+    }
     console.log('');
     console.log('  Press Ctrl+C to stop.');
     console.log('');

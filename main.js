@@ -8,6 +8,30 @@ let mainWindow;
 // This resolves to %APPDATA%/Larder on Windows
 const USER_DATA_DIR = path.join(app.getPath('userData'), 'data');
 
+// Window state (bounds + maximized flag) is persisted here so the window
+// reopens where the user left it, including the maximized state.
+const WIN_STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
+
+function loadWindowState() {
+    try {
+        if (fs.existsSync(WIN_STATE_FILE)) {
+            const state = JSON.parse(fs.readFileSync(WIN_STATE_FILE, 'utf8'));
+            if (state && typeof state === 'object') return state;
+        }
+    } catch (e) {
+        console.warn('[Larder] Could not read window state:', e.message);
+    }
+    return { width: 1400, height: 900, maximized: false };
+}
+
+function saveWindowState(state) {
+    try {
+        fs.writeFileSync(WIN_STATE_FILE, JSON.stringify(state), 'utf8');
+    } catch (e) {
+        console.warn('[Larder] Could not save window state:', e.message);
+    }
+}
+
 // List of data files that the server reads/writes
 const DATA_FILES = [
     'recipes.json',
@@ -63,9 +87,13 @@ function startServerInProcess() {
 }
 
 function createWindow() {
+    const winState = loadWindowState();
+
     mainWindow = new BrowserWindow({
-        width: 1400,
-        height: 900,
+        width: winState.width || 1400,
+        height: winState.height || 900,
+        x: winState.x,
+        y: winState.y,
         minWidth: 1000,
         minHeight: 700,
         title: 'Larder',
@@ -85,6 +113,10 @@ function createWindow() {
             allowRunningInsecureContent: false
         }
     });
+
+    if (winState.maximized) {
+        mainWindow.maximize();
+    }
 
     // A compromised renderer must not be able to open windows or navigate the
     // app away from the local server (e.g. to file:// or a phishing site).
@@ -148,6 +180,26 @@ function createWindow() {
     };
     mainWindow.on('maximize', () => sendMaximized(true));
     mainWindow.on('unmaximize', () => sendMaximized(false));
+
+    // Persist window bounds + maximized state as it changes, and on close.
+    const persistWindowState = () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            const isMax = mainWindow.isMaximized();
+            const bounds = isMax ? mainWindow.getNormalBounds() : mainWindow.getBounds();
+            saveWindowState({
+                width: bounds.width,
+                height: bounds.height,
+                x: bounds.x,
+                y: bounds.y,
+                maximized: isMax
+            });
+        }
+    };
+    mainWindow.on('resize', persistWindowState);
+    mainWindow.on('move', persistWindowState);
+    mainWindow.on('maximize', persistWindowState);
+    mainWindow.on('unmaximize', persistWindowState);
+    mainWindow.on('close', persistWindowState);
 }
 
 app.whenReady().then(async () => {
