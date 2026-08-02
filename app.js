@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Reveal app-only UI (e.g. the "Manage"/CMS nav button) when running inside
+    // the packaged Electron app; these elements stay hidden on the public site.
+    if (window.larderWindow && window.larderWindow.isElectron) {
+        document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
+    }
+
     // Escape user-controlled text before it reaches innerHTML templates (XSS).
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -621,26 +627,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Scaler Helper ---
+    // Convert a positive decimal to a proper mixed fraction string ("1 ½", "¾").
+    // Picks the nearest common measuring increment (⅛, ¼, ⅓, ⅜, ½, ⅝, ⅔, ¾, ⅞).
+    function toFractionString(value) {
+        if (value == null || isNaN(value)) return null;
+        const wholes = Math.floor(value + 1e-9);
+        const fracPart = value - wholes;
+        if (fracPart < 0.001) return String(wholes);
+        const increments = [
+            [1 / 8, '⅛'], [1 / 4, '¼'], [1 / 3, '⅓'], [3 / 8, '⅜'], [1 / 2, '½'],
+            [5 / 8, '⅝'], [2 / 3, '⅔'], [3 / 4, '¾'], [7 / 8, '⅞']
+        ];
+        let best = null, bestDiff = Infinity;
+        for (const [v, ch] of increments) {
+            const diff = Math.abs(fracPart - v);
+            if (diff < bestDiff) { bestDiff = diff; best = ch; }
+        }
+        if (wholes === 0) return best;
+        return `${wholes} ${best}`;
+    }
+
+    // Format a scaled amount. Non-cup units keep a single decimal place;
+    // cup measurements always render as proper fractions.
+    function formatScaledAmount(value, unit) {
+        if (value == null || isNaN(value)) return '';
+        const isCup = unit && /^cups?$/i.test(unit.trim());
+        if (isCup) {
+            const frac = toFractionString(value);
+            // "¾ cup" for less than one, "1 cup" for exactly one, "2 cups" otherwise.
+            const label = (value <= 1) ? 'cup' : 'cups';
+            return `${frac} ${label}`;
+        }
+        let num = Math.round(value * 10) / 10;
+        const numStr = String(num);
+        return `${numStr} ${unit || ''}`.trim();
+    }
+
+    // Parse an amount string that may start with a decimal, a unicode fraction
+    // ("½ cup"), or a mixed number ("1 ½ cups", "2 1/2 cups").
+    function parseAmount(amountStr) {
+        if (!amountStr) return null;
+        let str = String(amountStr).trim();
+        const fracMap = { '½': ' 1/2', '⅓': ' 1/3', '⅔': ' 2/3', '¼': ' 1/4', '¾': ' 3/4', '⅛': ' 1/8', '⅜': ' 3/8', '⅝': ' 5/8', '⅞': ' 7/8' };
+        for (const [char, val] of Object.entries(fracMap)) str = str.replace(char, val);
+        const match = str.match(/^(\d+(?:\s+\d+)?(?:\/\d+)?|\d*\.?\d+)?\s*([a-zA-Zµ%]+)?$/);
+        if (!match) return null;
+        let num = 0;
+        const numPart = match[1];
+        if (numPart) {
+            if (numPart.includes('/')) {
+                const [n, d] = numPart.split('/');
+                num = parseFloat(n) / parseFloat(d);
+            } else if (/\s/.test(numPart)) {
+                const parts = numPart.trim().split(/\s+/);
+                num = parseFloat(parts[0]) + parseFloat(parts[1]);
+            } else {
+                num = parseFloat(numPart);
+            }
+        }
+        return { value: isNaN(num) ? 0 : num, unit: (match[2] || '').trim() };
+    }
+
     function scaleAmount(amountStr, multiplier) {
         if (!amountStr) return '';
         if (multiplier === 1) return amountStr;
-        
-        let str = amountStr.trim();
-        const fracMap = {'½':'0.5', '⅓':'0.333', '⅔':'0.666', '¼':'0.25', '¾':'0.75'};
-        for (const [char, val] of Object.entries(fracMap)) {
-            str = str.replace(char, val);
-        }
-
-        const match = str.match(/^(\d*\.?\d+)\s*(.*)/);
-        if (match) {
-            let num = parseFloat(match[1]);
-            let rest = match[2];
-            let scaled = num * multiplier;
-            
-            scaled = parseFloat(scaled.toFixed(2));
-            return `${scaled} ${rest}`.trim();
-        }
-        return amountStr;
+        const parsed = parseAmount(amountStr);
+        if (!parsed) return amountStr;
+        return formatScaledAmount(parsed.value * multiplier, parsed.unit);
     }
 
     function renderIngredientsHTML(recipe, scale) {
@@ -665,8 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!metricAmt && !imperialAmt) {
                 let parsedAmount = parseFloat(ing.amount);
                 if (!isNaN(parsedAmount)) {
-                    let scaled = parsedAmount * scale;
-                    metricAmt = (Math.round(scaled * 100) / 100) + (ing.unit ? ' ' + ing.unit : '');
+                    metricAmt = formatScaledAmount(parsedAmount * scale, ing.unit || '');
                 } else if (ing.amount) {
                     metricAmt = ing.amount;
                 } else {

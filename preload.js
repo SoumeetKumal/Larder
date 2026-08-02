@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('larderWindow', {
+// The exposed API is only visible on `window.larderWindow` in the page's MAIN
+// world. Code running in the preload's own (isolated) world — like the title
+// bar click handlers below — must reference this local object instead, since
+// `window.larderWindow` is undefined there.
+const larderWindow = {
+    isElectron: true,
     minimize: () => ipcRenderer.send('window:minimize'),
     toggleMaximize: () => ipcRenderer.send('window:toggle-maximize'),
     close: () => ipcRenderer.send('window:close'),
@@ -8,7 +13,9 @@ contextBridge.exposeInMainWorld('larderWindow', {
     onMaximizedChange: (callback) => {
         ipcRenderer.on('window:maximized', (_event, value) => callback(value));
     }
-});
+};
+
+contextBridge.exposeInMainWorld('larderWindow', larderWindow);
 
 // Inject a themed, frameless title bar into every page. It uses the same CSS
 // variables as the rest of the app, so it follows light/dark mode automatically.
@@ -77,13 +84,13 @@ function injectTitleBar() {
     `;
     document.body.insertBefore(bar, document.body.firstChild);
 
-    document.getElementById('larder-btn-min').addEventListener('click', () => window.larderWindow.minimize());
-    document.getElementById('larder-btn-max').addEventListener('click', () => window.larderWindow.toggleMaximize());
-    document.getElementById('larder-btn-close').addEventListener('click', () => window.larderWindow.close());
+    document.getElementById('larder-btn-min').addEventListener('click', () => larderWindow.minimize());
+    document.getElementById('larder-btn-max').addEventListener('click', () => larderWindow.toggleMaximize());
+    document.getElementById('larder-btn-close').addEventListener('click', () => larderWindow.close());
 
     bar.addEventListener('dblclick', (e) => {
         if (e.target.closest('#larder-titlebar-controls')) return;
-        window.larderWindow.toggleMaximize();
+        larderWindow.toggleMaximize();
     });
 
     const maxIcon = document.getElementById('larder-max');
@@ -92,8 +99,8 @@ function injectTitleBar() {
         maxIcon.style.display = isMax ? 'none' : 'block';
         restoreIcon.style.display = isMax ? 'block' : 'none';
     };
-    window.larderWindow.onMaximizedChange(setState);
-    window.larderWindow.isMaximized().then(setState);
+    larderWindow.onMaximizedChange(setState);
+    larderWindow.isMaximized().then(setState);
 }
 
 window.addEventListener('DOMContentLoaded', () => {

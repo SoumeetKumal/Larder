@@ -9,6 +9,34 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#39;');
     }
 
+    // --- Amount formatting (shared with the shopping list display) ---
+    function toFractionString(value) {
+        if (value == null || isNaN(value)) return null;
+        const wholes = Math.floor(value + 1e-9);
+        const fracPart = value - wholes;
+        if (fracPart < 0.001) return String(wholes);
+        const increments = [
+            [1 / 8, '⅛'], [1 / 4, '¼'], [1 / 3, '⅓'], [3 / 8, '⅜'], [1 / 2, '½'],
+            [5 / 8, '⅝'], [2 / 3, '⅔'], [3 / 4, '¾'], [7 / 8, '⅞']
+        ];
+        let best = null, bestDiff = Infinity;
+        for (const [v, ch] of increments) {
+            const diff = Math.abs(fracPart - v);
+            if (diff < bestDiff) { bestDiff = diff; best = ch; }
+        }
+        if (wholes === 0) return best;
+        return `${wholes} ${best}`;
+    }
+    function formatAmountDisplay(value, unit) {
+        if (value == null || isNaN(value)) return '';
+        const u = String(unit || '').trim();
+        if (/^cups?$/i.test(u)) {
+            return `${toFractionString(value)} ${value <= 1 ? 'cup' : 'cups'}`;
+        }
+        const num = Math.round(value * 10) / 10;
+        return `${String(num)} ${u}`.trim();
+    }
+
     const addBtn = document.getElementById('add-recipe-btn');
     const statusText = document.getElementById('status-text');
     const listContainer = document.getElementById('cms-recipe-list');
@@ -331,11 +359,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const accent = avatarAccents[idx % avatarAccents.length];
                 const initial = (profile.name || 'U').trim().charAt(0).toUpperCase();
                 const target = macroTargets(profile);
-                const calPct = target.energy > 0 ? Math.min(100, Math.round((weekTotal.energy / target.energy) * 100)) : 0;
+                // Targets in the profile are per-day; multiply by 7 so the ring and
+                // macro progress compare the whole week against a weekly goal.
+                const weekTarget = {
+                    energy: target.energy * 7,
+                    protein: target.protein * 7,
+                    carbs: target.carbs * 7,
+                    fat: target.fat * 7
+                };
+                const calPct = weekTarget.energy > 0 ? Math.min(100, Math.round((weekTotal.energy / weekTarget.energy) * 100)) : 0;
                 const ringOffset = Math.max(0, 100 - calPct);
-                const proteinPct = target.protein > 0 ? Math.min(100, Math.round((weekTotal.protein / target.protein) * 100)) : 0;
-                const carbsPct = target.carbs > 0 ? Math.min(100, Math.round((weekTotal.carbs / target.carbs) * 100)) : 0;
-                const fatPct = target.fat > 0 ? Math.min(100, Math.round((weekTotal.fat / target.fat) * 100)) : 0;
+                const proteinPct = weekTarget.protein > 0 ? Math.min(100, Math.round((weekTotal.protein / weekTarget.protein) * 100)) : 0;
+                const carbsPct = weekTarget.carbs > 0 ? Math.min(100, Math.round((weekTotal.carbs / weekTarget.carbs) * 100)) : 0;
+                const fatPct = weekTarget.fat > 0 ? Math.min(100, Math.round((weekTotal.fat / weekTarget.fat) * 100)) : 0;
                 return `
                 <div class="mp-user-stat-card">
                     <div class="mp-user-header">
@@ -351,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="mp-user-cal">
                             <strong>${Math.round(weekTotal.energy).toLocaleString()}</strong>
-                            <span>/ ${target.energy.toLocaleString()} kcal</span>
+                            <span>/ ${weekTarget.energy.toLocaleString()} kcal</span>
                         </div>
                     </div>
                     <div class="mp-user-details-hover">
@@ -360,21 +396,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="mp-macro-label"><i data-lucide="beef" style="width: 14px; height: 14px; color: var(--accent-meat);"></i> Protein</span>
                             <div class="mp-macro-vals">
                                 <span class="mp-macro-curr">${Math.round(weekTotal.protein)}g</span>
-                                <span class="mp-macro-target">/ ${target.protein}g</span>
+                                <span class="mp-macro-target">/ ${weekTarget.protein}g</span>
                             </div>
                         </div>
                         <div class="mp-macro-row">
                             <span class="mp-macro-label"><i data-lucide="wheat" style="width: 14px; height: 14px; color: var(--accent-stock);"></i> Carbs</span>
                             <div class="mp-macro-vals">
                                 <span class="mp-macro-curr">${Math.round(weekTotal.carbs)}g</span>
-                                <span class="mp-macro-target">/ ${target.carbs}g</span>
+                                <span class="mp-macro-target">/ ${weekTarget.carbs}g</span>
                             </div>
                         </div>
                         <div class="mp-macro-row">
                             <span class="mp-macro-label"><i data-lucide="droplet" style="width: 14px; height: 14px; color: #D4B04A;"></i> Fat</span>
                             <div class="mp-macro-vals">
                                 <span class="mp-macro-curr">${Math.round(weekTotal.fat)}g</span>
-                                <span class="mp-macro-target">/ ${target.fat}g</span>
+                                <span class="mp-macro-target">/ ${weekTarget.fat}g</span>
                             </div>
                         </div>
                         <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted);">
@@ -890,26 +926,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
             );
 
+            const pantryView = (localStorage.getItem('larder_pantry_view') || 'cards');
+            const statusInfo = (ing, pItem) => {
+                const isTracked = !!pItem.isTracked;
+                const qty = pItem.quantity || 0;
+                let cls = 'not-tracked', label = 'Not Tracked';
+                if (isTracked) {
+                    if (qty <= 0) { cls = 'out-of-stock'; label = 'Out of Stock'; }
+                    else if (qty < 10) { cls = 'low-stock'; label = 'Low Stock'; }
+                    else { cls = 'in-stock'; label = 'In Stock'; }
+                }
+                return { cls, label, isTracked, qty };
+            };
+
             const cardsHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">
                         Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
                     </div>
+                    <div class="pantry-view-toggle" id="pantry-view-toggle">
+                        <button type="button" data-view="cards" class="${pantryView === 'cards' ? 'active' : ''}"><i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i> Cards</button>
+                        <button type="button" data-view="table" class="${pantryView === 'table' ? 'active' : ''}"><i data-lucide="table" style="width: 14px; height: 14px;"></i> Table</button>
+                    </div>
                 </div>
-                <div class="vd-pantry-grid" id="pantry-grid">
-                    ${filteredIngredients.length === 0 ? `<div class="empty-state">No ingredients match. Add ingredients first.</div>` : ''}
-                    ${filteredIngredients.map((ing) => {
+                <div id="pantry-content">
+                    ${pantryView === 'table' ? renderPantryTable(filteredIngredients, statusInfo) : renderPantryCards(filteredIngredients, statusInfo)}
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button id="save-pantry-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Pantry</button>
+                </div>
+            `;
+            listContainer.innerHTML = cardsHTML;
+            addBtn.style.display = 'none';
+
+            // View toggle switches between the card and table layout.
+            const toggle = document.getElementById('pantry-view-toggle');
+            toggle.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('larder_pantry_view', btn.dataset.view);
+                    renderCMSList();
+                });
+            });
+
+            function renderPantryCards(items, statusInfo) {
+                if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
+                return `<div class="vd-pantry-grid" id="pantry-grid">
+                    ${items.map((ing) => {
                         const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
                         const qty = pItem.quantity || 0;
                         const unit = ing.servingUnit || 'g';
-                        const isTracked = !!pItem.isTracked;
-                        let statusClass = 'not-tracked';
-                        let statusLabel = 'Not Tracked';
-                        if (isTracked) {
-                            if (qty <= 0) { statusClass = 'out-of-stock'; statusLabel = 'Out of Stock'; }
-                            else if (qty < 10) { statusClass = 'low-stock'; statusLabel = 'Low Stock'; }
-                            else { statusClass = 'in-stock'; statusLabel = 'In Stock'; }
-                        }
+                        const { cls, label, isTracked } = statusInfo(ing, pItem);
                         const pct = !isTracked ? 0 : Math.min(100, Math.round((qty / 100) * 100));
                         const vis = getCategoryIcon(ing.category);
                         const unitLabel = unit || 'g';
@@ -919,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="vd-pantry-icon">
                                     <svg viewBox="${vis.vb}" style="width:22px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
                                 </div>
-                                <button type="button" class="vd-pantry-status ${statusClass} p-track" role="checkbox" aria-checked="${isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${statusLabel}</button>
+                                <button type="button" class="vd-pantry-status ${cls} p-track" role="checkbox" aria-checked="${isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${label}</button>
                             </div>
                             <div class="vd-pantry-info">
                                 <h4>${escapeHtml(ing.name)}</h4>
@@ -938,17 +1004,54 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         `;
                     }).join('')}
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button id="save-pantry-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Pantry</button>
-                </div>
-            `;
-            listContainer.innerHTML = cardsHTML;
-            addBtn.style.display = 'none';
+                </div>`;
+            }
+
+            function renderPantryTable(items, statusInfo) {
+                if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
+                return `<div class="vd-pantry-table-wrap">
+                    <table class="vd-pantry-table">
+                        <thead>
+                            <tr>
+                                <th>Ingredient</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Track</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((ing) => {
+                                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
+                                const qty = pItem.quantity || 0;
+                                const unit = ing.servingUnit || 'g';
+                                const { cls, label, isTracked } = statusInfo(ing, pItem);
+                                const vis = getCategoryIcon(ing.category);
+                                return `
+                                <tr data-foodid="${escapeHtml(ing.foodId)}">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                            <svg viewBox="${vis.vb}" style="width:18px;height:${vis.h}px;fill:${vis.accent};flex-shrink:0;"><use href="${vis.href}"></use></svg>
+                                            <span style="font-weight: 600;">${escapeHtml(ing.name)}</span>
+                                        </div>
+                                    </td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(ing.category || 'Uncategorized')}</td>
+                                    <td><span class="vd-pantry-status ${cls}">${label}</span></td>
+                                    <td><input type="number" step="any" min="0" class="p-qty" value="${qty}" ${!isTracked ? 'disabled' : ''} aria-label="Quantity"></td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(unit || 'g')}</td>
+                                    <td><input type="checkbox" class="p-track-check" ${isTracked ? 'checked' : ''} aria-label="Track stock"></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
 
             // Toggle tracking via status badge; toggle quantity input accordingly
             function refreshTrackState(btn) {
                 const card = btn.closest('.vd-pantry-card');
+                if (!card) return;
                 const isTracked = btn.dataset.tracked === '1';
                 const qtyInput = card.querySelector('.p-qty');
                 if (isTracked) {
@@ -981,16 +1084,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
+            // Table view: checkbox toggles the tracked state and enables the qty input.
+            document.querySelectorAll('.p-track-check').forEach(chk => {
+                chk.addEventListener('change', () => {
+                    const row = chk.closest('tr');
+                    const qtyInput = row.querySelector('.p-qty');
+                    if (chk.checked) {
+                        qtyInput.removeAttribute('disabled');
+                    } else {
+                        qtyInput.setAttribute('disabled', 'true');
+                    }
+                });
+            });
+
             document.getElementById('save-pantry-btn').addEventListener('click', async () => {
-                const cards = document.querySelectorAll('#pantry-grid .vd-pantry-card');
                 const updatedPantry = [];
 
-                cards.forEach(card => {
+                document.querySelectorAll('.vd-pantry-card').forEach(card => {
                     const foodId = card.dataset.foodid;
                     const btn = card.querySelector('.p-track');
                     const isTracked = btn.dataset.tracked === '1';
                     const quantity = parseFloat(card.querySelector('.p-qty').value) || 0;
+                    if (isTracked || quantity > 0) {
+                        updatedPantry.push({ foodId, isTracked, quantity });
+                    }
+                });
 
+                document.querySelectorAll('.vd-pantry-table tbody tr').forEach(row => {
+                    const foodId = row.dataset.foodid;
+                    const isTracked = row.querySelector('.p-track-check').checked;
+                    const quantity = parseFloat(row.querySelector('.p-qty').value) || 0;
                     if (isTracked || quantity > 0) {
                         updatedPantry.push({ foodId, isTracked, quantity });
                     }
@@ -1132,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         shoppingList.push({
                             foodId,
                             name: data.name,
-                            amount: Math.ceil(deficit),
+                            amount: Math.round(deficit * 10) / 10,
                             unit: data.unit,
                             category: (foodRef && foodRef.category) || 'Other',
                             recipes: Array.from(data.recipes || []),
@@ -1178,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="vd-shop-item-details">
                                 <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
                                 <div class="vd-shop-item-meta">
-                                    <span class="vd-shop-qty">${escapeHtml(item.amount)} ${escapeHtml(item.unit)}</span>
+                                    <span class="vd-shop-qty">${escapeHtml(formatAmountDisplay(item.amount, item.unit))}</span>
                                     ${recipeTags}
                                 </div>
                             </div>

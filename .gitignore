@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ingredient verification working files (regenerated per batch; not source)
+scripts/_batches/
+docs/ingredients_progress.json
+scripts/verify_ingredients.js

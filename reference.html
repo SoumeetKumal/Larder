@@ -23,6 +23,7 @@
                 <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
                 <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
                 <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
+                <a href="cms" class="btn btn-ghost app-only" style="padding: 0.5rem 1rem; display: none;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
@@ -485,6 +486,9 @@
     <script>
         // Reference tab controller
         document.addEventListener('DOMContentLoaded', () => {
+            if (window.larderWindow && window.larderWindow.isElectron) {
+                document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
+            }
             const tabs = Array.from(document.querySelectorAll('.vd-tab'));
             const panels = Array.from(document.querySelectorAll('.vd-tab-panel'));
             const storageKey = 'larder_ref_tab';
@@ -567,11 +571,6 @@
     </div>
     <div class="vd-footer-bottom">
         <span>© <span id="current-year">2026</span> Larder. All rights reserved.</span>
-        <div class="vd-footer-bottom-links">
-            <a href="legal#disclaimer">Disclaimer</a>
-            <a href="legal#terms">Terms</a>
-            <a href="legal#privacy">Privacy</a>
-        </div>
     </div>
 </footer>
     <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
