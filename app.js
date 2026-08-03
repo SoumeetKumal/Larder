@@ -801,6 +801,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${res}${val.unit}`;
         };
 
+        // Micros are stored per-serving (or per-100g/total) numbers from the CMS.
+        const MICRO_FIELDS = ['fiberG', 'sugarG', 'saturatedFatG', 'monounsaturatedFatG', 'polyunsaturatedFatG', 'transFatG', 'cholesterolMg', 'sodiumMg', 'potassiumMg', 'calciumMg', 'ironMg', 'magnesiumMg', 'phosphorusMg', 'zincMg', 'copperMg', 'seleniumMcg', 'vitaminAMcg', 'vitaminCMg', 'vitaminDMcg', 'vitaminEMg', 'vitaminKMcg', 'thiaminMg', 'riboflavinMg', 'niacinMg', 'pantothenicMg', 'vitaminB6Mg', 'folateMcg', 'vitaminB12Mcg'];
+        const micros = {};
+        for (const nf of MICRO_FIELDS) {
+            if (typeof m[nf] === 'number' && !isNaN(m[nf]) && m[nf] > 0) micros[nf] = m[nf] / divisor;
+        }
+
         return {
             normalized: {
                 energy: e.num / divisor,
@@ -814,6 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 protein: m.protein ? calc(p) : '-',
                 fat: m.fat ? calc(f) : '-'
             },
+            micros,
             referenceLabel: suffix.replace(' / ', '') // "serving", "100g", "50g"
         };
     }
@@ -901,8 +909,21 @@ document.addEventListener('DOMContentLoaded', () => {
             ['Copper', 'copperMg', 'mg'],
             ['Selenium', 'seleniumMcg', 'mcg']
         ];
+        const fatRows = [
+            ['Saturated Fat', 'saturatedFatG', 'g'],
+            ['Trans Fat', 'transFatG', 'g'],
+            ['Monounsaturated Fat', 'monounsaturatedFatG', 'g'],
+            ['Polyunsaturated Fat', 'polyunsaturatedFatG', 'g'],
+            ['Cholesterol', 'cholesterolMg', 'mg']
+        ];
+        const carbRows = [
+            ['Dietary Fiber', 'fiberG', 'g'],
+            ['Total Sugars', 'sugarG', 'g']
+        ];
         const vitaminsRowsHtml = vitaminRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
         const mineralsRowsHtml = mineralRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
+        const fatsRowsHtml = fatRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
+        const carbsRowsHtml = carbRows.filter(r => typeof recipe[r[1]] === 'number' && recipe[r[1]] > 0);
 
         const fold = (icon, label, rowsHtml) => rowsHtml.length ? `
                     <details class="ing-fold">
@@ -916,6 +937,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </details>` : '';
         const vitaminsFold = fold('pill', 'Vitamins', vitaminsRowsHtml);
         const mineralsFold = fold('gem', 'Minerals', mineralsRowsHtml);
+        const fatsFold = fold('droplet', 'Fats', fatsRowsHtml);
+        const carbsFold = fold('leaf', 'Fiber & Sugars', carbsRowsHtml);
 
         // --- Macro visual bar (per 100g ratio) ---
         const p = Number(recipe.proteinG) || 0, f = Number(recipe.fatG) || 0, c = Number(recipe.carbsG) || 0;
@@ -954,9 +977,11 @@ document.addEventListener('DOMContentLoaded', () => {
         panels.push(`<div class="ing-tab-panel" data-panel="nutrition">
                     <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem;">Per ${escapeHtml(serving)} Serving</h4>
                     ${macroBar}
+                    ${fatsFold}
+                    ${carbsFold}
                     ${vitaminsFold}
                     ${mineralsFold}
-                    ${(!macroBar && !vitaminsFold && !mineralsFold) ? `<p style="color: var(--text-muted); font-size: 0.9rem;">No detailed nutrition breakdown available for this ingredient.</p>` : ''}
+                    ${(!macroBar && !fatsFold && !carbsFold && !vitaminsFold && !mineralsFold) ? `<p style="color: var(--text-muted); font-size: 0.9rem;">No detailed nutrition breakdown available for this ingredient.</p>` : ''}
                 </div>`);
 
         if (typeof recipe.averagePrice === 'number' && !isNaN(recipe.averagePrice)) {
@@ -1214,6 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = document.getElementById('nutritionDrawerContent');
         const sm = getStandardMacros(recipe);
         const norm = sm ? sm.normalized : null;
+        const micros = sm ? sm.micros : null;
 
         const rows = [];
         const addRow = (cls, label, value, pct) => {
@@ -1223,8 +1249,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (norm && (norm.energy || norm.fat || norm.carbs || norm.protein)) {
             if (norm.energy) addRow('main', 'Calories', fmtAmount(norm.energy) + ' kcal', null);
             if (norm.fat) addRow('main', 'Total Fat', fmtAmount(norm.fat) + 'g', Math.round(norm.fat / 78 * 100));
+            if (micros && micros.saturatedFatG != null) addRow('sub', 'Saturated Fat', fmtAmount(micros.saturatedFatG) + 'g', Math.round(micros.saturatedFatG / 20 * 100));
+            if (micros && micros.transFatG != null) addRow('sub', 'Trans Fat', fmtAmount(micros.transFatG) + 'g', null);
+            if (micros && micros.monounsaturatedFatG != null) addRow('sub', 'Monounsaturated Fat', fmtAmount(micros.monounsaturatedFatG) + 'g', null);
+            if (micros && micros.polyunsaturatedFatG != null) addRow('sub', 'Polyunsaturated Fat', fmtAmount(micros.polyunsaturatedFatG) + 'g', null);
+            if (micros && micros.cholesterolMg != null) addRow('main', 'Cholesterol', fmtAmount(micros.cholesterolMg) + 'mg', Math.round(micros.cholesterolMg / 300 * 100));
+            if (micros && micros.sodiumMg != null) addRow('main', 'Sodium', fmtAmount(micros.sodiumMg) + 'mg', Math.round(micros.sodiumMg / 2300 * 100));
             if (norm.carbs) addRow('main', 'Total Carbohydrates', fmtAmount(norm.carbs) + 'g', Math.round(norm.carbs / 275 * 100));
+            if (micros && micros.fiberG != null) addRow('sub', 'Dietary Fiber', fmtAmount(micros.fiberG) + 'g', Math.round(micros.fiberG / 28 * 100));
+            if (micros && micros.sugarG != null) addRow('sub', 'Total Sugars', fmtAmount(micros.sugarG) + 'g', null);
             if (norm.protein) addRow('main', 'Protein', fmtAmount(norm.protein) + 'g', Math.round(norm.protein / 50 * 100));
+
+            // Vitamins
+            const vitDefs = [
+                ['Vitamin A', 'vitaminAMcg', 'mcg', 900], ['Vitamin C', 'vitaminCMg', 'mg', 90], ['Vitamin D', 'vitaminDMcg', 'mcg', 20], ['Vitamin E', 'vitaminEMg', 'mg', 15], ['Vitamin K', 'vitaminKMcg', 'mcg', 120], ['Thiamin (B1)', 'thiaminMg', 'mg', 1.2], ['Riboflavin (B2)', 'riboflavinMg', 'mg', 1.3], ['Niacin (B3)', 'niacinMg', 'mg', 16], ['Vitamin B6', 'vitaminB6Mg', 'mg', 1.7], ['Folate (B9)', 'folateMcg', 'mcg', 400], ['Vitamin B12', 'vitaminB12Mcg', 'mcg', 2.4]
+            ];
+            for (const [label, field, unit, dv] of vitDefs) {
+                if (micros && micros[field] != null) addRow('vit', label, fmtAmount(micros[field]) + unit, Math.round(micros[field] / dv * 100));
+            }
+            // Minerals
+            const minDefs = [
+                ['Calcium', 'calciumMg', 'mg', 1300], ['Iron', 'ironMg', 'mg', 18], ['Magnesium', 'magnesiumMg', 'mg', 420], ['Phosphorus', 'phosphorusMg', 'mg', 700], ['Potassium', 'potassiumMg', 'mg', 4700], ['Zinc', 'zincMg', 'mg', 11], ['Copper', 'copperMg', 'mg', 0.9], ['Selenium', 'seleniumMcg', 'mcg', 55]
+            ];
+            for (const [label, field, unit, dv] of minDefs) {
+                if (micros && micros[field] != null) addRow('min', label, fmtAmount(micros[field]) + unit, Math.round(micros[field] / dv * 100));
+            }
         }
 
         content.innerHTML = rows.length

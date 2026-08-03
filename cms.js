@@ -119,10 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Auto-calc recipe macros by summing DB ingredient macros ---
+    const NUTRIENT_FIELDS = ['fiberG', 'sugarG', 'saturatedFatG', 'monounsaturatedFatG', 'polyunsaturatedFatG', 'transFatG', 'cholesterolMg', 'sodiumMg', 'potassiumMg', 'calciumMg', 'ironMg', 'magnesiumMg', 'phosphorusMg', 'zincMg', 'copperMg', 'seleniumMcg', 'vitaminAMcg', 'vitaminCMg', 'vitaminDMcg', 'vitaminEMg', 'vitaminKMcg', 'thiaminMg', 'riboflavinMg', 'niacinMg', 'pantothenicMg', 'vitaminB6Mg', 'folateMcg', 'vitaminB12Mcg'];
     function recalcMacrosFromIngredients() {
         if (!ingContainer) return;
         const rows = ingContainer.querySelectorAll('.cms-ingredient-row');
-        const totals = { energy: 0, carbs: 0, protein: 0, fat: 0 };
+        const totals = { energy: 0, carbs: 0, protein: 0, fat: 0, fiberG: 0, sugarG: 0, saturatedFatG: 0, monounsaturatedFatG: 0, polyunsaturatedFatG: 0, transFatG: 0, cholesterolMg: 0, sodiumMg: 0, potassiumMg: 0, calciumMg: 0, ironMg: 0, magnesiumMg: 0, phosphorusMg: 0, zincMg: 0, copperMg: 0, seleniumMcg: 0, vitaminAMcg: 0, vitaminCMg: 0, vitaminDMcg: 0, vitaminEMg: 0, vitaminKMcg: 0, thiaminMg: 0, riboflavinMg: 0, niacinMg: 0, pantothenicMg: 0, vitaminB6Mg: 0, folateMcg: 0, vitaminB12Mcg: 0 };
         const unitToG = { g: 1, kg: 1000, ml: 1, L: 1000 };
         const imperialG = { tbsp: 15, tsp: 5, cups: 240, cup: 240, whole: 100, can: 200, cans: 200, cloves: 5, sprig: 1, sprigs: 1, pinch: 0.3, medium: 100, small: 50, large: 120, slice: 30, piece: 50 };
         rows.forEach(row => {
@@ -145,6 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
             totals.carbs += (parseFloat(f.carbsG) || 0) / divisor * grams;
             totals.protein += (parseFloat(f.proteinG) || 0) / divisor * grams;
             totals.fat += (parseFloat(f.fatG) || 0) / divisor * grams;
+            for (const nf of NUTRIENT_FIELDS) {
+                totals[nf] += (parseFloat(f[nf]) || 0) / divisor * grams;
+            }
         });
 
         const refSelect = document.getElementById('macro-reference');
@@ -160,6 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setMacroField('macro-carbs', String(round1(totals.carbs)), 'g');
         setMacroField('macro-protein', String(round1(totals.protein)), 'g');
         setMacroField('macro-fat', String(round1(totals.fat)), 'g');
+        // Persist full nutrient breakdown so the recipe drawer can show it.
+        const breakdown = {};
+        for (const nf of NUTRIENT_FIELDS) {
+            const v = round1(totals[nf]);
+            if (v > 0) breakdown[nf] = v;
+        }
+        lastMacroBreakdown = breakdown;
     }
 
     function getCategoryIcon(cat) {
@@ -225,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cmsCategoryFilter = 'All';
     let cmsStatusFilter = 'All';
     let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
+    let lastMacroBreakdown = null;
 
     const cmsTabs = document.getElementById('cms-tabs');
     const searchInput = document.getElementById('cms-search');
@@ -2511,6 +2523,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 setMacroField('macro-carbs', recipe.macros.carbohydrate, 'g');
                 setMacroField('macro-protein', recipe.macros.protein, 'g');
                 setMacroField('macro-fat', recipe.macros.fat, 'g');
+                // Restore persisted micro breakdown so re-saving without auto-calc keeps it.
+                lastMacroBreakdown = {};
+                for (const nf of NUTRIENT_FIELDS) {
+                    if (typeof recipe.macros[nf] === 'number' && !isNaN(recipe.macros[nf])) lastMacroBreakdown[nf] = recipe.macros[nf];
+                }
             } else {
                 document.getElementById('macro-reference').value = 'per_serving';
                 macroRefSelect.dispatchEvent(new Event('change'));
@@ -2519,6 +2536,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setMacroField('macro-protein', '', 'g');
                 setMacroField('macro-fat', '', 'g');
                 document.getElementById('macro-yield').value = '';
+                lastMacroBreakdown = null;
             }
 
             if (recipe.ingredients?.length > 0) {
@@ -2608,7 +2626,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 energy: getMacroValue('macro-energy', 'kCal'),
                 carbohydrate: getMacroValue('macro-carbs', 'g'),
                 protein: getMacroValue('macro-protein', 'g'),
-                fat: getMacroValue('macro-fat', 'g')
+                fat: getMacroValue('macro-fat', 'g'),
+                ...(lastMacroBreakdown || {})
             },
             ingredients: recipeIngredients,
             steps,
