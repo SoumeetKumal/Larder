@@ -27,3 +27,6 @@ dist-ssr
 scripts/_batches/
 docs/ingredients_progress.json
 scripts/verify_ingredients.js
+
+# Archived design/dev artifacts (kept locally only, not committed)
+_archive/
