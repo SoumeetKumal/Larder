@@ -580,16 +580,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isIngredientsPage || recipe.entryType === 'ingredient') {
                 const safeTitle = escapeHtml(title);
                 const safeCategory = escapeHtml(recipe.category || 'Ingredient');
-                const safeImage = escapeHtml(recipe.imageUrl || 'images/icon.png');
+                const hasImg = !!(recipe.imageUrl && String(recipe.imageUrl).trim());
+                const safeImage = hasImg ? escapeHtml(recipe.imageUrl) : '';
                 const safeId = escapeHtml(itemId);
                 const safeEnergy = escapeHtml(energy);
                 const safeProtein = escapeHtml(recipe.proteinG);
                 const safeFat = escapeHtml(recipe.fatG);
-                const isFallback = !recipe.imageUrl;
+                const ingIcon = getIngredientIcon(recipe.category);
+                const cardVisual = hasImg
+                    ? `<img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.parentElement.querySelector('i').style.display='inline-flex';this.style.display='none';" style="width:100%;height:100%;object-fit:cover;">
+                        <i data-lucide="${ingIcon.icon}" style="width: 38px; height: 38px; stroke-width: 1.6; color: ${ingIcon.accent}; display: none;"></i>`
+                    : `<i data-lucide="${ingIcon.icon}" style="width: 38px; height: 38px; stroke-width: 1.6; color: ${ingIcon.accent};"></i>`;
                 return `
                 <div class="ingredient-card ${themeClass}" data-id="${safeId}" role="listitem" tabindex="0">
                     <div class="ingredient-card-visual" style="background: var(--surface-hover);">
-                        <img src="${safeImage}" alt="${safeTitle}" loading="lazy" onerror="this.onerror=null;this.src='images/icon.png';this.style.objectFit='contain';this.style.padding='1.25rem';" style="width:100%;height:100%;object-fit:${isFallback ? 'contain' : 'cover'};${isFallback ? 'padding:1.25rem;' : ''}">
+                        ${cardVisual}
                     </div>
                     <div class="ingredient-card-body">
                         <span class="ingredient-card-category">${safeCategory}</span>
@@ -843,22 +848,32 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    function getCategoryVisual(category) {
+    function getIngredientIcon(category) {
         const cat = (category || '').toLowerCase();
-        if (cat.includes('seafood') || cat.includes('fish') || cat.includes('shell')) return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 32, h: 16 };
-        if (cat.includes('vegetable') || cat.includes('veg')) return { accent: 'var(--accent-veg)', href: '#icon-tomato', vb: '0 0 88 96', w: 32, h: 35 };
-        if (cat.includes('meat') || cat.includes('poultry')) return { accent: 'var(--accent-meat)', href: '#icon-mortar', vb: '0 0 90 99', w: 22, h: 24 };
-        if (cat.includes('grain') || cat.includes('pasta') || cat.includes('bread') || cat.includes('rice')) return { accent: 'var(--accent-stock)', href: '#icon-nut', vb: '0 0 119 122', w: 28, h: 28 };
-        if (cat.includes('baking') || cat.includes('dessert') || cat.includes('sweet')) return { accent: 'var(--accent-bake)', href: '#icon-muffin', vb: '0 0 137 131', w: 32, h: 30 };
-        if (cat.includes('fruit')) return { accent: 'var(--accent-jam)', href: '#icon-tomato', vb: '0 0 88 96', w: 32, h: 35 };
-        return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 32, h: 16 };
+        if (cat.includes('vegetable') || cat.includes('veg') || cat.includes('herb')) return { accent: 'var(--accent-veg)', icon: 'leafy-green' };
+        if (cat.includes('fruit')) return { accent: 'var(--accent-jam)', icon: 'apple' };
+        if (cat.includes('meat') || cat.includes('poultry')) return { accent: 'var(--accent-meat)', icon: 'beef' };
+        if (cat.includes('fish') || cat.includes('seafood') || cat.includes('shell')) return { accent: 'var(--accent-sea)', icon: 'fish' };
+        if (cat.includes('dairy') || cat.includes('milk') || cat.includes('cheese')) return { accent: 'var(--accent-sea)', icon: 'milk' };
+        if (cat.includes('grain') || cat.includes('pasta') || cat.includes('bread') || cat.includes('rice') || cat.includes('cereal') || cat.includes('carbs') || cat.includes('noodle')) return { accent: 'var(--accent-stock)', icon: 'wheat' };
+        if (cat.includes('baking') || cat.includes('dessert') || cat.includes('sweet')) return { accent: 'var(--accent-bake)', icon: 'cake' };
+        if (cat.includes('snack')) return { accent: 'var(--accent-bake)', icon: 'cookie' };
+        if (cat.includes('fats') || cat.includes('oil')) return { accent: 'var(--accent-stock)', icon: 'droplet' };
+        if (cat.includes('spice')) return { accent: 'var(--accent-meat)', icon: 'flame' };
+        if (cat.includes('nut') || cat.includes('seed')) return { accent: 'var(--accent-stock)', icon: 'nut' };
+        if (cat.includes('legume') || cat.includes('bean')) return { accent: 'var(--accent-veg)', icon: 'bean' };
+        if (cat.includes('beverage') || cat.includes('drink') || cat.includes('wine')) return { accent: 'var(--accent-sea)', icon: 'cup-soda' };
+        if (cat.includes('condiment')) return { accent: 'var(--accent-stock)', icon: 'package' };
+        if (cat.includes('supplement')) return { accent: 'var(--accent-meat)', icon: 'pill' };
+        if (cat.includes('protein')) return { accent: 'var(--accent-meat)', icon: 'egg' };
+        return { accent: 'var(--accent-sea)', icon: 'utensils' };
     }
 
     function buildIngredientModalContent(recipe) {
         const title = (recipe.name || recipe.title || '').trim();
         const category = recipe.category || 'Other';
-        const vis = getCategoryVisual(category);
-        const accent = vis.accent;
+        const ingIcon = getIngredientIcon(category);
+        const accent = ingIcon.accent;
 
         const fmtG = (v) => (typeof v === 'number' && !isNaN(v)) ? (Math.round(v * 10) / 10) + 'g' : '-';
         const kcalVal = (typeof recipe.calories === 'number' && !isNaN(recipe.calories)) ? recipe.calories : '-';
@@ -1001,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-header" style="padding-bottom: 0;">
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.25rem;">
                     <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, ${accent} 15%, transparent), color-mix(in srgb, ${accent} 6%, transparent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <svg class="vector-icon" viewBox="${vis.vb}" style="width: ${vis.w}px; height: ${vis.h}px; fill: ${accent};"><use href="${vis.href}"></use></svg>
+                        <i data-lucide="${ingIcon.icon}" style="width: 26px; height: 26px; stroke-width: 1.8; color: ${accent};"></i>
                     </div>
                     <div>
                         <h2 class="recipe-full-title" style="margin-bottom: 0.1rem; color: ${accent};">${escapeHtml(title.toUpperCase())}</h2>
@@ -1088,10 +1103,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (recipe.category === 'Dessert') headerColor = 'var(--accent-bake)';
         else if (recipe.category === 'Breakfast') headerColor = 'var(--accent-stock)';
         
-        const ingVis = getCategoryVisual(recipe.category);
-        const pillParts = ingVis.vb.split(' ').map(Number);
-        const pillW = 22, pillH = Math.round(pillW * pillParts[3] / pillParts[2]);
-        const ingredientsPillIcon = `<svg class="vector-icon" viewBox="${ingVis.vb}" style="width: ${pillW}px; height: ${pillH}px; fill: currentColor;"><use href="${ingVis.href}"></use></svg>`;
+        const ingVis = getIngredientIcon(recipe.category);
+        const ingredientsPillIcon = `<i data-lucide="${ingVis.icon}" style="width: 18px; height: 18px; stroke-width: 2; color: currentColor;"></i>`;
         
         // Remove standard header wrapper and inject the custom modal structure 
         // Note: index.html already has `<div class="modal-content" id="modal-container">` and `<button class="modal-close" id="modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>` inside it, and `<div id="modal-body">`.
