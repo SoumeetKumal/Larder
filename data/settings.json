@@ -7,5 +7,9 @@
       "protein": 30,
       "fat": 30
     }
-  ]
+  ],
+  "shopping": {
+    "currency": "MUR",
+    "amount": 6000
+  }
 }

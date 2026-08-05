@@ -38,7 +38,9 @@
     "monounsaturatedFatG": 0.17,
     "polyunsaturatedFatG": 0.56,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 12,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "parsley",
@@ -79,7 +81,9 @@
     "monounsaturatedFatG": 0.03,
     "polyunsaturatedFatG": 0.01,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 4,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "tuna_flakes",
@@ -120,7 +124,9 @@
     "monounsaturatedFatG": 0.11,
     "polyunsaturatedFatG": 0.28,
     "transFatG": 0,
-    "cholesterolMg": 36
+    "cholesterolMg": 36,
+    "averagePrice": 95,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "white_wine",
@@ -161,7 +167,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 18,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "olive_oil",
@@ -182,7 +190,9 @@
     "saturatedFatG": 2.37,
     "monounsaturatedFatG": 9.99,
     "polyunsaturatedFatG": 1.56,
-    "transFatG": 0.02
+    "transFatG": 0.02,
+    "averagePrice": 9,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "tomato_puree",
@@ -223,7 +233,9 @@
     "monounsaturatedFatG": 0.03,
     "polyunsaturatedFatG": 0.09,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 25,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "garlic",
@@ -264,7 +276,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0.02,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 3,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "sugar",
@@ -304,7 +318,9 @@
     "saturatedFatG": 0,
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 2,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "onion",
@@ -345,7 +361,9 @@
     "monounsaturatedFatG": 0.01,
     "polyunsaturatedFatG": 0.02,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 15,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "parmigiano_reggiano",
@@ -358,7 +376,9 @@
     "carbsG": 0,
     "fiberG": 0,
     "sugarG": 0,
-    "category": "Dairy"
+    "category": "Dairy",
+    "averagePrice": 240,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "thyme",
@@ -396,7 +416,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0.01,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 3,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "lemon_juice",
@@ -437,7 +459,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 4,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "tarragon",
@@ -475,7 +499,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0.04,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 3,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "salt",
@@ -516,7 +542,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 1,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "rosemary",
@@ -554,7 +582,9 @@
     "monounsaturatedFatG": 0.01,
     "polyunsaturatedFatG": 0.01,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 3,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "pepper",
@@ -595,7 +625,9 @@
     "monounsaturatedFatG": 0.01,
     "polyunsaturatedFatG": 0.02,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 2,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "chilli_flakes",
@@ -1501,7 +1533,9 @@
     "saturatedFatG": 0.18,
     "monounsaturatedFatG": 0.21,
     "polyunsaturatedFatG": 0.18,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 8,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "basmati_rice_brown",
@@ -4203,7 +4237,9 @@
     "monounsaturatedFatG": 0,
     "polyunsaturatedFatG": 0.04,
     "transFatG": 0,
-    "cholesterolMg": 0
+    "cholesterolMg": 0,
+    "averagePrice": 6,
+    "priceCurrency": "MUR"
   },
   {
     "foodId": "pearl_barley",

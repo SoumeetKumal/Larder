@@ -60,6 +60,7 @@ const INGREDIENTS_PATH = path.join(DATA_DIR, 'ingredients.json');
 const MEALPLANS_PATH = path.join(DATA_DIR, 'mealplans.json');
 const PANTRY_PATH = path.join(DATA_DIR, 'pantry.json');
 const SHOPPINGLISTS_PATH = path.join(DATA_DIR, 'shoppinglists.json');
+const HOUSEHOLD_PATH = path.join(DATA_DIR, 'household.json');
 const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
 const API_KEY = 'larder_local_sync_8f92k';
 
@@ -103,6 +104,7 @@ const defaultFiles = {
     'mealplans.json': '[]',
     'pantry.json': '[]',
     'shoppinglists.json': '[]',
+    'household.json': '[]',
     'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
 };
 Object.entries(defaultFiles).forEach(([file, content]) => {
@@ -316,6 +318,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
+    if (req.url === '/api/household' && handleGenericFileAPI(req, res, HOUSEHOLD_PATH, 'household')) return;
 
     // --- API: network info (LAN addresses for companion-app sync) ---
     if (req.url === '/api/network-info' && req.method === 'GET') {

@@ -1,1 +1,118 @@
-[]
+[
+  {
+    "id": "mp_20260803_dinner",
+    "date": "2026-08-03",
+    "slot": "dinner",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 3,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_20260804_lunch",
+    "date": "2026-08-04",
+    "slot": "lunch",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_20260805_dinner",
+    "date": "2026-08-05",
+    "slot": "dinner",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 3,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_20260806_dinner",
+    "date": "2026-08-06",
+    "slot": "dinner",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 4,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_20260808_lunch",
+    "date": "2026-08-08",
+    "slot": "lunch",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 3,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_20260807_snack",
+    "date": "2026-08-07",
+    "slot": "snack",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "ingredient",
+        "referenceId": "onion",
+        "amount": 1,
+        "unit": "count"
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 1,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_eatout_20260809_lunch",
+    "date": "2026-08-09",
+    "slot": "lunch",
+    "isEatingOut": true,
+    "items": [],
+    "eaters": [
+      0
+    ],
+    "servings": 1,
+    "isConsumed": false
+  }
+]

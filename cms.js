@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let mealPlans = [];
     let pantry = [];
     let shoppingLists = [];
+    let householdItems = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
@@ -237,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cmsStatusFilter = 'All';
     let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
     let lastMacroBreakdown = null;
+    let householdOpenFn = null;
 
     const cmsTabs = document.getElementById('cms-tabs');
     const searchInput = document.getElementById('cms-search');
@@ -289,11 +291,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Grid / List view toggle for the recipe & ingredient tabs.
+    // Grid/List (or Cards/Table for pantry & household) view toggle.
     if (viewToggle) {
         viewToggle.addEventListener('click', () => {
-            cmsListView = cmsListView === 'grid' ? 'list' : 'grid';
-            localStorage.setItem('larder_cms_view', cmsListView);
+            if (currentCMSTab === 'pantry' || currentCMSTab === 'household') {
+                const key = currentCMSTab === 'pantry' ? 'larder_pantry_view' : 'larder_household_view';
+                const cur = localStorage.getItem(key) || 'cards';
+                localStorage.setItem(key, cur === 'cards' ? 'table' : 'cards');
+            } else {
+                cmsListView = cmsListView === 'grid' ? 'list' : 'grid';
+                localStorage.setItem('larder_cms_view', cmsListView);
+            }
             renderCMSList();
         });
     }
@@ -320,16 +328,23 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', (e) => {
             document.querySelectorAll('.cms-tab').forEach(t => {
                 t.classList.remove('active');
-                t.style.borderBottomColor = 'transparent';
-                t.style.color = 'var(--text-muted)';
             });
             e.target.classList.add('active');
-            e.target.style.borderBottomColor = 'var(--text-primary)';
-            e.target.style.color = 'inherit';
             currentCMSTab = e.target.dataset.tab;
             renderCMSList();
         });
     });
+    // Settings lives in the navbar actions, not the tab bar.
+    const cmsSettingsBtn = document.getElementById('cms-settings-btn');
+    if (cmsSettingsBtn) {
+        cmsSettingsBtn.addEventListener('click', () => {
+            document.querySelectorAll('.cms-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            currentCMSTab = 'settings';
+            renderCMSList();
+        });
+    }
 
     // --- Load Data ---
     const API_KEY = 'larder_local_sync_8f92k';
@@ -340,12 +355,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resSettings] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/pantry', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/household', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] })
             ]);
             recipes = resRecipes;
@@ -353,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mealPlans = resMealPlans;
             pantry = resPantry;
             shoppingLists = resShoppingLists;
+            householdItems = Array.isArray(resHousehold) ? resHousehold : [];
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
                 ? resSettings
                 : { profiles: resSettings && Array.isArray(resSettings.profiles) ? resSettings.profiles : [] };
@@ -420,6 +437,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function saveHousehold() {
+        try {
+            const res = await fetch('/api/household', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(householdItems)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            statusText.innerHTML = `<span class="status-dot"></span> Saved household supplies`;
+        } catch(e) {
+            alert('Save failed. Is the server running?');
+        }
+    }
+
     // --- Render CMS List ---
     function populateIngredientSuggestions() {
         const datalist = document.getElementById('ingredient-suggestions');
@@ -430,40 +461,150 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCMSList() {
         populateIngredientSuggestions();
 
+        // --- Shared costing helpers (used by Meal Plan and Shopping tabs) ---
+        const UNIT_TO_GRAMS = {
+            g: 1, gram: 1, grams: 1, '': 1,
+            kg: 1000, kilogram: 1000, kilograms: 1000,
+            ml: 1, millilitre: 1, milliliter: 1, millilitres: 1, milliliters: 1,
+            l: 1000, litre: 1000, liter: 1000, litres: 1000, liters: 1000,
+            tsp: 5, teaspoon: 5, teaspoons: 5,
+            tbsp: 15, tablespoon: 15, tablespoons: 15,
+            cup: 240, cups: 240,
+            oz: 28.35, ounce: 28.35, ounces: 28.35,
+            lb: 453.6, lbs: 453.6, pound: 453.6, pounds: 453.6
+        };
+        const COUNT_UNITS = ['piece', 'pieces', 'pc', 'pcs', 'each', 'whole', 'clove', 'cloves', 'sprig', 'sprigs', 'slice', 'slices', 'can', 'cans', 'pinch', 'pinches', 'stalk', 'stalks', 'bunch', 'medium', 'large', 'small', 'head', 'heads'];
+        const FRACTION_CHARS = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8' };
+
+        function parseAmountToGrams(amountStr, ing) {
+            if (typeof amountStr === 'number') return amountStr;
+            if (!amountStr) return 0;
+            let s = String(amountStr).trim();
+            for (const ch in FRACTION_CHARS) {
+                if (s.includes(ch)) s = s.split(ch).join(FRACTION_CHARS[ch]);
+            }
+            const m = s.match(/^([\d\s./-]+)\s*([a-zA-Zµ]+)?$/);
+            if (!m) return null;
+            let qty = 0;
+            for (const part of m[1].trim().split(/[\s-]+/)) {
+                if (!part) continue;
+                if (part.includes('/')) { const f = part.split('/'); qty += (parseFloat(f[0]) || 0) / (parseFloat(f[1]) || 1); }
+                else qty += parseFloat(part) || 0;
+            }
+            const u = (m[2] || '').toLowerCase();
+            if (u in UNIT_TO_GRAMS) return qty * UNIT_TO_GRAMS[u];
+            if (COUNT_UNITS.includes(u)) return qty * (parseFloat((ing && ing.servingSizeG)) || 100);
+            return null;
+        }
+
+        function perGramPrice(ing) {
+            if (!ing) return 0;
+            const avg = parseFloat(ing.averagePrice);
+            if (!(avg > 0)) return 0;
+            const serving = parseFloat(ing.servingSizeG) || 100;
+            return avg / serving;
+        }
+
+        function formatMoney(amount, currency) {
+            const symbols = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+            const sym = symbols[currency] || (currency ? currency + ' ' : '');
+            const n = (amount || 0).toFixed(2);
+            return sym + n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function currentWeekPlans() {
+            const today = new Date();
+            const dow = today.getDay() === 0 ? 7 : today.getDay();
+            const start = new Date(today);
+            start.setDate(today.getDate() - dow + 1);
+            const dates = [];
+            for (let i = 0; i < 7; i++) { const d = new Date(start); d.setDate(start.getDate() + i); dates.push(d.toISOString().split('T')[0]); }
+            return mealPlans.filter(p => dates.includes(p.date) && !p.isEatingOut && p.type !== 'eating_out');
+        }
+
+        function mealPlanCurrency() {
+            const firstPriced = ingredients.find(i => parseFloat(i.averagePrice) > 0);
+            return (appSettings.shopping && appSettings.shopping.currency)
+                || (firstPriced && firstPriced.priceCurrency)
+                || 'MUR';
+        }
+
+        function estimateMealCost(plan) {
+            const mult = plan.servings || 1;
+            let itemsToProcess = plan.items || [];
+            if (itemsToProcess.length === 0 && plan.type === 'recipe') itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
+            let total = 0, uncosted = 0, costed = 0;
+            itemsToProcess.forEach(item => {
+                if (item.type === 'recipe') {
+                    const recipe = recipes.find(r => r.id === item.referenceId);
+                    if (!recipe || !recipe.ingredients) return;
+                    recipe.ingredients.forEach(ing => {
+                        if (!ing.foodId) return;
+                        const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                        const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+                        const price = perGramPrice(foodRef);
+                        if (grams === null || !(price > 0)) { uncosted++; return; }
+                        if (grams > 0) { total += grams * price * mult; costed++; }
+                    });
+                } else if (item.type === 'ingredient' && item.referenceId) {
+                    const foodRef = ingredients.find(f => f.foodId === item.referenceId);
+                    const amountStr = (item.amount != null ? item.amount : '0') + (item.unit ? ' ' + item.unit : '');
+                    const grams = parseAmountToGrams(amountStr, foodRef);
+                    const price = perGramPrice(foodRef);
+                    if (grams === null || !(price > 0)) { uncosted++; return; }
+                    if (grams > 0) { total += grams * price * mult; costed++; }
+                }
+            });
+            return { cost: Math.round(total * 10) / 10, costed, uncosted };
+        }
+
         // Manage search bar visibility
         const searchAnchor = document.querySelector('.cms-search-anchor');
         if (searchAnchor) {
-            if (['recipe', 'food', 'pantry'].includes(currentCMSTab)) {
+            if (['recipe', 'food', 'pantry', 'household'].includes(currentCMSTab)) {
                 searchAnchor.style.display = 'flex';
             } else {
                 searchAnchor.style.display = 'none';
             }
         }
         if (searchInput) {
-            if (['recipe', 'food', 'pantry'].includes(currentCMSTab)) {
+            if (['recipe', 'food', 'pantry', 'household'].includes(currentCMSTab)) {
                 searchInput.style.display = 'block';
             } else {
                 searchInput.style.display = 'none';
             }
         }
 
-        // Toolbar: grid/list toggle + filter trigger shown only for recipe/food tabs.
-        const showToolbar = ['recipe', 'food'].includes(currentCMSTab);
+        // Per-tab page title.
+        const headerTitle = document.getElementById('cms-header-title');
+        if (headerTitle) {
+            const titles = { recipe: 'Recipes', food: 'Ingredients', mealplan: 'Meal Plan', pantry: 'Pantry', household: 'Household', shopping: 'Shopping Lists', settings: 'Settings' };
+            headerTitle.textContent = titles[currentCMSTab] || 'Recipes';
+        }
+
+        // Toolbar: view toggle + filter trigger shown for tabs that list records.
+        const showToolbar = ['recipe', 'food', 'pantry', 'household'].includes(currentCMSTab);
         if (viewToggle) viewToggle.style.display = showToolbar ? 'flex' : 'none';
         if (filterTrigger) filterTrigger.style.display = showToolbar ? 'flex' : 'none';
         if (filterDropdown) filterDropdown.classList.remove('active');
 
-        // View toggle icon reflects the current (grid/list) state. Rebuild the
-        // <i data-lucide> each time because lucide replaces it with an <svg>,
+        // View toggle icon reflects the active tab's current view state. Rebuild
+        // the <i data-lucide> each time because lucide replaces it with an <svg>,
         // orphaning any cached reference to the old element.
         if (viewToggle) {
-            const iconName = cmsListView === 'grid' ? 'layout-grid' : 'list';
+            let iconName;
+            if (currentCMSTab === 'pantry') iconName = (localStorage.getItem('larder_pantry_view') || 'cards') === 'cards' ? 'layout-grid' : 'table';
+            else if (currentCMSTab === 'household') iconName = (localStorage.getItem('larder_household_view') || 'cards') === 'cards' ? 'layout-grid' : 'table';
+            else iconName = cmsListView === 'grid' ? 'layout-grid' : 'list';
             viewToggle.innerHTML = `<i data-lucide="${iconName}" style="width: 18px; height: 18px;"></i>`;
         }
 
         // Build category filter chips from the active tab's data.
         if (showToolbar && filterChips) {
-            const source = currentCMSTab === 'food' ? ingredients : recipes.filter(r => r.entryType !== 'ingredient');
+            let source;
+            if (currentCMSTab === 'food' || currentCMSTab === 'pantry') source = ingredients;
+            else if (currentCMSTab === 'household') source = householdItems;
+            else source = recipes.filter(r => r.entryType !== 'ingredient');
             const cats = [...new Set(source.map(x => (x.category || 'Uncategorized')).filter(Boolean))].sort();
             if (cmsCategoryFilter !== 'All' && !cats.includes(cmsCategoryFilter)) cmsCategoryFilter = 'All';
             const chips = ['All', ...cats];
@@ -484,6 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Status filter chips (recipe tab only).
+        const statusFilterSection = document.getElementById('cms-filter-status-section');
+        if (statusFilterSection) statusFilterSection.style.display = (currentCMSTab === 'recipe') ? '' : 'none';
         if (currentCMSTab === 'recipe' && filterStatusChips) {
             const statuses = ['published', 'draft'];
             if (cmsStatusFilter !== 'All' && !statuses.includes(cmsStatusFilter)) cmsStatusFilter = 'All';
@@ -501,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentCMSTab === 'mealplan') {
             const slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+            const mpCurrency = mealPlanCurrency();
             const today = new Date();
             const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Make Monday=1, Sunday=7
 
@@ -560,6 +704,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const weekEnd = new Date(startOfWeek);
             weekEnd.setDate(startOfWeek.getDate() + 6);
             const weekLabel = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+            // Cost of every planned meal in the displayed week (for cost chips + summary)
+            const mealCosts = new Map();
+            let weekMealCost = 0, weekUncosted = 0, weekMealCount = 0;
+            weekDates.forEach(d => {
+                const dateString = d.toISOString().split('T')[0];
+                slots.forEach(slot => {
+                    const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
+                    if (!plan || plan.isEatingOut || plan.type === 'eating_out') return;
+                    const est = estimateMealCost(plan);
+                    mealCosts.set(dateString + '|' + slot, est);
+                    weekMealCost += est.cost;
+                    weekUncosted += est.uncosted;
+                    weekMealCount++;
+                });
+            });
+            weekMealCost = Math.round(weekMealCost * 10) / 10;
 
             // Build user stat cards from profiles
             const profiles = (appSettings.profiles && appSettings.profiles.length)
@@ -642,6 +803,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
             }).join('');
 
+            // Weekly cost summary card (vs budget) appended to the stat cards row
+            {
+                const weeklyBudget = parseFloat(appSettings.shopping && appSettings.shopping.amount) || 0;
+                const over = weeklyBudget > 0 && weekMealCost > weeklyBudget;
+                const statusCls = weeklyBudget > 0 ? (over ? 'sb-over' : 'sb-under') : 'sb-unset';
+                const statusLabel = weeklyBudget > 0
+                    ? (over
+                        ? `Over by ${formatMoney(weekMealCost - weeklyBudget, mpCurrency)}`
+                        : `Within · ${formatMoney(weeklyBudget - weekMealCost, mpCurrency)} to spare`)
+                    : 'No budget set';
+                const costAccent = over ? 'var(--accent-meat)' : 'var(--accent-veg)';
+                statsHTML += `
+                    <div class="mp-user-stat-card mp-cost-card">
+                        <div class="mp-user-header">
+                            <div class="mp-user-avatar" style="color: ${costAccent}; border-color: ${costAccent}; background: rgba(84,144,198,0.1);"><i data-lucide="wallet" style="width: 18px; height: 18px;"></i></div>
+                            <span class="mp-user-name">Week Meal Cost</span>
+                        </div>
+                        <div class="mp-user-summary">
+                            <div class="mp-cost-detail">
+                                <strong>${formatMoney(weekMealCost, mpCurrency)}</strong>
+                                <span class="mp-budget-target">/ ${weeklyBudget > 0 ? formatMoney(weeklyBudget, mpCurrency) : '—'}</span>
+                            </div>
+                        </div>
+                        <span class="sb-status ${statusCls}" style="margin-top: 0.5rem;">${escapeHtml(statusLabel)}</span>
+                        ${weekUncosted ? `<div class="mp-cost-note">${weekUncosted} ingredient${weekUncosted > 1 ? 's' : ''} not priced</div>` : ''}
+                        ${weekMealCount === 0 ? `<div class="mp-cost-note">No meals planned for this week.</div>` : ''}
+                    </div>`;
+            }
+
             // Build the mp-grid: header row + one row per slot
             let gridHTML = '<div class="mp-dashboard">';
             gridHTML += `
@@ -686,22 +876,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             const img = (r && r.imageUrl)
                                 ? `<img src="${escapeHtml(r.imageUrl)}" class="mp-meal-img" onerror="this.style.display='none'">`
                                 : `<div class="mp-meal-img" style="background: var(--bg-surface-hover); display: flex; align-items: center; justify-content: center;"><i data-lucide="utensils-crossed" style="width: 16px; height: 16px; color: var(--text-muted);"></i></div>`;
+                            const mealEst = (mealCosts.get(dateString + '|' + slot) || { cost: 0 });
+                            const mealCostChip = mealEst.cost > 0 ? `<span class="mp-cost-chip">${formatMoney(mealEst.cost, mpCurrency)}</span>` : '';
                             slotInner = `
                                 <div class="mp-meal-card">
                                     ${img}
                                     <div class="mp-meal-info">
                                         <div class="mp-meal-title">${escapeHtml(title)}</div>
-                                        <div class="mp-meal-meta">${m.energy ? Math.round(m.energy) + ' kcal' : ''}${plan.servings ? ' · ×' + plan.servings : ''}</div>
+                                        <div class="mp-meal-meta">${m.energy ? Math.round(m.energy) + ' kcal' : ''}${plan.servings ? ' · ×' + plan.servings : ''}${mealCostChip}</div>
                                     </div>
                                 </div>`;
                         } else if (plan.items && plan.items.length > 0) {
                             const names = plan.items.map(item => escapeHtml(item.name));
                             const shown = names.length <= 2 ? names.join(' & ') : names.slice(0, 2).join(' & ') + ` +${names.length - 2}`;
+                            const mealEst = (mealCosts.get(dateString + '|' + slot) || { cost: 0 });
+                            const mealCostChip = mealEst.cost > 0 ? `<span class="mp-cost-chip">${formatMoney(mealEst.cost, mpCurrency)}</span>` : '';
                             slotInner = `
                                 <div class="mp-meal-card">
                                     <div class="mp-meal-info">
                                         <div class="mp-meal-title">${shown}</div>
-                                        <div class="mp-meal-meta">${plan.items.length} item${plan.items.length !== 1 ? 's' : ''}${plan.servings ? ' · ×' + plan.servings : ''}</div>
+                                        <div class="mp-meal-meta">${plan.items.length} item${plan.items.length !== 1 ? 's' : ''}${plan.servings ? ' · ×' + plan.servings : ''}${mealCostChip}</div>
                                     </div>
                                 </div>`;
                         }
@@ -1154,10 +1348,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentCMSTab === 'pantry') {
-            const filteredIngredients = ingredients.filter(ing => 
+            let filteredIngredients = ingredients.filter(ing => 
                 ing.name.toLowerCase().includes(cmsSearchQuery) || 
                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
             );
+            if (cmsCategoryFilter !== 'All') {
+                filteredIngredients = filteredIngredients.filter(ing => (ing.category || 'Uncategorized') === cmsCategoryFilter);
+            }
 
             const pantryView = (localStorage.getItem('larder_pantry_view') || 'cards');
             const statusInfo = (ing, pItem) => {
@@ -1172,17 +1369,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return { cls, label, isTracked, qty };
             };
 
+            addBtn.style.display = 'flex';
+            setAddBtnLabel('Add Item');
+
             const cardsHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                        Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
-                    </div>
-                    <div style="display: flex; gap: 0.75rem; align-items: center;">
-                        <button type="button" class="btn secondary" id="pantry-add-item-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Item</button>
-                        <button type="button" class="pantry-view-toggle" id="pantry-view-toggle" title="${pantryView === 'cards' ? 'Switch to table view' : 'Switch to cards view'}">
-                            <i data-lucide="${pantryView === 'cards' ? 'layout-grid' : 'table'}" style="width: 16px; height: 16px;"></i>
-                        </button>
-                    </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
                 </div>
                 <div id="pantry-content">
                     ${pantryView === 'table' ? renderPantryTable(filteredIngredients, statusInfo) : renderPantryCards(filteredIngredients, statusInfo)}
@@ -1192,16 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             listContainer.innerHTML = cardsHTML;
-            addBtn.style.display = 'none';
             if (window.lucide) window.lucide.createIcons();
-
-            // Single icon toggle switches between the card and table layout.
-            const toggle = document.getElementById('pantry-view-toggle');
-            toggle.addEventListener('click', () => {
-                const next = pantryView === 'cards' ? 'table' : 'cards';
-                localStorage.setItem('larder_pantry_view', next);
-                renderCMSList();
-            });
 
             function renderPantryCards(items, statusInfo) {
                 if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
@@ -1215,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const vis = getCategoryIcon(ing.category);
                         const unitLabel = unit || 'g';
                         return `
-                        <div class="vd-pantry-card" data-foodid="${escapeHtml(ing.foodId)}">
+                        <div class="vd-pantry-card" data-foodid="${escapeHtml(ing.foodId)}" role="button" tabindex="0" title="Edit ingredient">
                             <div class="vd-pantry-header">
                                 <div class="vd-pantry-icon">
                                     <svg viewBox="${vis.vb}" style="width:22px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
@@ -1223,7 +1406,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <button type="button" class="vd-pantry-status ${cls} p-track" role="checkbox" aria-checked="${isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${label}</button>
                             </div>
                             <div class="vd-pantry-info">
-                                <h4>${escapeHtml(ing.name)}</h4>
+                                <div class="vd-pantry-title-row">
+                                    <h4>${escapeHtml(ing.name)}</h4>
+                                    <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                                </div>
                                 <p>${escapeHtml(ing.category || 'Uncategorized')}</p>
                             </div>
                             <div class="vd-pantry-tracker">
@@ -1235,10 +1421,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <span class="vd-pantry-qty">${Math.round(qty)}${escapeHtml(unitLabel)} left</span>
                                 </div>
-                            </div>
-                            <div class="vd-pantry-card-actions">
-                                <button type="button" class="cms-btn-icon pantry-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit ingredient" aria-label="Edit"><i data-lucide="edit-2" style="width: 15px; height: 15px;"></i></button>
-                                <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                             </div>
                         </div>
                         `;
@@ -1282,7 +1464,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td style="color: var(--text-muted);">${escapeHtml(unit || 'g')}</td>
                                     <td><input type="checkbox" class="p-track-check" ${isTracked ? 'checked' : ''} aria-label="Track stock"></td>
                                     <td>
-                                        <button type="button" class="cms-btn-icon pantry-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit ingredient" aria-label="Edit"><i data-lucide="edit-2" style="width: 15px; height: 15px;"></i></button>
                                         <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                                     </td>
                                 </tr>`;
@@ -1367,19 +1548,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 await savePantry();
             });
 
-            // Add a new pantry item: reuse the ingredient profile editor to create a new ingredient.
-            document.getElementById('pantry-add-item-btn').addEventListener('click', () => {
-                openProfileEditor();
-            });
-
-            // Edit an existing pantry item: open the profile editor for that ingredient.
-            document.querySelectorAll('.pantry-edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
+            // Clicking a pantry card opens the ingredient profile editor. Interactive
+            // controls inside the card (status toggle, qty input, delete) are excluded.
+            document.querySelectorAll('.vd-pantry-card[data-foodid], tr[data-foodid]').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('button') || e.target.closest('input')) return;
+                    openProfileEditor(card.dataset.foodid);
+                });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openProfileEditor(card.dataset.foodid);
+                    }
+                });
             });
 
             // Delete a pantry item: remove it from the ingredients DB (and pantry) after confirmation.
             document.querySelectorAll('.pantry-delete-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const foodId = btn.dataset.id;
                     const ing = ingredients.find(f => f.foodId === foodId);
                     const name = ing ? ing.name : 'this ingredient';
@@ -1400,14 +1587,253 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (currentCMSTab === 'household') {
+            let hhItems = householdItems
+                .filter(item => !cmsSearchQuery || (item.name || '').toLowerCase().includes(cmsSearchQuery) || (item.category || '').toLowerCase().includes(cmsSearchQuery));
+            if (cmsCategoryFilter !== 'All') {
+                hhItems = hhItems.filter(item => (item.category || 'Uncategorized') === cmsCategoryFilter);
+            }
+            hhItems = hhItems
+                .slice()
+                .sort((a, b) => (estimateDepletionDate(a) || '9999-12-31').localeCompare(estimateDepletionDate(b) || '9999-12-31'));
+
+            function daysBetween(from, to) {
+                const ms = new Date(to) - new Date(from);
+                return Math.max(0, Math.round(ms / 86400000));
+            }
+            function addDays(dateStr, days) {
+                const d = new Date(dateStr);
+                d.setDate(d.getDate() + days);
+                return d.toISOString().split('T')[0];
+            }
+            function estimateDepletionDate(item) {
+                if (!item || item.currentStock == null) return null;
+                const avg = parseFloat(item.avgDurationDays) || 0;
+                const stock = parseFloat(item.currentStock) || 0;
+                if (avg <= 0 || stock <= 0) return null;
+                const anchor = item.lastOpenedDate || new Date().toISOString().split('T')[0];
+                const firstUnitEnd = addDays(anchor, avg);
+                return addDays(firstUnitEnd, Math.max(0, stock - 1) * avg);
+            }
+            function hhStatusInfo(item) {
+                const stock = parseFloat(item.currentStock) || 0;
+                const avg = parseFloat(item.avgDurationDays) || 0;
+                const depletion = estimateDepletionDate(item);
+                const today = new Date().toISOString().split('T')[0];
+                let cls, label;
+                if (stock <= 0) { cls = 'out-of-stock'; label = 'Out of Stock'; }
+                else if (depletion && daysBetween(today, depletion) <= 7) { cls = 'low-stock'; label = 'Running Low'; }
+                else if (avg > 0) { cls = 'in-stock'; label = 'Stocked'; }
+                else { cls = 'not-tracked'; label = 'No Estimate'; }
+                return { cls, label, stock, depletion, daysLeft: depletion ? daysBetween(today, depletion) : null };
+            }
+
+            const hhView = (localStorage.getItem('larder_household_view') || 'cards');
+
+            function renderHouseholdCards(items) {
+                if (items.length === 0) return '<div class="empty-state">No household items yet. Add soap, toothpaste, cleaning supplies, and more.</div>';
+                return `<div class="vd-pantry-grid" id="household-grid">
+                    ${items.map((item) => {
+                        const s = hhStatusInfo(item);
+                        const avg = parseFloat(item.avgDurationDays) || 0;
+                        const price = parseFloat(item.pricePerUnit) || 0;
+                        const stockLabel = (item.unitSize || 'units');
+                        return `
+                        <div class="vd-pantry-card" data-hhid="${escapeHtml(item.id)}" role="button" tabindex="0" title="Edit item">
+                            <div class="vd-pantry-header">
+                                <div class="vd-pantry-icon">
+                                    <i data-lucide="${hhIcon(item.category)}" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                                </div>
+                                <span class="vd-pantry-status ${s.cls}">${s.label}</span>
+                            </div>
+                            <div class="vd-pantry-info">
+                                <div class="vd-pantry-title-row">
+                                    <h4>${escapeHtml(item.name || 'Unnamed item')}</h4>
+                                    <button type="button" class="cms-btn-icon delete household-delete-btn" data-id="${escapeHtml(item.id)}" title="Delete item" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                                </div>
+                                <p>${escapeHtml(item.category || 'Uncategorized')}</p>
+                            </div>
+                            <div class="vd-pantry-tracker">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                                    <span style="color: var(--text-main); font-weight: 600;">${s.stock} ${escapeHtml(stockLabel)}</span>
+                                    ${avg > 0 ? `<span style="color: var(--text-muted); font-size: 0.75rem;">~${avg}d each</span>` : ''}
+                                </div>
+                                ${s.depletion
+                                    ? `<div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                                        <span style="color: var(--text-muted);">Runs out</span>
+                                        <span style="color: var(--text-main); font-weight: 600;">${escapeHtml(s.depletion)}</span>
+                                        <span class="hh-days-left ${s.daysLeft !== null && s.daysLeft <= 7 ? 'hh-days-urgent' : ''}">${s.daysLeft !== null ? 'in ' + s.daysLeft + 'd' : ''}</span>
+                                    </div>`
+                                    : '<div style="color: var(--text-muted); font-size: 0.8rem;">Set avg. duration to estimate depletion</div>'}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                                ${price > 0 ? `<span style="color: var(--text-muted);">Rs ${price.toFixed(0)}/unit</span>` : '<span></span>'}
+                                <button type="button" class="btn secondary hh-open-btn" data-id="${escapeHtml(item.id)}" title="Log that you opened a new unit" style="padding: 0.3rem 0.6rem; font-size: 0.72rem;"><i data-lucide="package-open" style="width: 13px; height: 13px;"></i> Opened New Unit</button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+            }
+
+            function renderHouseholdTable(items) {
+                if (items.length === 0) return '<div class="empty-state">No household items yet. Add soap, toothpaste, cleaning supplies, and more.</div>';
+                return `<div class="vd-pantry-table-wrap">
+                    <table class="vd-pantry-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                                <th>Unit</th>
+                                <th>Avg. Duration</th>
+                                <th>Estimated Depletion</th>
+                                <th>Price/Unit</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((item) => {
+                                const s = hhStatusInfo(item);
+                                const avg = parseFloat(item.avgDurationDays) || 0;
+                                const price = parseFloat(item.pricePerUnit) || 0;
+                                const stockLabel = (item.unitSize || 'units');
+                                return `
+                                <tr data-hhid="${escapeHtml(item.id)}" style="cursor: pointer;">
+                                    <td><span style="font-weight: 600;">${escapeHtml(item.name || 'Unnamed item')}</span></td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(item.category || 'Uncategorized')}</td>
+                                    <td>${s.stock}</td>
+                                    <td style="color: var(--text-muted);">${escapeHtml(stockLabel)}</td>
+                                    <td>${avg > 0 ? avg + ' days' : '—'}</td>
+                                    <td>
+                                        ${s.depletion
+                                            ? `${escapeHtml(s.depletion)} <span class="hh-days-left ${s.daysLeft !== null && s.daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${s.daysLeft !== null ? 'in ' + s.daysLeft + 'd' : ''})</span>`
+                                            : '<span style="color: var(--text-muted);">—</span>'}
+                                    </td>
+                                    <td>${price > 0 ? 'Rs ' + price.toFixed(0) : '—'}</td>
+                                    <td>
+                                        <button type="button" class="btn secondary hh-open-btn" data-id="${escapeHtml(item.id)}" title="Log that you opened a new unit" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;"><i data-lucide="package-open" style="width: 13px; height: 13px;"></i> Opened</button>
+                                        <button type="button" class="cms-btn-icon delete household-delete-btn" data-id="${escapeHtml(item.id)}" title="Delete item" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            addBtn.style.display = 'flex';
+            setAddBtnLabel('Add Item');
+            householdOpenFn = openHouseholdEditor;
+
+            const cardsHTML = `
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Non-food consumables (toiletries, cleaning, paper goods). Depletion dates are estimated from stock × average duration. Log "Opened new unit" occasionally to recalibrate.
+                </div>
+                <div id="household-content">
+                    ${hhView === 'table' ? renderHouseholdTable(hhItems) : renderHouseholdCards(hhItems)}
+                </div>
+            `;
+            listContainer.innerHTML = cardsHTML;
+            if (window.lucide) window.lucide.createIcons();
+
+            function hhIcon(cat) {
+                const c = (cat || '').toLowerCase();
+                if (c.includes('toilet')) return 'shower-head';
+                if (c.includes('clean')) return 'spray-can';
+                if (c.includes('paper')) return 'layers';
+                if (c.includes('kitchen')) return 'utensils';
+                if (c.includes('batter')) return 'battery-charging';
+                if (c.includes('pet')) return 'paw-print';
+                return 'package';
+            }
+
+            function openHouseholdEditor(id = null) {
+                const item = id ? householdItems.find(x => x.id === id) : null;
+                document.getElementById('household-id').value = item ? item.id : '';
+                document.getElementById('household-name').value = (item && item.name) || '';
+                document.getElementById('household-category').value = (item && item.category) || '';
+                const unitSelect = document.getElementById('household-unit-size');
+                if (unitSelect) {
+                    const existing = (item && item.unitSize) || '';
+                    if (existing && ![...unitSelect.options].some(o => o.value === existing)) {
+                        const opt = document.createElement('option');
+                        opt.value = existing; opt.textContent = existing;
+                        unitSelect.appendChild(opt);
+                    }
+                    unitSelect.value = existing;
+                }
+                document.getElementById('household-stock').value = (item && item.currentStock) || '';
+                document.getElementById('household-duration').value = (item && item.avgDurationDays) || '';
+                document.getElementById('household-price').value = (item && item.pricePerUnit) || '';
+                document.getElementById('household-last-opened').value = (item && item.lastOpenedDate) || '';
+                const delBtn = document.getElementById('household-delete-btn');
+                delBtn.style.display = item ? '' : 'none';
+                document.getElementById('cms-household-modal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            document.querySelectorAll('.vd-pantry-card[data-hhid], tr[data-hhid]').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    openHouseholdEditor(card.dataset.hhid);
+                });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openHouseholdEditor(card.dataset.hhid);
+                    }
+                });
+            });
+            document.querySelectorAll('.hh-open-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const item = householdItems.find(x => x.id === btn.dataset.id);
+                    if (!item) return;
+                    const today = new Date().toISOString().split('T')[0];
+                    const prevOpen = item.lastOpenedDate;
+                    let elapsed = null;
+                    if (prevOpen) elapsed = daysBetween(prevOpen, today);
+                    if (elapsed !== null && elapsed > 0) {
+                        const history = Array.isArray(item.durationHistory) ? item.durationHistory.slice() : [];
+                        history.push(elapsed);
+                        const avg = history.reduce((a, b) => a + b, 0) / history.length;
+                        item.durationHistory = history;
+                        item.avgDurationDays = Math.round(avg);
+                    }
+                    item.lastOpenedDate = today;
+                    item.currentStock = Math.max(0, (parseFloat(item.currentStock) || 0) - 1);
+                    await saveHousehold();
+                    renderCMSList();
+                });
+            });
+            document.querySelectorAll('.household-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const item = householdItems.find(x => x.id === id);
+                    const confirmed = await showConfirmDialog(
+                        'Remove Household Item',
+                        `Remove "${item ? item.name : 'this item'}" from household supplies?`,
+                        'Remove'
+                    );
+                    if (!confirmed) return;
+                    householdItems = householdItems.filter(x => x.id !== id);
+                    renderCMSList();
+                    await saveHousehold();
+                });
+            });
+            return;
+        }
+
         if (currentCMSTab === 'shopping') {
             const uiHTML = `
-                <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
                     <button id="generate-list-btn" class="btn primary"><i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Generate List for This Week</button>
-                    <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i> <span>Save List</span></button>
+                    <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i><span>Save List</span></button>
                     <button id="print-list-btn" class="btn secondary"><i data-lucide="printer" style="width: 16px; height: 16px;"></i> Print / Save PDF</button>
                     <span style="color: var(--text-muted); font-size: 0.85rem;">(Aggregates ingredients from planned recipes and subtracts tracked pantry stock)</span>
                 </div>
+                <div id="shopping-budget-card" style="margin-bottom: 1.5rem;"></div>
                 <div id="shopping-list-results" style="display: grid; gap: 1rem;">
                     <!-- Results render here -->
                     <div class="empty-state">Click "Generate" to calculate your shopping needs.</div>
@@ -1435,10 +1861,180 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // --- Budget vs meal plan cost ---
+            function computeWeekCost() {
+                const plans = currentWeekPlans();
+                const agg = new Map(); // foodId -> { name, grams, recipes:Set, category }
+                const unpriced = [];
+                const addUnpriced = (name, reason) => {
+                    if (name && !unpriced.find(u => u.name === name)) unpriced.push({ name, reason });
+                };
+
+                plans.forEach(plan => {
+                    const mult = plan.servings || 1;
+                    let itemsToProcess = plan.items || [];
+                    if (itemsToProcess.length === 0 && plan.type === 'recipe') itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
+                    itemsToProcess.forEach(item => {
+                        if (item.type === 'recipe') {
+                            const recipe = recipes.find(r => r.id === item.referenceId);
+                            if (!recipe || !recipe.ingredients) return;
+                            recipe.ingredients.forEach(ing => {
+                                if (!ing.foodId) return;
+                                const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                                const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
+                                const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+                                const price = perGramPrice(foodRef);
+                                if (grams === null) { addUnpriced(name, 'unknown unit'); return; }
+                                if (!(price > 0)) { addUnpriced(name, 'no price set'); return; }
+                                const scaled = grams * mult;
+                                const ex = agg.get(ing.foodId);
+                                if (ex) { ex.grams += scaled; if (recipe.title) ex.recipes.add(recipe.title); }
+                                else agg.set(ing.foodId, { name, grams: scaled, recipes: recipe.title ? new Set([recipe.title]) : new Set(), category: (foodRef && foodRef.category) || 'Other' });
+                            });
+                        } else if (item.type === 'ingredient' && item.referenceId) {
+                            const foodRef = ingredients.find(f => f.foodId === item.referenceId);
+                            const name = foodRef ? foodRef.name : item.name;
+                            const amountStr = (item.amount != null ? item.amount : '0') + (item.unit ? ' ' + item.unit : '');
+                            const grams = parseAmountToGrams(amountStr, foodRef);
+                            const price = perGramPrice(foodRef);
+                            if (grams === null || !(price > 0)) { addUnpriced(name, grams === null ? 'unknown unit' : 'no price set'); return; }
+                            const scaled = grams * mult;
+                            const ex = agg.get(item.referenceId);
+                            if (ex) ex.grams += scaled;
+                            else agg.set(item.referenceId, { name, grams: scaled, recipes: new Set(), category: (foodRef && foodRef.category) || 'Other' });
+                        }
+                    });
+                });
+
+                const categories = new Map();
+                let total = 0;
+                agg.forEach((data, foodId) => {
+                    const cost = data.grams * perGramPrice(ingredients.find(f => f.foodId === foodId));
+                    total += cost;
+                    if (!categories.has(data.category)) categories.set(data.category, []);
+                    categories.get(data.category).push({ name: data.name, grams: Math.round(data.grams), cost: Math.round(cost * 10) / 10, recipes: Array.from(data.recipes) });
+                });
+
+                const currency = mealPlanCurrency();
+
+                return {
+                    total: Math.round(total * 10) / 10,
+                    currency,
+                    planCount: plans.length,
+                    categories: [...categories.entries()].map(([c, items]) => ({ category: c, items, subtotal: Math.round(items.reduce((s, x) => s + x.cost, 0) * 10) / 10 })),
+                    unpriced
+                };
+            }
+
+            function backfillListCosts(list) {
+                list.forEach(item => {
+                    if (item.cost == null) {
+                        const foodRef = ingredients.find(f => f.foodId === item.foodId);
+                        const grams = parseAmountToGrams((item.amount != null ? item.amount : 0) + ' ' + (item.unit || 'g'), foodRef);
+                        const unitPrice = perGramPrice(foodRef);
+                        item.grams = (grams === null ? null : Math.round(grams * 10) / 10);
+                        item.cost = (grams !== null && unitPrice > 0) ? Math.round(grams * unitPrice * 100) / 100 : null;
+                    }
+                });
+                return list;
+            }
+
+            function renderBudget() {
+                const card = document.getElementById('shopping-budget-card');
+                if (!card) return;
+                if (Array.isArray(shoppingLists)) backfillListCosts(shoppingLists);
+                const cost = computeWeekCost();
+                const budgetAmt = parseFloat(appSettings.shopping && appSettings.shopping.amount) || 0;
+
+                if (cost.planCount === 0) {
+                    card.innerHTML = `
+                        <div class="shopping-budget-card">
+                            <div class="sb-head">
+                                <div class="sb-title"><i data-lucide="wallet" style="width: 18px; height: 18px;"></i> Weekly Budget</div>
+                            </div>
+                            <div class="sb-empty">No meals are planned for this week, so there's nothing to cost yet. Plan a few recipes and the estimated cost will show here.</div>
+                        </div>`;
+                    if (window.lucide) window.lucide.createIcons();
+                    return;
+                }
+
+                const pct = budgetAmt > 0 ? Math.min(100, Math.round((cost.total / budgetAmt) * 100)) : (cost.total > 0 ? 100 : 0);
+                const over = budgetAmt > 0 && cost.total > budgetAmt;
+                const statusCls = over ? 'sb-over' : (budgetAmt > 0 ? 'sb-under' : 'sb-unset');
+                const statusTextLabel = over
+                    ? `Over budget by ${formatMoney(cost.total - budgetAmt, cost.currency)}`
+                    : (budgetAmt > 0 ? `Within budget · ${formatMoney(budgetAmt - cost.total, cost.currency)} to spare` : 'No budget set — set one in Settings → Shopping');
+
+                const categoryRows = cost.categories.map(c => `
+                    <div class="sb-cat-row">
+                        <span class="sb-cat-name">${escapeHtml(c.category)}</span>
+                        <div class="sb-cat-bar"><div class="sb-cat-fill" style="width: ${budgetAmt > 0 ? Math.min(100, Math.round((c.subtotal / budgetAmt) * 100)) : 0}%;"></div></div>
+                        <span class="sb-cat-amt">${formatMoney(c.subtotal, cost.currency)}</span>
+                    </div>`).join('');
+
+const unpricedRow = cost.unpriced.length
+                    ? `<div class="sb-unpriced">
+                        <div class="sb-unpriced-title"><i data-lucide="info" style="width: 14px; height: 14px;"></i> ${cost.unpriced.length} ingredient${cost.unpriced.length > 1 ? 's' : ''} not costed</div>
+                        <div class="sb-unpriced-list">${cost.unpriced.slice(0, 6).map(u => `${escapeHtml(u.name)} (${escapeHtml(u.reason)})`).join(', ')}${cost.unpriced.length > 6 ? ` +${cost.unpriced.length - 6} more` : ''}</div>
+                    </div>`
+                    : '';
+
+                const listItems = Array.isArray(shoppingLists) ? shoppingLists : [];
+                const hasListCost = listItems.some(i => i.cost != null && i.cost > 0);
+                const listTotal = listItems.reduce((s, i) => s + (parseFloat(i.cost) || 0), 0);
+                const listCostRow = hasListCost
+                    ? `<div class="sb-stat" style="border-top:1px solid var(--border);padding-top:10px;color:var(--muted);"><span class="sb-stat-label">Shopping list cost<br><small style="opacity:.75">after pantry stock</small></span><span class="sb-stat-value">${formatMoney(Math.round(listTotal * 10) / 10, cost.currency)}</span></div>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="shopping-budget-card">
+                        <div class="sb-head">
+                            <div class="sb-title"><i data-lucide="wallet" style="width: 18px; height: 18px;"></i> Weekly Budget vs Meal Plan Cost</div>
+                            <span class="sb-status ${statusCls}">${escapeHtml(statusTextLabel)}</span>
+                        </div>
+                        <div class="sb-bar"><div class="sb-fill ${over ? 'sb-fill-over' : ''}" style="width: ${pct}%;"></div></div>
+                        <div class="sb-meta">
+                            <div class="sb-stat"><span class="sb-stat-label">Estimated cost</span><span class="sb-stat-value">${formatMoney(cost.total, cost.currency)}</span></div>
+                            <div class="sb-stat"><span class="sb-stat-label">Weekly budget</span><span class="sb-stat-value">${formatMoney(budgetAmt, cost.currency)}</span></div>
+                            <div class="sb-stat"><span class="sb-stat-label">Meals planned</span><span class="sb-stat-value">${cost.planCount}</span></div>
+                            ${listCostRow}
+                        </div>
+                        ${categoryRows ? `<div class="sb-cats">${categoryRows}</div>` : ''}
+                        ${unpricedRow}
+                    </div>`;
+                if (window.lucide) window.lucide.createIcons();
+            }
+
             function renderShoppingList(list) {
                 if (!list || list.length === 0) {
                     resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
                     return;
+                }
+
+                const currency = mealPlanCurrency();
+                const listTotal = list.reduce((s, i) => s + (parseFloat(i.cost) || 0), 0);
+                const costableCount = list.filter(i => i.cost != null && i.cost > 0).length;
+                const listBudgetAmt = parseFloat(appSettings.shopping && appSettings.shopping.amount) || 0;
+                const listOver = listBudgetAmt > 0 && listTotal > listBudgetAmt;
+
+                const suggestionMap = {};
+                if (listOver) {
+                    list.forEach(item => {
+                        const fr = ingredients.find(f => f.foodId === item.foodId);
+                        if (!fr) return;
+                        const ppg = perGramPrice(fr);
+                        if (!(ppg > 0) || !(item.grams > 0)) return;
+                        let best = null, bestSave = Infinity;
+                        ingredients.forEach(alt => {
+                            if (alt.foodId === item.foodId) return;
+                            if ((alt.category || 'Other') !== (fr.category || 'Other')) return;
+                            const altPpg = perGramPrice(alt);
+                            if (!(altPpg > 0) || altPpg >= ppg) return;
+                            const save = (ppg - altPpg) * item.grams;
+                            if (save < bestSave) { bestSave = save; best = alt; }
+                        });
+                        if (best) suggestionMap[item.foodId] = { name: best.name, save: Math.round(bestSave * 100) / 100, toId: best.foodId };
+                    });
                 }
 
                 const groups = {};
@@ -1461,6 +2057,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> ${escapeHtml(r)}</span>
                         `).join('');
                         const isChecked = item.checked ? ' checked' : '';
+                        const costLabel = (item.cost != null && item.cost > 0)
+                            ? `<span class="vd-shop-cost">≈ ${formatMoney(item.cost, currency)}</span>`
+                            : '';
+                        const sugg = suggestionMap[item.foodId];
+                        const suggLabel = sugg
+                            ? `<div class="vd-shop-suggestion"><i data-lucide="sparkles" style="width: 12px; height: 12px;"></i> Cheaper swap: ${escapeHtml(sugg.name)} — save ≈ ${formatMoney(sugg.save, currency)}</div>`
+                            : '';
                         listHTML += `
                         <div class="vd-shop-item${isChecked}" data-cat="${escapeHtml(cat)}" data-idx="${itemIdx}">
                             <div class="vd-shop-checkbox" role="checkbox" tabindex="0" aria-checked="${item.checked ? 'true' : 'false'}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -1468,13 +2071,32 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
                                 <div class="vd-shop-item-meta">
                                     <span class="vd-shop-qty">${escapeHtml(formatAmountDisplay(item.amount, item.unit))}</span>
+                                    ${costLabel}
                                     ${recipeTags}
                                 </div>
                             </div>
+                            ${suggLabel}
                         </div>`;
                     });
                     listHTML += `</div>`;
                 });
+
+                if (costableCount > 0) {
+                    const statusCls = listOver ? 'sb-over' : 'sb-under';
+                    const statusText = listOver
+                        ? `Over budget by ${formatMoney(listTotal - listBudgetAmt, currency)}`
+                        : (listBudgetAmt > 0 ? 'Within budget' : 'No budget set');
+                    const saleText = listOver
+                        ? `This list exceeds ${formatMoney(listBudgetAmt, currency)} by ${formatMoney(listTotal - listBudgetAmt, currency)}. Cheaper same-category swaps suggested below.`
+                        : '';
+                    listHTML += `
+                        <div class="vd-shop-summary">
+                            <span class="vd-shop-summary-label">Estimated list total</span>
+                            <span class="vd-shop-summary-total">${formatMoney(listTotal, currency)}</span>
+                            <span class="sb-status ${statusCls}">${escapeHtml(statusText)}</span>
+                            ${saleText ? `<span class="vd-shop-sale-text">${escapeHtml(saleText)}</span>` : ''}
+                        </div>`;
+                }
                 listHTML += `</div>`;
                 resultsContainer.innerHTML = listHTML;
                 if (window.lucide) window.lucide.createIcons();
@@ -1503,8 +2125,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load a previously saved list if one exists
             if (Array.isArray(shoppingLists) && shoppingLists.length > 0) {
-                renderShoppingList(shoppingLists);
+                renderShoppingList(backfillListCosts(shoppingLists));
             }
+            renderBudget();
 
             document.getElementById('print-list-btn').onclick = () => {
                 const area = document.getElementById('shopping-print-area');
@@ -1546,7 +2169,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const parseAmount = (str) => {
                         if (typeof str === 'number') return { qty: str, unit: 'g' };
                         if (!str) return { qty: 0, unit: 'g' };
-                        const m = str.trim().match(/^([\d\s./-]+)\s*([a-zA-Zµ]+)?$/);
+                        let s = String(str).trim();
+                        for (const ch in FRACTION_CHARS) {
+                            if (s.includes(ch)) s = s.split(ch).join(FRACTION_CHARS[ch]);
+                        }
+                        const m = s.match(/^([\d\s./-]+)\s*([a-zA-Zµ]+)?$/);
                         if (!m) return { qty: 0, unit: 'g' };
                         let qty = 0;
                         const parts = m[1].trim().split(/[\s-]+/);
@@ -1576,7 +2203,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             recipe.ingredients.forEach(ing => {
                                 if (!ing.foodId) return;
                                 
-                                const parsed = parseAmount(ing.metric || ing.amount);
+                                const parsed = parseAmount(ing.metric || ing.imperial || ing.amount);
                                 const scaledAmount = parsed.qty * servingsMultiplier;
                                 const existing = requiredMap.get(ing.foodId);
                                 if (existing) {
@@ -1622,14 +2249,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (deficit > 0) {
                         const foodRef = ingredients.find(f => f.foodId === foodId);
+                        const amount = Math.round(deficit * 10) / 10;
+                        const grams = parseAmountToGrams(amount + ' ' + data.unit, foodRef);
+                        const unitPrice = perGramPrice(foodRef);
                         shoppingList.push({
                             foodId,
                             name: data.name,
-                            amount: Math.round(deficit * 10) / 10,
+                            amount,
                             unit: data.unit,
                             category: (foodRef && foodRef.category) || 'Other',
                             recipes: Array.from(data.recipes || []),
-                            checked: false
+                            checked: false,
+                            grams: (grams === null ? null : Math.round(grams * 10) / 10),
+                            cost: (grams !== null && unitPrice > 0) ? Math.round(grams * unitPrice * 100) / 100 : null
                         });
                     }
                 });
@@ -1641,6 +2273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const list = generateList();
                 shoppingLists = list;
                 renderShoppingList(list);
+                renderBudget();
                 persistShoppingList();
             };
             
@@ -1664,25 +2297,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Price-aware matching: per-100g unit price + cheapest-in-category badge
+            const priceCur = mealPlanCurrency();
+            const cheapestByCat = {};
+            ingredients.forEach(ing => {
+                const ppg = perGramPrice(ing);
+                if (!(ppg > 0)) return;
+                const cat = ing.category || 'Other';
+                if (!cheapestByCat[cat] || ppg < cheapestByCat[cat].ppg) cheapestByCat[cat] = { ppg, foodId: ing.foodId };
+            });
+            const unitPriceLabel = (ing) => {
+                const ppg = perGramPrice(ing);
+                if (!(ppg > 0)) return '';
+                return `${formatMoney(ppg * 100, priceCur)} / 100g`;
+            };
+            const isCheapest = (ing) => {
+                const c = cheapestByCat[ing.category || 'Other'];
+                return !!(c && c.foodId === ing.foodId);
+            };
+
             if (cmsListView === 'grid') {
                 listContainer.innerHTML = `
                     <div class="cms-grid-wrapper">
                         ${filteredIngredients.map(ing => {
                             const vis = getCategoryIcon(ing.category);
                             const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+                            const unitLabel = unitPriceLabel(ing);
+                            const cheapest = isCheapest(ing);
                             return `
-                            <div class="cms-card" data-id="${escapeHtml(ing.foodId)}">
+                            <div class="cms-card" data-id="${escapeHtml(ing.foodId)}" role="button" tabindex="0" title="Edit ingredient">
                                 <div class="cms-card-img-wrap">
                                     <svg viewBox="${vis.vb}" style="width:${vis.w * 2}px;height:${vis.h * 2}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
                                 </div>
                                 <div class="cms-card-body">
-                                    <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
-                                    <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}</div>
-                                    <div class="cms-card-meta"><span>${escapeHtml(serving)}</span></div>
-                                    <div class="cms-card-actions">
-                                        <button class="cms-btn-icon food-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                        <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                    <div class="cms-card-title-row">
+                                        <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
+                                        <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                     </div>
+                                    <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}${cheapest ? `<span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i> Cheapest</span>` : ''}</div>
+                                    <div class="cms-card-meta"><span>${escapeHtml(serving)}</span>${unitLabel ? `<span class="cms-price-chip">${unitLabel}</span>` : ''}</div>
                                 </div>
                             </div>`;
                         }).join('')}
@@ -1705,23 +2358,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const vis = getCategoryIcon(ing.category);
                                     const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
                                     return `
-                                    <tr>
+                                    <tr data-id="${escapeHtml(ing.foodId)}" style="cursor: pointer;">
                                         <td>
                                             <div class="cms-td-title">
                                                 <div class="cms-td-icon">
                                                     <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
                                                 </div>
                                                 <div>
-                                                    <div>${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
-                                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
+                                                    <div>${escapeHtml(ing.name || 'Unnamed ingredient')}${isCheapest(ing) ? ` <span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i></span>` : ''}</div>
+                                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}${unitPriceLabel(ing) ? ` · <span class="cms-price-chip">${unitPriceLabel(ing)}</span>` : ''}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>${escapeHtml(ing.category || '—')}</td>
                                         <td><span class="cms-badge published">Published</span></td>
                                         <td class="cms-actions-cell">
-                                            <button class="cms-btn-icon food-edit-btn" data-id="${escapeHtml(ing.foodId)}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                            <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                            <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                         </td>
                                     </tr>`;
                                 }).join('')}
@@ -1732,12 +2384,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (window.lucide) window.lucide.createIcons();
 
-            document.querySelectorAll('.food-edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => openProfileEditor(btn.dataset.id));
+            document.querySelectorAll('.cms-card[data-id], tr[data-id]').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    openProfileEditor(card.dataset.id);
+                });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openProfileEditor(card.dataset.id);
+                    }
+                });
             });
 
             document.querySelectorAll('.food-delete-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const foodId = btn.dataset.id;
                     const ing = ingredients.find(f => f.foodId === foodId);
                     const name = ing ? ing.name : 'this ingredient';
@@ -1778,6 +2440,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="vd-settings-nav">
                         <div class="vd-settings-nav-item active" data-settings-view="eaters"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Eaters</div>
                         <div class="vd-settings-nav-item" data-settings-view="preferences"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Preferences</div>
+                        <div class="vd-settings-nav-item" data-settings-view="shopping"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Shopping</div>
                         <div class="vd-settings-nav-item" data-settings-view="data"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Data</div>
                         <div class="vd-settings-nav-item" data-settings-view="network"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> Network</div>
                     </div>
@@ -1997,6 +2660,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                if (view === 'shopping') {
+                    const budget = appSettings.shopping || {};
+                    settingsPanel.innerHTML = `
+                        <div class="vd-settings-section">
+                            <h3 class="vd-settings-title">Shopping Budget</h3>
+                            <p class="vd-settings-desc">Set a weekly budget to compare against your meal plan's estimated ingredient cost. Costs are estimated from each ingredient's Average Price ÷ serving size.</p>
+                            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; max-width: 460px;">
+                                <div class="form-group" style="flex: 1 1 180px;">
+                                    <label>Weekly Budget</label>
+                                    <input type="number" id="shopping-budget-amount" min="0" step="any" class="seamless-input" placeholder="0" value="${budget.amount != null ? budget.amount : ''}">
+                                </div>
+                                <div class="form-group" style="flex: 0 1 140px;">
+                                    <label>Currency Code</label>
+                                    <input type="text" id="shopping-budget-currency" class="seamless-input" placeholder="MUR" value="${escapeHtml(budget.currency || 'MUR')}">
+                                </div>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;">Add an Average Price and serving size to each ingredient profile for accurate meal-plan costing.</p>
+                        </div>
+                        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <button class="btn primary" id="save-shopping-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Shopping Budget</button>
+                        </div>
+                    `;
+                    if (window.lucide) window.lucide.createIcons();
+
+                    document.getElementById('save-shopping-btn').onclick = async () => {
+                        const amount = parseFloat(document.getElementById('shopping-budget-amount').value) || 0;
+                        const currency = (document.getElementById('shopping-budget-currency').value || 'MUR').trim().toUpperCase();
+                        appSettings.shopping = { amount, currency };
+                        try {
+                            const res = await fetch('/api/settings', { method: 'PUT', headers: HEADERS, body: JSON.stringify(appSettings) });
+                            if (!res.ok) throw new Error('Save failed');
+                            statusText.innerHTML = `<span class="status-dot"></span> Shopping budget saved.`;
+                        } catch (e) {
+                            alert('Failed to save. Is the server running?');
+                        }
+                    };
+                    return;
+                }
+
                 if (view === 'data') {
                     settingsPanel.innerHTML = `
                         <div class="vd-settings-section">
@@ -2183,12 +2885,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="cms-card" data-id="${escapeHtml(recipe.id)}" role="button" tabindex="0" title="Edit recipe">
                             <div class="cms-card-img-wrap">${iconTile}</div>
                             <div class="cms-card-body">
-                                <div class="cms-card-title">${escapeHtml(recipe.title)}</div>
+                                <div class="cms-card-title-row">
+                                    <div class="cms-card-title">${escapeHtml(recipe.title)}</div>
+                                    <button type="button" class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete" aria-label="Delete recipe"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                                </div>
                                 <div class="cms-card-sub">${escapeHtml(recipe.category || 'Recipe')}</div>
                                 <div class="cms-card-meta">
                                     <span>${yieldStr ? escapeHtml(yieldStr) + ' servings' : '—'}</span>
                                     <span>${energyStr ? escapeHtml(energyStr) : '—'}</span>
-                                    <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete" aria-label="Delete recipe" style="margin-left: auto;"><i data-lucide="trash-2"></i></button>
                                 </div>
                             </div>
                         </div>`;
@@ -2218,7 +2922,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ? `<img class="cms-thumb" src="${escapeHtml(recipe.imageUrl)}" alt="">`
                                     : `<svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>`;
                                 return `
-                                <tr>
+                                <tr data-id="${escapeHtml(recipe.id)}" style="cursor: pointer;">
                                     <td>
                                         <div class="cms-td-title">
                                             <div class="cms-td-icon">${iconTile}</div>
@@ -2232,8 +2936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td>${energyNum ? escapeHtml(energyNum) + ' kcal' : '—'}</td>
                                     <td><span class="cms-badge published">Published</span></td>
                                     <td class="cms-actions-cell">
-                                        <button class="cms-btn-icon edit-btn" data-id="${escapeHtml(recipe.id)}" title="Edit"><i data-lucide="edit-2"></i></button>
-                                        <button class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete"><i data-lucide="trash-2"></i></button>
+                                        <button type="button" class="cms-btn-icon delete delete-btn" data-id="${escapeHtml(recipe.id)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                     </td>
                                 </tr>`;
                             }).join('')}
@@ -2244,15 +2947,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.lucide) window.lucide.createIcons();
 
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openEditor(btn.dataset.id);
-            });
-        });
-        document.querySelectorAll('.cms-card[data-id]').forEach(card => {
+        document.querySelectorAll('.cms-card[data-id], tr[data-id]').forEach(card => {
             if (currentCMSTab !== 'recipe') return;
-            card.addEventListener('click', () => openEditor(card.dataset.id));
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                openEditor(card.dataset.id);
+            });
             card.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -2283,8 +2983,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     addBtn.addEventListener('click', () => {
-        if (currentCMSTab === 'food') {
+        if (currentCMSTab === 'food' || currentCMSTab === 'pantry') {
             openProfileEditor();
+        } else if (currentCMSTab === 'household') {
+            if (householdOpenFn) householdOpenFn();
         } else {
             openEditor();
         }
@@ -2815,6 +3517,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cancelRecipeBtn) cancelRecipeBtn.addEventListener('click', closeModal);
     if (cancelFoodBtn) cancelFoodBtn.addEventListener('click', closeFoodModal);
 
+    // --- Household Item Editor Modal ---
+    const householdModal = document.getElementById('cms-household-modal');
+    const householdForm = document.getElementById('household-item-form');
+    const householdCloseBtn = householdModal ? householdModal.querySelector('.household-close') : null;
+    const householdDeleteBtn = document.getElementById('household-delete-btn');
+    const cancelHouseholdBtn = document.getElementById('cancel-household-btn');
+
+    function closeHouseholdModal() {
+        if (householdModal) householdModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    if (householdCloseBtn) householdCloseBtn.addEventListener('click', closeHouseholdModal);
+    if (householdModal) householdModal.addEventListener('click', (e) => { if (e.target === householdModal) closeHouseholdModal(); });
+    if (cancelHouseholdBtn) cancelHouseholdBtn.addEventListener('click', closeHouseholdModal);
+
+    if (householdForm) householdForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('household-id').value || ('hh_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6));
+        const name = document.getElementById('household-name').value.trim();
+        if (!name) { alert('Please enter an item name.'); return; }
+        const record = {
+            id,
+            name,
+            category: document.getElementById('household-category').value,
+            unitSize: document.getElementById('household-unit-size').value.trim(),
+            currentStock: parseFloat(document.getElementById('household-stock').value) || 0,
+            avgDurationDays: parseFloat(document.getElementById('household-duration').value) || 0,
+            pricePerUnit: parseFloat(document.getElementById('household-price').value) || 0,
+            lastOpenedDate: document.getElementById('household-last-opened').value || ''
+        };
+        const idx = householdItems.findIndex(x => x.id === id);
+        const existing = householdItems[idx] || {};
+        record.durationHistory = existing.durationHistory || [];
+        if (idx >= 0) householdItems[idx] = record;
+        else householdItems.push(record);
+        closeHouseholdModal();
+        renderCMSList();
+        await saveHousehold();
+    });
+
+    if (householdDeleteBtn) householdDeleteBtn.addEventListener('click', async () => {
+        const id = document.getElementById('household-id').value;
+        if (!id) return;
+        const confirmed = await showConfirmDialog('Delete this item?', 'This will permanently remove the item from household supplies.');
+        if (!confirmed) return;
+        householdItems = householdItems.filter(x => x.id !== id);
+        closeHouseholdModal();
+        renderCMSList();
+        await saveHousehold();
+    });
+
     if (cmsDeleteBtn) cmsDeleteBtn.addEventListener('click', async () => {
         const recipeId = document.getElementById('recipe-id').value;
         if (!recipeId) return;
@@ -2863,6 +3616,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             closeModal(); 
             closeFoodModal();
+            closeHouseholdModal();
         } 
     });
 });

@@ -11,6 +11,15 @@ Your personal recipe manager and kitchen companion — built for home cooks who 
 - `cms.html` — Private content management (meal planning, data import/export)
 - `legal.html` — Legal / privacy notices
 
+## <a name="shopping-optimizer"></a>Shopping Optimizer (CMS)
+
+Budget- and price-aware meal planning, built into the CMS:
+
+- **Weekly budget vs meal-plan cost** (Shopping tab) — cost of the current week's meals is estimated from each ingredient's `averagePrice ÷ servingSizeG` (metric units, falling back to imperial amounts), compared against a weekly budget set in Settings → Shopping, with a progress bar, per-category breakdown, and a "not costed" notice for unpriced/unparsed ingredients.
+- **Cost-aware shopping list** — every line shows an estimated cost plus a list total with an over/within-budget badge; when over budget, cheaper same-category swap suggestions are listed with the money you'd save.
+- **Cost-aware meal planning** — each planned meal gets a cost chip and a "Week Meal Cost" card compares the week's total to the budget.
+- **Price-aware ingredients** — the Ingredients tab shows a per-100g unit price on each priced item and marks the cheapest ingredient in every category.
+
 ## Tech
 
 - **Electron** desktop app with a local Node server (`server.js`, loopback-only)
