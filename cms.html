@@ -424,6 +424,22 @@
                             <div class="form-group" style="flex:1;"><label for="profile-averagePrice">Average Price</label><input type="number" step="any" id="profile-averagePrice" class="seamless-input" placeholder="0"></div>
                             <div class="form-group" style="flex:1;"><label for="profile-priceCurrency">Currency</label><input type="text" id="profile-priceCurrency" class="seamless-input" placeholder="MUR" value="MUR"></div>
                         </div>
+                        <div class="form-row" style="margin-top: 0.75rem; align-items: flex-end;">
+                            <div class="form-group" style="flex:1; max-width: 140px;"><label for="profile-priceBasisAmount">Price is per</label><input type="number" step="any" min="0" id="profile-priceBasisAmount" class="seamless-input" placeholder="100" value=""></div>
+                            <div class="form-group" style="flex:1;"><label for="profile-priceBasisUnit">Unit</label>
+                                <select id="profile-priceBasisUnit" class="seamless-input" style="width: 100%;">
+                                    <option value="g">g (grams)</option>
+                                    <option value="kg">kg (kilograms)</option>
+                                    <option value="ml">ml (millilitres)</option>
+                                    <option value="l">l (litres)</option>
+                                    <option value="cnt">each / piece</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex:1;"><label>Equals</label><div id="profile-price-per" class="seamless-input" style="display: flex; align-items: center; min-height: 38px;">—</div></div>
+                        </div>
+                        <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+                            e.g. enter the price of a <strong>500 g</strong> pack → set <em>Price is per 500 g</em>. Formulas blend the units automatically.
+                        </div>
                         <div id="profile-price-history" style="margin-top: 1.25rem;"></div>
                     </div>
 

@@ -18,6 +18,27 @@ const ING = [
 ];
 const cals = (n) => ({ ...ING[0], foodId: 'c', calories: n });
 
+console.log('\n-- priceBasisGrams / perGram --');
+check('no basis -> servingSizeG (100g) -> perGram', () => {
+    assert.ok(close(c.priceBasisGrams(ING[0]), 100));
+    assert.ok(close(c.perGram(ING[0]), 0.1), 'Rs10 per 100g -> 0.1/g');
+});
+check('explicit basis 500 g -> price/500', () => {
+    const t = { ...ING[0], averagePrice: 25, priceBasisAmount: 500, priceBasisUnit: 'g' };
+    assert.ok(close(c.priceBasisGrams(t), 500));
+    assert.ok(close(c.perGram(t), 0.05), 'Rs25 per 500g -> 0.05/g');
+});
+check('basis kg (2 kg -> 2000 g)', () => {
+    const t = { ...ING[0], averagePrice: 80, priceBasisAmount: 2, priceBasisUnit: 'kg' };
+    assert.ok(close(c.priceBasisGrams(t), 2000));
+    assert.ok(close(c.perGram(t), 0.04));
+});
+check('count basis uses serving size (2 each -> 2*55g)', () => {
+    const t = { ...ING[2], averagePrice: 5, priceBasisAmount: 2, priceBasisUnit: 'cnt' };
+    assert.ok(close(c.priceBasisGrams(t), 110), '2 each * 55 g serving');
+    assert.ok(close(c.perGram(t), 5 / 110));
+});
+
 console.log('\n-- gramsOf --');
 check('2 kg -> 2000', () => assert.ok(close(c.gramsOf(2, 'kg', null), 2000)));
 check('500 g -> 500', () => assert.ok(close(c.gramsOf(500, 'g', null), 500)));

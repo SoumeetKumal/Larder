@@ -31,10 +31,27 @@
         return num(amount) * (num(ing && ing.servingSizeG) || 100);
     }
 
+    // Grams that `averagePrice` buys. The basis is explicit when set
+    // (priceBasisAmount + priceBasisUnit, e.g. "2 kg", "100 g", "1 pc");
+    // otherwise it falls back to the ingredient's serving size (default 100 g).
+    function priceBasisGrams(ing) {
+        var a = num(ing && ing.priceBasisAmount);
+        if (a > 0) {
+            var u = String(ing && ing.priceBasisUnit || 'g').toLowerCase();
+            if (u === 'cnt' || u === 'pc' || u === 'each' || u === 'piece') {
+                return a * (num(ing && ing.servingSizeG) || 100);
+            }
+            return a * gramsOf(1, u, ing);
+        }
+        var s = num(ing && ing.servingSizeG);
+        return s > 0 ? s : 100;
+    }
+
     function perGram(ing) {
         var avg = num(ing && ing.averagePrice);
         if (avg <= 0) return 0;
-        return avg / (num(ing.servingSizeG) || 100);
+        var b = priceBasisGrams(ing);
+        return b > 0 ? avg / b : 0;
     }
 
     var ANIMAL_SOURCE = ['meat', 'fish', 'egg', 'dairy'];
@@ -154,6 +171,7 @@
 
     return {
         gramsOf: gramsOf,
+        priceBasisGrams: priceBasisGrams,
         perGram: perGram,
         isAnimalSource: isAnimalSource,
         computeTotals: computeTotals,

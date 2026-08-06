@@ -3,8 +3,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // minimal local version only if it is missing, so the app never breaks.
     const LC = typeof LarderCalc !== 'undefined' ? LarderCalc : {
         gramsOf: (a, u, ing) => (parseFloat(a) || 0) * ((u === 'kg' || u === 'l') ? 1000 : 1) * (parseFloat(ing && ing.servingSizeG) || 1),
-        perGram: ing => (parseFloat(ing && ing.averagePrice) || 0) / (parseFloat(ing && ing.servingSizeG) || 100),
-        computeTotals: (items, ingredients) => { const t = { energy: 0, protein: 0, carbs: 0, fat: 0, satFat: 0, sugar: 0, fiber: 0, vitD: 0, animal: 0, meat: 0, cost: 0, units: 0 }; (items || []).forEach(it => { const ing = (ingredients || []).find(f => f.foodId === it.ingredientId); const g = (parseFloat(it.amount) || 0) * ((it.unit === 'kg' || it.unit === 'l') ? 1000 : (parseFloat(ing && ing.servingSizeG) || 100)); if (!ing || !(g > 0)) return; const f = g / 100; t.energy += (parseFloat(ing.calories) || 0) * f; t.protein += (parseFloat(ing.proteinG) || 0) * f; t.carbs += (parseFloat(ing.carbsG) || 0) * f; t.fat += (parseFloat(ing.fatG) || 0) * f; t.satFat += (parseFloat(ing.saturatedFatG) || 0) * f; t.sugar += (parseFloat(ing.sugarG) || 0) * f; t.fiber += (parseFloat(ing.fiberG) || 0) * f; t.vitD += (parseFloat(ing.vitaminDMcg) || 0) * f; const pg = (parseFloat(ing.proteinG) || 0) * f; if (['meat', 'fish', 'egg', 'dairy'].includes((ing.proteinSource || '').toLowerCase())) t.animal += pg; t.meat += pg; t.cost += (parseFloat(ing.averagePrice) || 0) / (parseFloat(ing.servingSizeG) || 100) * g * (it.useStock ? 0 : 1); t.units += 1; }); return t; },
+        priceBasisGrams: (ing) => {
+            const a = parseFloat(ing && ing.priceBasisAmount);
+            if (a > 0) {
+                const u = String(ing && ing.priceBasisUnit || 'g').toLowerCase();
+                if (u === 'cnt' || u === 'pc' || u === 'each' || u === 'piece') {
+                    return a * (parseFloat(ing && ing.servingSizeG) || 100);
+                }
+                return a * ((u === 'kg' || u === 'l') ? 1000 : 1);
+            }
+            const s = parseFloat(ing && ing.servingSizeG);
+            return s > 0 ? s : 100;
+        },
+        perGram: (ing) => {
+            const avg = parseFloat(ing && ing.averagePrice);
+            if (!(avg > 0)) return 0;
+            const b = LC.priceBasisGrams(ing);
+            return b > 0 ? avg / b : 0;
+        },
+        computeTotals: (items, ingredients) => { const t = { energy: 0, protein: 0, carbs: 0, fat: 0, satFat: 0, sugar: 0, fiber: 0, vitD: 0, animal: 0, meat: 0, cost: 0, units: 0 }; (items || []).forEach(it => { const ing = (ingredients || []).find(f => f.foodId === it.ingredientId); const g = LC.gramsOf(it.amount, it.unit, ing); if (!ing || !(g > 0)) return; const f = g / 100; t.energy += (parseFloat(ing.calories) || 0) * f; t.protein += (parseFloat(ing.proteinG) || 0) * f; t.carbs += (parseFloat(ing.carbsG) || 0) * f; t.fat += (parseFloat(ing.fatG) || 0) * f; t.satFat += (parseFloat(ing.saturatedFatG) || 0) * f; t.sugar += (parseFloat(ing.sugarG) || 0) * f; t.fiber += (parseFloat(ing.fiberG) || 0) * f; t.vitD += (parseFloat(ing.vitaminDMcg) || 0) * f; const pg = (parseFloat(ing.proteinG) || 0) * f; if (['meat', 'fish', 'egg', 'dairy'].includes((ing.proteinSource || '').toLowerCase())) t.animal += pg; t.meat += pg; t.cost += LC.perGram(ing) * g * (it.useStock ? 0 : 1); t.units += 1; }); return t; },
         normalise: s => String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim(),
         matchIngredient: (name, ingredients) => { const q = (name || '').toLowerCase(); return (ingredients || []).find(i => (i.name || '').toLowerCase() === q) || null; },
         parseLine: () => null,
@@ -1099,8 +1116,10 @@ renderItemRows();
             if (!ing) return 0;
             const avg = parseFloat(ing.averagePrice);
             if (!(avg > 0)) return 0;
-            const serving = parseFloat(ing.servingSizeG) || 100;
-            return avg / serving;
+            const b = LC.priceBasisGrams && typeof LC.priceBasisGrams === 'function'
+                ? LC.priceBasisGrams(ing)
+                : (parseFloat(ing.servingSizeG) || 100);
+            return b > 0 ? avg / b : 0;
         }
 
         function formatMoney(amount, currency) {
@@ -4072,9 +4091,37 @@ const unpricedRow = cost.unpriced.length
         // Pricing
         document.getElementById('profile-averagePrice').value = (ing && ing.averagePrice) || '';
         document.getElementById('profile-priceCurrency').value = (ing && ing.priceCurrency) || 'MUR';
+        document.getElementById('profile-priceBasisAmount').value = (ing && ing.priceBasisAmount) || '';
+        document.getElementById('profile-priceBasisUnit').value = (ing && ing.priceBasisUnit) || 'g';
+        updatePricePerLabel();
 
         foodModal.classList.add('active');
         document.body.style.overflow = 'hidden';
+    }
+
+    // Show "equals" clarification for the pricing basis, defaulting to the
+    // ingredient's serving size when no explicit basis is set.
+    function updatePricePerLabel() {
+        const amountEl = document.getElementById('profile-priceBasisAmount');
+        const unitEl = document.getElementById('profile-priceBasisUnit');
+        const perEl = document.getElementById('profile-price-per');
+        if (!amountEl || !unitEl || !perEl) return;
+        const amount = parseFloat(amountEl.value);
+        const unit = unitEl.value || 'g';
+        const basisGrams = amount > 0
+            ? (amount * ((unit === 'kg' || unit === 'l') ? 1000 : 1))
+            : 100;
+        const label = unit === 'cnt'
+            ? `${amount || 1} × each`
+            : `${basisGrams} g`;
+        perEl.textContent = basisGrams > 0 ? label : '—';
+    }
+
+    const pbA = document.getElementById('profile-priceBasisAmount');
+    const pbU = document.getElementById('profile-priceBasisUnit');
+    if (pbA && pbU) {
+        pbA.addEventListener('input', updatePricePerLabel);
+        pbU.addEventListener('change', updatePricePerLabel);
     }
 
     profileForm.addEventListener('submit', async (e) => {
@@ -4160,6 +4207,14 @@ const unpricedRow = cost.unpriced.length
         // Pricing
         ingredients[idx].averagePrice = parseFloat(document.getElementById('profile-averagePrice').value) || 0;
         ingredients[idx].priceCurrency = document.getElementById('profile-priceCurrency').value.trim() || 'MUR';
+        const priceBasisAmount = parseFloat(document.getElementById('profile-priceBasisAmount').value);
+        if (priceBasisAmount > 0) {
+            ingredients[idx].priceBasisAmount = priceBasisAmount;
+            ingredients[idx].priceBasisUnit = document.getElementById('profile-priceBasisUnit').value || 'g';
+        } else {
+            delete ingredients[idx].priceBasisAmount;
+            delete ingredients[idx].priceBasisUnit;
+        }
 
         closeFoodModal();
         await saveIngredients();

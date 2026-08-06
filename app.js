@@ -965,18 +965,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${(!macroBar && !fatsFold && !carbsFold && !vitaminsFold && !mineralsFold) ? `<p style="color: var(--text-muted); font-size: 0.9rem;">No detailed nutrition breakdown available for this ingredient.</p>` : ''}
                 </div>`);
 
-        if (typeof recipe.averagePrice === 'number' && !isNaN(recipe.averagePrice)) {
-            tabs.push('<button class="ing-tab" data-tab="pricing">Pricing</button>');
-            panels.push(`<div class="ing-tab-panel" data-panel="pricing">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
-                        <div class="ing-info-card">
-                            <span class="ing-info-label"><i data-lucide="banknote" style="width: 14px; height: 14px;"></i> Average Price</span>
-                            <span class="ing-info-value" style="font-size: 1.4rem; font-weight: 700; color: ${accent};">${escapeHtml(recipe.priceCurrency || '₹')} ${recipe.averagePrice} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ ${escapeHtml(recipe.servingUnit || '100g')}</span></span>
-                        </div>
-                    </div>
-                </div>`);
-        }
-
         modalContainer.style.maxWidth = '680px';
         modalBody.innerHTML = `
             <div class="modal-header" style="padding-bottom: 0;">
