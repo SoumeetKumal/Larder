@@ -61,6 +61,8 @@ const MEALPLANS_PATH = path.join(DATA_DIR, 'mealplans.json');
 const PANTRY_PATH = path.join(DATA_DIR, 'pantry.json');
 const SHOPPINGLISTS_PATH = path.join(DATA_DIR, 'shoppinglists.json');
 const HOUSEHOLD_PATH = path.join(DATA_DIR, 'household.json');
+const RECEIPTS_PATH = path.join(DATA_DIR, 'receipts.json');
+const PLANNER_PATH = path.join(DATA_DIR, 'planner.json');
 const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
 const API_KEY = 'larder_local_sync_8f92k';
 
@@ -105,6 +107,8 @@ const defaultFiles = {
     'pantry.json': '[]',
     'shoppinglists.json': '[]',
     'household.json': '[]',
+    'receipts.json': '[]',
+    'planner.json': '{"goals": {"energyMax": 0, "carbsMax": 0, "fatMax": 0, "satFatMax": 0, "sugarMax": 0, "proteinMin": 0, "vitDMin": 0, "meatProteinPct": 50, "budget": 0, "currency": "MUR"}, "items": []}',
     'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
 };
 Object.entries(defaultFiles).forEach(([file, content]) => {
@@ -217,6 +221,8 @@ const server = http.createServer((req, res) => {
             try {
                 const parsed = JSON.parse(body.toString('utf8'));
                 if (!Array.isArray(parsed)) throw new Error('Expected an array');
+                const check = validateWrite('recipes', parsed);
+                if (!check.ok) { sendJson(res, 400, { error: check.error }); return; }
                 const formatted = JSON.stringify(parsed, null, 2);
                 fs.writeFile(RECIPES_PATH, formatted, 'utf8', (err) => {
                     if (err) {
@@ -254,6 +260,8 @@ const server = http.createServer((req, res) => {
             try {
                 const parsed = JSON.parse(body.toString('utf8'));
                 if (!Array.isArray(parsed)) throw new Error('Expected an array');
+                const check = validateWrite('ingredients', parsed);
+                if (!check.ok) { sendJson(res, 400, { error: check.error }); return; }
                 const formatted = JSON.stringify(parsed, null, 2);
                 fs.writeFile(INGREDIENTS_PATH, formatted, 'utf8', (err) => {
                     if (err) {
@@ -295,6 +303,8 @@ const server = http.createServer((req, res) => {
                 try {
                     const parsed = JSON.parse(body.toString('utf8'));
                     if (!Array.isArray(parsed)) throw new Error('Expected an array');
+                    const check = validateWrite(name, parsed);
+                    if (!check.ok) { sendJson(res, 400, { error: check.error }); return; }
                     const formatted = JSON.stringify(parsed, null, 2);
                     fs.writeFile(filePath, formatted, 'utf8', (err) => {
                         if (err) {
@@ -315,10 +325,93 @@ const server = http.createServer((req, res) => {
         return false;
     }
 
+    // --- Write-time validation (lenient: rejects malformed records, tolerates
+    // missing optional fields so existing data keeps working) ---
+    function validateWrite(name, parsed) {
+        const badObject = (v) => !v || typeof v !== 'object' || Array.isArray(v);
+        const err = (m) => ({ ok: false, error: m });
+        if (name === 'planner' || name === 'settings') {
+            if (badObject(parsed)) return err(`${name} payload must be an object`);
+            if (name === 'planner') {
+                if (badObject(parsed.goals)) return err('planner.goals must be an object');
+                if (!Array.isArray(parsed.items)) return err('planner.items must be an array');
+                for (const it of parsed.items) {
+                    if (badObject(it) || typeof it.ingredientId !== 'string' || !it.ingredientId) return err('planner items need a non-empty ingredientId');
+                }
+            } else if (!Array.isArray(parsed.profiles)) {
+                return err('settings.profiles must be an array');
+            }
+            return { ok: true };
+        }
+        if (!Array.isArray(parsed)) return err(`${name} payload must be an array`);
+        const records = parsed;
+        if (name === 'ingredients' || name === 'pantry') {
+            for (const r of records) {
+                if (badObject(r) || typeof r.foodId !== 'string' || !r.foodId) return err(`${name} records need a non-empty foodId`);
+            }
+        } else if (name === 'receipts') {
+            for (const r of records) {
+                if (badObject(r)) return err('receipts records must be objects');
+                if (r.items !== undefined && !Array.isArray(r.items)) return err('receipt.items must be an array');
+                if (r.items !== undefined) for (const it of r.items) {
+                    if (badObject(it) || typeof it.name !== 'string' || !it.name) return err('receipt items need a non-empty name');
+                }
+            }
+        } else {
+            for (const r of records) {
+                if (badObject(r)) return err(`${name} records must be objects`);
+            }
+        }
+        return { ok: true };
+    }
+
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
     if (req.url === '/api/household' && handleGenericFileAPI(req, res, HOUSEHOLD_PATH, 'household')) return;
+    if (req.url === '/api/receipts' && handleGenericFileAPI(req, res, RECEIPTS_PATH, 'receipts')) return;
+
+    // --- API: planner (object payload: { goals, items }) ---
+    if (req.url === '/api/planner' && req.method === 'GET') {
+        fs.readFile(PLANNER_PATH, 'utf8', (err, data) => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end('{"goals": {},"items": []}');
+                    return;
+                }
+                sendJson(res, 500, { error: 'Could not read planner.json' });
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(data);
+        });
+        return;
+    }
+    if (req.url === '/api/planner' && req.method === 'PUT') {
+        collectBody(req).then(body => {
+            try {
+                const parsed = JSON.parse(body.toString('utf8'));
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Expected an object');
+                const check = validateWrite('planner', parsed);
+                if (!check.ok) { sendJson(res, 400, { error: check.error }); return; }
+                const formatted = JSON.stringify(parsed, null, 2);
+                fs.writeFile(PLANNER_PATH, formatted, 'utf8', (err) => {
+                    if (err) {
+                        sendJson(res, 500, { error: 'Could not write planner.json' });
+                        return;
+                    }
+                    sendJson(res, 200, { success: true });
+                    console.log(`  💾 Saved planner to planner.json`);
+                });
+            } catch (e) {
+                sendJson(res, 400, { error: 'Invalid JSON or payload must be an object' });
+            }
+        }).catch(() => {
+            sendJson(res, 413, { error: 'Request body too large' });
+        });
+        return;
+    }
 
     // --- API: network info (LAN addresses for companion-app sync) ---
     if (req.url === '/api/network-info' && req.method === 'GET') {
@@ -348,6 +441,8 @@ const server = http.createServer((req, res) => {
             try {
                 const parsed = JSON.parse(body.toString('utf8'));
                 if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Expected an object');
+                const check = validateWrite('settings', parsed);
+                if (!check.ok) { sendJson(res, 400, { error: check.error }); return; }
                 const formatted = JSON.stringify(parsed, null, 2);
                 fs.writeFile(SETTINGS_PATH, formatted, 'utf8', (err) => {
                     if (err) {

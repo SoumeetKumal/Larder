@@ -11,7 +11,7 @@
 </head>
 <body class="cms-page">
     <nav class="cms-navbar">
-        <a href="cms" class="brand-logo" style="text-decoration: none;">
+        <a href="cms.html" class="brand-logo" style="text-decoration: none;">
             <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
             Larder CMS
         </a>
@@ -19,9 +19,11 @@
             <button class="cms-tab active" data-tab="recipe">Recipes</button>
             <button class="cms-tab" data-tab="food">Ingredients</button>
             <button class="cms-tab" data-tab="mealplan">Meal Plan</button>
+            <button class="cms-tab" data-tab="planner">Planner</button>
             <button class="cms-tab" data-tab="pantry">Pantry</button>
             <button class="cms-tab" data-tab="household">Household</button>
             <button class="cms-tab" data-tab="shopping">Shopping Lists</button>
+            <button class="cms-tab" data-tab="receipts">Receipts</button>
         </div>
         <div class="cms-nav-actions">
             <a href="./" class="btn secondary nav-site-btn" title="View Site" aria-label="View Site"><i data-lucide="external-link" style="width: 18px; height: 18px;"></i></a>
@@ -174,7 +176,8 @@
                             <summary class="cms-section-title" style="cursor: pointer; user-select: none;">Advanced ▸</summary>
                             <div style="padding: 0 1rem 1rem;">
                                 <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
-                                    <div class="form-group"><label>Icon Vector</label>
+                                    <div class="form-group"><label for="recipe-icon">Icon Vector</label>
+
                                         <select id="recipe-icon" class="seamless-select" style="width: 100%;">
                                             <option value="">None (Use Default)</option>
                                             <option value="icon-fish">Fish</option>
@@ -197,10 +200,11 @@
                                             <option value="icon-wine-glass">Wine Glass</option>
                                         </select>
                                     </div>
-                                    <div class="form-group"><label>Image URL</label><input type="url" id="recipe-image" class="seamless-input" placeholder="https://..."></div>
+                                    <div class="form-group"><label for="recipe-image">Image URL</label><input type="url" id="recipe-image" class="seamless-input" placeholder="https://..."></div>
                                 </div>
                                 <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
-                                    <div class="form-group"><label>Macro Reference</label>
+                                    <div class="form-group"><label for="macro-reference">Macro Reference</label>
+
                                         <select id="macro-reference" class="seamless-select" style="width: 100%;">
                                             <option value="per_serving">Per Serving</option>
                                             <option value="total">Total Recipe</option>
@@ -208,7 +212,7 @@
                                             <option value="per_x_g">Per X grams</option>
                                         </select>
                                     </div>
-                                    <div class="form-group" id="macro-ref-amount-group" style="display: none;"><label>Grams (X)</label><input type="number" id="macro-ref-amount" class="seamless-input" placeholder="e.g. 50"></div>
+                                    <div class="form-group" id="macro-ref-amount-group" style="display: none;"><label for="macro-ref-amount">Grams (X)</label><input type="number" id="macro-ref-amount" class="seamless-input" placeholder="e.g. 50"></div>
                                 </div>
                             </div>
                         </details>
@@ -292,7 +296,8 @@
                         <textarea id="profile-description" class="seamless-input seamless-textarea" placeholder="Description / subtitle..." style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.25rem; min-height: 80px;"></textarea>
 
                         <div class="form-group" style="margin-bottom: 1.25rem;">
-                            <label>Image URL</label>
+                            <label for="profile-image">Image URL</label>
+
                             <input type="url" id="profile-image" class="seamless-input" placeholder="https://...">
                         </div>
 
@@ -330,71 +335,96 @@
                     <!-- Culinary Tab -->
                     <div class="ing-tab-panel" data-panel="culinary">
                         <div class="form-group">
-                            <label>Flavour Profile</label>
+                            <label for="profile-flavour">Flavour Profile</label>
+
                             <textarea id="profile-flavour" class="seamless-input seamless-textarea" rows="2" placeholder="e.g., Earthy, mild, starchy"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Pairings</label>
+                            <label for="profile-pairings">Pairings</label>
+
                             <textarea id="profile-pairings" class="seamless-input seamless-textarea" rows="2" placeholder="e.g., Rosemary, butter, garlic"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Varieties / Types</label>
+                            <label for="profile-varieties">Varieties / Types</label>
+
                             <textarea id="profile-varieties" class="seamless-input seamless-textarea" rows="2" placeholder="e.g., Russet, Yukon Gold"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Preparations</label>
+                            <label for="profile-preparations">Preparations</label>
+
                             <textarea id="profile-preparations" class="seamless-input seamless-textarea" rows="2" placeholder="e.g., Boil, bake, fry, mash"></textarea>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem; max-width: 320px;">
+                            <label for="profile-proteinSource">Protein Source</label>
+                            <select id="profile-proteinSource" class="seamless-input">
+                                <option value="">— not set —</option>
+                                <option value="meat">Meat</option>
+                                <option value="fish">Fish &amp; Seafood</option>
+                                <option value="egg">Egg</option>
+                                <option value="dairy">Dairy</option>
+                                <option value="legume">Legumes</option>
+                                <option value="grain">Grains &amp; Cereals</option>
+                                <option value="nut">Nuts &amp; Seeds</option>
+                                <option value="plant">Plant / Other</option>
+                            </select>
                         </div>
                     </div>
 
                     <!-- Nutrition Tab -->
                     <div class="ing-tab-panel" data-panel="nutrition">
-                        <div class="cms-section-title">Vitamins</div>
+                        <div class="cms-section-title">Macros (per 100 g)</div>
                         <div class="form-row" style="margin-top: 0.75rem;">
-                            <div class="form-group"><label>Vitamin A (mcg)</label><input type="number" step="any" id="profile-vitaminAMcg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Vitamin C (mg)</label><input type="number" step="any" id="profile-vitaminCMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Vitamin D (mcg)</label><input type="number" step="any" id="profile-vitaminDMcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-saturatedFatG">Saturated Fat (g)</label><input type="number" step="any" id="profile-saturatedFatG" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-sugarG">Sugar (g)</label><input type="number" step="any" id="profile-sugarG" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-fiberG">Fiber (g)</label><input type="number" step="any" id="profile-fiberG" class="seamless-input" placeholder="0"></div>
+                        </div>
+                        <div class="cms-section-title" style="margin-top: 1.5rem;">Vitamins</div>
+                        <div class="form-row" style="margin-top: 0.75rem;">
+                            <div class="form-group"><label for="profile-vitaminAMcg">Vitamin A (mcg)</label><input type="number" step="any" id="profile-vitaminAMcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminCMg">Vitamin C (mg)</label><input type="number" step="any" id="profile-vitaminCMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminDMcg">Vitamin D (mcg)</label><input type="number" step="any" id="profile-vitaminDMcg" class="seamless-input" placeholder="0"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>Vitamin E (mg)</label><input type="number" step="any" id="profile-vitaminEMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Vitamin K (mcg)</label><input type="number" step="any" id="profile-vitaminKMcg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Thiamin / B1 (mg)</label><input type="number" step="any" id="profile-thiaminMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminEMg">Vitamin E (mg)</label><input type="number" step="any" id="profile-vitaminEMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminKMcg">Vitamin K (mcg)</label><input type="number" step="any" id="profile-vitaminKMcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-thiaminMg">Thiamin / B1 (mg)</label><input type="number" step="any" id="profile-thiaminMg" class="seamless-input" placeholder="0"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>Riboflavin / B2 (mg)</label><input type="number" step="any" id="profile-riboflavinMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Niacin / B3 (mg)</label><input type="number" step="any" id="profile-niacinMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Vitamin B6 (mg)</label><input type="number" step="any" id="profile-vitaminB6Mg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-riboflavinMg">Riboflavin / B2 (mg)</label><input type="number" step="any" id="profile-riboflavinMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-niacinMg">Niacin / B3 (mg)</label><input type="number" step="any" id="profile-niacinMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminB6Mg">Vitamin B6 (mg)</label><input type="number" step="any" id="profile-vitaminB6Mg" class="seamless-input" placeholder="0"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>Folate / B9 (mcg)</label><input type="number" step="any" id="profile-folateMcg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Vitamin B12 (mcg)</label><input type="number" step="any" id="profile-vitaminB12Mcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-folateMcg">Folate / B9 (mcg)</label><input type="number" step="any" id="profile-folateMcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-vitaminB12Mcg">Vitamin B12 (mcg)</label><input type="number" step="any" id="profile-vitaminB12Mcg" class="seamless-input" placeholder="0"></div>
                             <div class="form-group"></div>
                         </div>
 
                         <div class="cms-section-title" style="margin-top: 1.5rem;">Minerals</div>
                         <div class="form-row" style="margin-top: 0.75rem;">
-                            <div class="form-group"><label>Calcium (mg)</label><input type="number" step="any" id="profile-calciumMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Iron (mg)</label><input type="number" step="any" id="profile-ironMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Magnesium (mg)</label><input type="number" step="any" id="profile-magnesiumMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-calciumMg">Calcium (mg)</label><input type="number" step="any" id="profile-calciumMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-ironMg">Iron (mg)</label><input type="number" step="any" id="profile-ironMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-magnesiumMg">Magnesium (mg)</label><input type="number" step="any" id="profile-magnesiumMg" class="seamless-input" placeholder="0"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>Phosphorus (mg)</label><input type="number" step="any" id="profile-phosphorusMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Potassium (mg)</label><input type="number" step="any" id="profile-potassiumMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Sodium (mg)</label><input type="number" step="any" id="profile-sodiumMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-phosphorusMg">Phosphorus (mg)</label><input type="number" step="any" id="profile-phosphorusMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-potassiumMg">Potassium (mg)</label><input type="number" step="any" id="profile-potassiumMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-sodiumMg">Sodium (mg)</label><input type="number" step="any" id="profile-sodiumMg" class="seamless-input" placeholder="0"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label>Zinc (mg)</label><input type="number" step="any" id="profile-zincMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Copper (mg)</label><input type="number" step="any" id="profile-copperMg" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group"><label>Selenium (mcg)</label><input type="number" step="any" id="profile-seleniumMcg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-zincMg">Zinc (mg)</label><input type="number" step="any" id="profile-zincMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-copperMg">Copper (mg)</label><input type="number" step="any" id="profile-copperMg" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-seleniumMcg">Selenium (mcg)</label><input type="number" step="any" id="profile-seleniumMcg" class="seamless-input" placeholder="0"></div>
                         </div>
                     </div>
 
                     <!-- Pricing Tab -->
                     <div class="ing-tab-panel" data-panel="pricing">
                         <div class="form-row">
-                            <div class="form-group" style="flex:1;"><label>Average Price</label><input type="number" step="any" id="profile-averagePrice" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group" style="flex:1;"><label>Currency</label><input type="text" id="profile-priceCurrency" class="seamless-input" placeholder="MUR" value="MUR"></div>
+                            <div class="form-group" style="flex:1;"><label for="profile-averagePrice">Average Price</label><input type="number" step="any" id="profile-averagePrice" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group" style="flex:1;"><label for="profile-priceCurrency">Currency</label><input type="text" id="profile-priceCurrency" class="seamless-input" placeholder="MUR" value="MUR"></div>
                         </div>
+                        <div id="profile-price-history" style="margin-top: 1.25rem;"></div>
                     </div>
 
                     <!-- Footer -->
@@ -438,7 +468,8 @@
                 <div class="modal-body" style="display: block; padding: 1.5rem 2rem;">
                     <input type="hidden" id="household-id">
                     <div class="form-group" style="margin-bottom: 1.25rem;">
-                        <label>Unit — what one unit means</label>
+                        <label for="household-unit-size">Unit — what one unit means</label>
+
                         <select id="household-unit-size" class="seamless-select" style="width: 100%;">
                             <option value="">Select unit...</option>
                             <option value="tube">tube</option>
@@ -462,21 +493,25 @@
                     </div>
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
-                            <label>Current stock (units on hand)</label>
+                            <label for="household-stock">Current stock (units on hand)</label>
+
                             <input type="number" id="household-stock" class="seamless-input" placeholder="0" min="0" step="any">
                         </div>
                         <div class="form-group">
-                            <label>Avg. duration per unit (days)</label>
+                            <label for="household-duration">Avg. duration per unit (days)</label>
+
                             <input type="number" id="household-duration" class="seamless-input" placeholder="e.g. 35" min="0" step="any">
                         </div>
                     </div>
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
-                            <label>Price per unit (Rs)</label>
+                            <label for="household-price">Price per unit (Rs)</label>
+
                             <input type="number" id="household-price" class="seamless-input" placeholder="0" min="0" step="any">
                         </div>
                         <div class="form-group">
-                            <label>Last opened date</label>
+                            <label for="household-last-opened">Last opened date</label>
+
                             <input type="date" id="household-last-opened" class="seamless-input">
                         </div>
                     </div>
@@ -530,7 +565,7 @@
                 </div>
 
                 <div id="meal-assign-eaters-row" style="margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
-                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Who is eating?</label>
+                    <span style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Who is eating?</span>
                     <div id="meal-assign-eaters-list" style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
                         <!-- Checkboxes populated via JS -->
                     </div>
@@ -546,7 +581,7 @@
                 </div>
 
                 <div id="meal-assign-builder">
-                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Add Recipe or Ingredient</label>
+                    <label for="meal-assign-search" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Add Recipe or Ingredient</label>
 
                     <div style="position: relative; margin-bottom: 0.5rem;">
                         <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
@@ -566,7 +601,7 @@
                     </div>
 
                     <div style="margin-top: 1.5rem;">
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Selected Items:</label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Selected Items:</span>
                         <ul id="meal-assign-selected-list" style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); min-height: 50px;">
                             <!-- Selected items will render here -->
                         </ul>
@@ -580,7 +615,7 @@
                 <!-- Templates -->
                 <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <label style="font-size: 0.8rem; color: var(--text-muted);">Meal Templates</label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Meal Templates</span>
                         <button id="meal-template-save" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.7rem;">Save as Template</button>
                     </div>
                     <div id="meal-template-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 30px;">
@@ -590,15 +625,15 @@
 
                 <!-- Copy to Days -->
                 <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Also apply to:</label>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Also apply to:</span>
                     <div id="meal-copy-days" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="0" style="accent-color: var(--primary); width: 14px; height: 14px;"> Mon</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="1" style="accent-color: var(--primary); width: 14px; height: 14px;"> Tue</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="2" style="accent-color: var(--primary); width: 14px; height: 14px;"> Wed</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="3" style="accent-color: var(--primary); width: 14px; height: 14px;"> Thu</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="4" style="accent-color: var(--primary); width: 14px; height: 14px;"> Fri</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="5" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sat</label>
-                        <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" class="copy-day-cb" value="6" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sun</label>
+                        <label for="copy-day-0" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-0" class="copy-day-cb" value="0" style="accent-color: var(--primary); width: 14px; height: 14px;"> Mon</label>
+                        <label for="copy-day-1" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-1" class="copy-day-cb" value="1" style="accent-color: var(--primary); width: 14px; height: 14px;"> Tue</label>
+                        <label for="copy-day-2" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-2" class="copy-day-cb" value="2" style="accent-color: var(--primary); width: 14px; height: 14px;"> Wed</label>
+                        <label for="copy-day-3" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-3" class="copy-day-cb" value="3" style="accent-color: var(--primary); width: 14px; height: 14px;"> Thu</label>
+                        <label for="copy-day-4" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-4" class="copy-day-cb" value="4" style="accent-color: var(--primary); width: 14px; height: 14px;"> Fri</label>
+                        <label for="copy-day-5" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-5" class="copy-day-cb" value="5" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sat</label>
+                        <label for="copy-day-6" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-6" class="copy-day-cb" value="6" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sun</label>
                     </div>
                 </div>
             </div>
@@ -622,22 +657,22 @@
         <div class="vd-footer-col">
             <h4>Navigate</h4>
             <a href="./">Recipes</a>
-            <a href="ingredients">Ingredients</a>
-            <a href="basics">Basics</a>
-            <a href="reference">Reference</a>
-            <a href="cms">Manage</a>
+            <a href="ingredients.html">Ingredients</a>
+            <a href="basics.html">Basics</a>
+            <a href="reference.html">Reference</a>
+            <a href="cms.html">Manage</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#tab-conversions">Conversions</a>
-            <a href="reference#tab-ingredients">Ingredient Guides</a>
-            <a href="reference#tab-bakeware">Pan Sizes</a>
+            <a href="reference.html#tab-conversions">Conversions</a>
+            <a href="reference.html#tab-ingredients">Ingredient Guides</a>
+            <a href="reference.html#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
-            <a href="legal#disclaimer">Disclaimer</a>
-            <a href="legal#terms">Terms of Use</a>
-            <a href="legal#privacy">Privacy Policy</a>
+            <a href="legal.html#disclaimer">Disclaimer</a>
+            <a href="legal.html#terms">Terms of Use</a>
+            <a href="legal.html#privacy">Privacy Policy</a>
         </div>
     </div>
     <div class="vd-footer-bottom">
@@ -721,32 +756,16 @@
         })();
     </script>
 
+    <script src="calc.js"></script>
     <script src="cms.js"></script>
 
     <script>
         // Simple Theme Logic for CMS
         const htmlTag = document.documentElement;
-        const themeToggle = document.getElementById('themeToggle');
         
-        function setTheme(theme) {
-            htmlTag.setAttribute('data-theme', theme);
-            localStorage.setItem('larder_theme', theme);
-            if (themeToggle) {
-                themeToggle.innerHTML = theme === 'dark' ? '<i data-lucide="sun" style="width: 18px; height: 18px;"></i>' : '<i data-lucide="moon" style="width: 18px; height: 18px;"></i>';
-                if (window.lucide) window.lucide.createIcons();
-            }
-        }
-        const savedTheme = localStorage.getItem('larder_theme');
-        if (savedTheme) { setTheme(savedTheme); }
-        else { setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
-        
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                setTheme(htmlTag.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-            });
-        }
         
         if (window.lucide) window.lucide.createIcons();
     </script>
+    <script src="theme.js"></script>
 </body>
 </html>

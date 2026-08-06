@@ -39,6 +39,8 @@ const DATA_FILES = [
     'mealplans.json',
     'pantry.json',
     'shoppinglists.json',
+    'household.json',
+    'receipts.json',
     'settings.json'
 ];
 

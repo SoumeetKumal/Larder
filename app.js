@@ -273,6 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tmp = minVal;
                     minVal = maxVal;
                     maxVal = tmp;
+                    minInput.value = minVal;
+                    maxInput.value = maxVal;
                 }
 
                 const minPercent = (minVal / config.max) * 100;
@@ -698,12 +700,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let num = 0;
         const numPart = match[1];
         if (numPart) {
-            if (numPart.includes('/')) {
+            if (/\s/.test(numPart) && numPart.includes('/')) {
+                // Mixed fraction: "1 1/2" → 1.5
+                const parts = numPart.trim().split(/\s+/);
+                const whole = parseFloat(parts[0]);
+                const [fn, fd] = parts[1].split('/');
+                num = whole + parseFloat(fn) / parseFloat(fd);
+            } else if (numPart.includes('/')) {
+                // Simple fraction: "1/2" → 0.5
                 const [n, d] = numPart.split('/');
                 num = parseFloat(n) / parseFloat(d);
-            } else if (/\s/.test(numPart)) {
-                const parts = numPart.trim().split(/\s+/);
-                num = parseFloat(parts[0]) + parseFloat(parts[1]);
             } else {
                 num = parseFloat(numPart);
             }

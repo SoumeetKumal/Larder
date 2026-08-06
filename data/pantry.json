@@ -1,6 +1,1 @@
-[
-  { "foodId": "tagliatelle", "isTracked": true, "quantity": 100 },
-  { "foodId": "tuna_flakes", "isTracked": true, "quantity": 50 },
-  { "foodId": "salt", "isTracked": true, "quantity": 500 },
-  { "foodId": "sugar", "isTracked": true, "quantity": 250 }
-]
+[]

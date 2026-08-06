@@ -25,10 +25,10 @@
             
             <div class="nav-links" id="navLinks">
                 <a href="./" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Recipes</a>
-                <a href="ingredients" class="btn" style="padding: 0.5rem 1rem; background: var(--bg-surface-hover);">Ingredients</a>
-                <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
-                <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
-                <a href="cms" class="btn btn-ghost app-only" style="padding: 0.5rem 1rem; display: none;">Manage</a>
+                <a href="ingredients.html" class="btn" style="padding: 0.5rem 1rem; background: var(--bg-surface-hover);">Ingredients</a>
+                <a href="basics.html" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
+                <a href="reference.html" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
+                <a href="cms.html" class="btn btn-ghost app-only" style="padding: 0.5rem 1rem; display: none;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
@@ -123,7 +123,7 @@
         </div>
 
         <main role="main">
-            <div id="recipe-grid" class="grid-3" role="list" aria-label="Recipe cards">
+            <div id="recipe-grid" class="grid-3" role="list" aria-label="Ingredient cards">
                 <div class="empty-state">Loading...</div>
             </div>
         </main>
@@ -178,21 +178,21 @@
         <div class="vd-footer-col">
             <h4>Navigate</h4>
             <a href="./">Recipes</a>
-            <a href="ingredients">Ingredients</a>
-            <a href="basics">Basics</a>
-            <a href="reference">Reference</a>
+            <a href="ingredients.html">Ingredients</a>
+            <a href="basics.html">Basics</a>
+            <a href="reference.html">Reference</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#tab-conversions">Conversions</a>
-            <a href="reference#tab-ingredients">Ingredient Guides</a>
-            <a href="reference#tab-bakeware">Pan Sizes</a>
+            <a href="reference.html#tab-conversions">Conversions</a>
+            <a href="reference.html#tab-ingredients">Ingredient Guides</a>
+            <a href="reference.html#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
-            <a href="legal#disclaimer">Disclaimer</a>
-            <a href="legal#terms">Terms of Use</a>
-            <a href="legal#privacy">Privacy Policy</a>
+            <a href="legal.html#disclaimer">Disclaimer</a>
+            <a href="legal.html#terms">Terms of Use</a>
+            <a href="legal.html#privacy">Privacy Policy</a>
         </div>
     </div>
     <div class="vd-footer-bottom">
@@ -265,5 +265,6 @@
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
     <script src="app.js"></script>
+    <script src="theme.js"></script>
 </body>
 </html>

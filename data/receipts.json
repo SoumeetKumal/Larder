@@ -1,0 +1,15 @@
+[
+  {
+    "id": "rc_test",
+    "store": "X",
+    "date": "2026-08-06",
+    "total": 10,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Tagliatelle",
+        "price": 10
+      }
+    ]
+  }
+]

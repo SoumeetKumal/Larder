@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Shared pure-math module (calc.js) loaded before cms.js. Fall back to a
+    // minimal local version only if it is missing, so the app never breaks.
+    const LC = typeof LarderCalc !== 'undefined' ? LarderCalc : {
+        gramsOf: (a, u, ing) => (parseFloat(a) || 0) * ((u === 'kg' || u === 'l') ? 1000 : 1) * (parseFloat(ing && ing.servingSizeG) || 1),
+        perGram: ing => (parseFloat(ing && ing.averagePrice) || 0) / (parseFloat(ing && ing.servingSizeG) || 100),
+        computeTotals: (items, ingredients) => { const t = { energy: 0, protein: 0, carbs: 0, fat: 0, satFat: 0, sugar: 0, fiber: 0, vitD: 0, animal: 0, meat: 0, cost: 0, units: 0 }; (items || []).forEach(it => { const ing = (ingredients || []).find(f => f.foodId === it.ingredientId); const g = (parseFloat(it.amount) || 0) * ((it.unit === 'kg' || it.unit === 'l') ? 1000 : (parseFloat(ing && ing.servingSizeG) || 100)); if (!ing || !(g > 0)) return; const f = g / 100; t.energy += (parseFloat(ing.calories) || 0) * f; t.protein += (parseFloat(ing.proteinG) || 0) * f; t.carbs += (parseFloat(ing.carbsG) || 0) * f; t.fat += (parseFloat(ing.fatG) || 0) * f; t.satFat += (parseFloat(ing.saturatedFatG) || 0) * f; t.sugar += (parseFloat(ing.sugarG) || 0) * f; t.fiber += (parseFloat(ing.fiberG) || 0) * f; t.vitD += (parseFloat(ing.vitaminDMcg) || 0) * f; const pg = (parseFloat(ing.proteinG) || 0) * f; if (['meat', 'fish', 'egg', 'dairy'].includes((ing.proteinSource || '').toLowerCase())) t.animal += pg; t.meat += pg; t.cost += (parseFloat(ing.averagePrice) || 0) / (parseFloat(ing.servingSizeG) || 100) * g * (it.useStock ? 0 : 1); t.units += 1; }); return t; },
+        normalise: s => String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim(),
+        matchIngredient: (name, ingredients) => { const q = (name || '').toLowerCase(); return (ingredients || []).find(i => (i.name || '').toLowerCase() === q) || null; },
+        parseLine: () => null,
+        parseReceiptText: () => []
+    };
     // Escape user-controlled text before it reaches innerHTML templates (XSS).
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -230,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let pantry = [];
     let shoppingLists = [];
     let householdItems = [];
+    let planner = { goals: {}, items: [] };
+    let receipts = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
@@ -355,14 +368,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/pantry', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/shoppinglists', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/household', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] })
+                fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] }),
+                fetch('/api/planner', { headers: HEADERS }).then(r => r.ok ? r.json() : null),
+                fetch('/api/receipts', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
@@ -373,6 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
                 ? resSettings
                 : { profiles: resSettings && Array.isArray(resSettings.profiles) ? resSettings.profiles : [] };
+            planner = (resPlanner && typeof resPlanner === 'object' && !Array.isArray(resPlanner))
+                ? { goals: resPlanner.goals || {}, items: Array.isArray(resPlanner.items) ? resPlanner.items : [] }
+                : { goals: {}, items: [] };
+            receipts = Array.isArray(resReceipts) ? resReceipts : [];
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
             addBtn.classList.remove('hidden');
@@ -404,7 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             statusText.innerHTML = `<span class="status-dot"></span> Saved recipes`;
         } catch(e) {
-            alert('Save failed. Is the server running?');
+            alert('Save failed. Reverting to previous state.');
+            loadData();
         }
     }
 
@@ -419,7 +439,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             statusText.innerHTML = `<span class="status-dot"></span> Saved ingredients`;
         } catch(e) {
-            alert('Save failed. Is the server running?');
+            alert('Save failed. Reverting to previous state.');
+            loadData();
         }
     }
 
@@ -433,7 +454,38 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Save failed');
             statusText.innerHTML = `<span class="status-dot"></span> Saved pantry`;
         } catch(e) {
-            alert('Save failed. Is the server running?');
+            alert('Save failed. Reverting to previous state.');
+            loadData();
+        }
+    }
+
+    async function savePlanner() {
+        try {
+            const res = await fetch('/api/planner', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(planner)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            statusText.innerHTML = `<span class="status-dot"></span> Saved planner`;
+        } catch(e) {
+            alert('Save failed. Reverting to previous state.');
+            loadData();
+        }
+    }
+
+    async function saveReceipts() {
+        try {
+            const res = await fetch('/api/receipts', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(receipts)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            statusText.innerHTML = `<span class="status-dot"></span> Saved receipts`;
+        } catch(e) {
+            alert('Save failed. Reverting to previous state.');
+            loadData();
         }
     }
 
@@ -447,7 +499,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Save failed');
             statusText.innerHTML = `<span class="status-dot"></span> Saved household supplies`;
         } catch(e) {
-            alert('Save failed. Is the server running?');
+            alert('Save failed. Reverting to previous state.');
+            loadData();
         }
     }
 
@@ -458,6 +511,551 @@ document.addEventListener('DOMContentLoaded', () => {
         datalist.innerHTML = ingredients.map(f => `<option value="${escapeHtml(f.name)}">`).join('');
     }
 
+function renderPlanner() {
+        const container = document.getElementById('cms-recipe-list');
+        if (!container) return;
+
+        const goals = Object.assign({
+            energyMin: 0, energyMax: 0, carbsMin: 0, carbsMax: 0,
+            proteinMin: 0, proteinMax: 0, fatMin: 0, fatMax: 0,
+            satFatMax: 0, sugarMax: 0, fiberMin: 0, vitDMin: 0,
+            meatProteinPct: 50, budget: 0, currency: ''
+        }, planner.goals || {});
+        const currency = goals.currency
+            || (appSettings.shopping && appSettings.shopping.currency)
+            || (ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
+            || 'MUR';
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function findIng(id) { return ingredients.find(f => f.foodId === id); }
+        function gramsOf(item) { return LC.gramsOf(item && item.amount, item && item.unit, findIng(item.ingredientId)); }
+        function perGramOf(ing) { return LC.perGram(ing); }
+
+        const t = LC.computeTotals(planner.items, ingredients);
+
+        function flag(minKey, maxKey, value) {
+            const mn = parseFloat(goals[minKey]) || 0;
+            const mx = parseFloat(goals[maxKey]) || 0;
+            if (mx > 0 && value > mx) return 'over';
+            if (mn > 0 && value < mn) return 'under';
+            if (mx > 0 || mn > 0) return 'ok';
+            return '';
+        }
+        function totalRow(label, value, unit, minKey, maxKey) {
+            const fg = flag(minKey, maxKey, value);
+            const mx = parseFloat(goals[maxKey]) || 0;
+            const mn = parseFloat(goals[minKey]) || 0;
+            const barPct = mx > 0 ? Math.min(100, value / mx * 100) : (mn > 0 ? Math.min(100, value / mn * 100) : 0);
+            const cls = fg === 'ok' || fg === '' ? 'blue' : 'red';
+            return `<div class="pl-total-row">
+                <div class="pl-total-label">${label}</div>
+                <div class="pl-total-bar"><div class="pl-total-fill ${cls}" style="width:${barPct}%"></div></div>
+                <div class="pl-total-val ${cls}">${value.toFixed(1)}${unit}</div>
+                <div class="pl-total-flag ${cls}">${fg}</div>
+            </div>`;
+        }
+
+        // --- Goals card ---
+        const goalCells = [
+            ['energy', 'Energy (kcal)'], ['carbs', 'Carbs (g)'], ['protein', 'Protein (g)'], ['fat', 'Fat (g)'],
+            ['satFat', 'Sat. fat (g)'], ['sugar', 'Sugar (g)'], ['fiber', 'Fiber (g)'], ['vitD', 'Vitamin D (mcg)']
+        ].map(([key, label]) => `
+                <div class="pln-goal-cell">
+                    <div class="pln-goal-label">${label}</div>
+                    <div class="pln-goal-inputs">
+                        <div class="pln-goal-min"><span class="pln-input-tag">min</span><input type="number" class="pln-goal-input" data-goal="${key}Min" value="${goals[key + 'Min'] || ''}" placeholder="0"></div>
+                        <div class="pln-goal-max"><span class="pln-input-tag">max</span><input type="number" class="pln-goal-input" data-goal="${key}Max" value="${goals[key + 'Max'] || ''}" placeholder="0"></div>
+                    </div>
+                </div>
+            `).join('');
+
+        let html = '';
+        html += `
+        <div class="planner-wrap">
+        <div class="planner-card">
+            <div class="planner-card-head"><i data-lucide="target" style="width:18px;height:18px;"></i> Monthly Nutrition Goals <span class="planner-hint">min&ndash;max boundaries for the month</span></div>
+            <div class="planner-goals-grid">${goalCells}</div>
+            <div class="planner-goals-sub">
+                <div class="pln-sub-item"><label>Protein from animal sources</label><input type="number" class="pln-goal-sub" data-goal="meatProteinPct" value="${goals.meatProteinPct || 0}" min="0" max="100" style="width:70px;text-align:right;"> %</div>
+                <div class="pln-sub-item"><label>Monthly budget</label><div class="pln-budget-input"><input type="number" class="pln-goal-sub" data-goal="budget" value="${goals.budget || 0}" style="width:110px;text-align:right;"><span class="pln-budget-c">${currency}</span></div></div>
+            </div>
+            <div class="planner-card-actions"><button class="btn primary" id="planner-save-goals" style="font-size:14px;">Save goals</button><span class="pln-note" id="planner-goal-note"></span></div>
+        </div>`;
+
+        // --- Live totals vs goals ---
+        const animalPct = t.meat > 0 ? Math.round(t.animal / t.meat * 100) : 0;
+        const aGoal = parseFloat(goals.meatProteinPct) || 0;
+        const aCls = (aGoal > 0 && Math.abs(animalPct - aGoal) > 10) ? 'red' : (aGoal > 0 ? 'blue' : '');
+        const totRows = [
+            totalRow('Energy', t.energy, ' kcal', 'energyMin', 'energyMax'),
+            totalRow('Carbs', t.carbs, ' g', 'carbsMin', 'carbsMax'),
+            totalRow('Protein', t.protein, ' g', 'proteinMin', 'proteinMax'),
+            totalRow('Fat', t.fat, ' g', 'fatMin', 'fatMax'),
+            totalRow('Sat. fat', t.satFat, ' g', '', 'satFatMax'),
+            totalRow('Sugar', t.sugar, ' g', '', 'sugarMax'),
+            totalRow('Fiber', t.fiber, ' g', 'fiberMin', ''),
+            totalRow('Vitamin D', t.vitD, ' mcg', 'vitDMin', '')
+        ];
+        const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.budget);
+        html += `
+        <div class="planner-card">
+            <div class="planner-card-head"><i data-lucide="gauge" style="width:18px;height:18px;"></i> Projected month totals <span class="planner-hint">live vs your goals</span></div>
+            <div class="pl-totals">${totRows.join('')}\n                <div class="pl-total-row"><div class="pl-total-label">Animal protein %</div><div class="pl-total-bar"><div class="pl-total-fill ${aCls}" style="width:${Math.min(100, animalPct)}%"></div></div><div class="pl-total-val ${aCls}">${animalPct}%</div><div class="pl-total-flag ${aCls}">target ${aGoal}%</div></div>
+            </div>
+            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(t.cost)}</strong> <span class="pln-note">budget ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
+        </div>`;
+
+        // --- Builder ---
+        const datalist = ingredients.map(f => `<option value="${escapeHtml(f.name)}">`).join('');
+        const suggestionChips = ingredients.slice().sort((a, b) => (parseFloat(b.averagePrice) || 0) - (parseFloat(a.averagePrice) || 0)).slice(0, 8)
+            .map(s => `<button type="button" class="pl-sugg-chip" data-name="${escapeHtml(s.name)}">${escapeHtml(s.name)}</button>`).join('');
+        const rows = (planner.items || []).map((it, i) => {
+            const ing = findIng(it.ingredientId);
+            const c = perGramOf(ing) * gramsOf(it);
+            const scopeOn = it.scope === 'month';
+            return `<div class="pl-item" data-idx="${i}">
+                <div class="pl-item-name">${escapeHtml(ing ? ing.name : (it.name || '?'))}</div>
+                <div class="pl-item-amount"><input type="number" class="pl-amount seamless-input" data-idx="${i}" value="${it.amount || ''}" step="any" style="width:72px;"><input type="text" class="pl-unit seamless-input" data-idx="${i}" value="${escapeHtml(it.unit || 'g')}" style="width:46px;"></div>
+                <div class="pl-item-cost">${fmt(c)}</div>
+                <label class="pln-check" title="Apply existing pantry/household stock so this stays off the shopping list"><input type="checkbox" class="pl-usesock" data-idx="${i}" ${it.useStock ? 'checked' : ''}><span>use stock</span></label>
+                <label class="pln-check" title="Long-life staple bought once for the month; otherwise refreshed weekly"><input type="checkbox" class="pl-scope" data-idx="${i}" ${scopeOn ? 'checked' : ''}><span>month</span></label>
+                <button class="pl-item-remove" data-idx="${i}" title="Remove">&times;</button>
+            </div>`;
+        }).join('');
+        html += `
+        <div class="planner-card">
+            <div class="planner-card-head"><i data-lucide="plus-square" style="width:18px;height:18px;"></i> Build the ingredient list <span class="planner-hint"><span class="red-note">red</span> over target &middot; <span class="blue-note">blue</span> near target</span></div>
+            <div class="pl-add-row">
+                <input list="pl-ing-suggest" class="seamless-input pl-ing-picker" id="pl-ing-name" placeholder="Search ingredient&hellip;">
+                <datalist id="pl-ing-suggest">${datalist}</datalist>
+                <input type="number" class="seamless-input pl-new-amount" id="pl-new-amount" placeholder="Amount" step="any" style="width:82px;">
+                <input type="text" class="seamless-input pl-new-unit" id="pl-new-unit" placeholder="g" value="g" style="width:46px;">
+                <button class="btn primary" id="pl-add-btn">Add</button>
+            </div>
+            ${suggestionChips ? `<div class="pl-sugg">Suggestions: ${suggestionChips}</div>` : ''}
+            <div class="pl-list">${rows || '<div class="empty-state">No planned items yet &mdash; add your month&apos;s groceries above.</div>'}</div>
+            <div class="plorer-list-actions"><button class="btn primary" id="pl-generate-btn"><i data-lucide="shopping-basket"></i> Generate shopping list</button></div>
+        </div>
+        <div id="pl-generated" class="planner-card"></div>
+        </div>`;
+
+        container.innerHTML = html;
+        if (window.lucide) window.lucide.createIcons();
+
+        const saveGoalsFromDOM = () => {
+            container.querySelectorAll('[data-goal]').forEach(el => {
+                const key = el.dataset.goal;
+                if (key === 'currency') planner.goals[key] = el.value || 'MUR';
+                else planner.goals[key] = parseFloat(el.value) || 0;
+            });
+        };
+
+        const saveGoalsBtn = container.querySelector('#planner-save-goals');
+        if (saveGoalsBtn) saveGoalsBtn.addEventListener('click', async () => {
+            saveGoalsFromDOM();
+            await savePlanner();
+            const note = container.querySelector('#planner-goal-note');
+            if (note) { note.textContent = 'Goals saved.'; setTimeout(() => { note.textContent = ''; }, 1800); }
+            renderPlanner();
+        });
+
+        const addBtn = container.querySelector('#pl-add-btn');
+        if (addBtn) addBtn.addEventListener('click', () => {
+            const nameEl = container.querySelector('#pl-ing-name');
+            const amtEl = container.querySelector('#pl-new-amount');
+            const unitEl = container.querySelector('#pl-new-unit');
+            const name = (nameEl ? nameEl.value : '').trim();
+            const ing = ingredients.find(f => f.name.toLowerCase() === name.toLowerCase());
+            if (!ing) { alert('Choose an ingredient from the list.'); return; }
+            planner.items.push({
+                ingredientId: ing.foodId, name: ing.name,
+                amount: parseFloat(amtEl && amtEl.value) || 0,
+                unit: (unitEl && unitEl.value.trim()) || 'g',
+                scope: /can|tinned|jar|frozen|oil|condiment|spice|grain|legume|pasta|rice|flour|sugar|honey|bean/i.test(ing.category || '') ? 'month' : 'fresh',
+                useStock: false
+            });
+            renderPlanner();
+        });
+
+        container.querySelectorAll('.pl-sugg-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const nameEl = container.querySelector('#pl-ing-name');
+                if (nameEl) nameEl.value = chip.dataset.name;
+            });
+        });
+
+        container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
+            el.addEventListener('change', () => {
+                const i = parseInt(el.dataset.idx);
+                if (planner.items[i]) {
+                    if (el.classList.contains('pl-amount')) planner.items[i].amount = parseFloat(el.value) || 0;
+                    else planner.items[i].unit = el.value.trim() || 'g';
+                    renderPlanner();
+                }
+            });
+        });
+        container.querySelectorAll('.pl-scope').forEach(el => el.addEventListener('change', () => {
+            const i = parseInt(el.dataset.idx);
+            if (planner.items[i]) { planner.items[i].scope = el.checked ? 'month' : 'fresh'; renderPlanner(); }
+        }));
+        container.querySelectorAll('.pl-usesock').forEach(el => el.addEventListener('change', () => {
+            const i = parseInt(el.dataset.idx);
+            if (planner.items[i]) { planner.items[i].useStock = el.checked; renderPlanner(); }
+        }));
+        container.querySelectorAll('.pl-item-remove').forEach(btn => btn.addEventListener('click', () => {
+            const i = parseInt(btn.dataset.idx);
+            if (planner.items[i]) { planner.items.splice(i, 1); renderPlanner(); }
+        }));
+
+        const genBtn = container.querySelector('#pl-generate-btn');
+        if (genBtn) genBtn.addEventListener('click', async () => {
+            saveGoalsFromDOM();
+            const area = container.querySelector('#pl-generated');
+            if (area) {
+                area.innerHTML = generatePartitionedList();
+                if (window.lucide) window.lucide.createIcons();
+            }
+            await savePlanner();
+        });
+    }
+
+    function generatePartitionedList() {
+        const goals = planner.goals || {};
+        const currency = goals.currency
+            || (appSettings.shopping && appSettings.shopping.currency)
+            || (ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
+            || 'MUR';
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const findIng = id => ingredients.find(f => f.foodId === id);
+        const perGramOf = ing => LC.perGram(ing);
+        const gramsOf = item => LC.gramsOf(item && item.amount, item && item.unit, findIng(item.ingredientId));
+        const pantryByFood = {};
+        (pantry || []).concat(householdItems || []).forEach(p => {
+            const id = p.foodId;
+            if (id) {
+                const qty = parseFloat(p.quantity) || 0;
+                pantryByFood[id] = (pantryByFood[id] || 0) + qty;
+            }
+        });
+
+        const monthPlanned = (planner.items || []).filter(it => it.scope === 'month');
+        const freshPlanned = (planner.items || []).filter(it => it.scope !== 'month');
+
+        function partitionLines(list) {
+            return list.map(it => {
+                const ing = findIng(it.ingredientId);
+                const stockG = it.useStock ? (pantryByFood[it.ingredientId] || 0) : 0;
+                const plannedG = gramsOf(it);
+                const needG = Math.max(0, plannedG - stockG);
+                const surplusG = it.useStock && stockG > plannedG ? stockG - plannedG : 0;
+                const unit = it.unit || 'g';
+                const cost = needG * perGramOf(ing);
+                let needStr, surplusStr, status;
+                if (needG > 0 && surplusG > 0) {
+                    needStr = fmtG(needG, unit) + '<span class="pln-buy">buy</span>';
+                    surplusStr = '<span class="pln-surplus">+' + (+surplusG).toFixed(1) + ' surplus</span>';
+                    status = 'stock covers part';
+                } else if (needG > 0) {
+                    needStr = fmtG(needG, unit) + '<span class="pln-buy">buy</span>';
+                    surplusStr = '';
+                    status = 'to buy';
+                } else {
+                    needStr = '<span class="pln-in-stock">in stock</span>';
+                    surplusStr = surplusG > 0 ? '<span class="pln-surplus">+' + (+surplusG).toFixed(1) + ' surplus</span>' : '';
+                    status = 'covered by stock';
+                }
+                return { ing, it, needG, surplusG, cost, status, needStr, surplusStr };
+            });
+        }
+        function fmtG(g, unit) {
+            const u = (unit || 'g').toLowerCase();
+            if (u === 'kg' || u === 'l') return (g / 1000).toFixed(2) + ' ' + unit;
+            if (u === 'g' || !u) return g.toFixed(1) + ' g';
+            return g.toFixed(1) + ' ' + unit;
+        }
+
+        let monthRows = '', freshRows = '', monthTotal = 0, freshTotal = 0;
+        partitionLines(monthPlanned).forEach((item, i) => {
+            monthRows += lineRow('month', i, item);
+            monthTotal += item.cost;
+        });
+        partitionLines(freshPlanned).forEach((item, i) => {
+            freshRows += lineRow('fresh', i, item);
+            freshTotal += item.cost;
+        });
+
+        function lineRow(scope, i, item) {
+            return `<tr>
+                <td>${escapeHtml(item.ing ? item.ing.name : item.it.name)}</td>
+                <td>${item.needStr} ${item.surplusStr || ''}</td>
+                <td>${fmt(item.cost)}</td>
+                <td>${item.it.useStock ? '<span class="pln-tag">stock-aware</span>' : '<span class="pln-tag-grey">full buy</span>'}</td>
+            </tr>`;
+        }
+
+        const html = `
+            <div class="planner-card-head"><i data-lucide="sparkles" style="width:18px;height:18px;"></i> Partitioned shopping list <span class="planner-hint">month-bulk vs weekly-fresh, pantry stock applied</span></div>
+            <div class="pl-part-grid">
+                <div class="planner-card pl-part"><div class="planner-card-head"><i data-lucide="calendar-range"></i> Monthly bulk <span class="planner-hint">${monthPlanned.length} lines &middot; ${fmt(monthTotal)}</span></div>
+                    <table class="pl-part-table"><thead><tr><th>Item</th><th>To buy</th><th>Est.</th><th>Sourcing</th></tr></thead><tbody>${monthRows || '<tr><td colspan="4" class="empty-state">No monthly staples planned.</td></tr>'}</tbody></table>
+                </div>
+                <div class="planner-card pl-part"><div class="planner-card-head"><i data-lucide="shopping-basket"></i> Weekly / fresh <span class="planner-hint">${freshPlanned.length} lines &middot; ${fmt(freshTotal)}</span></div>
+                    <table class="pl-part-table"><thead><tr><th>Item</th><th>To buy</th><th>Est</th><th>Sourcing</th></tr></thead><tbody>${freshRows || '<tr><td colspan="4" class="empty-state">No weekly items planned.</td></tr>'}</tbody></table>
+                </div>
+            </div>
+        `;
+        return html;
+    }
+
+function renderReceipts() {
+        const container = document.getElementById('cms-recipe-list');
+        if (!container) return;
+
+        const currency = (appSettings.shopping && appSettings.shopping.currency)
+            || (ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
+            || 'MUR';
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const budget = parseFloat(appSettings.shopping && appSettings.shopping.amount) || 0;
+
+const norm = s => String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        function matchIngredient(name) { return LC.matchIngredient(name, ingredients); }
+        function matchNote(name) {
+            const ing = matchIngredient(name);
+            if (!ing) return { text: 'no match', cls: 'red-note' };
+            return { text: '→ ' + ing.name, cls: 'blue-note' };
+        }
+
+// Heuristic parse of a pasted receipt/OCR line (shared module).
+        function parseLine(line) { return LC.parseLine(line); }
+        function parseReceiptText(text) { return LC.parseReceiptText(text, ingredients); }
+
+        // ---- Shopping analytics (derived from receipts) ----
+        const sorted = receipts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        const totalSpend = receipts.reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+        const thisMonthKey = new Date().toISOString().slice(0, 7);
+        const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 1);
+        const lastMonthKey = lastMonth.toISOString().slice(0, 7);
+        const thisMonthSpend = receipts.filter(r => (r.date || '').startsWith(thisMonthKey)).reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+        const lastMonthSpend = receipts.filter(r => (r.date || '').startsWith(lastMonthKey)).reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+
+        const storeTotals = {};
+        receipts.forEach(r => {
+            const st = r.store || 'Other';
+            storeTotals[st] = (storeTotals[st] || 0) + (parseFloat(r.total) || 0);
+        });
+        const storeRows = Object.entries(storeTotals).sort((a, b) => b[1] - a[1]).slice(0, 6)
+            .map(([st, amt]) => `<div class="rc-store-row"><span class="rc-store-name">${escapeHtml(st)}</span><div class="pl-total-bar" style="flex:1"><div class="pl-total-fill blue" style="width:${totalSpend ? Math.min(100, amt / totalSpend * 100) : 0}%"></div></div><span class="rc-store-amt">${fmt(amt)}</span></div>`).join('');
+
+        // Last 8 weeks spend trend
+        function weekKey(d) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); return x.toISOString().slice(0, 10); }
+        const wkSpend = {};
+        receipts.forEach(r => { const k = weekKey(r.date); wkSpend[k] = (wkSpend[k] || 0) + (parseFloat(r.total) || 0); });
+        const wkToday = weekKey(new Date().toISOString().slice(0, 10));
+        const wkStart = new Date(wkToday); wkStart.setDate(wkStart.getDate() - 7 * 7);
+        const wkLabels = [], wkVals = []; let wkMax = 0;
+        for (let i = 0; i <= 7; i++) {
+            const d = new Date(wkStart); d.setDate(d.getDate() + 7 * i);
+            const k = weekKey(d.toISOString().slice(0, 10));
+            const v = wkSpend[k] || 0;
+            wkLabels.push(d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }));
+            wkVals.push(v);
+            if (v > wkMax) wkMax = v;
+        }
+        const trendBars = wkVals.map((v, i) => `<div class="rc-trend-col"><div class="rc-trend-bar-wrap"><div class="rc-trend-bar ${wkLabels[i] === wkToday ? 'thiswk' : ''}" style="height:${wkMax ? Math.max(3, v / wkMax * 60) : 3}px"></div></div><div class="rc-trend-lbl">${wkLabels[i]}</div><div class="rc-trend-val">${fmt(v)}</div></div>`).join('');
+
+        const budgetCls = budget > 0 && thisMonthSpend > budget ? 'red' : 'blue';
+        const budgetNote = budget > 0 ? (thisMonthSpend > budget ? 'over budget' : `remaining ${fmt(budget - thisMonthSpend)}`) : 'no budget set';
+
+        const anHTML = `
+        <div class="planner-card rc-analytics">
+            <div class="planner-card-head"><i data-lucide="chart-pie" style="width:18px;height:18px;"></i> Shopping analytics <span class="planner-hint">from captured receipts</span></div>
+            <div class="rc-kpis">
+                <div class="rc-kpi"><div class="rc-kpi-label">This month</div><div class="rc-kpi-val ${budgetCls}">${fmt(thisMonthSpend)}</div><div class="rc-kpi-sub">${budgetNote}</div></div>
+                <div class="rc-kpi"><div class="rc-kpi-label">Last month</div><div class="rc-kpi-val">${fmt(lastMonthSpend)}</div><div class="rc-kpi-sub">${lastMonthSpend ? (thisMonthSpend - lastMonthSpend) >= 0 ? '+' + fmt(thisMonthSpend - lastMonthSpend) : fmt(thisMonthSpend - lastMonthSpend) : ''}</div></div>
+                <div class="rc-kpi"><div class="rc-kpi-label">All time</div><div class="rc-kpi-val">${fmt(totalSpend)}</div><div class="rc-kpi-sub">${receipts.length} receipt${receipts.length === 1 ? '' : 's'}</div></div>
+                <div class="rc-kpi"><div class="rc-kpi-label">Avg / receipt</div><div class="rc-kpi-val">${fmt(receipts.length ? totalSpend / receipts.length : 0)}</div><div class="rc-kpi-sub">${budget ? 'budget ' + fmt(budget) : ''}</div></div>
+            </div>
+            <div class="rc-split">
+                <div class="rc-spend-trend"><div class="rc-subhead">Spend · last 8 weeks</div><div class="rc-trend-wrap">${trendBars}</div></div>
+                <div class="rc-stores"><div class="rc-subhead">By store</div>${storeRows || '<div class="empty-state" style="padding:.4rem">No receipts yet.</div>'}</div>
+            </div>
+        </div>`;
+
+        // ---- Add-receipt form ----
+        const storesList = [...new Set(receipts.map(r => r.store).filter(Boolean))];
+        const storeOpts = storesList.map(s => `<option value="${escapeHtml(s)}">`).join('');
+        const addForm = `
+        <div class="planner-card">
+            <div class="planner-card-head"><i data-lucide="receipt" style="width:18px;height:18px;"></i> Add a receipt <span class="planner-hint">paste receipt text, or fill items manually &mdash; names auto-match to ingredients</span></div>
+            <div class="rc-form-grid">
+                <div class="rc-f"><label>Store</label><input class="seamless-input" id="rc-store" list="rc-store-list" placeholder="e.g. Winner's"><datalist id="rc-store-list">${storeOpts}</datalist></div>
+                <div class="rc-f"><label>Date</label><input type="date" class="seamless-input" id="rc-date" value="${new Date().toISOString().slice(0, 10)}"></div>
+                <div class="rc-f"><label>Total</label><input type="number" class="seamless-input" id="rc-total" placeholder="0.00" step="any" style="width:110px"></div>
+            </div>
+            <div class="rc-f"><label>Pasted receipt text (<span class="planner-hint">one item per line, e.g. "Rice 2kg 145.00"</span>)</label><textarea class="seamless-input seamless-textarea" id="rc-paste" rows="5"></textarea><button class="btn secondary" id="rc-parse-btn" style="margin-top:.5rem;font-size:14px">Parse lines</button></div>
+            <div class="rc-items-head">Items</div>
+            <div id="rc-items-rows"></div>
+            <div class="rc-selected-line">Matched price <strong id="rc-calc-total">${fmt(0)}</strong></div>
+            <div class="planner-card-actions"><button class="btn primary" id="rc-save-btn">Save receipt</button><span class="pln-note" id="rc-save-note"></span></div>
+        </div>`;
+
+        // ---- Receipt list ----
+        const rcCards = receipts.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((r, i) => {
+            const rowsH = (r.items || []).map(it => {
+                const ms = matchIngredient(it.name);
+                const badge = ms ? `<span class="pln-tag">→ ${escapeHtml(ms.name)}</span>` : '<span class="pln-tag-grey">no match</span>';
+                return `<li class="rc-item"><div class="rc-item-name">${escapeHtml(it.name)}</div><div class="rc-item-mid">${it.qty || 1} ${escapeHtml(it.unit || '')}</div><div class="rc-item-price">${fmt(it.price)}</div>${badge}</li>`;
+            }).join('');
+            const matched = (r.items || []).filter(it => it.foodId || matchIngredient(it.name)).length;
+            return `
+            <div class="planner-card" data-rcid="${r.id}">
+                <div class="rc-list-head">
+                    <div class="rc-store-title">${escapeHtml(r.store || 'Receipt')}</div>
+                    <div class="rc-date">${escapeHtml(r.date || '')}</div>
+                    <div class="rc-total">${fmt(r.total)}</div>
+                </div>
+                <div class="rc-item-count">${(r.items || []).length} line(s) &middot; ${matched} matched</div>
+                <ul class="rc-item-list">${rowsH}</ul>
+                <div class="rc-list-actions">
+                    <button class="btn secondary rc-to-pantry" data-id="${r.id}" style="font-size:13px">Add items to pantry</button>
+                    <button class="btn secondary danger rc-del" data-id="${r.id}" style="font-size:13px">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        const listHTML = `
+        <div class="planner-card">
+            <div class="planner-card-head"><i data-lucide="receipt-text" style="width:18px;height:18px;"></i> Receipts <span class="planner-hint">${receipts.length} recorded</span></div>
+            ${rcCards || '<div class="empty-state">No receipts yet &mdash; add your first one above.</div>'}
+        </div>`;
+
+        function unitToGrams(unit, ing) {
+            const u = (unit || 'g').toLowerCase();
+            const UN = { g: 1, gram: 1, kg: 1000, kgs: 1000, ml: 1, l: 1000, litre: 1000, pc: 1, each: 1, bottle: 1, bag: 1, pack: 1, packet: 1, can: 1, tin: 1 };
+            if (u in UN) return UN[u];
+            return parseFloat(ing && ing.servingSizeG) || 100;
+        }
+        container.innerHTML = `<div class="planner-wrap">${anHTML}${addForm}${listHTML}</div>`;
+        if (window.lucide) window.lucide.createIcons();
+
+        // Build item rows (for manual entry)
+        let itemRows = [];
+        function renderItemRows() {
+            const wrap = container.querySelector('#rc-items-rows');
+            if (!wrap) return;
+            wrap.innerHTML = itemRows.map((it, i) => `
+                <div class="rc-man-item" data-idx="${i}">
+                    <input type="text" class="seamless-input rc-man-name" data-idx="${i}" value="${escapeHtml(it.name)}" placeholder="Item name">
+                    <input type="number" class="seamless-input rc-man-qty" data-idx="${i}" value="${it.qty}" step="any" style="width:60px">
+                    <input type="text" class="seamless-input rc-man-unit" data-idx="${i}" value="${it.unit || 'g'}" style="width:46px">
+                    <input type="number" class="seamless-input rc-man-price" data-idx="${i}" value="${it.price || ''}" step="any" style="width:90px">
+                    <span class="rc-man-match" data-idx="${i}"></span>
+                    <button class="rc-rm" data-idx="${i}" title="Remove">&times;</button>
+                </div>`).join('');
+            wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+                const i2 = parseInt(inp.dataset.idx);
+                if (!itemRows[i2]) return;
+                if (inp.classList.contains('rc-man-name')) itemRows[i2].name = inp.value;
+                else if (inp.classList.contains('rc-man-qty')) itemRows[i2].qty = parseFloat(inp.value) || 0;
+                else if (inp.classList.contains('rc-man-unit')) itemRows[i2].unit = inp.value;
+                else if (inp.classList.contains('rc-man-price')) itemRows[i2].price = parseFloat(inp.value) || 0;
+                updateCalc();
+                renderMatches();
+            }));
+            wrap.querySelectorAll('.rc-rm').forEach(btn => btn.addEventListener('click', () => {
+                itemRows.splice(parseInt(btn.dataset.idx), 1);
+                renderItemRows(); updateCalc();
+            }));
+        }
+        function renderMatches() {
+            container.querySelectorAll('.rc-man-item').forEach(eli2 => {
+                const i2 = parseInt(eli2.dataset.idx);
+                if (!itemRows[i2]) return;
+                const ing = matchIngredient(itemRows[i2].name);
+                const el = eli2.querySelector('.rc-man-match');
+                if (el) el.textContent = ing ? '→ ' + ing.name : '';
+                el.classList.toggle('blue-note', !!ing);
+                el.classList.toggle('red-note', !ing);
+            });
+        }
+        function updateCalc() {
+            const tot = itemRows.reduce((s, it) => s + ((it.price || 0) * ((it.qty || 0) || 1)), 0);
+            const el = container.querySelector('#rc-calc-total');
+            if (el) el.textContent = fmt(tot);
+        }
+        renderItemRows();
+        renderMatches();
+
+        // parse button
+        const parseBtn = container.querySelector('#rc-parse-btn');
+        if (parseBtn) parseBtn.addEventListener('click', () => {
+            const text = (container.querySelector('#rc-paste') || {}).value || '';
+            const parsed = parseReceiptText(text);
+            if (!parsed.length) { alert('Could not parse any lines.'); return; }
+            // match existing rows by name, else append
+            parsed.forEach(l => {
+                const existing = itemRows.find(x => norm(x.name) === norm(l.name));
+                if (existing) { existing.qty += l.qty; existing.price = existing.price || l.price; }
+                else itemRows.push({ name: l.name, qty: l.qty, unit: l.unit, price: l.price, foodId: l.foodId, grams: l.grams });
+            });
+            const totEl = container.querySelector('#rc-total');
+            const sum = itemRows.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+            if (totEl && !(parseFloat(totEl.value) > 0)) totEl.value = Math.round(sum * 100) / 100;
+renderItemRows();
+            renderMatches();
+            updateCalc();
+        });
+
+        // save
+        const saveBtn = container.querySelector('#rc-save-btn');
+        if (saveBtn) saveBtn.addEventListener('click', async () => {
+            const store = (container.querySelector('#rc-store') || {}).value.trim() || 'Other';
+            const date = (container.querySelector('#rc-date') || {}).value || new Date().toISOString().slice(0, 10);
+            const total = parseFloat(container.querySelector('#rc-total').value) || 0;
+            const items = itemRows.map(it => {
+                const ing = matchIngredient(it.name);
+                return { name: it.name, qty: it.qty, unit: it.unit || 'g', price: it.price || 0, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null };
+            });
+            const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+            receipts.push({
+                id: 'rc_' + Date.now(),
+                store, date, total: total || Math.round(computed * 100) / 100,
+                currency: currency,
+                items,
+                enteredTotal: total
+            });
+            await saveReceipts();
+            renderReceipts();
+            return;
+        });
+
+        // list actions
+        container.querySelectorAll('.rc-to-pantry').forEach(btn => btn.addEventListener('click', async () => {
+            const r = receipts.find(x => String(x.id) === String(btn.dataset.id));
+            if (!r) return;
+            let added = 0;
+            (r.items || []).forEach(it => {
+                const ing = matchIngredient(it.name);
+                if (!ing) return;
+                const cur = pantry.find(p => p.foodId === ing.foodId);
+                const grams = it.grams || ((parseFloat(it.qty) || 1) * (unitToGrams(it.unit, ing) || 1));
+                if (cur) cur.quantity = (parseFloat(cur.quantity) || 0) + grams;
+                else pantry.push({ foodId: ing.foodId, isTracked: true, quantity: grams });
+                added++;
+            });
+            if (added) { await savePantry(); }
+            const note = container.querySelector('#rc-save-note');
+            if (note) { note.textContent = `Added ${added} item(s) to pantry.`; setTimeout(() => { note.textContent = ''; }, 2000); }
+        }));
+        container.querySelectorAll('.rc-del').forEach(btn => btn.addEventListener('click', async () => {
+            receipts = receipts.filter(x => String(x.id) !== String(btn.dataset.id));
+            await saveReceipts();
+            renderReceipts();
+        }));
+    }
     function renderCMSList() {
         populateIngredientSuggestions();
 
@@ -578,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Per-tab page title.
         const headerTitle = document.getElementById('cms-header-title');
         if (headerTitle) {
-            const titles = { recipe: 'Recipes', food: 'Ingredients', mealplan: 'Meal Plan', pantry: 'Pantry', household: 'Household', shopping: 'Shopping Lists', settings: 'Settings' };
+            const titles = { recipe: 'Recipes', food: 'Ingredients', mealplan: 'Meal Plan', planner: 'Monthly Planner', pantry: 'Pantry', household: 'Household', shopping: 'Shopping Lists', receipts: 'Receipts', settings: 'Settings' };
             headerTitle.textContent = titles[currentCMSTab] || 'Recipes';
         }
 
@@ -642,6 +1240,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        if (currentCMSTab === 'planner') {
+            renderPlanner();
+            return;
+        }
+
+        if (currentCMSTab === 'receipts') {
+            renderReceipts();
+            return;
+        }
+
         if (currentCMSTab === 'mealplan') {
             const slots = ['breakfast', 'lunch', 'dinner', 'snack'];
             const mpCurrency = mealPlanCurrency();
@@ -691,7 +1299,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else if (item.type === 'ingredient') {
                             const ing = ingredients.find(f => f.foodId === item.referenceId);
                             if (!ing) return;
-                            const per100 = macroNum(item.amount) / 100;
+                            const grams = parseAmountToGrams((item.amount != null ? item.amount : 0) + ' ' + (item.unit || 'g'), ing);
+                            const per100 = (grams || 0) / 100;
                             weekTotal.energy += (macroNum(ing.calories) * per100) * mult;
                             weekTotal.carbs += (macroNum(ing.carbsG) * per100) * mult;
                             weekTotal.protein += (macroNum(ing.proteinG) * per100) * mult;
@@ -738,7 +1347,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
 
-            const statsHTML = profiles.map((profile, idx) => {
+            let statsHTML = profiles.map((profile, idx) => {
                 const accent = avatarAccents[idx % avatarAccents.length];
                 const initial = (profile.name || 'U').trim().charAt(0).toUpperCase();
                 const target = macroTargets(profile);
@@ -1340,7 +1949,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!res.ok) throw new Error('Save failed');
                     statusText.innerHTML = `<span class="status-dot"></span> Saved Meal Plan`;
                 } catch(e) {
-                    alert('Save failed. Is the server running?');
+                    alert('Save failed. Reverting to previous state.');
+                    loadData();
                 }
             };
             
@@ -1372,8 +1982,36 @@ document.addEventListener('DOMContentLoaded', () => {
             addBtn.style.display = 'flex';
             setAddBtnLabel('Add Item');
 
+            // Restock/reorder alert: tracked items out of or below a healthy level.
+            const restockItems = ingredients
+                .map(ing => { const p = pantry.find(x => x.foodId === ing.foodId) || { isTracked: false, quantity: 0 }; return { ing, p }; })
+                .filter(({ ing, p }) => {
+                    if (!p.isTracked) return false;
+                    const q = parseFloat(p.quantity) || 0;
+                    return q <= 0 || q < 10;
+                })
+                .sort((a, b) => (parseFloat(a.p.quantity) || 0) - (parseFloat(b.p.quantity) || 0));
+            const restockRows = restockItems.slice(0, 12).map(({ ing, p }) => {
+                const q = parseFloat(p.quantity) || 0;
+                const reorder = Math.max(1, 10 - q);
+                const unit = ing.servingUnit || 'g';
+                return `<div class="rst-row">
+                    <span class="rst-name">${escapeHtml(ing.name)}</span>
+                    <span class="vd-pantry-status ${q <= 0 ? 'out-of-stock' : 'low-stock'}">${q <= 0 ? 'Out' : 'Low'}</span>
+                    <span class="rst-qty">${q.toFixed(0)} ${escapeHtml(unit)} left</span>
+                    <button type="button" class="btn secondary rst-add-btn" data-foodid="${escapeHtml(ing.foodId)}" data-name="${escapeHtml(ing.name)}" data-reorder="${reorder.toFixed(2)}" style="font-size:12px;padding:.25rem .55rem;">Add ${reorder.toFixed(0)} to planner</button>
+                </div>`;
+            }).join('');
+            const restockHTML = restockItems.length
+                ? `<div class="planner-card rst-card">
+                    <div class="planner-card-head"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--accent-danger,#c0392b);"></i> Restock needed <span class="planner-hint">${restockItems.length} tracked item(s) low or out of stock</span></div>
+                    <div class="rst-list">${restockRows}</div>
+                </div>`
+                : '';
+
             const cardsHTML = `
-                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                ${restockHTML}
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1.5rem;">
                     Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
                 </div>
                 <div id="pantry-content">
@@ -1385,6 +2023,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             listContainer.innerHTML = cardsHTML;
             if (window.lucide) window.lucide.createIcons();
+
+            // "Add to planner" from the restock alert
+            listContainer.querySelectorAll('.rst-add-btn').forEach(btn => btn.addEventListener('click', async () => {
+                planner.items = planner.items || [];
+                planner.items.push({
+                    ingredientId: btn.dataset.foodid,
+                    name: btn.dataset.name,
+                    amount: parseFloat(btn.dataset.reorder),
+                    unit: (ingredients.find(x => x.foodId === btn.dataset.foodid) || {}).servingUnit || 'g',
+                    scope: 'fresh',
+                    useStock: false
+                });
+                await savePlanner();
+                statusText.innerHTML = `<span class="status-dot"></span> Added ${escapeHtml(btn.dataset.name)} to the monthly planner`;
+            }));
 
             function renderPantryCards(items, statusInfo) {
                 if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
@@ -1725,9 +2378,11 @@ document.addEventListener('DOMContentLoaded', () => {
             setAddBtnLabel('Add Item');
             householdOpenFn = openHouseholdEditor;
 
+            const runningLow = householdItems.filter(it => { const s = (parseFloat(it.currentStock) || 0); return s <= 0 || (parseFloat(it.avgDurationDays) || 0) > 0 && ((hhStatusInfo(it).daysLeft ?? 99) <= 7); }).length;
             const cardsHTML = `
                 <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
                     Non-food consumables (toiletries, cleaning, paper goods). Depletion dates are estimated from stock × average duration. Log "Opened new unit" occasionally to recalibrate.
+                    ${runningLow ? ` &mdash; <span style="color: var(--accent-danger, #c0392b); font-weight: 700;">${runningLow} item(s) running low</span>` : ''}
                 </div>
                 <div id="household-content">
                     ${hhView === 'table' ? renderHouseholdTable(hhItems) : renderHouseholdCards(hhItems)}
@@ -1857,7 +2512,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (label) label.textContent = ' Saved';
                     setTimeout(() => { if (label) label.textContent = ' Save List'; }, 1500);
                 } catch (e) {
-                    alert('Failed to save shopping list. Is the server running?');
+                    alert('Failed to save shopping list. Reverting to previous state.');
+                    loadData();
                 }
             }
 
@@ -2833,7 +3489,8 @@ const unpricedRow = cost.unpriced.length
                         throw new Error();
                     }
                 }).catch(() => {
-                    alert('Failed to save settings.');
+                    alert('Failed to save settings. Reverting to previous state.');
+                    loadData();
                 });
             }
 
@@ -3365,6 +4022,9 @@ const unpricedRow = cost.unpriced.length
         document.getElementById('profile-proteinG').value = (ing && ing.proteinG) || '';
         document.getElementById('profile-fatG').value = (ing && ing.fatG) || '';
         document.getElementById('profile-carbsG').value = (ing && ing.carbsG) || '';
+        document.getElementById('profile-saturatedFatG').value = (ing && ing.saturatedFatG) || '';
+        document.getElementById('profile-sugarG').value = (ing && ing.sugarG) || '';
+        document.getElementById('profile-fiberG').value = (ing && ing.fiberG) || '';
 
         // Reset tabs to Overview
         const ingTabs = document.getElementById('cmsIngTabs');
@@ -3383,6 +4043,7 @@ const unpricedRow = cost.unpriced.length
         document.getElementById('profile-pairings').value = details.pairings || '';
         document.getElementById('profile-varieties').value = details.varieties || '';
         document.getElementById('profile-preparations').value = details.preparations || '';
+        document.getElementById('profile-proteinSource').value = (ing && ing.proteinSource) || '';
 
         // Vitamins
         document.getElementById('profile-vitaminAMcg').value = (ing && ing.vitaminAMcg) || '';
@@ -3443,7 +4104,9 @@ const unpricedRow = cost.unpriced.length
                 fatG: 0,
                 carbsG: 0,
                 fiberG: 0,
-                sugarG: 0
+                sugarG: 0,
+                saturatedFatG: 0,
+                proteinSource: ''
             });
             idx = ingredients.length - 1;
             document.getElementById('profile-food-id').value = newFoodId;
@@ -3458,6 +4121,10 @@ const unpricedRow = cost.unpriced.length
         ingredients[idx].proteinG = parseFloat(document.getElementById('profile-proteinG').value) || 0;
         ingredients[idx].fatG = parseFloat(document.getElementById('profile-fatG').value) || 0;
         ingredients[idx].carbsG = parseFloat(document.getElementById('profile-carbsG').value) || 0;
+        ingredients[idx].saturatedFatG = parseFloat(document.getElementById('profile-saturatedFatG').value) || 0;
+        ingredients[idx].sugarG = parseFloat(document.getElementById('profile-sugarG').value) || 0;
+        ingredients[idx].fiberG = parseFloat(document.getElementById('profile-fiberG').value) || 0;
+        ingredients[idx].proteinSource = document.getElementById('profile-proteinSource').value || '';
         ingredients[idx].ingredientDetails = {
             storage: document.getElementById('profile-storage').value.trim(),
             flavour: document.getElementById('profile-flavour').value.trim(),

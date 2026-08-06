@@ -24,10 +24,10 @@
             
             <div class="nav-links" id="navLinks">
                 <a href="./" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Recipes</a>
-                <a href="ingredients" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
-                <a href="basics" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
-                <a href="reference" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
-                <a href="cms" class="btn btn-ghost app-only" style="padding: 0.5rem 1rem; display: none;">Manage</a>
+                <a href="ingredients.html" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Ingredients</a>
+                <a href="basics.html" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Basics</a>
+                <a href="reference.html" class="btn btn-ghost" style="padding: 0.5rem 1rem;">Reference</a>
+                <a href="cms.html" class="btn btn-ghost app-only" style="padding: 0.5rem 1rem; display: none;">Manage</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
                     <span id="themeIcon"><i data-lucide="moon" style="width: 18px; height: 18px;"></i></span> 
                 </button>
@@ -146,21 +146,21 @@
         <div class="vd-footer-col">
             <h4>Navigate</h4>
             <a href="./">Recipes</a>
-            <a href="ingredients">Ingredients</a>
-            <a href="basics">Basics</a>
-            <a href="reference">Reference</a>
+            <a href="ingredients.html">Ingredients</a>
+            <a href="basics.html">Basics</a>
+            <a href="reference.html">Reference</a>
         </div>
         <div class="vd-footer-col">
             <h4>Resources</h4>
-            <a href="reference#tab-conversions">Conversions</a>
-            <a href="reference#tab-ingredients">Ingredient Guides</a>
-            <a href="reference#tab-bakeware">Pan Sizes</a>
+            <a href="reference.html#tab-conversions">Conversions</a>
+            <a href="reference.html#tab-ingredients">Ingredient Guides</a>
+            <a href="reference.html#tab-bakeware">Pan Sizes</a>
         </div>
         <div class="vd-footer-col">
             <h4>Legal</h4>
-            <a href="legal#disclaimer">Disclaimer</a>
-            <a href="legal#terms">Terms of Use</a>
-            <a href="legal#privacy">Privacy Policy</a>
+            <a href="legal.html#disclaimer">Disclaimer</a>
+            <a href="legal.html#terms">Terms of Use</a>
+            <a href="legal.html#privacy">Privacy Policy</a>
         </div>
     </div>
     <div class="vd-footer-bottom">
@@ -185,34 +185,7 @@
     </script>
 
     <script>
-        const htmlTag = document.documentElement;
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        function setTheme(theme) {
-            htmlTag.setAttribute('data-theme', theme);
-            localStorage.setItem('larder_theme', theme);
-            if (themeIcon) {
-                themeIcon.innerHTML = theme === 'dark' ? '<i data-lucide="sun" style="width: 18px; height: 18px;"></i>' : '<i data-lucide="moon" style="width: 18px; height: 18px;"></i>';
-                if (window.lucide) window.lucide.createIcons();
-            }
-        }
-        const savedTheme = localStorage.getItem('larder_theme');
-        if (savedTheme) { setTheme(savedTheme); }
-        else { setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                setTheme(htmlTag.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-            });
-        }
-        if (window.lucide) window.lucide.createIcons();
-
-        const navToggle = document.getElementById('navToggle');
-        const navLinks = document.getElementById('navLinks');
-        if (navToggle && navLinks) {
-            navToggle.addEventListener('click', () => {
-                const open = navLinks.classList.toggle('open');
-                navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
+        
             document.addEventListener('click', (e) => {
                 if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !navToggle.contains(e.target)) {
                     navLinks.classList.remove('open');
@@ -221,6 +194,7 @@
             });
         }
     </script>
+    <script src="theme.js"></script>
 </body>
 
 </html>
