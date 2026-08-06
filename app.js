@@ -127,11 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load data
     function loadRecipes() {
-        const endpoint = isIngredientsPage ? '/api/ingredients' : '/api/recipes';
+        const endpoint = (isIngredientsPage ? '/api/ingredients' : '/api/recipes') + '?_=' + Date.now();
         const fallbackFile = isIngredientsPage ? 'data/ingredients.json' : 'data/recipes.json';
         const headers = { 'Authorization': 'Bearer larder_local_sync_8f92k' };
         
-        fetch(endpoint, { headers })
+        fetch(endpoint, { headers, cache: 'no-store' })
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => { recipesData = data; initUI(); })
             .catch(() => {
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         if (isIngredientsPage) {
-            fetch('/api/recipes', { headers })
+            fetch('/api/recipes?_=' + Date.now(), { headers, cache: 'no-store' })
                 .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                 .then(data => { recipeIndex = data; })
                 .catch(() => {

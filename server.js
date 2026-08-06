@@ -193,6 +193,13 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // --- API responses must never be cached. Without explicit cache-control
+    // the browser applies heuristic caching to GET /api/*, so edits made in the
+    // CMS would keep showing stale data on the public pages. ---
+    if (req.url.startsWith('/api/')) {
+        res.setHeader('Cache-Control', 'no-store');
+    }
+
     // --- API authentication (all /api/ routes) ---
     if (req.url.startsWith('/api/')) {
         const auth = req.headers['authorization'] || '';
