@@ -8,7 +8,11 @@
     "start": "electron .",
     "server": "node server.js",
     "build": "electron-builder --win",
-    "build:portable": "electron-builder --win portable"
+    "build:portable": "electron-builder --win portable",
+    "test": "node --test",
+    "test:integration": "node tests/larder.test.js",
+    "test:math": "node tests/larder-math.test.js",
+    "lint": "stylelint \"styles.css\""
   },
   "private": true,
   "build": {
@@ -66,7 +70,9 @@
   },
   "devDependencies": {
     "electron": "^43.1.1",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "stylelint": "^17.14.1",
+    "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
     "adm-zip": "^0.6.0",

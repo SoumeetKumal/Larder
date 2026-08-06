@@ -172,16 +172,20 @@ function main() {
         // Convert FitTrack recipe → Larder recipe format
         const larderRecipe = {
             id: String(nextRecipeId++),
+            entryType: 'recipe',
             title: recipe.name,
             category: 'Uncategorized',  // FitTrack doesn't have recipe categories
             description: '',
             imageUrl: '',
+            time: '',
+            iconTag: '',
+            status: 'Draft',
             macros: {
                 yield: `${recipe.servings || 1} Servings`,
-                energy: '',
-                carbohydrate: '',
-                protein: '',
-                fat: '',
+                energy: '0 kCal',
+                carbohydrate: '0g',
+                protein: '0g',
+                fat: '0g',
             },
             ingredients: [],
             steps: [],

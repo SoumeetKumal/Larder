@@ -2663,9 +2663,8 @@
             bottom: 1rem;
             max-width: none;
         }
-        .filter-toolbar {
-            flex-direction: row;
-            flex-wrap: wrap;
+.filter-toolbar {
+            flex-flow: row wrap;
             justify-content: flex-end;
             align-items: center;
             gap: 0.75rem;
@@ -2703,7 +2702,6 @@
         }
         .cms-navbar {
             flex-wrap: wrap;
-            row-gap: 0.5rem;
             padding: 0.75rem 1rem;
             gap: 0.5rem 1rem;
         }

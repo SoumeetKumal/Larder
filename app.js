@@ -5,21 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
     }
 
-    // --- Mobile Nav Toggle ---
-    const navToggle = document.getElementById('navToggle');
-    const navLinks = document.getElementById('navLinks');
-    if (navToggle && navLinks) {
-        navToggle.addEventListener('click', () => {
-            const open = navLinks.classList.toggle('open');
-            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
-        document.addEventListener('click', (e) => {
-            if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !navToggle.contains(e.target)) {
-                navLinks.classList.remove('open');
-                navToggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
+    // --- Nav and Theme Logic ---
+    // Extracted to theme.js
 
     // Escape user-controlled text before it reaches innerHTML templates (XSS).
     function escapeHtml(value) {
@@ -41,39 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hrMatch) total += parseInt(hrMatch[1], 10) * 60;
         if (minMatch) total += parseInt(minMatch[1], 10);
         return total > 0 ? total : null;
-    }
-
-    // --- Theme Logic ---
-    const htmlTag = document.documentElement;
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-
-    function setTheme(theme) {
-        htmlTag.setAttribute('data-theme', theme);
-        localStorage.setItem('larder_theme', theme);
-        if (themeIcon) {
-            themeIcon.innerHTML = theme === 'dark' ? '<i data-lucide="sun" style="width: 18px; height: 18px;"></i>' : '<i data-lucide="moon" style="width: 18px; height: 18px;"></i>';
-            if (window.lucide) window.lucide.createIcons();
-        }
-        if (themeText) {
-            themeText.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
-        }
-    }
-
-    const savedTheme = localStorage.getItem('larder_theme');
-    if (savedTheme) {
-        setTheme(savedTheme);
-    } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
-    }
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlTag.getAttribute('data-theme');
-            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-        });
     }
 
     // --- Search & Filter UI Toggles ---
@@ -763,7 +717,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getStandardMacros(recipe) {
-        if (!recipe.macros && typeof recipe.calories === 'undefined') return null;
+        if (recipe._stdMacros !== undefined) return recipe._stdMacros;
+        if (!recipe.macros && typeof recipe.calories === 'undefined') {
+            recipe._stdMacros = null;
+            return null;
+        }
         
         let parseStr = (str) => {
             if (typeof str === 'number') return { num: str, unit: 'g' };
@@ -819,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof m[nf] === 'number' && !isNaN(m[nf]) && m[nf] > 0) micros[nf] = m[nf] / divisor;
         }
 
-        return {
+        const result = {
             normalized: {
                 energy: e.num / divisor,
                 carbs: c.num / divisor,
@@ -835,6 +793,8 @@ document.addEventListener('DOMContentLoaded', () => {
             micros,
             referenceLabel: suffix.replace(' / ', '') // "serving", "100g", "50g"
         };
+        recipe._stdMacros = result;
+        return result;
     }
 
     function getYieldNumber(recipe) {
