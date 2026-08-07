@@ -16,20 +16,25 @@ if (navToggle && navLinks) {
 
 // Theme Logic
 const htmlTag = document.documentElement;
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-const themeText = document.getElementById('themeText');
 
 function setTheme(theme) {
     htmlTag.setAttribute('data-theme', theme);
     localStorage.setItem('larder_theme', theme);
-    if (themeIcon) {
-        themeIcon.innerHTML = theme === 'dark' ? '<i data-lucide="sun" style="width: 18px; height: 18px;"></i>' : '<i data-lucide="moon" style="width: 18px; height: 18px;"></i>';
-        if (window.lucide) window.lucide.createIcons();
-    }
-    if (themeText) {
-        themeText.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
-    }
+    
+    // Update all theme toggles currently in the DOM
+    document.querySelectorAll('#themeToggle, .theme-toggle').forEach(toggle => {
+        const themeIcon = toggle.querySelector('#themeIcon') || toggle.querySelector('.theme-icon') || (toggle.querySelector('i') ? toggle.querySelector('i').parentElement : toggle);
+        if (themeIcon) {
+            const isSidebar = toggle.classList.contains('cms-sidebar-link');
+            const size = isSidebar ? '16px' : '18px';
+            themeIcon.innerHTML = theme === 'dark' ? `<i data-lucide="sun" style="width: ${size}; height: ${size};"></i>` : `<i data-lucide="moon" style="width: ${size}; height: ${size};"></i>`;
+        }
+        const themeText = toggle.querySelector('#themeText');
+        if (themeText) {
+            themeText.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+        }
+    });
+    if (window.lucide) window.lucide.createIcons();
 }
 
 const savedTheme = localStorage.getItem('larder_theme');
@@ -40,12 +45,14 @@ if (savedTheme) {
     setTheme(prefersDark ? 'dark' : 'light');
 }
 
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
+// Event Delegation for Theme Toggles (handles dynamic elements and multiple instances)
+document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('#themeToggle, .theme-toggle');
+    if (toggle) {
         const currentTheme = htmlTag.getAttribute('data-theme');
         setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    });
-}
+    }
+});
 
 // Ensure Lucide icons are initialized if loaded
 if (window.lucide) {

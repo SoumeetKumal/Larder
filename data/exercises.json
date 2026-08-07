@@ -1,1 +1,302 @@
-[]
+[
+  {
+    "exerciseId": "bench_press",
+    "name": "Bench Press",
+    "primaryMuscle": "Chest",
+    "secondaryMuscles": "Shoulders,Triceps",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Lie flat on bench, grip bar slightly wider than shoulders, lower to chest, press up"
+  },
+  {
+    "exerciseId": "squat",
+    "name": "Squat",
+    "primaryMuscle": "Legs",
+    "secondaryMuscles": "Glutes,Core",
+    "equipment": "Barbell",
+    "level": "intermediate",
+    "forceType": "Push",
+    "instructions": "Bar on upper back, feet shoulder-width, sit back and down, drive through heels"
+  },
+  {
+    "exerciseId": "deadlift",
+    "name": "Deadlift",
+    "primaryMuscle": "Hamstrings",
+    "secondaryMuscles": "Back,Glutes,Traps",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Feet hip-width, grip bar, keep back straight, stand up by extending hips"
+  },
+  {
+    "exerciseId": "pullups",
+    "name": "Pull-ups",
+    "primaryMuscle": "Back",
+    "secondaryMuscles": "Biceps,Forearms",
+    "equipment": "Bodyweight",
+    "level": "intermediate",
+    "forceType": "Pull",
+    "instructions": "Hang from bar with overhand grip, pull up until chin over bar, lower with control"
+  },
+  {
+    "exerciseId": "overhead_press",
+    "name": "Overhead Press",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": "Triceps",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Bar at shoulder height, press overhead until arms straight, lower with control"
+  },
+  {
+    "exerciseId": "barbell_row",
+    "name": "Barbell Row",
+    "primaryMuscle": "Back",
+    "secondaryMuscles": "Biceps,Forearms",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Bent over, back flat, pull bar to lower chest, squeeze shoulder blades"
+  },
+  {
+    "exerciseId": "incline_bench_press",
+    "name": "Incline Bench Press",
+    "primaryMuscle": "Chest",
+    "secondaryMuscles": "Shoulders,Triceps",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "On incline bench 30-45 degrees, press bar from chest to arms extended"
+  },
+  {
+    "exerciseId": "romanian_deadlift",
+    "name": "Romanian Deadlift",
+    "primaryMuscle": "Hamstrings",
+    "secondaryMuscles": "Glutes,Back",
+    "equipment": "Barbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Bar at thighs, hinge at hips keeping legs mostly straight, feel hamstring stretch"
+  },
+  {
+    "exerciseId": "lat_pulldown",
+    "name": "Lat Pulldown",
+    "primaryMuscle": "Back",
+    "secondaryMuscles": "Biceps",
+    "equipment": "Machine",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Sit at machine, grip bar wide, pull to upper chest, squeeze shoulder blades"
+  },
+  {
+    "exerciseId": "dumbbell_curl",
+    "name": "Dumbbell Curl",
+    "primaryMuscle": "Arms",
+    "secondaryMuscles": "Forearms",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Stand with dumbbells at sides, curl up rotating palms forward, squeeze biceps"
+  },
+  {
+    "exerciseId": "tricep_pushdown",
+    "name": "Tricep Pushdown",
+    "primaryMuscle": "Arms",
+    "secondaryMuscles": null,
+    "equipment": "Cable",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Stand at cable machine, push bar down until arms straight, control return"
+  },
+  {
+    "exerciseId": "leg_press",
+    "name": "Leg Press",
+    "primaryMuscle": "Legs",
+    "secondaryMuscles": "Glutes,Hamstrings",
+    "equipment": "Machine",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Sit in machine, feet on platform, push until legs nearly straight, control descent"
+  },
+  {
+    "exerciseId": "dumbbell_shoulder_press",
+    "name": "Dumbbell Shoulder Press",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": "Triceps",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Dumbbells at shoulders, press overhead until arms straight, lower with control"
+  },
+  {
+    "exerciseId": "leg_curl",
+    "name": "Leg Curl",
+    "primaryMuscle": "Hamstrings",
+    "secondaryMuscles": null,
+    "equipment": "Machine",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Lie face down, curl weight up to glutes, lower with control"
+  },
+  {
+    "exerciseId": "calf_raise",
+    "name": "Calf Raise",
+    "primaryMuscle": "Calves",
+    "secondaryMuscles": null,
+    "equipment": "Machine",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Stand with balls of feet on edge, raise heels as high as possible, lower below platform"
+  },
+  {
+    "exerciseId": "plank",
+    "name": "Plank",
+    "primaryMuscle": "Core",
+    "secondaryMuscles": null,
+    "equipment": "Bodyweight",
+    "level": "beginner",
+    "forceType": "Hold",
+    "instructions": "Forearms on ground, body straight from head to heels, hold position"
+  },
+  {
+    "exerciseId": "dumbbell_row",
+    "name": "Dumbbell Row",
+    "primaryMuscle": "Back",
+    "secondaryMuscles": "Biceps,Forearms",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "One hand and knee on bench, pull dumbbell to hip, squeeze shoulder blade"
+  },
+  {
+    "exerciseId": "lateral_raise",
+    "name": "Lateral Raise",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": null,
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Stand with dumbbells at sides, raise arms to sides until parallel to floor"
+  },
+  {
+    "exerciseId": "face_pull",
+    "name": "Face Pull",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": "Back",
+    "equipment": "Cable",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Stand at cable, pull rope to face, elbows high, squeeze shoulder blades"
+  },
+  {
+    "exerciseId": "hammer_curl",
+    "name": "Hammer Curl",
+    "primaryMuscle": "Arms",
+    "secondaryMuscles": "Forearms",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Stand with dumbbells, palms facing each other, curl up keeping palms neutral"
+  },
+  {
+    "exerciseId": "goblet_squat",
+    "name": "Goblet Squat",
+    "primaryMuscle": "Legs",
+    "secondaryMuscles": "Glutes,Core",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Hold dumbbell at chest, squat down keeping chest up, drive through heels"
+  },
+  {
+    "exerciseId": "hip_thrust",
+    "name": "Hip Thrust",
+    "primaryMuscle": "Glutes",
+    "secondaryMuscles": "Hamstrings,Core",
+    "equipment": "Barbell",
+    "level": "intermediate",
+    "forceType": "Push",
+    "instructions": "Sit with upper back on bench, bar on hips, thrust upward squeezing glutes"
+  },
+  {
+    "exerciseId": "chest_fly",
+    "name": "Chest Fly",
+    "primaryMuscle": "Chest",
+    "secondaryMuscles": "Shoulders",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Lie on bench with dumbbells above chest, open arms wide with slight bend, bring back together"
+  },
+  {
+    "exerciseId": "seated_cable_row",
+    "name": "Seated Cable Row",
+    "primaryMuscle": "Back",
+    "secondaryMuscles": "Biceps",
+    "equipment": "Cable",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Sit with feet braced, pull handle to torso, squeeze shoulder blades, control return"
+  },
+  {
+    "exerciseId": "front_raise",
+    "name": "Front Raise",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": null,
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Raise dumbbells in front to shoulder height, keep arms slightly bent"
+  },
+  {
+    "exerciseId": "reverse_fly",
+    "name": "Reverse Fly",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": "Back",
+    "equipment": "Dumbbell",
+    "level": "beginner",
+    "forceType": "Pull",
+    "instructions": "Hinge at hips, raise arms out to sides until parallel, squeeze upper back"
+  },
+  {
+    "exerciseId": "glute_bridge",
+    "name": "Glute Bridge",
+    "primaryMuscle": "Glutes",
+    "secondaryMuscles": "Hamstrings",
+    "equipment": "Bodyweight",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Lie on back, feet flat, lift hips by squeezing glutes, lower with control"
+  },
+  {
+    "exerciseId": "leg_extension",
+    "name": "Leg Extension",
+    "primaryMuscle": "Quadriceps",
+    "secondaryMuscles": null,
+    "equipment": "Machine",
+    "level": "beginner",
+    "forceType": "Push",
+    "instructions": "Sit on machine, extend legs fully, pause, lower with control"
+  },
+  {
+    "exerciseId": "cable_lateral_raise",
+    "name": "Cable Lateral Raise",
+    "primaryMuscle": "Shoulders",
+    "secondaryMuscles": null,
+    "equipment": "Cable",
+    "level": "intermediate",
+    "forceType": "Push",
+    "instructions": "Stand sideways to cable, raise arm to shoulder height, control descent"
+  },
+  {
+    "exerciseId": "cable_woodchopper",
+    "name": "Cable Woodchopper",
+    "primaryMuscle": "Core",
+    "secondaryMuscles": "Obliques",
+    "equipment": "Cable",
+    "level": "intermediate",
+    "forceType": "Pull",
+    "instructions": "Pull cable diagonally across body using core rotation, control return"
+  }
+]

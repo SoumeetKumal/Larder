@@ -292,7 +292,7 @@
             </nav>
             <div class="cms-sidebar-footer">
                 <a href="./" class="cms-sidebar-link" title="View Site" aria-label="View Site"><i data-lucide="external-link" style="width: 16px; height: 16px;"></i>View Site</a>
-                <button class="cms-sidebar-link" id="themeToggle" aria-label="Toggle Dark Mode"><i data-lucide="moon" style="width: 16px; height: 16px;"></i>Theme</button>
+                <button class="cms-sidebar-link" id="themeToggle" aria-label="Toggle Dark Mode"><span id="themeIcon"><i data-lucide="moon" style="width: 16px; height: 16px;"></i></span><span id="themeText">Dark Mode</span></button>
                 <a href="cms.html" class="cms-sidebar-link" title="Settings" aria-label="Settings"><i data-lucide="settings" style="width: 16px; height: 16px;"></i>Settings</a>
             </div>
         </aside>
@@ -314,6 +314,9 @@
                             <button class="search-close" id="wt-search-close" aria-label="Clear search"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
                         </div>
                     </div>
+                    <button type="button" class="filter-trigger" id="wt-view-toggle" title="Toggle grid/list view" aria-label="Toggle view">
+                        <i data-lucide="layout-grid" style="width: 18px; height: 18px;" id="wt-view-toggle-icon"></i>
+                    </button>
                     <button class="btn primary add-circle-btn" id="wt-add-btn" title="Add" aria-label="Add"><i data-lucide="plus" style="width: 18px; height: 18px;"></i><span id="wt-add-label" style="display: none;">Add Exercise</span></button>
                 </div>
             </header>

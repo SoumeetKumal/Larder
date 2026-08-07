@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_MUSCLES = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Forearms', 'Quadriceps', 'Hamstrings', 'Glutes', 'Calves', 'Core', 'Full Body', 'Cardio', 'Other'];
     const DEFAULT_EQUIPMENT = ['Barbell', 'Dumbbell', 'Machine', 'Cable', 'Bodyweight', 'Kettlebell', 'Resistance Band', 'Plate', 'Smith Machine', 'EZ Bar', 'Suspension', 'Other'];
 
+    let workoutsListView = localStorage.getItem('larder_workouts_view') || 'list';
+
     const state = {
         exercises: [],
         templates: [],
@@ -157,42 +159,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const groupNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
 
-        list.innerHTML = groupNames.map(group => {
-            const rows = groups[group].map(ex => `
-                <div class="wt-row" data-id="${escapeHtml(ex.exerciseId || '')}">
-                    <div class="wt-row-main">
-                        <div class="wt-row-title">${escapeHtml(ex.name)}</div>
-                        <div class="wt-tags">
-                            <span class="wt-tag">${escapeHtml(ex.primaryMuscle || 'Other')}</span>
-                            ${(ex.equipment || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.equipment)}</span>` : ''}
-                            ${(ex.secondaryMuscles || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.secondaryMuscles)}</span>` : ''}
-                            ${(ex.level || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.level)}</span>` : ''}
-                            ${(ex.forceType || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.forceType)}</span>` : ''}
+        if (workoutsListView === 'grid') {
+            list.innerHTML = `<div class="wt-grid">` + groupNames.map(group => {
+                return groups[group].map(ex => `
+                    <div class="wt-card" data-id="${escapeHtml(ex.exerciseId || '')}">
+                        <div class="wt-card-head">
+                            <div>
+                                <div class="wt-card-title">${escapeHtml(ex.name)}</div>
+                                <div class="wt-tags" style="margin-top: 0.3rem;">
+                                    <span class="wt-tag">${escapeHtml(ex.primaryMuscle || 'Other')}</span>
+                                    ${(ex.equipment || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.equipment)}</span>` : ''}
+                                    ${(ex.level || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.level)}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="wt-row-actions">
+                                <button type="button" class="wt-icon-btn wt-ex-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
+                                <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                            </div>
                         </div>
-                        ${(ex.instructions || '').trim() ? `<div class="wt-row-sub">${escapeHtml(ex.instructions)}</div>` : ''}
+                        ${(ex.instructions || '').trim() ? `<div class="wt-row-sub" style="margin-top: 0.5rem;">${escapeHtml(ex.instructions)}</div>` : ''}
                     </div>
-                    <div class="wt-row-actions">
-                        <button type="button" class="wt-icon-btn wt-ex-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
-                        <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                `).join('');
+            }).join('') + `</div>`;
+        } else {
+            list.innerHTML = groupNames.map(group => {
+                const rows = groups[group].map(ex => `
+                    <div class="wt-row" data-id="${escapeHtml(ex.exerciseId || '')}">
+                        <div class="wt-row-main">
+                            <div class="wt-row-title">${escapeHtml(ex.name)}</div>
+                            <div class="wt-tags">
+                                <span class="wt-tag">${escapeHtml(ex.primaryMuscle || 'Other')}</span>
+                                ${(ex.equipment || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.equipment)}</span>` : ''}
+                                ${(ex.secondaryMuscles || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.secondaryMuscles)}</span>` : ''}
+                                ${(ex.level || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.level)}</span>` : ''}
+                                ${(ex.forceType || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.forceType)}</span>` : ''}
+                            </div>
+                            ${(ex.instructions || '').trim() ? `<div class="wt-row-sub">${escapeHtml(ex.instructions)}</div>` : ''}
+                        </div>
+                        <div class="wt-row-actions">
+                            <button type="button" class="wt-icon-btn wt-ex-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
+                            <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
-            return `
-                <div class="wt-ex-group">
-                    <div class="wt-ex-group-head">
-                        <h3>${escapeHtml(group)}</h3>
-                        <span class="wt-ex-group-count">${groups[group].length}</span>
+                `).join('');
+                return `
+                    <div class="wt-ex-group">
+                        <div class="wt-ex-group-head">
+                            <h3>${escapeHtml(group)}</h3>
+                            <span class="wt-ex-group-count">${groups[group].length}</span>
+                        </div>
+                        <div class="wt-list">${rows}</div>
                     </div>
-                    <div class="wt-list">${rows}</div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
 
-        list.querySelectorAll('.wt-ex-edit').forEach((btn, i) => {
-            btn.addEventListener('click', () => openExerciseModal(exs[i]));
+        list.querySelectorAll('.wt-ex-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ex = state.exercises.find(e => e.exerciseId === btn.closest('[data-id]').dataset.id);
+                if (ex) openExerciseModal(ex);
+            });
         });
-        list.querySelectorAll('.wt-ex-delete').forEach((btn, i) => {
-            btn.addEventListener('click', () => deleteExercise(exs[i]));
+        list.querySelectorAll('.wt-ex-delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ex = state.exercises.find(e => e.exerciseId === btn.closest('[data-id]').dataset.id);
+                if (ex) deleteExercise(ex);
+            });
         });
         if (window.lucide) window.lucide.createIcons({ root: list });
     }
@@ -531,9 +563,32 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#wt-search').value = '';
             $('#wt-search-wrap').classList.remove('active');
             $('#wt-search-trigger').style.opacity = '';
+            
+            const viewToggleBtn = $('#wt-view-toggle');
+            if (viewToggleBtn) {
+                viewToggleBtn.style.display = state.view === 'exercises' ? '' : 'none';
+            }
+            
             render();
         });
     });
+
+    const viewToggleBtn = $('#wt-view-toggle');
+    if (viewToggleBtn) {
+        const updateIcon = () => {
+            const iconName = workoutsListView === 'grid' ? 'layout-grid' : 'list';
+            viewToggleBtn.innerHTML = `<i data-lucide="${iconName}" style="width: 18px; height: 18px;" id="wt-view-toggle-icon"></i>`;
+            if (window.lucide) window.lucide.createIcons();
+        };
+        updateIcon();
+        
+        viewToggleBtn.addEventListener('click', () => {
+            workoutsListView = workoutsListView === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('larder_workouts_view', workoutsListView);
+            updateIcon();
+            if (state.view === 'exercises') renderExercises();
+        });
+    }
 
     const searchInput = $('#wt-search');
     const searchTrigger = $('#wt-search-trigger');

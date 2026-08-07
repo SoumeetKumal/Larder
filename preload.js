@@ -54,6 +54,11 @@ function injectTitleBar() {
         .larder-titlebar-btn svg { width: 12px; height: 12px; }
         body { padding-top: 38px; }
         body.cms-page .cms-navbar { top: 38px; }
+        @media (min-width: 769px) {
+            body.cms-page { padding-top: 0; }
+            body.cms-page .cms-app-layout { height: calc(100vh - 38px); margin-top: 38px; }
+            body.cms-page .cms-dashboard { height: 100%; }
+        }
     `;
     document.head.appendChild(style);
 
