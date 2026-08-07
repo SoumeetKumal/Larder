@@ -1,1 +1,103 @@
-[]
+[
+  {
+    "templateId": "push-pull-legs",
+    "name": "Push / Pull / Legs",
+    "description": "Classic three-day split hitting every major muscle group.",
+    "durationWeeks": 8,
+    "days": [
+      {
+        "dayId": "d-push",
+        "name": "Push",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Bench Press", "sets": 4, "repsMin": 6, "repsMax": 8, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Incline Bench Press", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Overhead Press", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Tricep Pushdown", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      },
+      {
+        "dayId": "d-pull",
+        "name": "Pull",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Deadlift", "sets": 3, "repsMin": 5, "repsMax": 5, "targetWeightKg": null, "restSeconds": 180 },
+          { "name": "Pull-ups", "sets": 4, "repsMin": 6, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Barbell Row", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Dumbbell Curl", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      },
+      {
+        "dayId": "d-legs",
+        "name": "Legs",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Squat", "sets": 4, "repsMin": 6, "repsMax": 8, "targetWeightKg": null, "restSeconds": 150 },
+          { "name": "Romanian Deadlift", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Leg Press", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Calf Raise", "sets": 4, "repsMin": 12, "repsMax": 15, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      }
+    ]
+  },
+  {
+    "templateId": "upper-lower",
+    "name": "Upper / Lower",
+    "description": "Four-day split that hits every muscle twice a week.",
+    "durationWeeks": 6,
+    "days": [
+      {
+        "dayId": "d-upper-a",
+        "name": "Upper A",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Bench Press", "sets": 4, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Pull-ups", "sets": 3, "repsMin": 8, "repsMax": 12, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Dumbbell Shoulder Press", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Chest Fly", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      },
+      {
+        "dayId": "d-lower-a",
+        "name": "Lower A",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Squat", "sets": 4, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 150 },
+          { "name": "Romanian Deadlift", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Leg Curl", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 60 },
+          { "name": "Calf Raise", "sets": 4, "repsMin": 12, "repsMax": 15, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      }
+    ]
+  },
+  {
+    "templateId": "full-body",
+    "name": "Full Body",
+    "description": "Three full-body sessions a week — ideal for beginners.",
+    "durationWeeks": 4,
+    "days": [
+      {
+        "dayId": "d-full-a",
+        "name": "Full Body A",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Squat", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Bench Press", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 120 },
+          { "name": "Barbell Row", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Plank", "sets": 3, "repsMin": 30, "repsMax": 60, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      },
+      {
+        "dayId": "d-full-b",
+        "name": "Full Body B",
+        "isRestDay": false,
+        "exercises": [
+          { "name": "Deadlift", "sets": 3, "repsMin": 5, "repsMax": 5, "targetWeightKg": null, "restSeconds": 180 },
+          { "name": "Overhead Press", "sets": 3, "repsMin": 8, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Pull-ups", "sets": 3, "repsMin": 6, "repsMax": 10, "targetWeightKg": null, "restSeconds": 90 },
+          { "name": "Glute Bridge", "sets": 3, "repsMin": 10, "repsMax": 12, "targetWeightKg": null, "restSeconds": 60 }
+        ]
+      }
+    ]
+  }
+]

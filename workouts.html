@@ -43,35 +43,6 @@
         }
         .wt-subtab:hover { color: var(--primary); }
         .wt-subtab.active { background: var(--bg-surface); color: var(--primary); box-shadow: var(--shadow-sm); }
-        .wt-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            align-items: center;
-            margin-bottom: 1.25rem;
-        }
-        .wt-filter-label {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-        }
-        .wt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        .wt-chip {
-            border: 1px solid var(--border);
-            background: var(--bg-surface);
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 0.78rem;
-            font-weight: 600;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        .wt-chip:hover { border-color: var(--primary); color: var(--primary); }
-        .wt-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .wt-ex-group { margin-bottom: 1.5rem; }
         .wt-ex-group-head {
             display: flex;
@@ -237,6 +208,8 @@
         .wt-empty i { opacity: 0.5; margin-bottom: 0.6rem; }
         .wt-empty p { margin: 0.3rem 0; font-size: 0.9rem; }
         .wt-empty small { font-size: 0.78rem; }
+        .wt-empty .btn { margin-top: 0.9rem; }
+        #wt-add-btn.with-label { width: auto; border-radius: 999px; padding: 0 1.2rem; }
         .wt-add-day { width: 100%; }
         .wt-modal-footer {
             display: flex;
@@ -261,7 +234,6 @@
             <div class="cms-sidebar-brand">
                 <a href="cms.html" class="brand-logo" style="text-decoration: none;">
                     <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
-                    <span>Larder CMS</span>
                 </a>
             </div>
             <nav class="cms-tabs" aria-label="CMS sections">
@@ -314,10 +286,28 @@
                             <button class="search-close" id="wt-search-close" aria-label="Clear search"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
                         </div>
                     </div>
+                    <button type="button" class="filter-trigger" id="wt-filter-trigger" title="Filters" aria-label="Filters">
+                        <i data-lucide="sliders-horizontal" style="width: 18px; height: 18px;"></i>
+                        <span class="filter-badge" id="wt-filter-badge" style="display:none;">0</span>
+                    </button>
                     <button type="button" class="filter-trigger" id="wt-view-toggle" title="Toggle grid/list view" aria-label="Toggle view">
                         <i data-lucide="layout-grid" style="width: 18px; height: 18px;" id="wt-view-toggle-icon"></i>
                     </button>
                     <button class="btn primary add-circle-btn" id="wt-add-btn" title="Add" aria-label="Add"><i data-lucide="plus" style="width: 18px; height: 18px;"></i><span id="wt-add-label" style="display: none;">Add Exercise</span></button>
+                    <div class="global-filter-dropdown" id="wt-filter-dropdown">
+                        <div class="filter-dropdown-header">
+                            <h4>Filters</h4>
+                            <button type="button" class="filter-reset" id="wt-filter-reset">Reset</button>
+                        </div>
+                        <div class="filter-section">
+                            <div class="filter-section-title">Muscle</div>
+                            <div class="filter-chips" id="wt-filter-muscle-chips"></div>
+                        </div>
+                        <div class="filter-section">
+                            <div class="filter-section-title">Equipment</div>
+                            <div class="filter-chips" id="wt-filter-equipment-chips"></div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -329,8 +319,6 @@
             </div>
 
             <section id="wt-exercises-view">
-                <div class="wt-filters" id="wt-muscle-filters"></div>
-                <div class="wt-filters" id="wt-equipment-filters"></div>
                 <div id="wt-exercise-list"></div>
             </section>
 

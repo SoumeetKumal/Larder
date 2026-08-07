@@ -1988,7 +1988,7 @@ body.cms-page { background-color: var(--bg-surface-hover); }
 
     /* App shell: fixed left sidebar + fluid content */
     .cms-sidebar { width: 248px; flex-shrink: 0; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow-sm); height: 100%; }
-    .cms-sidebar-brand { padding: 1.25rem 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+    .cms-sidebar-brand { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
     .cms-sidebar-brand .brand-logo { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
 
     .cms-sidebar .cms-tabs { flex-direction: column; gap: 0; margin: 0; padding: 0.5rem 0.75rem; border-bottom: none; overflow-y: hidden; flex: 1; }
@@ -3071,13 +3071,12 @@ body.printing-shopping .cms-navbar,
 .planner-wrap { display: flex; flex-direction: column; gap: .6rem; }
 .planner-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: .7rem; align-items: start; }
 .planner-main { display: flex; flex-direction: column; gap: .6rem; min-width: 0; }
-.planner-side { display: flex; flex-direction: column; gap: .6rem; position: sticky; top: 1rem; min-width: 0; }
+.planner-side { display: flex; flex-direction: column; gap: .6rem; min-width: 0; }
 
-/* Projected totals are long (every macro/mineral). Keep the panel on screen by
-   letting only the totals grid scroll within it, so the whole sidebar never
-   exceeds the viewport. */
-.planner-side .planner-card { max-height: calc(100vh - 205px); display: flex; flex-direction: column; }
-.planner-side .pl-totals { overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+/* Projected totals list every macro/mineral and may be long; let the card grow
+   with the page and scroll with the app rather than owning its own scrollbar. */
+.planner-side .planner-card { display: flex; flex-direction: column; }
+.pl-totals { min-height: 0; }
 .planner-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color, rgba(0,0,0,.08));
@@ -3144,7 +3143,7 @@ body.printing-shopping .cms-navbar,
     font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
     color: var(--accent-sea); margin-top: .25rem;
 }
-.pl-total-row { display: grid; grid-template-columns: auto 1fr auto 18px; align-items: center; gap: .4rem; white-space: nowrap; }
+.pl-total-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: .4rem; white-space: nowrap; }
 .pl-total-label { font-size: .8rem; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
 .pl-total-bar { height: 8px; background: rgba(0,0,0,.08); border-radius: 6px; overflow: hidden; }
 .pl-total-fill { height: 100%; border-radius: 6px; transition: width .2s; }
@@ -3152,11 +3151,11 @@ body.printing-shopping .cms-navbar,
 .pl-total-fill.blue, .pl-total-val.blue { color: var(--accent-info, #2980b9); }
 .pl-total-fill.red { background: var(--accent-danger, #c0392b); }
 .pl-total-fill.blue { background: var(--accent-info, #2980b9); }
-.pl-total-val { display: inline-flex; align-items: baseline; gap: .3rem; font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+.pl-total-val { display: inline-flex; align-items: baseline; gap: .3rem; font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; white-space: nowrap; }
 .pl-total-now { font-weight: 700; }
 .pl-total-unit { font-size: .7rem; color: var(--text-muted); font-weight: 500; margin-left: .1rem; }
 .pl-total-target { font-size: .76rem; color: var(--text-muted); font-weight: 500; }
-.pl-total-flag { font-size: .7rem; width: 18px; text-align: center; }
+.pl-total-flag { font-size: .7rem; text-align: center; white-space: nowrap; }
 .pl-cost-line { margin-top: .9rem; font-size: .95rem; }
 .red-note, .red { color: var(--accent-danger, #c0392b) !important; }
 .blue-note { color: var(--accent-info, #2980b9); }

@@ -67,7 +67,7 @@ function injectTitleBar() {
     bar.innerHTML = `
         <div id="larder-titlebar-brand">
             <img src="images/icon.png" alt="" onerror="this.style.display='none'">
-            <span>Larder</span>
+            <span>Larder CMS</span>
         </div>
         <div id="larder-titlebar-controls">
             <button class="larder-titlebar-btn" id="larder-btn-min" aria-label="Minimize">

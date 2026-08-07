@@ -184,6 +184,10 @@ function sendJson(res, status, obj) {
 }
 
 const server = http.createServer((req, res) => {
+    // Query strings are stripped up-front so cache-busting URLs like
+    // "/api/recipes?_=123" still match the exact-path routes below.
+    req.url = req.url.split('?')[0];
+
     // --- Security headers on every response ---
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');

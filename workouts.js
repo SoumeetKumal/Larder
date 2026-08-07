@@ -112,15 +112,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function buildFilterChips(containerId, values, current, onChange) {
         const container = $(containerId);
         const chips = ['All', ...values];
-        container.innerHTML = `
-            <span class="wt-filter-label">${containerId === '#wt-muscle-filters' ? 'Muscle' : 'Equipment'}</span>
-            <div class="wt-chips">${chips.map(v =>
-                `<button type="button" class="wt-chip${v === current ? ' active' : ''}" data-val="${escapeHtml(v)}">${escapeHtml(v)}</button>`
-            ).join('')}</div>
-        `;
-        container.querySelectorAll('.wt-chip').forEach(chip => {
+        container.innerHTML = chips.map(v =>
+            `<button type="button" class="filter-chip${v === current ? ' active' : ''}" data-val="${escapeHtml(v)}">${escapeHtml(v)}</button>`
+        ).join('');
+        container.querySelectorAll('.filter-chip').forEach(chip => {
             chip.addEventListener('click', () => onChange(chip.dataset.val));
         });
+    }
+
+    function updateFilterBadge() {
+        const badge = $('#wt-filter-badge');
+        if (!badge) return;
+        const count = (state.muscle !== 'All' ? 1 : 0) + (state.equipment !== 'All' ? 1 : 0);
+        badge.textContent = String(count);
+        badge.style.display = count > 0 ? 'flex' : 'none';
+        const trigger = $('#wt-filter-trigger');
+        if (trigger) trigger.classList.toggle('has-filters', count > 0);
     }
 
     // --- Render exercises ---
@@ -141,9 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = $('#wt-exercise-list');
         const exs = filteredExercises();
         const muscles = uniqueValues(state.exercises.map(ex => ex.primaryMuscle || 'Other'));
-        buildFilterChips('#wt-muscle-filters', [...new Set([...DEFAULT_MUSCLES, ...muscles])], state.muscle, (v) => { state.muscle = v; renderExercises(); });
+        buildFilterChips('#wt-filter-muscle-chips', [...new Set([...DEFAULT_MUSCLES, ...muscles])], state.muscle, (v) => { state.muscle = v; renderExercises(); });
         const equipments = uniqueValues(state.exercises.map(ex => ex.equipment || 'Other'));
-        buildFilterChips('#wt-equipment-filters', [...new Set([...DEFAULT_EQUIPMENT, ...equipments])], state.equipment, (v) => { state.equipment = v; renderExercises(); });
+        buildFilterChips('#wt-filter-equipment-chips', [...new Set([...DEFAULT_EQUIPMENT, ...equipments])], state.equipment, (v) => { state.equipment = v; renderExercises(); });
+        updateFilterBadge();
 
         if (!exs.length) {
             list.innerHTML = '<div class="wt-empty"><i data-lucide="dumbbell" style="width: 40px; height: 40px;"></i><p>No exercises found.</p><small>Click the + button to add your first exercise.</small></div>';
@@ -242,8 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = $('#wt-template-list');
         const tpls = filteredTemplates();
         if (!tpls.length) {
-            list.innerHTML = '<div class="wt-empty"><i data-lucide="calendar-range" style="width: 40px; height: 40px;"></i><p>No workout templates yet.</p><small>Create a template with days, exercises, sets and reps — FitTrack can sync it.</small></div>';
+            list.innerHTML = '<div class="wt-empty"><i data-lucide="calendar-range" style="width: 40px; height: 40px;"></i><p>No workout templates yet.</p><small>Group exercises into days (Push, Pull, Legs...) and FitTrack can sync them.</small><button type="button" class="btn primary wt-empty-add" style="margin-top: 0.9rem;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i>Create your first template</button></div>';
             if (window.lucide) window.lucide.createIcons({ root: list });
+            const addBtn = list.querySelector('.wt-empty-add');
+            if (addBtn) addBtn.addEventListener('click', () => openTemplateModal(null));
             return;
         }
 
@@ -295,7 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#wt-templates-view').style.display = state.view === 'templates' ? '' : 'none';
         const addLabel = $('#wt-add-label');
         const addBtn = $('#wt-add-btn');
-        if (addLabel) addLabel.style.display = state.view === 'templates' ? 'inline' : 'none';
+        if (addLabel) {
+            addLabel.textContent = state.view === 'templates' ? 'Add Template' : 'Add Exercise';
+            addLabel.style.display = state.view === 'templates' ? 'inline' : 'none';
+        }
+        addBtn.classList.toggle('with-label', state.view === 'templates');
         addBtn.title = state.view === 'templates' ? 'Add template' : 'Add exercise';
         document.querySelectorAll('.wt-subtab').forEach(t => t.classList.toggle('active', t.dataset.view === state.view));
         if (state.view === 'exercises') renderExercises();
@@ -617,6 +631,28 @@ document.addEventListener('DOMContentLoaded', () => {
             searchTrigger.style.opacity = '';
         }
     });
+
+    const filterTrigger = $('#wt-filter-trigger');
+    const filterDropdown = $('#wt-filter-dropdown');
+    if (filterTrigger && filterDropdown) {
+        filterTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (filterDropdown.classList.contains('active') && !filterDropdown.contains(e.target) && e.target !== filterTrigger && !(filterTrigger && filterTrigger.contains(e.target))) {
+                filterDropdown.classList.remove('active');
+            }
+        });
+        const filterReset = $('#wt-filter-reset');
+        if (filterReset) {
+            filterReset.addEventListener('click', () => {
+                state.muscle = 'All';
+                state.equipment = 'All';
+                renderExercises();
+            });
+        }
+    }
 
     $('#wt-add-btn').addEventListener('click', () => {
         if (state.view === 'templates') openTemplateModal(null);
