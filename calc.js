@@ -63,9 +63,15 @@
         return null;
     }
 
+    // Every nutrient we track, keyed by the ingredient's field name. computeTotals
+    // accumulates each from per-100g (times the grams factor). Used for planner
+    // projections and the monthly micro goals.
+    var MICRO_FIELDS = ['saturatedFatG', 'transFatG', 'monounsaturatedFatG', 'polyunsaturatedFatG', 'cholesterolMg', 'sugarG', 'fiberG', 'sodiumMg', 'potassiumMg', 'calciumMg', 'ironMg', 'magnesiumMg', 'phosphorusMg', 'zincMg', 'copperMg', 'seleniumMcg', 'vitaminAMcg', 'vitaminCMg', 'vitaminDMcg', 'vitaminEMg', 'vitaminKMcg', 'thiaminMg', 'riboflavinMg', 'niacinMg', 'pantothenicMg', 'vitaminB6Mg', 'folateMcg', 'vitaminB12Mcg'];
+
     // Aggregate nutrition + cost for planner items. useStock lines cost 0.
     function computeTotals(items, ingredients) {
         var t = { energy: 0, protein: 0, carbs: 0, fat: 0, satFat: 0, sugar: 0, fiber: 0, vitD: 0, animal: 0, meat: 0, cost: 0, units: 0 };
+        MICRO_FIELDS.forEach(function (k) { t[k] = 0; });
         (items || []).forEach(function (it) {
             var ing = findIngredientById(ingredients, it && it.ingredientId);
             var g = gramsOf(it && it.amount, it && it.unit, ing);
@@ -79,6 +85,7 @@
             t.sugar += num(ing.sugarG) * f;
             t.fiber += num(ing.fiberG) * f;
             t.vitD += num(ing.vitaminDMcg) * f;
+            MICRO_FIELDS.forEach(function (k) { t[k] += num(ing[k]) * f; });
             var prot = num(ing.proteinG) * f;
             t.meat += prot;
             if (isAnimalSource(ing.proteinSource)) t.animal += prot;
@@ -181,6 +188,7 @@
         parseLine: parseLine,
         parseReceiptText: parseReceiptText,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
-        COUNT_UNITS: COUNT_UNITS
+        COUNT_UNITS: COUNT_UNITS,
+        MICRO_FIELDS: MICRO_FIELDS
     };
 });

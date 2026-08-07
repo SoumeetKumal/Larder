@@ -10,27 +10,46 @@
     <script src="vendor/lucide.js" integrity="sha256-lyPe7Yrffbw6JXmSfXtyTkQAG6EigAJdZt78V9HNgxY=" crossorigin="anonymous"></script>
 </head>
 <body class="cms-page">
-    <nav class="cms-navbar">
-        <a href="cms.html" class="brand-logo" style="text-decoration: none;">
-            <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
-            Larder CMS
-        </a>
-        <div class="cms-tabs" id="cms-tabs">
-            <button class="cms-tab active" data-tab="recipe">Recipes</button>
-            <button class="cms-tab" data-tab="food">Ingredients</button>
-            <button class="cms-tab" data-tab="mealplan">Meal Plan</button>
-            <button class="cms-tab" data-tab="planner">Planner</button>
-            <button class="cms-tab" data-tab="pantry">Pantry</button>
-            <button class="cms-tab" data-tab="household">Household</button>
-            <button class="cms-tab" data-tab="shopping">Shopping Lists</button>
-            <button class="cms-tab" data-tab="receipts">Receipts</button>
-        </div>
-        <div class="cms-nav-actions">
-            <a href="./" class="btn secondary nav-site-btn" title="View Site" aria-label="View Site"><i data-lucide="external-link" style="width: 18px; height: 18px;"></i></a>
-            <button class="btn secondary" id="themeToggle" aria-label="Toggle Dark Mode"></button>
-            <button class="btn secondary nav-settings-btn" id="cms-settings-btn" title="Settings" aria-label="Settings"><i data-lucide="settings" style="width: 18px; height: 18px;"></i></button>
-        </div>
-    </nav>
+    <div class="cms-app-layout">
+        <aside class="cms-sidebar">
+            <div class="cms-sidebar-brand">
+                <a href="cms.html" class="brand-logo" style="text-decoration: none;">
+                    <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
+                    <span>Larder CMS</span>
+                </a>
+            </div>
+            <nav class="cms-tabs" id="cms-tabs" aria-label="CMS sections">
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Plan</div>
+                    <button class="cms-tab" data-tab="mealplan"><i data-lucide="calendar" style="width: 16px; height: 16px;"></i>Meal Plan</button>
+                    <button class="cms-tab" data-tab="planner"><i data-lucide="list-checks" style="width: 16px; height: 16px;"></i>Monthly Planner</button>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Cook</div>
+                    <button class="cms-tab active" data-tab="recipe"><i data-lucide="book-open" style="width: 16px; height: 16px;"></i>Recipes</button>
+                    <button class="cms-tab" data-tab="food"><i data-lucide="carrot" style="width: 16px; height: 16px;"></i>Ingredients</button>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Stock</div>
+                    <button class="cms-tab" data-tab="pantry"><i data-lucide="archive" style="width: 16px; height: 16px;"></i>Pantry</button>
+                    <button class="cms-tab" data-tab="household"><i data-lucide="home" style="width: 16px; height: 16px;"></i>Household</button>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Shop & Track</div>
+                    <button class="cms-tab" data-tab="shopping"><i data-lucide="shopping-basket" style="width: 16px; height: 16px;"></i>Shopping Lists</button>
+                    <button class="cms-tab" data-tab="receipts"><i data-lucide="receipt" style="width: 16px; height: 16px;"></i>Receipts</button>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Fitness</div>
+                    <a class="cms-tab" href="workouts.html"><i data-lucide="dumbbell" style="width: 16px; height: 16px;"></i>Workouts</a>
+                </div>
+            </nav>
+            <div class="cms-sidebar-footer">
+                <a href="./" class="cms-sidebar-link" title="View Site" aria-label="View Site"><i data-lucide="external-link" style="width: 16px; height: 16px;"></i>View Site</a>
+                <button class="cms-sidebar-link" id="themeToggle" aria-label="Toggle Dark Mode"><i data-lucide="moon" style="width: 16px; height: 16px;"></i>Theme</button>
+                <button class="cms-sidebar-link" id="cms-settings-btn" title="Settings" aria-label="Settings"><i data-lucide="settings" style="width: 16px; height: 16px;"></i>Settings</button>
+            </div>
+        </aside>
 
     <main class="cms-dashboard">
         <header class="cms-header">
@@ -78,6 +97,7 @@
             <div class="empty-state">Connecting to server...</div>
         </div>
     </main>
+    </div>
 
     <!-- CMS Recipe Editor Modal (matches visual_direction_cms.html) -->
     <div id="cms-editor-modal" class="modal-overlay">

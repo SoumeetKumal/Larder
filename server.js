@@ -64,7 +64,19 @@ const HOUSEHOLD_PATH = path.join(DATA_DIR, 'household.json');
 const RECEIPTS_PATH = path.join(DATA_DIR, 'receipts.json');
 const PLANNER_PATH = path.join(DATA_DIR, 'planner.json');
 const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
+const EXERCISES_PATH = path.join(DATA_DIR, 'exercises.json');
+const WORKOUT_TEMPLATES_PATH = path.join(DATA_DIR, 'workoutTemplates.json');
 const API_KEY = 'larder_local_sync_8f92k';
+
+// The only files Larder keeps as user data. Used by /api/export to produce a
+// clean bundle and by /api/import to whitelist acceptable files on restore.
+const DATA_FILES = [
+    'recipes.json', 'ingredients.json', 'mealplans.json',
+    'pantry.json', 'shoppinglists.json', 'household.json',
+    'receipts.json', 'planner.json', 'settings.json',
+    'exercises.json', 'workoutTemplates.json'
+];
+const KNOWN_DATA_FILES = new Set(DATA_FILES);
 
 // Maximum request body size (uploads + data writes). 50 MB is plenty for
 // recipe data and a backup archive.
@@ -109,7 +121,9 @@ const defaultFiles = {
     'household.json': '[]',
     'receipts.json': '[]',
     'planner.json': '{"goals": {"energyMax": 0, "carbsMax": 0, "fatMax": 0, "satFatMax": 0, "sugarMax": 0, "proteinMin": 0, "vitDMin": 0, "meatProteinPct": 50, "budget": 0, "currency": "MUR"}, "items": []}',
-    'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}'
+    'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}',
+    'exercises.json': '[]',
+    'workoutTemplates.json': '[]'
 };
 Object.entries(defaultFiles).forEach(([file, content]) => {
     const p = path.join(DATA_DIR, file);
@@ -364,6 +378,28 @@ const server = http.createServer((req, res) => {
                     if (badObject(it) || typeof it.name !== 'string' || !it.name) return err('receipt items need a non-empty name');
                 }
             }
+        } else if (name === 'exercises') {
+            for (const r of records) {
+                if (badObject(r)) return err('exercises records must be objects');
+                if (typeof r.name !== 'string' || !r.name) return err('exercises need a non-empty name');
+                if (r.primaryMuscle != null && typeof r.primaryMuscle !== 'string') return err('exercise.primaryMuscle must be a string');
+                if (r.secondaryMuscles != null && typeof r.secondaryMuscles !== 'string') return err('exercise.secondaryMuscles must be a string');
+                if (r.equipment != null && typeof r.equipment !== 'string') return err('exercise.equipment must be a string');
+            }
+        } else if (name === 'workoutTemplates') {
+            for (const r of records) {
+                if (badObject(r)) return err('workoutTemplates records must be objects');
+                if (typeof r.name !== 'string' || !r.name) return err('workout templates need a non-empty name');
+                if (!Array.isArray(r.days)) return err('workout template.days must be an array');
+                for (const d of r.days) {
+                    if (badObject(d)) return err('template days must be objects');
+                    if (!Array.isArray(d.exercises)) return err('template day.exercises must be an array');
+                    for (const e of d.exercises) {
+                        if (badObject(e) || typeof e.name !== 'string' || !e.name) return err('template exercises need a non-empty name');
+                        if (e.sets != null && typeof e.sets !== 'number') return err('template exercise.sets must be a number');
+                    }
+                }
+            }
         } else {
             for (const r of records) {
                 if (badObject(r)) return err(`${name} records must be objects`);
@@ -377,6 +413,8 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
     if (req.url === '/api/household' && handleGenericFileAPI(req, res, HOUSEHOLD_PATH, 'household')) return;
     if (req.url === '/api/receipts' && handleGenericFileAPI(req, res, RECEIPTS_PATH, 'receipts')) return;
+    if (req.url === '/api/exercises' && handleGenericFileAPI(req, res, EXERCISES_PATH, 'exercises')) return;
+    if (req.url === '/api/workout-templates' && handleGenericFileAPI(req, res, WORKOUT_TEMPLATES_PATH, 'workoutTemplates')) return;
 
     // --- API: planner (object payload: { goals, items }) ---
     if (req.url === '/api/planner' && req.method === 'GET') {
@@ -471,16 +509,29 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/export' && req.method === 'GET') {
         try {
             const zip = new AdmZip();
-            zip.addLocalFolder(DATA_DIR);
+            // Export only Larder's known JSON data files, so the archive is a
+            // clean, portable bundle (no stray temp files or logs).
+            let added = 0;
+            DATA_FILES.forEach(file => {
+                const p = path.join(DATA_DIR, file);
+                if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+                    zip.addLocalFile(p);
+                    added++;
+                }
+            });
+            if (added === 0) throw new Error('No data files to export');
             const buffer = zip.toBuffer();
+            const stamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const fname = `larder-data-${stamp}.zip`;
             res.writeHead(200, {
                 'Content-Type': 'application/zip',
-                'Content-Disposition': 'attachment; filename=larder_backup.zip',
+                'Content-Disposition': `attachment; filename=${fname}`,
                 'Content-Length': buffer.length
             });
             res.end(buffer);
-            console.log(`  📦 Exported data archive`);
+            console.log(`  📦 Exported ${added} data file(s) to ${fname}`);
         } catch (e) {
+            console.error(e);
             sendJson(res, 500, { error: 'Export failed' });
         }
         return;
@@ -490,11 +541,18 @@ const server = http.createServer((req, res) => {
         collectBody(req).then(buffer => {
             try {
                 const zip = new AdmZip(buffer);
+                // Accept only Larder's known data files. This rejects stray files
+                // and, together with the zip-slip check below, keeps the import
+                // a clean, safe restore into DATA_DIR.
+                const entries = zip.getEntries();
+                if (!entries.length) throw new Error('Empty archive');
                 // Zip-slip protection: refuse any entry that would resolve
                 // outside DATA_DIR (e.g. entries named ../../evil).
                 const dataPrefix = DATA_DIR.endsWith(path.sep) ? DATA_DIR : DATA_DIR + path.sep;
-                zip.getEntries().forEach(entry => {
+                entries.forEach(entry => {
                     const clean = entry.entryName.replace(/\\/g, '/');
+                    if (path.basename(clean) !== clean) throw new Error('No subfolders allowed');
+                    if (!KNOWN_DATA_FILES.has(clean)) throw new Error('Unexpected file: ' + clean);
                     const target = path.resolve(DATA_DIR, clean);
                     if (target !== DATA_DIR && !target.startsWith(dataPrefix)) {
                         throw new Error('Blocked unsafe archive entry: ' + entry.entryName);
@@ -502,7 +560,7 @@ const server = http.createServer((req, res) => {
                 });
                 zip.extractAllTo(DATA_DIR, true);
                 sendJson(res, 200, { success: true });
-                console.log(`  📥 Imported data archive successfully`);
+                console.log(`  📥 Imported ${entries.length} data file(s) successfully`);
             } catch (e) {
                 console.error(e);
                 sendJson(res, 400, { error: 'Import failed or invalid zip' });

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Larder CMS · Workouts</title>
+    <link rel="icon" type="image/png" href="images/icon.png">
+    <link rel="apple-touch-icon" href="images/icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="vendor/lucide.js" integrity="sha256-lyPe7Yrffbw6JXmSfXtyTkQAG6EigAJdZt78V9HNgxY=" crossorigin="anonymous"></script>
+    <style>
+        .wt-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+        .wt-subtabs {
+            display: flex;
+            gap: 0.35rem;
+            background: var(--bg-surface-hover);
+            padding: 0.3rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            width: fit-content;
+        }
+        .wt-subtab {
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: all var(--transition-fast);
+        }
+        .wt-subtab:hover { color: var(--primary); }
+        .wt-subtab.active { background: var(--bg-surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+        .wt-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        .wt-filter-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+        .wt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .wt-chip {
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .wt-chip:hover { border-color: var(--primary); color: var(--primary); }
+        .wt-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .wt-ex-group { margin-bottom: 1.5rem; }
+        .wt-ex-group-head {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.6rem;
+        }
+        .wt-ex-group-head h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            text-transform: capitalize;
+        }
+        .wt-ex-group-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-surface-hover);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+        }
+        .wt-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .wt-row {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .wt-row:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+        .wt-row-main { flex: 1; min-width: 0; }
+        .wt-row-title { font-weight: 600; color: var(--text-main); font-size: 0.92rem; }
+        .wt-row-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+        .wt-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+        .wt-tag {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            border: 1px solid var(--primary);
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+        }
+        .wt-tag.muted { color: var(--text-muted); background: var(--bg-surface-hover); border-color: var(--border); }
+        .wt-row-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+        .wt-icon-btn {
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+        .wt-icon-btn:hover { color: var(--primary); border-color: var(--primary); }
+        .wt-icon-btn.danger:hover { color: var(--accent-danger, #c0392b); border-color: var(--accent-danger, #c0392b); background: rgba(192, 57, 43, 0.06); }
+        .wt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .wt-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .wt-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+        .wt-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+        .wt-card-title { font-weight: 700; color: var(--text-main); font-size: 1rem; }
+        .wt-card-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .wt-card-days { display: flex; flex-direction: column; gap: 0.5rem; }
+        .wt-card-day {
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.65rem;
+            background: var(--bg-surface-hover);
+        }
+        .wt-card-day-name { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .wt-card-day-ex { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+        .wt-modal-form { display: flex; flex-direction: column; gap: 0.9rem; padding: 1.5rem 2rem 2rem; }
+        .wt-field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .wt-field label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+        .wt-field .wt-hint { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+        .wt-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+        .wt-day-block {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 0.9rem;
+            overflow: hidden;
+            background: var(--bg-surface);
+        }
+        .wt-day-head {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            background: var(--bg-surface-hover);
+            border-bottom: 1px solid var(--border);
+        }
+        .wt-day-head .wt-day-num {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--primary);
+            background: var(--primary-light);
+            border: 1px solid var(--primary);
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .wt-day-head input {
+            flex: 1;
+            border: 1px solid transparent;
+            background: none;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 0.3rem 0.4rem;
+            border-radius: 6px;
+        }
+        .wt-day-head input:focus { border-color: var(--primary); outline: none; background: var(--bg-surface); }
+        .wt-ex-row {
+            display: grid;
+            grid-template-columns: minmax(140px, 2fr) repeat(4, minmax(56px, 1fr)) 40px;
+            gap: 0.4rem;
+            align-items: center;
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .wt-ex-row:last-child { border-bottom: none; }
+        .wt-ex-row input, .wt-ex-row select {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.45rem;
+            border-radius: 6px;
+        }
+        .wt-ex-row input:focus, .wt-ex-row select:focus { border-color: var(--primary); outline: none; }
+        .wt-ex-row .wt-remove { border: none; background: none; color: var(--text-muted); cursor: pointer; width: 32px; height: 32px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+        .wt-ex-row .wt-remove:hover { color: var(--accent-danger, #c0392b); background: rgba(192, 57, 43, 0.08); }
+        .wt-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+        }
+        .wt-empty i { opacity: 0.5; margin-bottom: 0.6rem; }
+        .wt-empty p { margin: 0.3rem 0; font-size: 0.9rem; }
+        .wt-empty small { font-size: 0.78rem; }
+        .wt-add-day { width: 100%; }
+        .wt-modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.1rem 2rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg-surface-hover);
+        }
+        body.cms-page #wt-ex-modal .modal-content { max-width: 640px; }
+        body.cms-page #wt-tpl-modal .modal-content { max-width: 900px; max-height: 92vh; overflow-y: auto; }
+        @media (max-width: 640px) {
+            .wt-field-row { grid-template-columns: 1fr; }
+            .wt-ex-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body class="cms-page">
+    <div class="cms-app-layout">
+        <aside class="cms-sidebar">
+            <div class="cms-sidebar-brand">
+                <a href="cms.html" class="brand-logo" style="text-decoration: none;">
+                    <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
+                    <span>Larder CMS</span>
+                </a>
+            </div>
+            <nav class="cms-tabs" aria-label="CMS sections">
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Plan</div>
+                    <a class="cms-tab" href="cms.html#mealplan"><i data-lucide="calendar" style="width: 16px; height: 16px;"></i>Meal Plan</a>
+                    <a class="cms-tab" href="cms.html#planner"><i data-lucide="list-checks" style="width: 16px; height: 16px;"></i>Monthly Planner</a>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Cook</div>
+                    <a class="cms-tab" href="cms.html#recipe"><i data-lucide="book-open" style="width: 16px; height: 16px;"></i>Recipes</a>
+                    <a class="cms-tab" href="cms.html#food"><i data-lucide="carrot" style="width: 16px; height: 16px;"></i>Ingredients</a>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Stock</div>
+                    <a class="cms-tab" href="cms.html#pantry"><i data-lucide="archive" style="width: 16px; height: 16px;"></i>Pantry</a>
+                    <a class="cms-tab" href="cms.html#household"><i data-lucide="home" style="width: 16px; height: 16px;"></i>Household</a>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Shop & Track</div>
+                    <a class="cms-tab" href="cms.html#shopping"><i data-lucide="shopping-basket" style="width: 16px; height: 16px;"></i>Shopping Lists</a>
+                    <a class="cms-tab" href="cms.html#receipts"><i data-lucide="receipt" style="width: 16px; height: 16px;"></i>Receipts</a>
+                </div>
+                <div class="cms-nav-group">
+                    <div class="cms-nav-group-head">Fitness</div>
+                    <a class="cms-tab active" href="workouts.html"><i data-lucide="dumbbell" style="width: 16px; height: 16px;"></i>Workouts</a>
+                </div>
+            </nav>
+            <div class="cms-sidebar-footer">
+                <a href="./" class="cms-sidebar-link" title="View Site" aria-label="View Site"><i data-lucide="external-link" style="width: 16px; height: 16px;"></i>View Site</a>
+                <button class="cms-sidebar-link" id="themeToggle" aria-label="Toggle Dark Mode"><i data-lucide="moon" style="width: 16px; height: 16px;"></i>Theme</button>
+                <a href="cms.html" class="cms-sidebar-link" title="Settings" aria-label="Settings"><i data-lucide="settings" style="width: 16px; height: 16px;"></i>Settings</a>
+            </div>
+        </aside>
+
+        <main class="cms-dashboard">
+            <header class="cms-header">
+                <div class="cms-header-title">
+                    <h1 id="wt-header-title">Exercises</h1>
+                    <div class="cms-header-status" id="wt-status"><i data-lucide="zap" style="width: 14px; height: 14px;"></i> Connecting...</div>
+                </div>
+                <div class="cms-actions">
+                    <div class="cms-search-anchor">
+                        <button type="button" class="search-trigger" id="wt-search-trigger" title="Search" aria-label="Search">
+                            <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                        </button>
+                        <div class="search-bar-wrap collapsible" id="wt-search-wrap">
+                            <i data-lucide="search" class="search-bar-icon"></i>
+                            <input type="text" class="search-input" id="wt-search" placeholder="Search exercises...">
+                            <button class="search-close" id="wt-search-close" aria-label="Clear search"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
+                        </div>
+                    </div>
+                    <button class="btn primary add-circle-btn" id="wt-add-btn" title="Add" aria-label="Add"><i data-lucide="plus" style="width: 18px; height: 18px;"></i><span id="wt-add-label" style="display: none;">Add Exercise</span></button>
+                </div>
+            </header>
+
+            <div class="wt-header">
+                <div class="wt-subtabs" id="wt-subtabs">
+                    <button class="wt-subtab active" data-view="exercises"><i data-lucide="dumbbell" style="width: 15px; height: 15px;"></i>Exercises</button>
+                    <button class="wt-subtab" data-view="templates"><i data-lucide="calendar-range" style="width: 15px; height: 15px;"></i>Workout Templates</button>
+                </div>
+            </div>
+
+            <section id="wt-exercises-view">
+                <div class="wt-filters" id="wt-muscle-filters"></div>
+                <div class="wt-filters" id="wt-equipment-filters"></div>
+                <div id="wt-exercise-list"></div>
+            </section>
+
+            <section id="wt-templates-view" style="display: none;">
+                <div id="wt-template-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Exercise modal -->
+    <div id="wt-ex-modal" class="modal-overlay">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button type="button" class="modal-close wt-modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>
+            <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 id="wt-ex-modal-title" style="margin: 0; font-size: 1.35rem;">New Exercise</h3>
+            </div>
+            <div class="wt-modal-form">
+                <div class="wt-field">
+                    <label for="wt-ex-name">Name</label>
+                    <input type="text" id="wt-ex-name" class="seamless-input" placeholder="e.g. Bench Press" autocomplete="off">
+                </div>
+                <div class="wt-field-row">
+                    <div class="wt-field">
+                        <label for="wt-ex-primary">Primary muscle group</label>
+                        <input type="text" id="wt-ex-primary" class="seamless-input" list="wt-muscle-list" placeholder="e.g. Chest" autocomplete="off">
+                        <datalist id="wt-muscle-list"></datalist>
+                    </div>
+                    <div class="wt-field">
+                        <label for="wt-ex-secondary">Secondary muscles <span class="wt-hint">(comma-separated)</span></label>
+                        <input type="text" id="wt-ex-secondary" class="seamless-input" placeholder="e.g. Triceps, Front Delts" autocomplete="off">
+                    </div>
+                </div>
+                <div class="wt-field-row">
+                    <div class="wt-field">
+                        <label for="wt-ex-equipment">Equipment</label>
+                        <input type="text" id="wt-ex-equipment" class="seamless-input" list="wt-equipment-list" placeholder="e.g. Barbell" autocomplete="off">
+                        <datalist id="wt-equipment-list"></datalist>
+                    </div>
+                    <div class="wt-field-row" style="grid-template-columns: 1fr 1fr; gap: 0.9rem;">
+                        <div class="wt-field">
+                            <label for="wt-ex-level">Level</label>
+                            <select id="wt-ex-level" class="seamless-input">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="wt-field">
+                            <label for="wt-ex-force">Force type</label>
+                            <select id="wt-ex-force" class="seamless-input">
+                                <option value="">—</option>
+                                <option value="Push">Push</option>
+                                <option value="Pull">Pull</option>
+                                <option value="Hinge">Hinge</option>
+                                <option value="Squat">Squat</option>
+                                <option value="Lunge">Lunge</option>
+                                <option value="Core">Core</option>
+                                <option value="Hold">Hold</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="wt-field">
+                    <label for="wt-ex-instructions">Instructions</label>
+                    <textarea id="wt-ex-instructions" class="seamless-input seamless-textarea" rows="4" placeholder="How to perform this exercise..."></textarea>
+                </div>
+            </div>
+            <div class="wt-modal-footer">
+                <button type="button" class="btn danger" id="wt-ex-delete" style="display: none;"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Delete</button>
+                <div style="display: flex; gap: 0.7rem; margin-left: auto;">
+                    <button type="button" class="btn secondary wt-modal-close">Cancel</button>
+                    <button type="button" class="btn primary" id="wt-ex-save"><i data-lucide="save" style="width: 15px; height: 15px;"></i> Save Exercise</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout template modal -->
+    <div id="wt-tpl-modal" class="modal-overlay">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button type="button" class="modal-close wt-modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>
+            <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 id="wt-tpl-modal-title" style="margin: 0; font-size: 1.35rem;">New Workout Template</h3>
+            </div>
+            <div class="wt-modal-form">
+                <div class="wt-field">
+                    <label for="wt-tpl-name">Template name</label>
+                    <input type="text" id="wt-tpl-name" class="seamless-input" placeholder="e.g. Push / Pull / Legs" autocomplete="off">
+                </div>
+                <div class="wt-field-row">
+                    <div class="wt-field">
+                        <label for="wt-tpl-desc">Description</label>
+                        <input type="text" id="wt-tpl-desc" class="seamless-input" placeholder="Optional short description" autocomplete="off">
+                    </div>
+                    <div class="wt-field">
+                        <label for="wt-tpl-weeks">Duration (weeks)</label>
+                        <input type="number" id="wt-tpl-weeks" class="seamless-input" min="1" placeholder="e.g. 8">
+                    </div>
+                </div>
+                <div class="wt-field">
+                    <label>Program days <span class="wt-hint">each day contains exercises with sets &amp; reps</span></label>
+                    <div id="wt-tpl-days"></div>
+                    <button type="button" class="btn secondary wt-add-day" id="wt-tpl-add-day"><i data-lucide="plus" style="width: 15px; height: 15px;"></i> Add Day</button>
+                </div>
+            </div>
+            <div class="wt-modal-footer">
+                <button type="button" class="btn danger" id="wt-tpl-delete" style="display: none;"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Delete</button>
+                <div style="display: flex; gap: 0.7rem; margin-left: auto;">
+                    <button type="button" class="btn secondary wt-modal-close">Cancel</button>
+                    <button type="button" class="btn primary" id="wt-tpl-save"><i data-lucide="save" style="width: 15px; height: 15px;"></i> Save Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-dialog" class="modal-overlay">
+        <div class="confirm-dialog-content">
+            <div class="confirm-dialog-icon">⚠</div>
+            <h3 id="confirm-dialog-title">Confirm Delete</h3>
+            <p id="confirm-dialog-message">Are you sure?</p>
+            <div class="confirm-dialog-actions">
+                <button id="confirm-dialog-cancel" class="btn secondary">Cancel</button>
+                <button id="confirm-dialog-ok" class="btn danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme.js"></script>
+    <script src="workouts.js"></script>
+</body>
+</html>

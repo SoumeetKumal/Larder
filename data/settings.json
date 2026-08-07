@@ -11,5 +11,8 @@
   "shopping": {
     "currency": "MUR",
     "amount": 6000
+  },
+  "network": {
+    "allowLan": true
   }
 }
