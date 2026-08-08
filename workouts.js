@@ -303,14 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#wt-header-title').textContent = state.view === 'exercises' ? 'Exercises' : 'Workout Templates';
         $('#wt-exercises-view').style.display = state.view === 'exercises' ? '' : 'none';
         $('#wt-templates-view').style.display = state.view === 'templates' ? '' : 'none';
-        const addLabel = $('#wt-add-label');
         const addBtn = $('#wt-add-btn');
-        if (addLabel) {
-            addLabel.textContent = state.view === 'templates' ? 'Add Template' : 'Add Exercise';
-            addLabel.style.display = state.view === 'templates' ? 'inline' : 'none';
-        }
-        addBtn.classList.toggle('with-label', state.view === 'templates');
-        addBtn.title = state.view === 'templates' ? 'Add template' : 'Add exercise';
+        if (addBtn) addBtn.title = state.view === 'templates' ? 'Add template' : 'Add exercise';
         document.querySelectorAll('.wt-subtab').forEach(t => t.classList.toggle('active', t.dataset.view === state.view));
         if (state.view === 'exercises') renderExercises();
         else renderTemplates();

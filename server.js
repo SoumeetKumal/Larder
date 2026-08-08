@@ -4,10 +4,11 @@ const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
 const AdmZip = require('adm-zip');
+const { execFile } = require('child_process');
 
 const PORT = 8000;
 const ROOT = __dirname;
-const DATA_DIR = global.LARDER_DATA_DIR || path.join(ROOT, 'data');
+const DATA_DIR = global.LARDER_DATA_DIR || process.env.LARDER_DATA_DIR || path.join(ROOT, 'data');
 // Bind to loopback only by default. Larder is a personal, local-first app:
 // exposing the API to the network would let any LAN peer read/overwrite data.
 // When settings.json has network.allowLan === true (or env LARDER_ALLOW_LAN=1),
@@ -575,6 +576,67 @@ const server = http.createServer((req, res) => {
             } else {
                 sendJson(res, 400, { error: 'Import failed or invalid zip' });
             }
+        });
+        return;
+    }
+
+    // --- API: publish current data to the website repo (git add/commit/push) ---
+    // The live site (GitHub Pages) only shows data that is committed to the
+    // repo's data/ folder, so this endpoint copies the app's live JSON files
+    // into <repoPath>/data and pushes them. repoPath is stored in settings
+    // (settings.website.repoPath) so it persists across app restarts.
+    if (req.url === '/api/publish' && req.method === 'POST') {
+        collectBody(req).then(body => {
+            let repoPath = '';
+            try { repoPath = JSON.parse(body.toString('utf8')).repoPath || ''; } catch (e) { /* fall through */ }
+            if (!repoPath) {
+                try {
+                    const s = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
+                    repoPath = (s.website && s.website.repoPath) || '';
+                } catch (e) { /* not configured */ }
+            }
+            if (!repoPath || !fs.existsSync(path.join(repoPath, '.git'))) {
+                sendJson(res, 400, { error: 'Website repo not configured. Open Settings → Data → Publish and set the repo path (a local clone of your website repo).' });
+                return;
+            }
+            try {
+                const targetDir = path.join(repoPath, 'data');
+                if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+                let copied = 0;
+                DATA_FILES.forEach(file => {
+                    const src = path.join(DATA_DIR, file);
+                    if (fs.existsSync(src)) {
+                        fs.copyFileSync(src, path.join(targetDir, file));
+                        copied++;
+                    }
+                });
+                const run = (cmd, args) => new Promise((resolve, reject) => {
+                    execFile(cmd, args, { cwd: repoPath, maxBuffer: 5 * 1024 * 1024 }, (err, stdout, stderr) => {
+                        if (err) reject(new Error((stderr || stdout || err.message).trim()));
+                        else resolve((stdout || '').trim());
+                    });
+                });
+                (async () => {
+                    const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+                    await run('git', ['add', 'data']);
+                    let commitOut = '';
+                    try {
+                        commitOut = await run('git', ['commit', '-m', `Publish data from Larder CMS (${stamp})`]);
+                    } catch (e) {
+                        commitOut = '(nothing to commit)';
+                    }
+                    const pushOut = await run('git', ['push']);
+                    sendJson(res, 200, { success: true, copied, commit: commitOut, push: pushOut, message: `Published ${copied} data file(s). GitHub Pages will rebuild in a minute.` });
+                    console.log(`  🚀 Published ${copied} data file(s) to ${repoPath}`);
+                })().catch(e => {
+                    console.error(e);
+                    sendJson(res, 500, { error: 'Publish failed: ' + e.message });
+                });
+            } catch (e) {
+                sendJson(res, 500, { error: 'Publish failed: ' + e.message });
+            }
+        }).catch(() => {
+            sendJson(res, 413, { error: 'Request body too large' });
         });
         return;
     }

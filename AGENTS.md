@@ -21,6 +21,64 @@ How to test the real app:
 To inspect the live DOM of a running Electron app, launch with
 `--remote-debugging-port=9223` and use the DevTools protocol (`http://localhost:9223/json`).
 
+## Data locations
+
+There are two independent data stores; don't confuse them:
+
+- **App data** — `%APPDATA%\Larder\data\*.json`. This is what the packaged app (and
+  the CMS) read/write. This is the *live* data: `node server.js` alone reads the
+  repo's `data/`, NOT this folder.
+- **Repo data** — `data/*.json` in this source tree. Used by bare `node server.js`
+  and as the packaged app's seed. The repo `data/` is also what **GitHub Pages
+  serves** for the live website — see "Publishing to the website" below.
+
+To make the server read the app data (e.g. to inspect the real data without
+launching Electron), set `LARDER_DATA_DIR`:
+
+```powershell
+$env:LARDER_DATA_DIR = "$env:APPDATA\Larder\data"
+node server.js
+```
+
+## Backup / restore
+
+Always make sure backup and restore work properly before shipping a build:
+
+1. **Backup** — CMS → Settings → Data → **Export (ZIP)** downloads
+   `larder-data-YYYY-MM-DD.zip` via `GET /api/export`.
+2. **Restore** — CMS → Settings → Data → **Import (ZIP)** pushes the zip through
+   `POST /api/import`, which only accepts the app's known data files (zip-slip
+   protected, no subfolders allowed).
+3. Test both end-to-end in Electron: export, then import the archive and confirm
+   every dataset (recipes, ingredients, pantry, planner, settings, receipts,
+   household, shopping lists, exercises, workout templates) is intact.
+
+The exported zip must round-trip: importing it on a fresh `%APPDATA%\Larder\data`
+folder should restore everything the app had. This is the "move to a new PC"
+scenario — install Larder, import the backup, done.
+
+## Publishing to the website (GitHub Pages)
+
+The live site (`https://soumeetkumal.github.io/Larder/`) is **static GitHub
+Pages** — it shows only the `data/*.json` files committed to the repo's `master`
+branch. There is no server on Pages, so the CMS's app-data changes never reach it
+automatically.
+
+To publish: CMS → Settings → Data → **Publish to Website**. Set the path to a
+local clone of the website repo (e.g. `C:\Users\you\Larder`), then click Publish.
+The server copies the app's live data files into `<repo>/data/`, runs
+`git add data && git commit && git push`, and GitHub Pages rebuilds within a
+minute. The repo path is stored in `settings.json` (`settings.website.repoPath`).
+
+Alternatively, publish manually:
+
+```powershell
+Copy-Item "$env:APPDATA\Larder\data\*.json" "data\"
+git add data
+git commit -m "Publish data from Larder CMS"
+git push
+```
+
 ## Other conventions
 
 - Lint: `npm run lint` (stylelint on styles.css)

@@ -1988,8 +1988,6 @@ body.cms-page { background-color: var(--bg-surface-hover); }
 
     /* App shell: fixed left sidebar + fluid content */
     .cms-sidebar { width: 248px; flex-shrink: 0; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow-sm); height: 100%; }
-    .cms-sidebar-brand { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
-    .cms-sidebar-brand .brand-logo { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
 
     .cms-sidebar .cms-tabs { flex-direction: column; gap: 0; margin: 0; padding: 0.5rem 0.75rem; border-bottom: none; overflow-y: hidden; flex: 1; }
     .cms-nav-group { margin-bottom: 0.5rem; }
@@ -2751,9 +2749,6 @@ body.cms-page { background-color: var(--bg-surface-hover); }
             border-right: none;
             border-bottom: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-        }
-        .cms-sidebar-brand {
-            display: none;
         }
         .cms-sidebar .cms-tabs {
             flex-flow: row wrap;

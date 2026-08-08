@@ -12,11 +12,6 @@
 <body class="cms-page">
     <div class="cms-app-layout">
         <aside class="cms-sidebar">
-            <div class="cms-sidebar-brand">
-                <a href="cms.html" class="brand-logo" style="text-decoration: none;">
-                    <img src="images/icon.png" alt="Larder Logo" style="height: 28px; width: 28px; border-radius: 6px; object-fit: contain;">
-                </a>
-            </div>
             <nav class="cms-tabs" id="cms-tabs" aria-label="CMS sections">
                 <div class="cms-nav-group">
                     <div class="cms-nav-group-head">Plan</div>
@@ -87,6 +82,80 @@
                     <div class="filter-section" id="cms-filter-status-section">
                         <div class="filter-section-title">Status</div>
                         <div class="filter-chips" id="cms-filter-status-chips"></div>
+                    </div>
+                    <div class="filter-section" id="cms-filter-tags-section" style="display: none;">
+                        <div class="filter-section-title">Tags</div>
+                        <div class="tag-search-wrap">
+                            <i data-lucide="search" class="tag-search-icon"></i>
+                            <input type="text" class="tag-search-input" id="cms-tag-search-input" placeholder="Search tags...">
+                        </div>
+                        <div class="filter-chips" id="cms-tag-chips"></div>
+                    </div>
+                    <div class="filter-section" id="cms-filter-time-section" style="display: none;">
+                        <div class="filter-section-title">Prep + Cook Time</div>
+                        <div class="range-slider-group">
+                            <div class="range-label">
+                                <span class="range-label-text">Time</span>
+                                <span class="range-label-values" id="cms-filter-time-val">Any</span>
+                            </div>
+                            <div class="dual-range" id="cms-slider-time-container">
+                                <div class="range-track"></div>
+                                <div class="range-fill" id="cms-slider-time-fill" style="left: 0%; width: 100%;"></div>
+                                <input type="range" min="0" max="180" step="5" value="0" id="cms-slider-time-min" class="macro-slider-min">
+                                <input type="range" min="0" max="180" step="5" value="180" id="cms-slider-time-max" class="macro-slider-max">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-section" id="cms-filter-nutrition-section" style="display: none;">
+                        <div class="filter-section-title">Nutrition (per serving)</div>
+                        <div class="range-slider-group">
+                            <div class="range-label">
+                                <span class="range-label-text">Calories</span>
+                                <span class="range-label-values" id="cms-filter-cal-val">Any</span>
+                            </div>
+                            <div class="dual-range" id="cms-slider-cal-container">
+                                <div class="range-track"></div>
+                                <div class="range-fill" id="cms-slider-cal-fill" style="left: 0%; width: 100%;"></div>
+                                <input type="range" min="0" max="2000" step="50" value="0" id="cms-slider-cal-min" class="macro-slider-min">
+                                <input type="range" min="0" max="2000" step="50" value="2000" id="cms-slider-cal-max" class="macro-slider-max">
+                            </div>
+                        </div>
+                        <div class="range-slider-group">
+                            <div class="range-label">
+                                <span class="range-label-text">Carbs</span>
+                                <span class="range-label-values" id="cms-filter-carbs-val">Any</span>
+                            </div>
+                            <div class="dual-range" id="cms-slider-carbs-container">
+                                <div class="range-track"></div>
+                                <div class="range-fill" id="cms-slider-carbs-fill" style="left: 0%; width: 100%;"></div>
+                                <input type="range" min="0" max="200" step="5" value="0" id="cms-slider-carbs-min" class="macro-slider-min">
+                                <input type="range" min="0" max="200" step="5" value="200" id="cms-slider-carbs-max" class="macro-slider-max">
+                            </div>
+                        </div>
+                        <div class="range-slider-group">
+                            <div class="range-label">
+                                <span class="range-label-text">Protein</span>
+                                <span class="range-label-values" id="cms-filter-protein-val">Any</span>
+                            </div>
+                            <div class="dual-range" id="cms-slider-protein-container">
+                                <div class="range-track"></div>
+                                <div class="range-fill" id="cms-slider-protein-fill" style="left: 0%; width: 100%;"></div>
+                                <input type="range" min="0" max="150" step="5" value="0" id="cms-slider-protein-min" class="macro-slider-min">
+                                <input type="range" min="0" max="150" step="5" value="150" id="cms-slider-protein-max" class="macro-slider-max">
+                            </div>
+                        </div>
+                        <div class="range-slider-group">
+                            <div class="range-label">
+                                <span class="range-label-text">Fat</span>
+                                <span class="range-label-values" id="cms-filter-fat-val">Any</span>
+                            </div>
+                            <div class="dual-range" id="cms-slider-fat-container">
+                                <div class="range-track"></div>
+                                <div class="range-fill" id="cms-slider-fat-fill" style="left: 0%; width: 100%;"></div>
+                                <input type="range" min="0" max="150" step="5" value="0" id="cms-slider-fat-min" class="macro-slider-min">
+                                <input type="range" min="0" max="150" step="5" value="150" id="cms-slider-fat-max" class="macro-slider-max">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -171,6 +171,205 @@ document.addEventListener('DOMContentLoaded', () => {
         return parts.join(' ');
     }
 
+    // Mirror the website's filter semantics exactly (app.js). Time is parsed to
+    // minutes; macros are normalized to "per serving" so the CMS recipe/ingredient
+    // filters behave identically to the public pages.
+    function cmsParseTimeToMinutes(timeStr) {
+        if (!timeStr) return null;
+        const s = String(timeStr).toLowerCase();
+        let total = 0;
+        const hrMatch = s.match(/(\d+)\s*(?:hr|hrs|hour|hours)/);
+        const minMatch = s.match(/(\d+)\s*(?:min|mins|minute|minutes)/);
+        if (hrMatch) total += parseInt(hrMatch[1], 10) * 60;
+        if (minMatch) total += parseInt(minMatch[1], 10);
+        return total > 0 ? total : null;
+    }
+
+    function cmsGetStandardMacros(recipe) {
+        if (!recipe) return null;
+        if (recipe._cmsStdMacros !== undefined) return recipe._cmsStdMacros;
+        if (!recipe.macros && typeof recipe.calories === 'undefined') {
+            recipe._cmsStdMacros = null;
+            return null;
+        }
+        const parseStr = (str) => {
+            if (typeof str === 'number') return { num: str, unit: 'g' };
+            if (!str) return { num: 0, unit: '' };
+            const match = String(str).match(/^(\d*\.?\d+)\s*(.*)/);
+            return match ? { num: parseFloat(match[1]), unit: match[2] } : { num: 0, unit: '' };
+        };
+        const e = recipe.macros ? parseStr(recipe.macros.energy) : { num: recipe.calories || 0, unit: 'kcal' };
+        const c = recipe.macros ? parseStr(recipe.macros.carbohydrate) : { num: recipe.carbsG || 0, unit: 'g' };
+        const p = recipe.macros ? parseStr(recipe.macros.protein) : { num: recipe.proteinG || 0, unit: 'g' };
+        const f = recipe.macros ? parseStr(recipe.macros.fat) : { num: recipe.fatG || 0, unit: 'g' };
+        const m = recipe.macros || {};
+        const refType = m.macroReference?.type || 'per_serving';
+        const refAmt = m.macroReference?.referenceAmount || '';
+        let yieldNum = 1;
+        if (m.yield) {
+            const match = m.yield.match(/^(\d*\.?\d+)/);
+            if (match) yieldNum = parseFloat(match[1]) || 1;
+        }
+        let divisor = 1;
+        if (refType === 'total') divisor = yieldNum;
+        else if (refType === 'per_x_g') { /* per-refAmount base, keep raw */ }
+        const result = {
+            normalized: {
+                energy: e.num / divisor,
+                carbs: c.num / divisor,
+                protein: p.num / divisor,
+                fat: f.num / divisor
+            }
+        };
+        recipe._cmsStdMacros = result;
+        return result;
+    }
+
+    function cmsGetRecipeTags(recipe) {
+        const tags = [];
+        const std = cmsGetStandardMacros(recipe);
+        if (std) {
+            const n = std.normalized;
+            if (n.protein >= 20) tags.push('High Protein');
+            if (n.carbs >= 20) tags.push('Carbs');
+            if (n.fat >= 20) tags.push('High Fat');
+            if (n.energy >= 500) tags.push('High Energy');
+        }
+        const minutes = cmsParseTimeToMinutes(recipe.time);
+        if (minutes !== null && minutes <= 30) tags.push('Quick Meal');
+        if (minutes !== null && minutes >= 60) tags.push('Long Cook');
+        const cat = (recipe.category || '').toLowerCase();
+        if (cat === 'seafood') tags.push('Seafood');
+        if (cat === 'vegetable') tags.push('Vegetarian');
+        if (cat === 'baking') tags.push('Baking');
+        return tags;
+    }
+
+    function cmsItemPassesFilters(item, opts = {}) {
+        const isRecipe = opts.isRecipe !== false;
+        if (cmsSelectedTags.size > 0) {
+            const tags = isRecipe ? cmsGetRecipeTags(item) : [];
+            if (![...cmsSelectedTags].every(t => tags.includes(t))) return false;
+        }
+        if (cmsMacroFilters.time.min !== null || cmsMacroFilters.time.max !== null) {
+            if (!isRecipe) return true;
+            const minutes = cmsParseTimeToMinutes(item.time);
+            if (minutes === null) return false;
+            if (cmsMacroFilters.time.min !== null && minutes < cmsMacroFilters.time.min) return false;
+            if (cmsMacroFilters.time.max !== null && minutes > cmsMacroFilters.time.max) return false;
+        }
+        const hasMacro = ['cal', 'carbs', 'protein', 'fat'].some(k => cmsMacroFilters[k].min !== null || cmsMacroFilters[k].max !== null);
+        if (hasMacro) {
+            const std = cmsGetStandardMacros(item);
+            if (!std) return false;
+            const n = std.normalized;
+            const check = (val, f) => {
+                if (f.min !== null && val < f.min) return false;
+                if (f.max !== null && val > f.max) return false;
+                return true;
+            };
+            return check(n.energy, cmsMacroFilters.cal)
+                && check(n.carbs, cmsMacroFilters.carbs)
+                && check(n.protein, cmsMacroFilters.protein)
+                && check(n.fat, cmsMacroFilters.fat);
+        }
+        return true;
+    }
+
+    const CMS_SLIDER_CONFIGS = {
+        cal: { min: 0, max: 2000, step: 50 },
+        carbs: { min: 0, max: 200, step: 5 },
+        protein: { min: 0, max: 150, step: 5 },
+        fat: { min: 0, max: 150, step: 5 },
+        time: { min: 0, max: 180, step: 5 }
+    };
+
+    let cmsSlidersInitialized = false;
+    function initCMSDualSliders() {
+        if (cmsSlidersInitialized) return;
+        cmsSlidersInitialized = true;
+        Object.keys(CMS_SLIDER_CONFIGS).forEach(key => {
+            const config = CMS_SLIDER_CONFIGS[key];
+            const minInput = document.getElementById(`cms-slider-${key}-min`);
+            const maxInput = document.getElementById(`cms-slider-${key}-max`);
+            if (!minInput || !maxInput) return;
+            const fill = document.getElementById(`cms-slider-${key}-fill`);
+            const valDisplay = document.getElementById(`cms-filter-${key}-val`);
+            function updateSlider() {
+                let minVal = parseFloat(minInput.value);
+                let maxVal = parseFloat(maxInput.value);
+                if (minVal > maxVal) {
+                    const tmp = minVal; minVal = maxVal; maxVal = tmp;
+                    minInput.value = minVal; maxInput.value = maxVal;
+                }
+                if (fill) {
+                    fill.style.left = `${(minVal / config.max) * 100}%`;
+                    fill.style.width = `${((maxVal - minVal) / config.max) * 100}%`;
+                }
+                const isMinModified = minVal > config.min;
+                const isMaxModified = maxVal < config.max;
+                cmsMacroFilters[key].min = isMinModified ? minVal : null;
+                cmsMacroFilters[key].max = isMaxModified ? maxVal : null;
+                const unit = key === 'cal' ? ' kcal' : key === 'time' ? ' min' : 'g';
+                if (valDisplay) {
+                    if (isMinModified && isMaxModified) valDisplay.textContent = `${minVal}${unit} – ${maxVal}${unit}`;
+                    else if (isMinModified) valDisplay.textContent = `≥ ${minVal}${unit}`;
+                    else if (isMaxModified) valDisplay.textContent = `≤ ${maxVal}${unit}`;
+                    else valDisplay.textContent = 'Any';
+                }
+                renderCMSList();
+            }
+            minInput.addEventListener('input', updateSlider);
+            maxInput.addEventListener('input', updateSlider);
+        });
+        const tagSearchInputEl = document.getElementById('cms-tag-search-input');
+        if (tagSearchInputEl) {
+            tagSearchInputEl.addEventListener('input', (e) => {
+                cmsTagSearch = e.target.value.toLowerCase();
+                renderCMSTagChips();
+            });
+        }
+    }
+
+    function renderCMSTagChips() {
+        const tagChipsEl = document.getElementById('cms-tag-chips');
+        if (!tagChipsEl) return;
+        const relevantRecipes = recipes.filter(r => r.entryType !== 'ingredient');
+        const tagCounts = {};
+        relevantRecipes.forEach(r => {
+            cmsGetRecipeTags(r).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+        });
+        const query = cmsTagSearch;
+        const tags = Object.keys(tagCounts)
+            .filter(t => !query || t.toLowerCase().includes(query))
+            .sort();
+        tagChipsEl.innerHTML = tags.map(tag => {
+            const active = cmsSelectedTags.has(tag);
+            return `<button type="button" class="filter-chip${active ? ' active' : ''}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}<span class="tag-count">${tagCounts[tag]}</span></button>`;
+        }).join('') || `<span class="filter-empty-hint">No matching tags</span>`;
+        tagChipsEl.querySelectorAll('.filter-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tag = btn.dataset.tag;
+                if (cmsSelectedTags.has(tag)) { cmsSelectedTags.delete(tag); btn.classList.remove('active'); }
+                else { cmsSelectedTags.add(tag); btn.classList.add('active'); }
+                renderCMSList();
+            });
+        });
+    }
+
+    function updateCMSFilterBadge() {
+        if (!filterBadge) return;
+        let count = 0;
+        if (cmsCategoryFilter !== 'All') count++;
+        if (cmsStatusFilter !== 'All') count++;
+        count += cmsSelectedTags.size;
+        ['cal', 'carbs', 'protein', 'fat', 'time'].forEach(k => {
+            if (cmsMacroFilters[k].min !== null || cmsMacroFilters[k].max !== null) count++;
+        });
+        filterBadge.textContent = String(count);
+        if (filterTrigger) filterTrigger.classList.toggle('has-filters', count > 0);
+    }
+
     // --- Auto-calc recipe macros by summing DB ingredient macros ---
     const NUTRIENT_FIELDS = ['fiberG', 'sugarG', 'saturatedFatG', 'monounsaturatedFatG', 'polyunsaturatedFatG', 'transFatG', 'cholesterolMg', 'sodiumMg', 'potassiumMg', 'calciumMg', 'ironMg', 'magnesiumMg', 'phosphorusMg', 'zincMg', 'copperMg', 'seleniumMcg', 'vitaminAMcg', 'vitaminCMg', 'vitaminDMcg', 'vitaminEMg', 'vitaminKMcg', 'thiaminMg', 'riboflavinMg', 'niacinMg', 'pantothenicMg', 'vitaminB6Mg', 'folateMcg', 'vitaminB12Mcg'];
     function recalcMacrosFromIngredients() {
@@ -291,6 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let mealWeekOffset = 0;
     let cmsCategoryFilter = 'All';
     let cmsStatusFilter = 'All';
+    let cmsSelectedTags = new Set();
+    let cmsTagSearch = '';
+    let cmsMacroFilters = {
+        cal: { min: null, max: null },
+        carbs: { min: null, max: null },
+        protein: { min: null, max: null },
+        fat: { min: null, max: null },
+        time: { min: null, max: null }
+    };
     let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
     let lastMacroBreakdown = null;
     let householdOpenFn = null;
@@ -379,6 +587,25 @@ document.addEventListener('DOMContentLoaded', () => {
         filterReset.addEventListener('click', () => {
             cmsCategoryFilter = 'All';
             cmsStatusFilter = 'All';
+            cmsSelectedTags.clear();
+            cmsTagSearch = '';
+            ['cal', 'carbs', 'protein', 'fat', 'time'].forEach(key => {
+                cmsMacroFilters[key].min = null;
+                cmsMacroFilters[key].max = null;
+            });
+            ['cal', 'carbs', 'protein', 'fat', 'time'].forEach(key => {
+                const cfg = CMS_SLIDER_CONFIGS[key];
+                const minInput = document.getElementById(`cms-slider-${key}-min`);
+                const maxInput = document.getElementById(`cms-slider-${key}-max`);
+                if (minInput) minInput.value = cfg.min;
+                if (maxInput) maxInput.value = cfg.max;
+                const fill = document.getElementById(`cms-slider-${key}-fill`);
+                if (fill) { fill.style.left = '0%'; fill.style.width = '100%'; }
+                const valDisplay = document.getElementById(`cms-filter-${key}-val`);
+                if (valDisplay) valDisplay.textContent = 'Any';
+            });
+            const tagSearchInputEl = document.getElementById('cms-tag-search-input');
+            if (tagSearchInputEl) tagSearchInputEl.value = '';
             renderCMSList();
         });
     }
@@ -824,9 +1051,9 @@ const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.bud
         <aside class="planner-side">
         <div class="planner-card">
             <div class="planner-card-head"><i data-lucide="gauge" style="width:18px;height:18px;"></i> Projected month totals <span class="planner-hint">live vs your goals</span></div>
-            <div class="pl-totals">${totGroupRows}\n                <div class="pl-total-row"><div class="pl-total-label">Animal protein %</div><div class="pl-total-bar"><div class="pl-total-fill ${aCls}" style="width:${Math.min(100, animalPct)}%"></div></div><div class="pl-total-val ${aCls}">${animalPct}%</div><div class="pl-total-flag ${aCls}">target ${aGoal}%</div></div>
+            <div class="pl-totals">${totGroupRows}\n                <div class="pl-total-row"><div class="pl-total-label">Animal protein %</div><div class="pl-total-bar"><div class="pl-total-fill ${aCls}" style="width:${Math.min(100, animalPct)}%"></div></div><div class="pl-total-val ${aCls}">${animalPct}% / ${aGoal}%</div><div class="pl-total-flag ${aCls}">&nbsp;</div></div>
             </div>
-            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(t.cost)}</strong> <span class="pln-note">budget ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
+            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(t.cost)}</strong> <span class="pln-note">/ ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
         </div>
         </aside>`;
 
@@ -1477,11 +1704,18 @@ renderItemRows();
                 });
             });
             if (filterBadge) {
-                const count = (cmsCategoryFilter === 'All' ? 0 : 1) + (cmsStatusFilter === 'All' ? 0 : 1);
-                filterBadge.textContent = String(count);
-                if (filterTrigger) filterTrigger.classList.toggle('has-filters', count > 0);
+                updateCMSFilterBadge();
             }
         }
+
+        // Section visibility: Tags + Time are recipe-only; Nutrition shows for
+        // recipes AND ingredients, matching the website (index.html / ingredients.html).
+        const tagsSection = document.getElementById('cms-filter-tags-section');
+        if (tagsSection) tagsSection.style.display = (currentCMSTab === 'recipe') ? '' : 'none';
+        const timeSection = document.getElementById('cms-filter-time-section');
+        if (timeSection) timeSection.style.display = (currentCMSTab === 'recipe') ? '' : 'none';
+        const nutritionSection = document.getElementById('cms-filter-nutrition-section');
+        if (nutritionSection) nutritionSection.style.display = (currentCMSTab === 'recipe' || currentCMSTab === 'food') ? '' : 'none';
 
         // Status filter chips (recipe tab only).
         const statusFilterSection = document.getElementById('cms-filter-status-section');
@@ -1499,6 +1733,12 @@ renderItemRows();
                     renderCMSList();
                 });
             });
+        }
+
+        // Rebuild tag chips + refresh slider labels only on tabs where they appear.
+        if (currentCMSTab === 'recipe') {
+            initCMSDualSliders();
+            renderCMSTagChips();
         }
 
         if (currentCMSTab === 'planner') {
@@ -3307,6 +3547,10 @@ const unpricedRow = cost.unpriced.length
                 filteredIngredients = filteredIngredients.filter(ing => (ing.category || 'Uncategorized') === cmsCategoryFilter);
             }
 
+            if (['cal', 'carbs', 'protein', 'fat'].some(k => cmsMacroFilters[k].min !== null || cmsMacroFilters[k].max !== null)) {
+                filteredIngredients = filteredIngredients.filter(ing => cmsItemPassesFilters(ing, { isRecipe: false }));
+            }
+
             if (filteredIngredients.length === 0) {
                 listContainer.innerHTML = `<div class="empty-state">No ingredients found. Click "Add Ingredient" to create one!</div>`;
                 return;
@@ -3715,6 +3959,7 @@ const unpricedRow = cost.unpriced.length
                 }
 
                 if (view === 'data') {
+                    const repoPath = (appSettings.website && appSettings.website.repoPath) || '';
                     settingsPanel.innerHTML = `
                         <div class="vd-settings-section">
                             <h3 class="vd-settings-title">Data Management</h3>
@@ -3727,6 +3972,15 @@ const unpricedRow = cost.unpriced.length
                                 </label>
                             </div>
                             <p id="import-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
+                        </div>
+                        <div class="vd-settings-section" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                            <h3 class="vd-settings-title">Publish to Website</h3>
+                            <p class="vd-settings-desc">The live site is GitHub Pages, which only shows data committed to your website repo's <code>data/</code> folder. Set the path to a local clone of that repo (e.g. <code>C:\\Users\\you\\Larder</code>), then click Publish to copy your current data in, commit, and push. GitHub Pages rebuilds within a minute.</p>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
+                                <input type="text" id="website-repo-path" value="${escapeHtml(repoPath)}" placeholder="C:\\path\\to\\website-repo" style="flex: 1 1 320px; min-width: 220px; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+                                <button class="btn secondary" id="publish-data-btn"><i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i> Publish</button>
+                            </div>
+                            <p id="publish-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
                         </div>
                     `;
                     if (window.lucide) window.lucide.createIcons();
@@ -3772,6 +4026,40 @@ const unpricedRow = cost.unpriced.length
                         } catch (err) {
                             importStatus.textContent = "Import failed. Please check the file.";
                             importStatus.style.color = "var(--danger-color, #f87171)";
+                        }
+                    };
+
+                    const repoPathInput = document.getElementById('website-repo-path');
+                    const publishStatus = document.getElementById('publish-status');
+                    const publishBtn = document.getElementById('publish-data-btn');
+                    const saveRepoPath = async () => {
+                        appSettings.website = { ...(appSettings.website || {}), repoPath: repoPathInput.value.trim() };
+                        const res = await fetch('/api/settings', { method: 'PUT', headers: HEADERS, body: JSON.stringify(appSettings) });
+                        return res.ok;
+                    };
+                    publishBtn.onclick = async () => {
+                        publishBtn.disabled = true;
+                        publishStatus.style.color = "var(--text-muted)";
+                        publishStatus.textContent = "Saving repo path and publishing... please wait.";
+                        try {
+                            await saveRepoPath();
+                            const res = await fetch('/api/publish', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ repoPath: repoPathInput.value.trim() })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.success) {
+                                publishStatus.style.color = "var(--success-color, #4ade80)";
+                                publishStatus.textContent = data.message || "Published successfully!";
+                            } else {
+                                throw new Error(data.error || "Publish failed.");
+                            }
+                        } catch (err) {
+                            publishStatus.style.color = "var(--danger-color, #f87171)";
+                            publishStatus.textContent = err.message;
+                        } finally {
+                            publishBtn.disabled = false;
                         }
                     };
                     return;
@@ -3874,11 +4162,16 @@ const unpricedRow = cost.unpriced.length
             filtered = filtered.filter(r => (r.status || 'published') === cmsStatusFilter);
         }
 
+        if (cmsSelectedTags.size > 0 || ['cal', 'carbs', 'protein', 'fat', 'time'].some(k => cmsMacroFilters[k].min !== null || cmsMacroFilters[k].max !== null)) {
+            filtered = filtered.filter(r => cmsItemPassesFilters(r, { isRecipe: true }));
+        }
+
         if (cmsSearchQuery) {
             filtered = filtered.filter(r =>
                 (r.title || '').toLowerCase().includes(cmsSearchQuery) ||
                 (r.category || '').toLowerCase().includes(cmsSearchQuery) ||
-                (r.description || '').toLowerCase().includes(cmsSearchQuery)
+                (r.description || '').toLowerCase().includes(cmsSearchQuery) ||
+                (r.ingredients || []).some(ing => (ing.item || '').toLowerCase().includes(cmsSearchQuery))
             );
         }
 
