@@ -1,8 +1,1 @@
-{
-  "goals": {
-    "proteinMin": 300,
-    "budget": 6000,
-    "currency": "MUR"
-  },
-  "items": []
-}
+{"goals": {"energyMax": 0, "carbsMax": 0, "fatMax": 0, "satFatMax": 0, "sugarMax": 0, "proteinMin": 0, "vitDMin": 0, "meatProteinPct": 50, "budget": 0, "currency": "MUR"}, "items": []}
