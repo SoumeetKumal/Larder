@@ -30,3 +30,6 @@ scripts/verify_ingredients.js
 
 # Archived design/dev artifacts (kept locally only, not committed)
 _archive/
+
+# App's local clone of the website repo (created on "Publish to Website")
+website-repo/
