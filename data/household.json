@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "hh_msfq1sl13cdo04",
+    "name": "Toothpaste",
+    "category": "Toiletries",
+    "unitSize": "ml",
+    "currentStock": 1,
+    "avgDurationDays": 90,
+    "pricePerUnit": 135,
+    "lastOpenedDate": "2026-07-27",
+    "durationHistory": []
+  }
+]

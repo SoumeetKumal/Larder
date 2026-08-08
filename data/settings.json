@@ -1,18 +1,30 @@
 {
   "profiles": [
     {
-      "name": "User",
-      "calories": 2000,
+      "name": "Soumeet",
+      "calories": 1500,
+      "carbs": 40,
+      "protein": 30,
+      "fat": 30
+    },
+    {
+      "name": "Nabiihah",
+      "calories": 1200,
       "carbs": 40,
       "protein": 30,
       "fat": 30
     }
   ],
-  "shopping": {
-    "currency": "MUR",
-    "amount": 6000
-  },
+  "preferences": {},
+  "automation": {},
   "network": {
     "allowLan": true
+  },
+  "shopping": {
+    "amount": 6000,
+    "currency": "MUR"
+  },
+  "website": {
+    "repoPath": "C:\\Users\\soume\\Downloads\\Inbox\\App Development\\Recipe"
   }
 }

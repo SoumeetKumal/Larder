@@ -15,47 +15,47 @@
         "referenceAmount": ""
       },
       "yield": "3",
-      "energy": "638 kCal",
-      "carbohydrate": "74.0 g",
-      "protein": "30.2 g",
-      "fat": "21.3 g",
-      "fiberG": 8.2,
-      "sugarG": 14.3,
-      "saturatedFatG": 3,
+      "energy": "748 kCal",
+      "carbohydrate": "94.5 g",
+      "protein": "35 g",
+      "fat": "23.7 g",
+      "fiberG": 7.7,
+      "sugarG": 13.9,
+      "saturatedFatG": 2.9,
       "monounsaturatedFatG": 10.3,
-      "polyunsaturatedFatG": 2.6,
+      "polyunsaturatedFatG": 2.5,
       "cholesterolMg": 20.4,
-      "sodiumMg": 4078.2,
-      "potassiumMg": 1181,
-      "calciumMg": 142.3,
-      "ironMg": 8.8,
-      "magnesiumMg": 128.9,
-      "phosphorusMg": 380.4,
-      "zincMg": 2.8,
+      "sodiumMg": 4077.2,
+      "potassiumMg": 1143.8,
+      "calciumMg": 138.8,
+      "ironMg": 8.3,
+      "magnesiumMg": 120,
+      "phosphorusMg": 348.9,
+      "zincMg": 2.6,
       "copperMg": 0.8,
-      "seleniumMcg": 110.1,
+      "seleniumMcg": 99.5,
       "vitaminAMcg": 93.2,
       "vitaminCMg": 33.7,
       "vitaminDMcg": 0.7,
       "vitaminEMg": 6.1,
       "vitaminKMcg": 181.1,
-      "thiaminMg": 1.1,
+      "thiaminMg": 0.9,
       "riboflavinMg": 0.6,
-      "niacinMg": 15.7,
-      "pantothenicMg": 1.3,
+      "niacinMg": 14.5,
+      "pantothenicMg": 1.2,
       "vitaminB6Mg": 0.7,
-      "folateMcg": 297.2,
+      "folateMcg": 257.7,
       "vitaminB12Mcg": 1.4
     },
     "ingredients": [
       {
         "item": "Tagliatelle",
         "foodId": "tagliatelle",
-        "metric": "320g",
+        "metric": "270g",
         "imperial": "3 cups"
       },
       {
-        "item": "Parsley, chopped",
+        "item": "Parsley",
         "foodId": "parsley",
         "metric": "",
         "imperial": "2 tbsp"
@@ -85,7 +85,7 @@
         "imperial": "1 ½ cups"
       },
       {
-        "item": "Garlic, minced",
+        "item": "Garlic",
         "foodId": "garlic",
         "metric": "",
         "imperial": "5 cloves"
@@ -97,13 +97,13 @@
         "imperial": "1 tbsp"
       },
       {
-        "item": "Onion, diced",
+        "item": "Onion",
         "foodId": "onion",
         "metric": "",
         "imperial": "1 medium"
       },
       {
-        "item": "Parmigiano Reggiano, grated",
+        "item": "Parmigiano Reggiano",
         "foodId": "parmigiano_reggiano",
         "metric": "75g",
         "imperial": "1 cup"
@@ -115,7 +115,7 @@
         "imperial": "2 sprigs"
       },
       {
-        "item": "Lemon, squeezed",
+        "item": "Lemon Juice",
         "foodId": "lemon_juice",
         "metric": "",
         "imperial": "½ small"
@@ -139,7 +139,7 @@
         "imperial": "1 sprig"
       },
       {
-        "item": "Pepper, freshly ground",
+        "item": "Pepper",
         "foodId": "pepper",
         "metric": "",
         "imperial": "1 tbsp"
@@ -164,6 +164,14 @@
       "Garnish with parsley and more parmigiano reggiano before serving."
     ],
     "note": "The sauce can be be ahead of time and heated before adding freshly cooked pasta. DO NOT cook pasta ahead of time.",
-    "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!"
+    "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 748,
+        "carbs": 94.5,
+        "protein": 35,
+        "fat": 23.7
+      }
+    }
   }
 ]

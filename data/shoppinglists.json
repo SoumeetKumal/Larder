@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "foodId": "chicken_breast_skinless",
+    "name": "Chicken breast, skinless",
+    "amount": 250,
+    "unit": "g",
+    "category": "Protein",
+    "recipes": [],
+    "checked": false,
+    "grams": 250,
+    "cost": null,
+    "sources": [
+      "planner"
+    ]
+  },
+  {
+    "foodId": "parmigiano_reggiano",
+    "name": "Parmigiano Reggiano",
+    "amount": 75,
+    "unit": "g",
+    "category": "Dairy",
+    "recipes": [],
+    "checked": false,
+    "grams": 75,
+    "cost": 180,
+    "sources": [
+      "planner"
+    ]
+  }
+]

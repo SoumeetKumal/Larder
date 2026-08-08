@@ -94,7 +94,7 @@
     "name": "Dumbbell Curl",
     "primaryMuscle": "Arms",
     "secondaryMuscles": "Forearms",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Pull",
     "instructions": "Stand with dumbbells at sides, curl up rotating palms forward, squeeze biceps"
@@ -124,7 +124,7 @@
     "name": "Dumbbell Shoulder Press",
     "primaryMuscle": "Shoulders",
     "secondaryMuscles": "Triceps",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Push",
     "instructions": "Dumbbells at shoulders, press overhead until arms straight, lower with control"
@@ -164,7 +164,7 @@
     "name": "Dumbbell Row",
     "primaryMuscle": "Back",
     "secondaryMuscles": "Biceps,Forearms",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Pull",
     "instructions": "One hand and knee on bench, pull dumbbell to hip, squeeze shoulder blade"
@@ -174,7 +174,7 @@
     "name": "Lateral Raise",
     "primaryMuscle": "Shoulders",
     "secondaryMuscles": null,
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Push",
     "instructions": "Stand with dumbbells at sides, raise arms to sides until parallel to floor"
@@ -194,7 +194,7 @@
     "name": "Hammer Curl",
     "primaryMuscle": "Arms",
     "secondaryMuscles": "Forearms",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Pull",
     "instructions": "Stand with dumbbells, palms facing each other, curl up keeping palms neutral"
@@ -224,7 +224,7 @@
     "name": "Chest Fly",
     "primaryMuscle": "Chest",
     "secondaryMuscles": "Shoulders",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Pull",
     "instructions": "Lie on bench with dumbbells above chest, open arms wide with slight bend, bring back together"
@@ -244,7 +244,7 @@
     "name": "Front Raise",
     "primaryMuscle": "Shoulders",
     "secondaryMuscles": null,
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Push",
     "instructions": "Raise dumbbells in front to shoulder height, keep arms slightly bent"
@@ -254,7 +254,7 @@
     "name": "Reverse Fly",
     "primaryMuscle": "Shoulders",
     "secondaryMuscles": "Back",
-    "equipment": "Dumbbell",
+    "equipment": "Dumbbells",
     "level": "beginner",
     "forceType": "Pull",
     "instructions": "Hinge at hips, raise arms out to sides until parallel, squeeze upper back"
