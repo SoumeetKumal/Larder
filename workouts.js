@@ -170,29 +170,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (workoutsListView === 'grid') {
             list.innerHTML = `<div class="wt-grid">` + groupNames.map(group => {
                 return groups[group].map(ex => `
-                    <div class="wt-card" data-id="${escapeHtml(ex.exerciseId || '')}">
-                        <div class="wt-card-head">
-                            <div>
-                                <div class="wt-card-title">${escapeHtml(ex.name)}</div>
-                                <div class="wt-tags" style="margin-top: 0.3rem;">
-                                    <span class="wt-tag">${escapeHtml(ex.primaryMuscle || 'Other')}</span>
-                                    ${(ex.equipment || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.equipment)}</span>` : ''}
-                                    ${(ex.level || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.level)}</span>` : ''}
+                    <div class="wt-card" data-id="${escapeHtml(ex.exerciseId || '')}" role="button" tabindex="0" title="Edit exercise">
+                            <div class="wt-card-head">
+                                <div>
+                                    <div class="wt-card-title">${escapeHtml(ex.name)}</div>
+                                    <div class="wt-tags" style="margin-top: 0.3rem;">
+                                        <span class="wt-tag">${escapeHtml(ex.primaryMuscle || 'Other')}</span>
+                                        ${(ex.equipment || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.equipment)}</span>` : ''}
+                                        ${(ex.level || '').trim() ? `<span class="wt-tag muted">${escapeHtml(ex.level)}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="wt-row-actions">
+                                    <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                                 </div>
                             </div>
-                            <div class="wt-row-actions">
-                                <button type="button" class="wt-icon-btn wt-ex-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
-                                <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
-                            </div>
+                            ${(ex.instructions || '').trim() ? `<div class="wt-row-sub" style="margin-top: 0.5rem;">${escapeHtml(ex.instructions)}</div>` : ''}
                         </div>
-                        ${(ex.instructions || '').trim() ? `<div class="wt-row-sub" style="margin-top: 0.5rem;">${escapeHtml(ex.instructions)}</div>` : ''}
-                    </div>
                 `).join('');
             }).join('') + `</div>`;
         } else {
             list.innerHTML = groupNames.map(group => {
                 const rows = groups[group].map(ex => `
-                    <div class="wt-row" data-id="${escapeHtml(ex.exerciseId || '')}">
+                    <div class="wt-row" data-id="${escapeHtml(ex.exerciseId || '')}" role="button" tabindex="0" title="Edit exercise">
                         <div class="wt-row-main">
                             <div class="wt-row-title">${escapeHtml(ex.name)}</div>
                             <div class="wt-tags">
@@ -205,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${(ex.instructions || '').trim() ? `<div class="wt-row-sub">${escapeHtml(ex.instructions)}</div>` : ''}
                         </div>
                         <div class="wt-row-actions">
-                            <button type="button" class="wt-icon-btn wt-ex-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
                             <button type="button" class="wt-icon-btn danger wt-ex-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                         </div>
                     </div>
@@ -222,16 +220,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
         }
 
-        list.querySelectorAll('.wt-ex-edit').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const ex = state.exercises.find(e => e.exerciseId === btn.closest('[data-id]').dataset.id);
-                if (ex) openExerciseModal(ex);
-            });
-        });
         list.querySelectorAll('.wt-ex-delete').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const ex = state.exercises.find(e => e.exerciseId === btn.closest('[data-id]').dataset.id);
                 if (ex) deleteExercise(ex);
+            });
+        });
+        list.querySelectorAll('.wt-card, .wt-row').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                const id = card.dataset.id;
+                const ex = state.exercises.find(e => e.exerciseId === id);
+                if (ex) openExerciseModal(ex);
+            });
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const id = card.dataset.id;
+                    const ex = state.exercises.find(e => e.exerciseId === id);
+                    if (ex) openExerciseModal(ex);
+                }
             });
         });
         if (window.lucide) window.lucide.createIcons({ root: list });
@@ -269,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
             }).join('');
             return `
-                <div class="wt-card">
+                <div class="wt-card" role="button" tabindex="0" title="Edit template">
                     <div class="wt-card-head">
                         <div>
                             <div class="wt-card-title">${escapeHtml(t.name)}</div>
@@ -280,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                         <div class="wt-row-actions">
-                            <button type="button" class="wt-icon-btn wt-tpl-edit" title="Edit" aria-label="Edit"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i></button>
                             <button type="button" class="wt-icon-btn danger wt-tpl-delete" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                         </div>
                     </div>
@@ -290,11 +298,28 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('')}</div>`;
 
-        list.querySelectorAll('.wt-tpl-edit').forEach((btn, i) => {
-            btn.addEventListener('click', () => openTemplateModal(tpls[i]));
+        list.querySelectorAll('.wt-tpl-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.wt-card');
+                const idx = Array.from(list.querySelectorAll('.wt-card')).indexOf(card);
+                const tpl = tpls[idx];
+                if (tpl) deleteTemplate(tpl);
+            });
         });
-        list.querySelectorAll('.wt-tpl-delete').forEach((btn, i) => {
-            btn.addEventListener('click', () => deleteTemplate(tpls[i]));
+        list.querySelectorAll('.wt-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                const idx = Array.from(list.querySelectorAll('.wt-card')).indexOf(card);
+                openTemplateModal(tpls[idx]);
+            });
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const idx = Array.from(list.querySelectorAll('.wt-card')).indexOf(card);
+                    openTemplateModal(tpls[idx]);
+                }
+            });
         });
         if (window.lucide) window.lucide.createIcons({ root: list });
     }
@@ -343,6 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.querySelectorAll('.wt-modal-close').forEach(btn => {
         btn.addEventListener('click', closeModals);
+    });
+    // Clicking the backdrop (outside the modal) closes it, matching the CMS.
+    document.querySelectorAll('#wt-ex-modal, #wt-tpl-modal').forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) closeModals(); });
     });
 
     // --- Exercise CRUD ---
@@ -430,6 +459,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="wt-remove wt-day-remove" title="Remove day" aria-label="Remove day"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
                 </div>
                 <div class="wt-day-exercises">
+                    <div class="wt-ex-header">
+                        <span>Exercise</span>
+                        <span>Sets</span>
+                        <span>Min Reps</span>
+                        <span>Max Reps</span>
+                        <span>Rest (s)</span>
+                        <span></span>
+                    </div>
                     ${(day.exercises || []).map((ex, ei) => `
                         <div class="wt-ex-row" data-di="${di}" data-ei="${ei}">
                             <input type="text" class="wt-ex-name" list="wt-all-exercise-names" value="${escapeHtml(ex.name || '')}" placeholder="Exercise">

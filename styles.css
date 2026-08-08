@@ -1993,7 +1993,7 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .cms-nav-group { margin-bottom: 0.5rem; }
     .cms-nav-group:last-child { margin-bottom: 0; }
     .cms-nav-group-head { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 0 0.6rem; margin-bottom: 0.15rem; }
-    .cms-sidebar .cms-tab { display: flex; align-items: center; gap: 0.65rem; width: 100%; text-align: left; padding: 0.45rem 0.7rem; margin-bottom: 0.1rem; border-bottom: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; font-family: inherit; background: none; border: none; transition: all var(--transition-fast); }
+    .cms-sidebar .cms-tab { display: flex; align-items: center; gap: 0.65rem; width: 100%; padding: 0.45rem 0.7rem; margin-bottom: 0.1rem; border-bottom: none; border-radius: 8px; font-size: 0.88rem; line-height: 1; font-weight: 600; color: var(--text-secondary); cursor: pointer; font-family: inherit; background: none; border: none; text-align: left; text-decoration: none; transition: all var(--transition-fast); }
     .cms-sidebar .cms-tab:hover { color: var(--primary); background: var(--bg-surface-hover); }
     .cms-sidebar .cms-tab.active { color: var(--primary); background: var(--primary-light); }
 

@@ -582,24 +582,67 @@ const server = http.createServer((req, res) => {
 
     // --- API: publish current data to the website repo (git add/commit/push) ---
     // The live site (GitHub Pages) only shows data that is committed to the
-    // repo's data/ folder, so this endpoint copies the app's live JSON files
-    // into <repoPath>/data and pushes them. repoPath is stored in settings
-    // (settings.website.repoPath) so it persists across app restarts.
+    // repo's data/ folder, so App copies the live JSON files into <repo>/data
+    // and pushes them. The clone lives in the app's own data folder so it
+    // survives a "install Larder → import backup → publish" move to a new PC:
+    // if the clone is missing it is created automatically from the website
+    // remote stored in settings (settings.website). The repo path is stored as
+    // settings.website.repoPath; anything else is resolved relative to the app
+    // data folder. Credentials come from git's own helpers, or from an optional
+    // personal-access token in settings.website.token.
+    const WEBSITE_REPO_DIR = path.join(DATA_DIR, '..', 'website-repo');
+
+    const getWebsiteConfig = () => {
+        try {
+            const s = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
+            const w = s.website || {};
+            const storedPath = w.repoPath && w.repoPath.trim() ? w.repoPath.trim() : '';
+            const pathExists = storedPath && fs.existsSync(path.join(storedPath, '.git'));
+            return {
+                repoUrl: w.repoUrl || 'https://github.com/SoumeetKumal/Larder.git',
+                repoPath: pathExists ? storedPath : WEBSITE_REPO_DIR,
+                token: w.token || ''
+            };
+        } catch (e) {
+            return { repoUrl: 'https://github.com/SoumeetKumal/Larder.git', repoPath: WEBSITE_REPO_DIR, token: '' };
+        }
+    };
+
+    const gitAuthArgs = (token) => {
+        if (!token) return [];
+        return ['-c', 'credential.helper=', '-c', `http.extraHeader=Authorization: Basic ${Buffer.from('x-access-token:' + token).toString('base64')}`];
+    };
+
+    const persistWebsiteRepoPath = (repoPath) => {
+        try {
+            const s = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
+            s.website = s.website || {};
+            if (s.website.repoPath !== repoPath) {
+                s.website.repoPath = repoPath;
+                fs.writeFileSync(SETTINGS_PATH, JSON.stringify(s, null, 2), 'utf8');
+            }
+        } catch (e) { /* best effort */ }
+    };
+
     if (req.url === '/api/publish' && req.method === 'POST') {
         collectBody(req).then(body => {
-            let repoPath = '';
-            try { repoPath = JSON.parse(body.toString('utf8')).repoPath || ''; } catch (e) { /* fall through */ }
-            if (!repoPath) {
-                try {
-                    const s = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
-                    repoPath = (s.website && s.website.repoPath) || '';
-                } catch (e) { /* not configured */ }
-            }
-            if (!repoPath || !fs.existsSync(path.join(repoPath, '.git'))) {
-                sendJson(res, 400, { error: 'Website repo not configured. Open Settings → Data → Publish and set the repo path (a local clone of your website repo).' });
-                return;
-            }
+            const cfg = getWebsiteConfig();
+            let repoPath = cfg.repoPath;
             try {
+                const bodyRepoPath = JSON.parse(body.toString('utf8')).repoPath || '';
+                if (bodyRepoPath && fs.existsSync(path.join(bodyRepoPath, '.git'))) repoPath = bodyRepoPath;
+            } catch (e) { /* fall through */ }
+            const run = (cmd, args, opts = {}) => new Promise((resolve, reject) => {
+                execFile(cmd, args, { cwd: opts.cwd || repoPath, maxBuffer: 5 * 1024 * 1024, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } }, (err, stdout, stderr) => {
+                    if (err) reject(new Error((stderr || stdout || err.message).trim().split('\n')[0]));
+                    else resolve((stdout || '').trim());
+                });
+            });
+            (async () => {
+                if (!fs.existsSync(path.join(repoPath, '.git'))) {
+                    fs.mkdirSync(path.dirname(repoPath), { recursive: true });
+                    await run('git', [...gitAuthArgs(cfg.token), 'clone', cfg.repoUrl, repoPath], { cwd: path.dirname(repoPath) });
+                }
                 const targetDir = path.join(repoPath, 'data');
                 if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
                 let copied = 0;
@@ -610,31 +653,17 @@ const server = http.createServer((req, res) => {
                         copied++;
                     }
                 });
-                const run = (cmd, args) => new Promise((resolve, reject) => {
-                    execFile(cmd, args, { cwd: repoPath, maxBuffer: 5 * 1024 * 1024 }, (err, stdout, stderr) => {
-                        if (err) reject(new Error((stderr || stdout || err.message).trim()));
-                        else resolve((stdout || '').trim());
-                    });
-                });
-                (async () => {
-                    const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-                    await run('git', ['add', 'data']);
-                    let commitOut = '';
-                    try {
-                        commitOut = await run('git', ['commit', '-m', `Publish data from Larder CMS (${stamp})`]);
-                    } catch (e) {
-                        commitOut = '(nothing to commit)';
-                    }
-                    const pushOut = await run('git', ['push']);
-                    sendJson(res, 200, { success: true, copied, commit: commitOut, push: pushOut, message: `Published ${copied} data file(s). GitHub Pages will rebuild in a minute.` });
-                    console.log(`  🚀 Published ${copied} data file(s) to ${repoPath}`);
-                })().catch(e => {
-                    console.error(e);
-                    sendJson(res, 500, { error: 'Publish failed: ' + e.message });
-                });
-            } catch (e) {
+                const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+                await run('git', ['add', 'data']);
+                const commitOut = await run('git', ['commit', '-m', `Publish data from Larder CMS (${stamp})`]);
+                const pushOut = await run('git', [...gitAuthArgs(cfg.token), 'push']);
+                persistWebsiteRepoPath(repoPath);
+                sendJson(res, 200, { success: true, copied, commit: commitOut, push: pushOut, message: `Published ${copied} data file(s). GitHub Pages will rebuild in a minute.` });
+                console.log(`  🚀 Published ${copied} data file(s) to ${repoPath}`);
+            })().catch(e => {
+                console.error(e);
                 sendJson(res, 500, { error: 'Publish failed: ' + e.message });
-            }
+            });
         }).catch(() => {
             sendJson(res, 413, { error: 'Request body too large' });
         });

@@ -502,6 +502,77 @@ document.addEventListener('DOMContentLoaded', () => {
     let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
     let lastMacroBreakdown = null;
     let householdOpenFn = null;
+
+    // Filters are tracked per tab (Recipes vs Ingredients vs Pantry vs Household)
+    // so choosing a filter on one screen never leaks onto another. The live
+    // state above mirrors the active tab's filters; switching tabs snapshots
+    // them here and restores the incoming tab's snapshot.
+    const cmsTabFilterSnapshots = {};
+    function freshCMSFilters() {
+        return {
+            category: 'All',
+            status: 'All',
+            tags: new Set(),
+            tagSearch: '',
+            search: '',
+            macros: {
+                cal: { min: null, max: null },
+                carbs: { min: null, max: null },
+                protein: { min: null, max: null },
+                fat: { min: null, max: null },
+                time: { min: null, max: null }
+            }
+        };
+    }
+    function snapshotTabFilters() {
+        cmsTabFilterSnapshots[currentCMSTab] = {
+            category: cmsCategoryFilter,
+            status: cmsStatusFilter,
+            tags: cmsSelectedTags,
+            tagSearch: cmsTagSearch,
+            search: cmsSearchQuery,
+            macros: cmsMacroFilters
+        };
+    }
+    function restoreTabFilters() {
+        const snap = cmsTabFilterSnapshots[currentCMSTab] || freshCMSFilters();
+        cmsCategoryFilter = snap.category;
+        cmsStatusFilter = snap.status;
+        cmsSelectedTags = snap.tags;
+        cmsTagSearch = snap.tagSearch;
+        cmsSearchQuery = snap.search;
+        cmsMacroFilters = snap.macros;
+    }
+    function applyCMSFilterUI() {
+        Object.keys(CMS_SLIDER_CONFIGS).forEach(key => {
+            const cfg = CMS_SLIDER_CONFIGS[key];
+            const m = cmsMacroFilters[key] || {};
+            const minInput = document.getElementById(`cms-slider-${key}-min`);
+            const maxInput = document.getElementById(`cms-slider-${key}-max`);
+            const lo = (m.min !== null && m.min !== undefined) ? m.min : cfg.min;
+            const hi = (m.max !== null && m.max !== undefined) ? m.max : cfg.max;
+            if (minInput) minInput.value = lo;
+            if (maxInput) maxInput.value = hi;
+            const fill = document.getElementById(`cms-slider-${key}-fill`);
+            if (fill) {
+                fill.style.left = `${(lo / cfg.max) * 100}%`;
+                fill.style.width = `${((hi - lo) / cfg.max) * 100}%`;
+            }
+            const valDisplay = document.getElementById(`cms-filter-${key}-val`);
+            const unit = key === 'cal' ? ' kcal' : key === 'time' ? ' min' : 'g';
+            const isMin = m.min !== null && m.min !== undefined;
+            const isMax = m.max !== null && m.max !== undefined;
+            if (valDisplay) {
+                if (isMin && isMax) valDisplay.textContent = `${lo}${unit} – ${hi}${unit}`;
+                else if (isMin) valDisplay.textContent = `≥ ${lo}${unit}`;
+                else if (isMax) valDisplay.textContent = `≤ ${hi}${unit}`;
+                else valDisplay.textContent = 'Any';
+            }
+        });
+        const tagSearchBx = document.getElementById('cms-tag-search-input');
+        if (tagSearchBx) tagSearchBx.value = cmsTagSearch;
+        if (searchInput) searchInput.value = cmsSearchQuery;
+    }
     // When the Monthly Planner asks to generate a shopping list, these sources
     // are pre-ticked and auto-generated when the Shopping tab renders.
     let pendingShoppingSources = null;
@@ -610,6 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     const activateTab = (tab) => {
+        snapshotTabFilters();
         document.querySelectorAll('.cms-tab').forEach(t => {
             t.classList.remove('active');
         });
@@ -618,6 +690,9 @@ document.addEventListener('DOMContentLoaded', () => {
             t.tabIndex = (tab && t === tab) ? 0 : -1;
         });
         currentCMSTab = tab ? tab.dataset.tab : 'settings';
+        restoreTabFilters();
+        applyCMSFilterUI();
+        if (filterDropdown) filterDropdown.classList.remove('active');
         renderCMSList();
     };
     document.querySelectorAll('.cms-tab').forEach(tab => {
@@ -1256,11 +1331,9 @@ container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
             // Generate the shopping list in the Shopping tab, with the monthly
             // planner already ticked as a source.
             pendingShoppingSources = ['planner', 'meals'];
-            currentCMSTab = 'shopping';
-            document.querySelectorAll('.cms-tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.tab === 'shopping');
-            });
-renderCMSList();
+            const shoppingTab = document.querySelector('.cms-tab[data-tab="shopping"]');
+            if (shoppingTab) activateTab(shoppingTab);
+            else renderCMSList();
         });
 }
 
@@ -1672,7 +1745,7 @@ renderItemRows();
         const showToolbar = ['recipe', 'food', 'pantry', 'household'].includes(currentCMSTab);
         if (viewToggle) viewToggle.style.display = showToolbar ? 'flex' : 'none';
         if (filterTrigger) filterTrigger.style.display = showToolbar ? 'flex' : 'none';
-        if (filterDropdown) filterDropdown.classList.remove('active');
+        if (!showToolbar && filterDropdown) filterDropdown.classList.remove('active');
 
         // View toggle icon reflects the active tab's current view state. Rebuild
         // the <i data-lucide> each time because lucide replaces it with an <svg>,
@@ -3960,6 +4033,8 @@ const unpricedRow = cost.unpriced.length
 
                 if (view === 'data') {
                     const repoPath = (appSettings.website && appSettings.website.repoPath) || '';
+                    const repoUrl = (appSettings.website && appSettings.website.repoUrl) || 'https://github.com/SoumeetKumal/Larder.git';
+                    const token = (appSettings.website && appSettings.website.token) || '';
                     settingsPanel.innerHTML = `
                         <div class="vd-settings-section">
                             <h3 class="vd-settings-title">Data Management</h3>
@@ -3975,10 +4050,18 @@ const unpricedRow = cost.unpriced.length
                         </div>
                         <div class="vd-settings-section" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
                             <h3 class="vd-settings-title">Publish to Website</h3>
-                            <p class="vd-settings-desc">The live site is GitHub Pages, which only shows data committed to your website repo's <code>data/</code> folder. Set the path to a local clone of that repo (e.g. <code>C:\\Users\\you\\Larder</code>), then click Publish to copy your current data in, commit, and push. GitHub Pages rebuilds within a minute.</p>
+                            <p class="vd-settings-desc">The live site is GitHub Pages, which only shows data committed to your website repo's <code>data/</code> folder. The app keeps its own clone of the website repo in the app's data folder — leave the path blank for the automatic location. Publish copies your current data in, commits, and pushes. GitHub Pages rebuilds within a minute.</p>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Website repo URL</label>
+                                <input type="text" id="website-repo-url" value="${escapeHtml(repoUrl)}" placeholder="https://github.com/you/Larder.git" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Local clone path <span style="font-weight: 400;">(optional — defaults inside the app's data folder)</span></label>
+                                <input type="text" id="website-repo-path" value="${escapeHtml(repoPath)}" placeholder="<app data folder>\\website-repo" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Personal access token</label>
+                                <input type="password" id="website-token" value="${escapeHtml(token)}" autocomplete="off" placeholder="ghp_...  (optional — only for private repos)" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+                            </div>
                             <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
-                                <input type="text" id="website-repo-path" value="${escapeHtml(repoPath)}" placeholder="C:\\path\\to\\website-repo" style="flex: 1 1 320px; min-width: 220px; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
                                 <button class="btn secondary" id="publish-data-btn"><i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i> Publish</button>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">First publish on a new PC clones the repo automatically.</span>
                             </div>
                             <p id="publish-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
                         </div>
@@ -4030,19 +4113,25 @@ const unpricedRow = cost.unpriced.length
                     };
 
                     const repoPathInput = document.getElementById('website-repo-path');
+                    const repoUrlInput = document.getElementById('website-repo-url');
+                    const tokenInput = document.getElementById('website-token');
                     const publishStatus = document.getElementById('publish-status');
                     const publishBtn = document.getElementById('publish-data-btn');
-                    const saveRepoPath = async () => {
-                        appSettings.website = { ...(appSettings.website || {}), repoPath: repoPathInput.value.trim() };
+                    const saveWebsiteSettings = async () => {
+                        appSettings.website = {
+                            repoPath: repoPathInput.value.trim(),
+                            repoUrl: repoUrlInput.value.trim() || 'https://github.com/SoumeetKumal/Larder.git',
+                            token: tokenInput.value.trim()
+                        };
                         const res = await fetch('/api/settings', { method: 'PUT', headers: HEADERS, body: JSON.stringify(appSettings) });
                         return res.ok;
                     };
                     publishBtn.onclick = async () => {
                         publishBtn.disabled = true;
                         publishStatus.style.color = "var(--text-muted)";
-                        publishStatus.textContent = "Saving repo path and publishing... please wait.";
+                        publishStatus.textContent = "Saving settings and publishing... please wait.";
                         try {
-                            await saveRepoPath();
+                            await saveWebsiteSettings();
                             const res = await fetch('/api/publish', {
                                 method: 'POST',
                                 headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },

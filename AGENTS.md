@@ -64,11 +64,24 @@ Pages** — it shows only the `data/*.json` files committed to the repo's `maste
 branch. There is no server on Pages, so the CMS's app-data changes never reach it
 automatically.
 
-To publish: CMS → Settings → Data → **Publish to Website**. Set the path to a
-local clone of the website repo (e.g. `C:\Users\you\Larder`), then click Publish.
-The server copies the app's live data files into `<repo>/data/`, runs
-`git add data && git commit && git push`, and GitHub Pages rebuilds within a
-minute. The repo path is stored in `settings.json` (`settings.website.repoPath`).
+To publish: CMS → Settings → Data → **Publish to Website**. The app keeps its own
+clone of the website repo *inside the app's data folder* — `%APPDATA%\Larder\website-repo`
+— so after a "install → import backup" move to a new PC the first Publish simply
+downloads a fresh clone automatically, then copies the live data into `<repo>/data/`,
+runs `git add data && git commit && git push`. GitHub Pages rebuilds within a minute.
+
+Settings the publish uses (all stored in `settings.json` under `settings.website`):
+
+- `repoPath` — local clone location. Optional; defaults to
+  `%APPDATA%\Larder\website-repo` and is remembered after the first publish.
+- `repoUrl` — website repo remote (default
+  `https://github.com/SoumeetKumal/Larder.git`).
+- `token` — optional GitHub personal-access token (for private repos). When absent,
+  git uses its own credential helpers (e.g. Windows Credential Manager), so on a PC
+  that has already authenticated with GitHub nothing needs to be entered.
+
+A stale `repoPath` (e.g. carried over from a previous PC's backup) is ignored if the
+folder no longer exists, and publishing falls back to the in-app clone.
 
 Alternatively, publish manually:
 
