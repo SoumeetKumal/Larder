@@ -204,9 +204,9 @@
       "polyunsaturatedFatG": 4.5,
       "transFatG": 1,
       "cholesterolMg": 315.8,
-      "sodiumMg": 493.2,
-      "potassiumMg": 1862.3,
-      "calciumMg": 333.3,
+      "sodiumMg": 1462.2,
+      "potassiumMg": 1862.5,
+      "calciumMg": 333.9,
       "ironMg": 8.7,
       "magnesiumMg": 176.9,
       "phosphorusMg": 850.4,
@@ -231,7 +231,7 @@
         "item": "Chicken breast, skinless",
         "foodId": "chicken_breast_skinless",
         "metric": "500g",
-        "imperial": ""
+        "imperial": "2 ⅛ cups"
       },
       {
         "item": "Yogurt, plain",
