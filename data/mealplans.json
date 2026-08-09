@@ -114,5 +114,43 @@
     ],
     "servings": 1,
     "isConsumed": false
+  },
+  {
+    "id": "mp_msm4wj5yf8ozh7huhbttsx85wf13y9",
+    "date": "2026-07-28",
+    "slot": "breakfast",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1786280091596",
+        "name": "BUTTER CHICKEN",
+        "unit": null
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 1,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_msm4wj5yh1bo3es83z5g01fudw24p5",
+    "date": "2026-07-27",
+    "slot": "breakfast",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "1786280091596",
+        "name": "BUTTER CHICKEN",
+        "unit": null
+      }
+    ],
+    "eaters": [
+      0
+    ],
+    "servings": 1,
+    "isConsumed": false
   }
 ]

@@ -9,5 +9,16 @@
     "pricePerUnit": 135,
     "lastOpenedDate": "2026-07-27",
     "durationHistory": []
+  },
+  {
+    "id": "hh_msm5at4f3dwrz0",
+    "name": "Shampoo",
+    "category": "Toiletries",
+    "unitSize": "bottle",
+    "currentStock": 1,
+    "avgDurationDays": 125,
+    "pricePerUnit": 1000,
+    "lastOpenedDate": "2026-07-12",
+    "durationHistory": []
   }
 ]
