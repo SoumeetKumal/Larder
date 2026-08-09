@@ -193,31 +193,31 @@
         "referenceAmount": ""
       },
       "yield": "2",
-      "energy": "925.9 kCal",
-      "carbohydrate": "37.3 g",
+      "energy": "912.8 kCal",
+      "carbohydrate": "36.9 g",
       "protein": "87.7 g",
-      "fat": "50.6 g",
+      "fat": "49.3 g",
       "fiberG": 10.6,
-      "sugarG": 16.5,
-      "saturatedFatG": 25.7,
-      "monounsaturatedFatG": 14,
-      "polyunsaturatedFatG": 4.5,
-      "transFatG": 1,
-      "cholesterolMg": 315.8,
-      "sodiumMg": 493.2,
-      "potassiumMg": 1862.3,
-      "calciumMg": 333.3,
+      "sugarG": 16.1,
+      "saturatedFatG": 24.8,
+      "monounsaturatedFatG": 13.6,
+      "polyunsaturatedFatG": 4.4,
+      "transFatG": 0.9,
+      "cholesterolMg": 312.4,
+      "sodiumMg": 1644.8,
+      "potassiumMg": 1862.2,
+      "calciumMg": 333.7,
       "ironMg": 8.7,
-      "magnesiumMg": 176.9,
-      "phosphorusMg": 850.4,
+      "magnesiumMg": 176.8,
+      "phosphorusMg": 850,
       "zincMg": 4.3,
       "copperMg": 0.6,
       "seleniumMcg": 77.5,
-      "vitaminAMcg": 669.6,
+      "vitaminAMcg": 658.6,
       "vitaminCMg": 28.6,
       "vitaminDMcg": 0.8,
       "vitaminEMg": 8.9,
-      "vitaminKMcg": 20.3,
+      "vitaminKMcg": 20.2,
       "thiaminMg": 0.3,
       "riboflavinMg": 0.7,
       "niacinMg": 37.9,
@@ -231,60 +231,60 @@
         "item": "Chicken breast, skinless",
         "foodId": "chicken_breast_skinless",
         "metric": "500g",
-        "imperial": ""
+        "imperial": "2 ⅛ cups"
       },
       {
         "item": "Yogurt, plain",
         "foodId": "yogurt_plain",
-        "metric": "",
+        "metric": "240g",
         "imperial": "1 cups"
       },
       {
         "item": "Butter, salted",
         "foodId": "butter_salted",
-        "metric": "",
+        "metric": "56.8g",
         "imperial": "4 tbsp"
       },
       {
         "item": "Cumin",
         "foodId": "cumin",
-        "metric": "",
+        "metric": "5g",
         "imperial": "1 tsp"
       },
       {
         "item": "Coriander seed",
         "foodId": "coriander_seed",
-        "metric": "",
+        "metric": "15g",
         "imperial": "1 tbsp"
       },
       {
         "item": "Chilli Flakes",
         "foodId": "chilli_flakes",
-        "metric": "",
+        "metric": "30g",
         "imperial": "2 tbsp"
       },
       {
         "item": "Ginger, raw",
         "foodId": "ginger_raw",
-        "metric": "",
+        "metric": "5g",
         "imperial": "1 tsp"
       },
       {
         "item": "Garlic, raw",
         "foodId": "garlic_raw",
-        "metric": "",
+        "metric": "5g",
         "imperial": "1 tsp"
       },
       {
         "item": "Onion",
         "foodId": "onion",
-        "metric": "",
+        "metric": "30g",
         "imperial": "2 tbsp"
       },
       {
         "item": "Sugar",
         "foodId": "sugar",
-        "metric": "",
+        "metric": "4.2g",
         "imperial": "1 tsp"
       },
       {
@@ -296,28 +296,28 @@
       {
         "item": "Tomato Purée",
         "foodId": "tomato_puree",
-        "metric": "",
+        "metric": "240g",
         "imperial": "1 cups"
       },
       {
         "item": "Heavy cream",
         "foodId": "heavy_cream",
-        "metric": "",
+        "metric": "45g",
         "imperial": "3 tbsp"
       },
       {
         "item": "Salt",
         "foodId": "salt",
-        "metric": "",
+        "metric": "6g",
         "imperial": "1 tsp"
       }
     ],
     "steps": [
-      "Marinate chicken with yoghurt, salt, chilli and let\nrest for at least 4 hours.",
-      "Heat 2 tbsp. butter in a pan, sear and then cook\nchicken for 15 min on low heat.",
-      "Mix ginger, garlic, cumin, chilli, coriander,\nfenugreek, fried onions, salt, sugar and water to\nmake a paste.",
-      "Add remaining butter to a pan along with flour,\npaste and cook for 3 min.",
-      "Add heavy cream and tomato puree and cook\nfor about 15 min.",
+      "Marinate chicken with yoghurt, salt, chilli and let rest for at least 4 hours.",
+      "Heat 2 tbsp. butter in a pan, sear and then cook chicken for 15 min on low heat.",
+      "Mix ginger, garlic, cumin, chilli, coriander, fenugreek, fried onions, salt, sugar and water to\nmake a paste.",
+      "Add remaining butter to a pan along with flour, paste and cook for 3 min.",
+      "Add heavy cream and tomato puree and cook for about 15 min.",
       "Add chicken to the sauce and simmer for 2-3 min. before serving."
     ],
     "tags": [
@@ -327,10 +327,10 @@
     "variations": "",
     "_cmsStdMacros": {
       "normalized": {
-        "energy": 925.9,
-        "carbs": 37.3,
+        "energy": 912.8,
+        "carbs": 36.9,
         "protein": 87.7,
-        "fat": 50.6
+        "fat": 49.3
       }
     }
   }
