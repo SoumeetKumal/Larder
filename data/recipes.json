@@ -15,25 +15,25 @@
         "referenceAmount": ""
       },
       "yield": "3",
-      "energy": "778.9 kCal",
-      "carbohydrate": "100.8 g",
-      "protein": "36.1 g",
-      "fat": "23.8 g",
-      "fiberG": 7.9,
-      "sugarG": 14.1,
+      "energy": "803.6 kCal",
+      "carbohydrate": "105.8 g",
+      "protein": "36.9 g",
+      "fat": "23.9 g",
+      "fiberG": 8.1,
+      "sugarG": 14.3,
       "saturatedFatG": 3,
       "monounsaturatedFatG": 10.3,
       "polyunsaturatedFatG": 2.6,
       "cholesterolMg": 20.4,
-      "sodiumMg": 4077.7,
-      "potassiumMg": 1162.4,
-      "calciumMg": 140.5,
-      "ironMg": 8.5,
-      "magnesiumMg": 124.4,
-      "phosphorusMg": 364.7,
-      "zincMg": 2.7,
+      "sodiumMg": 4078.1,
+      "potassiumMg": 1177.3,
+      "calciumMg": 141.9,
+      "ironMg": 8.7,
+      "magnesiumMg": 128,
+      "phosphorusMg": 377.3,
+      "zincMg": 2.8,
       "copperMg": 0.8,
-      "seleniumMcg": 104.8,
+      "seleniumMcg": 109,
       "vitaminAMcg": 93.2,
       "vitaminCMg": 33.7,
       "vitaminDMcg": 0.7,
@@ -41,17 +41,17 @@
       "vitaminKMcg": 181.1,
       "thiaminMg": 1,
       "riboflavinMg": 0.6,
-      "niacinMg": 15.1,
+      "niacinMg": 15.6,
       "pantothenicMg": 1.3,
       "vitaminB6Mg": 0.7,
-      "folateMcg": 277.5,
+      "folateMcg": 293.3,
       "vitaminB12Mcg": 1.4
     },
     "ingredients": [
       {
         "item": "Tagliatelle",
         "foodId": "tagliatelle",
-        "metric": "295g",
+        "metric": "315g",
         "imperial": "3 cups"
       },
       {
@@ -163,14 +163,174 @@
       "Add the tagliatelle and some of the starchy water to the sauté pan, mix, and let the tagliatelle finish cooking in the sauce. Grate some parmigiano reggiano on top while cooking.",
       "Garnish with parsley and more parmigiano reggiano before serving."
     ],
+    "tags": [
+      "ITALIAN"
+    ],
     "note": "The sauce can be be ahead of time and heated before adding freshly cooked pasta. DO NOT cook pasta ahead of time.",
     "variations": "The type of pasta used for this recipe is tagliatalle, more specifically, nouilles fines. Experiment with other types of pasta!",
     "_cmsStdMacros": {
       "normalized": {
-        "energy": 778.9,
-        "carbs": 100.8,
-        "protein": 36.1,
-        "fat": 23.8
+        "energy": 803.6,
+        "carbs": 105.8,
+        "protein": 36.9,
+        "fat": 23.9
+      }
+    }
+  },
+  {
+    "id": "1786280091596",
+    "entryType": "recipe",
+    "title": "BUTTER CHICKEN",
+    "category": "Vegetables, Fruits, and Seeds",
+    "time": "40 mins",
+    "iconTag": "",
+    "description": "",
+    "imageUrl": "https://static.toiimg.com/thumb/53205522.cms?imgsize=302803&width=800&height=800",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "2",
+      "energy": "925.9 kCal",
+      "carbohydrate": "37.3 g",
+      "protein": "87.7 g",
+      "fat": "50.6 g",
+      "fiberG": 10.6,
+      "sugarG": 16.5,
+      "saturatedFatG": 25.7,
+      "monounsaturatedFatG": 14,
+      "polyunsaturatedFatG": 4.5,
+      "transFatG": 1,
+      "cholesterolMg": 315.8,
+      "sodiumMg": 493.2,
+      "potassiumMg": 1862.3,
+      "calciumMg": 333.3,
+      "ironMg": 8.7,
+      "magnesiumMg": 176.9,
+      "phosphorusMg": 850.4,
+      "zincMg": 4.3,
+      "copperMg": 0.6,
+      "seleniumMcg": 77.5,
+      "vitaminAMcg": 669.6,
+      "vitaminCMg": 28.6,
+      "vitaminDMcg": 0.8,
+      "vitaminEMg": 8.9,
+      "vitaminKMcg": 20.3,
+      "thiaminMg": 0.3,
+      "riboflavinMg": 0.7,
+      "niacinMg": 37.9,
+      "pantothenicMg": 8.5,
+      "vitaminB6Mg": 2.1,
+      "folateMcg": 57.3,
+      "vitaminB12Mcg": 1.3
+    },
+    "ingredients": [
+      {
+        "item": "Chicken breast, skinless",
+        "foodId": "chicken_breast_skinless",
+        "metric": "500g",
+        "imperial": ""
+      },
+      {
+        "item": "Yogurt, plain",
+        "foodId": "yogurt_plain",
+        "metric": "",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Butter, salted",
+        "foodId": "butter_salted",
+        "metric": "",
+        "imperial": "4 tbsp"
+      },
+      {
+        "item": "Cumin",
+        "foodId": "cumin",
+        "metric": "",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Coriander seed",
+        "foodId": "coriander_seed",
+        "metric": "",
+        "imperial": "1 tbsp"
+      },
+      {
+        "item": "Chilli Flakes",
+        "foodId": "chilli_flakes",
+        "metric": "",
+        "imperial": "2 tbsp"
+      },
+      {
+        "item": "Ginger, raw",
+        "foodId": "ginger_raw",
+        "metric": "",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Garlic, raw",
+        "foodId": "garlic_raw",
+        "metric": "",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Onion",
+        "foodId": "onion",
+        "metric": "",
+        "imperial": "2 tbsp"
+      },
+      {
+        "item": "Sugar",
+        "foodId": "sugar",
+        "metric": "",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "All-purpose flour",
+        "foodId": "allpurpose_flour",
+        "metric": "",
+        "imperial": "0.5 tsp"
+      },
+      {
+        "item": "Tomato Purée",
+        "foodId": "tomato_puree",
+        "metric": "",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Heavy cream",
+        "foodId": "heavy_cream",
+        "metric": "",
+        "imperial": "3 tbsp"
+      },
+      {
+        "item": "Salt",
+        "foodId": "salt",
+        "metric": "",
+        "imperial": "1 tsp"
+      }
+    ],
+    "steps": [
+      "Marinate chicken with yoghurt, salt, chilli and let\nrest for at least 4 hours.",
+      "Heat 2 tbsp. butter in a pan, sear and then cook\nchicken for 15 min on low heat.",
+      "Mix ginger, garlic, cumin, chilli, coriander,\nfenugreek, fried onions, salt, sugar and water to\nmake a paste.",
+      "Add remaining butter to a pan along with flour,\npaste and cook for 3 min.",
+      "Add heavy cream and tomato puree and cook\nfor about 15 min.",
+      "Add chicken to the sauce and simmer for 2-3 min. before serving."
+    ],
+    "tags": [
+      "INDIA"
+    ],
+    "note": "",
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 925.9,
+        "carbs": 37.3,
+        "protein": 87.7,
+        "fat": 50.6
       }
     }
   }
