@@ -2045,6 +2045,11 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .cms-table-wrapper { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
     .cms-table { width: 100%; border-collapse: collapse; text-align: left; }
     .cms-table th { padding: 1rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); background: var(--bg-surface-hover); }
+.cms-table th.sortable, .vd-pantry-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.cms-table th.sortable:hover, .vd-pantry-table th.sortable:hover { color: var(--primary); }
+.cms-table th.sort-active, .vd-pantry-table th.sort-active { color: var(--primary); }
+.sort-ind { display: inline-block; width: 1em; text-align: center; margin-left: 0.35rem; font-size: 0.8em; }
+
     .cms-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); font-size: 0.95rem; }
     .cms-table tbody tr { transition: background-color var(--transition-fast); }
     .cms-table tbody tr:hover { background-color: var(--bg-base); }
@@ -2134,7 +2139,7 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     /* Ingredient autocomplete dropdown */
     .cms-ing-name-wrap { position: relative; }
     .cms-ing-name-wrap .seamless-input { width: 100%; box-sizing: border-box; }
-    .cms-ing-suggestions { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); max-height: 220px; overflow-y: auto; display: none; }
+    .cms-ing-suggestions { position: absolute; top: calc(100% + 4px); left: 0; width: max(100%, 560px); max-width: calc(100vw - 2rem); z-index: 50; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); max-height: 220px; overflow-y: auto; display: none; }
     .cms-ing-suggestions.open { display: block; }
     .cms-ing-suggestion { padding: 0.55rem 0.75rem; cursor: pointer; font-size: 0.85rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
     .cms-ing-suggestion:hover, .cms-ing-suggestion.active { background: var(--primary-light); color: var(--primary); }
@@ -2407,9 +2412,13 @@ body.cms-page { background-color: var(--bg-surface-hover); }
         display: block;
     }
 
-    .cms-ingredient-row { display: grid; grid-template-columns: minmax(140px, 3fr) minmax(110px, 1fr) minmax(130px, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+    .cms-ingredient-row { display: grid; grid-template-columns: auto minmax(140px, 3fr) minmax(110px, 1fr) minmax(130px, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
     .cms-ingredient-row:last-child { border-bottom: none; }
     .cms-ingredient-row .cms-btn-icon { padding: 0.25rem; }
+    .cms-ingredient-row .drag-handle { cursor: grab; opacity: 0.4; transition: opacity var(--transition-fast); }
+    .cms-ingredient-row .drag-handle:hover { opacity: 1; color: var(--primary); }
+    .cms-ingredient-row.dragging { opacity: 0.5; background: var(--bg-surface-hover); }
+    .cms-ingredient-row.drag-over { outline: 2px solid var(--primary); outline-offset: -2px; }
     .cms-unit-group { display: flex; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-surface); overflow: hidden; }
     .cms-unit-group input { border: none; border-radius: 0; min-width: 0; padding: 0.4rem; text-align: center; border-right: 1px solid var(--border); flex: 1; outline: none; background: transparent; }
     .cms-unit-group select { border: none; border-radius: 0; padding: 0.4rem; background: var(--bg-surface-hover); color: var(--text-muted); font-weight: 600; cursor: pointer; outline: none; }
@@ -2647,6 +2656,10 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .vd-pantry-table-wrap { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
     .vd-pantry-table { width: 100%; border-collapse: collapse; text-align: left; }
     .vd-pantry-table th { padding: 0.85rem 1.25rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); background: var(--bg-surface-hover); }
+.vd-pantry-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.vd-pantry-table th.sortable:hover { color: var(--primary); }
+.vd-pantry-table th.sort-active { color: var(--primary); }
+
     .vd-pantry-table td { padding: 0.8rem 1.25rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); font-size: 0.9rem; }
     .vd-pantry-table tbody tr { transition: background-color var(--transition-fast); }
     .vd-pantry-table tbody tr:hover { background-color: var(--bg-base); }

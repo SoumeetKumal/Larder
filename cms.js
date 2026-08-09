@@ -1631,8 +1631,8 @@ renderItemRows();
         function sortTh(key, label, style) {
             const st = cmsTableSort[currentCMSTab];
             const active = st && st.key === key;
-            const ind = active ? `<span class="sort-ind" aria-hidden="true">${st.dir === 1 ? '↑' : '↓'}</span>` : '';
-            return `<th data-sort="${key}" class="sortable${active ? ' sort-active' : ''}"${style ? ` style="${style}"` : ''} title="Sort by ${label}">${label}${ind}</th>`;
+            const arrow = active ? (st.dir === 1 ? '↑' : '↓') : '';
+            return `<th data-sort="${key}" class="sortable${active ? ' sort-active' : ''}"${style ? ` style="${style}"` : ''} title="Sort by ${label}">${label}<span class="sort-ind" aria-hidden="true">${arrow}</span></th>`;
         }
         function bindSortHandlers(root) {
             root.querySelectorAll('th.sortable').forEach(th => {
@@ -2571,7 +2571,7 @@ renderItemRows();
                 renderCMSList();
             };
             
-            // Save logic
+            // Save logic - saves ALL meal plans across ALL weeks
             document.getElementById('save-mealplan-btn').onclick = async () => {
                 try {
                     const res = await fetch('/api/mealplans', {
@@ -2580,7 +2580,7 @@ renderItemRows();
                         body: JSON.stringify(mealPlans)
                     });
                     if (!res.ok) throw new Error('Save failed');
-                    statusText.innerHTML = `<span class="status-dot"></span> Saved Meal Plan`;
+                    statusText.innerHTML = `<span class="status-dot"></span> Saved Meal Plan (all weeks)`;
                 } catch(e) {
                     alert('Save failed. Reverting to previous state.');
                     loadData();
@@ -2631,6 +2631,25 @@ renderItemRows();
                 const anchor = pItem.lastOpenedDate || new Date().toISOString().split('T')[0];
                 return estimateDepletionDate({ currentStock: qty, avgDurationDays: avg, lastOpenedDate: anchor });
             };
+
+            // Pantry sort accessor
+            const pantrySortVal = (ing, key) => {
+                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0, avgDurationDays: 0 };
+                const { label, isTracked } = statusInfo(ing, pItem);
+                switch (key) {
+                    case 'name': return (ing.name || '').toLowerCase();
+                    case 'category': return (ing.category || '').toLowerCase();
+                    case 'status': return label.toLowerCase();
+                    case 'quantity': return pItem.quantity || 0;
+                    case 'unit': return (ing.servingUnit || 'g').toLowerCase();
+                    case 'days': return parseFloat(pItem.avgDurationDays) > 0 ? parseFloat(pItem.avgDurationDays) : null;
+                    case 'depletion': return pantryDaysLeft(ing, pItem) || null;
+                    case 'track': return isTracked;
+                }
+                return null;
+            };
+            const pantrySort = cmsTableSort.pantry;
+            if (pantrySort && pantrySort.key) filteredIngredients = sortRows(filteredIngredients, pantrySort.key, pantrySort.dir, pantrySortVal);
 
             addBtn.style.display = 'flex';
             setAddBtnLabel('Add Item');
@@ -2752,14 +2771,14 @@ renderItemRows();
                     <table class="vd-pantry-table">
                         <thead>
                             <tr>
-                                <th>Ingredient</th>
-                                <th>Category</th>
-                                <th>Status</th>
-                                <th>Quantity</th>
-                                <th>Unit</th>
-                                <th>Days/Unit</th>
-                                <th>Est. Depletion</th>
-                                <th>Track</th>
+                                ${sortTh('name', 'Ingredient')}
+                                ${sortTh('category', 'Category')}
+                                ${sortTh('status', 'Status')}
+                                ${sortTh('quantity', 'Quantity')}
+                                ${sortTh('unit', 'Unit')}
+                                ${sortTh('days', 'Days/Unit')}
+                                ${sortTh('depletion', 'Est. Depletion')}
+                                ${sortTh('track', 'Track')}
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -2928,6 +2947,8 @@ renderItemRows();
                     statusText.innerHTML = `<span class="status-dot"></span> Removed "${name}" from pantry`;
                 });
             });
+
+            bindSortHandlers(listContainer);
             return;
         }
 
@@ -2940,6 +2961,22 @@ renderItemRows();
             hhItems = hhItems
                 .slice()
                 .sort((a, b) => (estimateDepletionDate(a) || '9999-12-31').localeCompare(estimateDepletionDate(b) || '9999-12-31'));
+
+            // Household sort accessor
+            const hhSortVal = (item, key) => {
+                switch (key) {
+                    case 'item': return (item.name || '').toLowerCase();
+                    case 'category': return (item.category || '').toLowerCase();
+                    case 'stock': return parseFloat(item.currentStock) || 0;
+                    case 'unit': return (item.unitSize || 'units').toLowerCase();
+                    case 'duration': return parseFloat(item.avgDurationDays) > 0 ? parseFloat(item.avgDurationDays) : null;
+                    case 'depletion': return estimateDepletionDate(item) || null;
+                    case 'price': return parseFloat(item.pricePerUnit) > 0 ? parseFloat(item.pricePerUnit) : null;
+                }
+                return null;
+            };
+            const hhSort = cmsTableSort.household;
+            if (hhSort && hhSort.key) hhItems = sortRows(hhItems, hhSort.key, hhSort.dir, hhSortVal);
 
             function daysBetween(from, to) {
                 const ms = new Date(to) - new Date(from);
@@ -3025,13 +3062,13 @@ renderItemRows();
                     <table class="vd-pantry-table">
                         <thead>
                             <tr>
-                                <th>Item</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Unit</th>
-                                <th>Avg. Duration</th>
-                                <th>Estimated Depletion</th>
-                                <th>Price/Unit</th>
+                                ${sortTh('item', 'Item')}
+                                ${sortTh('category', 'Category')}
+                                ${sortTh('stock', 'Stock')}
+                                ${sortTh('unit', 'Unit')}
+                                ${sortTh('duration', 'Avg. Duration')}
+                                ${sortTh('depletion', 'Estimated Depletion')}
+                                ${sortTh('price', 'Price/Unit')}
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -3168,6 +3205,8 @@ renderItemRows();
                     await saveHousehold();
                 });
             });
+
+            bindSortHandlers(listContainer);
             return;
         }
 
@@ -4875,6 +4914,7 @@ const unpricedRow = cost.unpriced.length
         div.className = 'cms-ingredient-row';
         const displayName = resolveIngredientName(item, foodId);
         div.innerHTML = `
+            <button type="button" class="cms-btn-icon drag-handle" aria-label="Drag to reorder" title="Drag to reorder"><i data-lucide="grip-vertical" style="width: 14px; height: 14px; color: var(--text-muted);"></i></button>
             <input type="text" data-field="name" class="seamless-input" value="${escapeHtml(displayName)}" placeholder="Search ingredient..." autocomplete="off" title="${escapeHtml(displayName)}" style="font-weight: 500; font-size: 0.95rem;">
             <div class="cms-unit-group">
                 <input type="text" data-field="metric-num" value="${escapeHtml(m.num)}" placeholder="Amount">
@@ -4948,6 +4988,41 @@ const unpricedRow = cost.unpriced.length
         nameInput.addEventListener('input', () => {
             if (metricNumInput.dataset.auto === '1') autoCalcMetric(div);
             if (impNumInput.dataset.auto === '1') autoCalcImperial(div);
+        });
+
+        // Drag-and-drop reorder
+        const dragHandle = div.querySelector('.drag-handle');
+        dragHandle.draggable = true;
+        dragHandle.addEventListener('dragstart', (e) => {
+            div.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', '');
+        });
+        dragHandle.addEventListener('dragend', () => {
+            div.classList.remove('dragging');
+            document.querySelectorAll('.cms-ingredient-row.drag-over').forEach(r => r.classList.remove('drag-over'));
+        });
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const dragging = ingContainer.querySelector('.cms-ingredient-row.dragging');
+            if (dragging && dragging !== div) {
+                const rect = div.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    ingContainer.insertBefore(dragging, div);
+                } else {
+                    ingContainer.insertBefore(dragging, div.nextSibling);
+                }
+            }
+            div.classList.add('drag-over');
+        });
+        div.addEventListener('dragleave', () => {
+            div.classList.remove('drag-over');
+        });
+        div.addEventListener('drop', (e) => {
+            e.preventDefault();
+            div.classList.remove('drag-over');
         });
 
         ingContainer.appendChild(div);
