@@ -242,6 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cat === 'seafood') tags.push('Seafood');
         if (cat === 'vegetable') tags.push('Vegetarian');
         if (cat === 'baking') tags.push('Baking');
+        if (Array.isArray(recipe.tags)) {
+            for (const t of recipe.tags) {
+                if (t && !tags.includes(t)) tags.push(t);
+            }
+        }
         return tags;
     }
 
@@ -4421,8 +4426,8 @@ const unpricedRow = cost.unpriced.length
                 return;
             }
             list.innerHTML = matches.map((f, i) => `
-                <div class="cms-ing-suggestion${i === activeIdx ? ' active' : ''}" data-idx="${i}">
-                    ${escapeHtml(f.name)}
+                <div class="cms-ing-suggestion${i === activeIdx ? ' active' : ''}" data-idx="${i}" title="${escapeHtml(f.name)}">
+                    <span class="cms-ing-suggestion-name">${escapeHtml(f.name)}</span>
                     <span class="cms-ing-suggestion-cat">${escapeHtml(f.category || '')}</span>
                 </div>`).join('');
             list.classList.add('open');
@@ -4521,7 +4526,7 @@ const unpricedRow = cost.unpriced.length
         div.className = 'cms-ingredient-row';
         const displayName = resolveIngredientName(item, foodId);
         div.innerHTML = `
-            <input type="text" data-field="name" class="seamless-input" value="${escapeHtml(displayName)}" placeholder="Search ingredient..." autocomplete="off" style="font-weight: 500; font-size: 0.95rem;">
+            <input type="text" data-field="name" class="seamless-input" value="${escapeHtml(displayName)}" placeholder="Search ingredient..." autocomplete="off" title="${escapeHtml(displayName)}" style="font-weight: 500; font-size: 0.95rem;">
             <div class="cms-unit-group">
                 <input type="text" data-field="metric-num" value="${escapeHtml(m.num)}" placeholder="Amount">
                 <select data-field="metric-unit">${metricUnits.map(u => `<option${m.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select>
@@ -4648,6 +4653,9 @@ const unpricedRow = cost.unpriced.length
             (recipe.steps || []).forEach(step => createStepRow(step));
             document.getElementById('recipe-note').value = recipe.note || '';
             document.getElementById('recipe-variations').value = recipe.variations || '';
+            const cmsTagsEl = document.getElementById('cms-recipe-tags');
+            if (cmsTagsEl) cmsTagsEl.innerHTML = cmsGetRecipeTags(recipe).map(t => `<span class="tag-display-chip">${escapeHtml(t)}</span>`).join('');
+            recipeManualTags = Array.isArray(recipe.tags) ? [...recipe.tags] : [];
             if (cmsDeleteBtn) cmsDeleteBtn.style.display = '';
         } else {
             form.reset();
@@ -4658,12 +4666,121 @@ const unpricedRow = cost.unpriced.length
             setMacroField('macro-fat', '', 'g');
             if (recipeStatusSelect) recipeStatusSelect.value = 'published';
             createIngredientRow();
+            const cmsTagsEl = document.getElementById('cms-recipe-tags');
+            if (cmsTagsEl) cmsTagsEl.innerHTML = '';
+            recipeManualTags = [];
             if (cmsDeleteBtn) cmsDeleteBtn.style.display = 'none';
         }
+        renderRecipeTagsEditor();
+        refreshRecipeAutoTags();
         if (window.lucide) window.lucide.createIcons();
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
+
+    // --- Recipe tag editor ---
+    let recipeManualTags = [];
+
+    function renderRecipeTagsEditor() {
+        const chipsEl = document.getElementById('recipe-tags-chips');
+        if (!chipsEl) return;
+        chipsEl.innerHTML = recipeManualTags.map((tag, i) => `
+            <span class="tag-edit-chip" data-index="${i}">
+                <span class="tag-edit-label" title="Click to edit">${escapeHtml(tag)}</span>
+                <button type="button" class="tag-edit-remove" data-index="${i}" title="Remove tag" aria-label="Remove tag">&times;</button>
+            </span>`).join('') || `<span class="tag-empty-hint">No custom tags yet — type one below.</span>`;
+
+        chipsEl.querySelectorAll('.tag-edit-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                recipeManualTags.splice(parseInt(btn.dataset.index, 10), 1);
+                renderRecipeTagsEditor();
+            });
+        });
+        chipsEl.querySelectorAll('.tag-edit-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                if (e.target.closest('.tag-edit-remove')) return;
+                startTagEdit(chip);
+            });
+        });
+    }
+
+    function startTagEdit(chip) {
+        const idx = parseInt(chip.dataset.index, 10);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'seamless-input tag-edit-input';
+        input.value = recipeManualTags[idx];
+        input.maxLength = 50;
+        chip.replaceChildren(input);
+        input.focus();
+        input.select();
+        const commit = () => {
+            const val = input.value.trim();
+            if (val && !recipeManualTags.includes(val)) recipeManualTags[idx] = val;
+            else if (!val) recipeManualTags.splice(idx, 1);
+            renderRecipeTagsEditor();
+        };
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+            else if (e.key === 'Escape') { renderRecipeTagsEditor(); }
+        });
+        input.addEventListener('blur', commit);
+    }
+
+    function addRecipeTag(val) {
+        val = (val || '').trim();
+        if (!val) return;
+        if (!recipeManualTags.includes(val)) recipeManualTags.push(val);
+    }
+
+    function refreshRecipeAutoTags() {
+        const autoEl = document.getElementById('recipe-tags-auto');
+        if (!autoEl) return;
+        const pseudo = {
+            time: composeTimeString(
+                document.getElementById('recipe-time-hours').value,
+                document.getElementById('recipe-time-mins').value
+            ),
+            category: document.getElementById('recipe-category').value,
+            macros: {
+                yield: document.getElementById('macro-yield').value,
+                energy: getMacroValue('macro-energy', 'kCal'),
+                carbohydrate: getMacroValue('macro-carbs', 'g'),
+                protein: getMacroValue('macro-protein', 'g'),
+                fat: getMacroValue('macro-fat', 'g')
+            }
+        };
+        const autoTags = cmsGetRecipeTags(pseudo);
+        autoEl.innerHTML = autoTags.length
+            ? `<span class="auto-tag-hint">Auto:</span> ${autoTags.map(t => `<span class="tag-display-chip">${escapeHtml(t)}</span>`).join('')}`
+            : '';
+    }
+
+    const recipeTagsInput = document.getElementById('recipe-tags-input');
+    const recipeTagsAddBtn = document.getElementById('recipe-tags-add');
+    if (recipeTagsInput) {
+        recipeTagsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addRecipeTag(recipeTagsInput.value);
+                recipeTagsInput.value = '';
+                renderRecipeTagsEditor();
+            }
+        });
+    }
+    if (recipeTagsAddBtn) {
+        recipeTagsAddBtn.addEventListener('click', () => {
+            addRecipeTag(recipeTagsInput ? recipeTagsInput.value : '');
+            if (recipeTagsInput) recipeTagsInput.value = '';
+            renderRecipeTagsEditor();
+            if (recipeTagsInput) recipeTagsInput.focus();
+        });
+    }
+    ['recipe-time-hours', 'recipe-time-mins', 'recipe-category', 'macro-energy', 'macro-carbs', 'macro-protein', 'macro-fat', 'macro-yield'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', refreshRecipeAutoTags);
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -4731,6 +4848,7 @@ const unpricedRow = cost.unpriced.length
             },
             ingredients: recipeIngredients,
             steps,
+            tags: recipeManualTags,
             note: document.getElementById('recipe-note').value,
             variations: document.getElementById('recipe-variations').value
         };

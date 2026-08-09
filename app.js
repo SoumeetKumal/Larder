@@ -360,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cat === 'seafood') tags.push('Seafood');
         if (cat === 'vegetable') tags.push('Vegetarian');
         if (cat === 'baking') tags.push('Baking');
+        if (Array.isArray(recipe.tags)) {
+            for (const t of recipe.tags) {
+                if (t && !tags.includes(t)) tags.push(t);
+            }
+        }
         return tags;
     }
 
@@ -1060,6 +1065,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const ingVis = getIngredientIcon(recipe.category);
         const ingredientsPillIcon = `<i data-lucide="${ingVis.icon}" style="width: 18px; height: 18px; stroke-width: 2; color: currentColor;"></i>`;
         
+        const tags = getRecipeTags(recipe);
+        const tagsHtml = tags.length
+            ? `<div class="modal-tags">${tags.map(t => `<span class="tag-display-chip">${escapeHtml(t)}</span>`).join('')}</div>`
+            : '';
+        
         // Remove standard header wrapper and inject the custom modal structure 
         // Note: index.html already has `<div class="modal-content" id="modal-container">` and `<button class="modal-close" id="modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>` inside it, and `<div id="modal-body">`.
         // BUT our `modalBody.innerHTML = ...` targets `#modal-body`. 
@@ -1083,6 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <h2 class="recipe-full-title" style="color: ${headerColor}; text-transform: uppercase;">${escapeHtml(recipe.title)}</h2>
                 <p class="recipe-full-desc">${escapeHtml(recipe.description || '')}</p>
+                ${tagsHtml}
             </div>
             
             <div class="modal-body" style="padding: 0;">
