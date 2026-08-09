@@ -33797,5 +33797,20 @@
     "copperMg": 0,
     "seleniumMcg": 0,
     "notes": "Mauritian curry noodles"
+  },
+  {
+    "foodId": "fenugreek_leaves",
+    "name": "Fenugreek Leaves",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
   }
 ]
