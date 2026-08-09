@@ -417,7 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (m && parseFloat(m[1]) > 0) divisor = parseFloat(m[1]);
         }
         const round1 = v => Math.round(v / divisor * 10) / 10;
-        setMacroField('macro-energy', String(round1(totals.energy)), 'kCal');
+        // Energy is displayed whole; macros and micros keep one decimal place.
+        setMacroField('macro-energy', String(Math.round(totals.energy / divisor)), 'kCal');
         setMacroField('macro-carbs', String(round1(totals.carbs)), 'g');
         setMacroField('macro-protein', String(round1(totals.protein)), 'g');
         setMacroField('macro-fat', String(round1(totals.fat)), 'g');
@@ -529,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cmsListView = localStorage.getItem('larder_cms_view') || 'list';
     let lastMacroBreakdown = null;
     let householdOpenFn = null;
+    let cmsTableSort = {};
 
     // Filters are tracked per tab (Recipes vs Ingredients vs Pantry vs Household)
     // so choosing a filter on one screen never leaks onto another. The live
@@ -1613,6 +1615,36 @@ renderItemRows();
     }
     function renderCMSList() {
         populateIngredientSuggestions();
+
+        // --- Sortable table columns (Recipes / Ingredients / Pantry / Household) ---
+        function cmpValue(a, b, dir) {
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            if (typeof a === 'number' && typeof b === 'number' && isFinite(a) && isFinite(b)) return (a - b) * dir;
+            return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }) * dir;
+        }
+        function sortRows(arr, key, dir, get) {
+            if (!key) return arr;
+            return arr.slice().sort((x, y) => cmpValue(get(x, key), get(y, key), dir));
+        }
+        function sortTh(key, label, style) {
+            const st = cmsTableSort[currentCMSTab];
+            const active = st && st.key === key;
+            const ind = active ? `<span class="sort-ind" aria-hidden="true">${st.dir === 1 ? '↑' : '↓'}</span>` : '';
+            return `<th data-sort="${key}" class="sortable${active ? ' sort-active' : ''}"${style ? ` style="${style}"` : ''} title="Sort by ${label}">${label}${ind}</th>`;
+        }
+        function bindSortHandlers(root) {
+            root.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sort;
+                    const st = cmsTableSort[currentCMSTab];
+                    const dir = st && st.key === key ? (st.dir === 1 ? -1 : 1) : 1;
+                    cmsTableSort[currentCMSTab] = { key, dir };
+                    renderCMSList();
+                });
+            });
+        }
 
         // --- Shared costing helpers (used by Meal Plan and Shopping tabs) ---
         const UNIT_TO_GRAMS = {
@@ -3656,6 +3688,19 @@ const unpricedRow = cost.unpriced.length
                 return;
             }
 
+            // Food sort accessor
+            const foodSortVal = (ing, key) => {
+                switch (key) {
+                    case 'name': return (ing.name || '').toLowerCase();
+                    case 'category': return (ing.category || '').toLowerCase();
+                    case 'serving': return `${ing.servingSizeG || ''}${ing.servingUnit || 'g'}`.toLowerCase();
+                    case 'status': return 'published';
+                }
+                return null;
+            };
+            const foodSort = cmsTableSort.food;
+            if (foodSort && foodSort.key) filteredIngredients = sortRows(filteredIngredients, foodSort.key, foodSort.dir, foodSortVal);
+
             // Price-aware matching: per-100g unit price + cheapest-in-category badge
             const priceCur = mealPlanCurrency();
             const cheapestByCat = {};
@@ -3706,9 +3751,9 @@ const unpricedRow = cost.unpriced.length
                         <table class="cms-table">
                             <thead>
                                 <tr>
-                                    <th>Ingredient</th>
-                                    <th style="width: 240px;">Category</th>
-                                    <th style="width: 130px;">Status</th>
+                                    ${sortTh('name', 'Ingredient')}
+                                    ${sortTh('category', 'Category', 'width: 240px;')}
+                                    ${sortTh('status', 'Status', 'width: 130px;')}
                                     <th style="width: 110px; text-align: right;">Actions</th>
                                 </tr>
                             </thead>
@@ -3742,6 +3787,8 @@ const unpricedRow = cost.unpriced.length
                 `;
             }
             if (window.lucide) window.lucide.createIcons();
+
+            bindSortHandlers(listContainer);
 
             document.querySelectorAll('.cms-card[data-id], tr[data-id]').forEach(card => {
                 card.addEventListener('click', (e) => {
@@ -4296,6 +4343,19 @@ const unpricedRow = cost.unpriced.length
             return;
         }
 
+        // Recipe sort accessor
+        const recipeSortVal = (r, key) => {
+            switch (key) {
+                case 'title': return (r.title || '').toLowerCase();
+                case 'servings': { const y = parseFloat(String((r.macros && r.macros.yield) || '').replace(',', '.')); return isNaN(y) ? null : y; }
+                case 'energy': { const e = parseFloat(String((r.macros && r.macros.energy) || r.calories || '')); return isNaN(e) ? null : e; }
+                case 'status': return (r.status || 'published').toLowerCase();
+            }
+            return null;
+        };
+        const recipeSort = cmsTableSort.recipe;
+        if (recipeSort && recipeSort.key) filtered = sortRows(filtered, recipeSort.key, recipeSort.dir, recipeSortVal);
+
         if (cmsListView === 'grid') {
             listContainer.innerHTML = `
                 <div class="cms-grid-wrapper">
@@ -4329,10 +4389,10 @@ const unpricedRow = cost.unpriced.length
                     <table class="cms-table">
                         <thead>
                             <tr>
-                                <th>Title & Category</th>
-                                <th style="width: 100px;">Servings</th>
-                                <th style="width: 120px;">Energy</th>
-                                <th style="width: 130px;">Status</th>
+                                ${sortTh('title', 'Title & Category')}
+                                ${sortTh('servings', 'Servings', 'width: 100px;')}
+                                ${sortTh('energy', 'Energy', 'width: 120px;')}
+                                ${sortTh('status', 'Status', 'width: 130px;')}
                                 <th style="width: 110px; text-align: right;">Actions</th>
                             </tr>
                         </thead>
@@ -4371,6 +4431,8 @@ const unpricedRow = cost.unpriced.length
         }
 
         if (window.lucide) window.lucide.createIcons();
+
+        bindSortHandlers(listContainer);
 
         document.querySelectorAll('.cms-card[data-id], tr[data-id]').forEach(card => {
             if (currentCMSTab !== 'recipe') return;
@@ -4442,13 +4504,27 @@ const unpricedRow = cost.unpriced.length
             list.classList.remove('open');
             activeIdx = -1;
         }
-        function render(matches) {
-            if (matches.length === 0) {
+        // Matches from the DB, plus a "+ Create" row whenever the typed name
+        // isn't an exact existing ingredient.
+        function getItems(query) {
+            const q = String(query || '').trim();
+            if (!q) return [];
+            const matches = filter(q);
+            const exact = q && !ingredients.some(f => f.name.toLowerCase() === q.toLowerCase());
+            if (exact) matches.push({ _create: true, name: q });
+            return matches;
+        }
+        function render(items) {
+            if (items.length === 0) {
                 list.classList.remove('open');
                 return;
             }
-            list.innerHTML = matches.map((f, i) => `
-                <div class="cms-ing-suggestion${i === activeIdx ? ' active' : ''}" data-idx="${i}" title="${escapeHtml(f.name)}">
+            list.innerHTML = items.map((f, i) => f._create
+                ? `<div class="cms-ing-suggestion cms-ing-create${i === activeIdx ? ' active' : ''}" data-idx="${i}" title="Create ingredient &quot;${escapeHtml(f.name)}&quot;">
+                    <span class="cms-ing-suggestion-name">+ Create “${escapeHtml(f.name)}”</span>
+                    <span class="cms-ing-suggestion-cat">new ingredient</span>
+                </div>`
+                : `<div class="cms-ing-suggestion${i === activeIdx ? ' active' : ''}" data-idx="${i}" title="${escapeHtml(f.name)}">
                     <span class="cms-ing-suggestion-name">${escapeHtml(f.name)}</span>
                     <span class="cms-ing-suggestion-cat">${escapeHtml(f.category || '')}</span>
                 </div>`).join('');
@@ -4462,10 +4538,42 @@ const unpricedRow = cost.unpriced.length
                 (f.category && f.category.toLowerCase().includes(q))
             ).slice(0, 8);
         }
+        async function createAndLink(f) {
+            let newFoodId = slugify(f.name);
+            let suffix = 1;
+            while (ingredients.some(x => x.foodId === newFoodId)) {
+                newFoodId = slugify(f.name) + '-' + (++suffix);
+            }
+            ingredients.push({
+                foodId: newFoodId,
+                name: f.name,
+                servingSizeG: 100,
+                servingUnit: 'g',
+                category: '',
+                calories: 0,
+                proteinG: 0,
+                fatG: 0,
+                carbsG: 0,
+                fiberG: 0,
+                sugarG: 0,
+                saturatedFatG: 0,
+                proteinSource: ''
+            });
+            nameInput.value = f.name;
+            div.dataset.foodId = newFoodId;
+            hide();
+            recalcMacrosFromIngredients();
+            statusText.innerHTML = `<span class="status-dot"></span> Created ingredient “${escapeHtml(f.name)}”`;
+            await saveIngredients();
+        }
         function apply(idx) {
-            const matches = filter(nameInput.value);
-            const f = matches[idx];
+            const items = getItems(nameInput.value);
+            const f = items[idx];
             if (!f) return;
+            if (f._create) {
+                createAndLink(f);
+                return;
+            }
             nameInput.value = f.name;
             div.dataset.foodId = f.foodId;
             hide();
@@ -4473,30 +4581,30 @@ const unpricedRow = cost.unpriced.length
         }
 
         nameInput.addEventListener('input', () => {
-            if (!div.dataset.foodId) {
+            if (div.dataset.foodId) {
                 // Only keep the DB link when the typed name still matches the linked ingredient.
                 const linked = ingredients.find(f => f.foodId === div.dataset.foodId);
                 if (linked && linked.name !== nameInput.value) div.dataset.foodId = '';
             }
-            const matches = filter(nameInput.value);
-            activeIdx = matches.length ? 0 : -1;
-            render(matches);
+            const items = getItems(nameInput.value);
+            activeIdx = items.length ? 0 : -1;
+            render(items);
         });
         nameInput.addEventListener('focus', () => {
-            const matches = filter(nameInput.value);
-            activeIdx = matches.length ? 0 : -1;
-            render(matches);
+            const items = getItems(nameInput.value);
+            activeIdx = items.length ? 0 : -1;
+            render(items);
         });
         nameInput.addEventListener('keydown', (e) => {
-            const matches = filter(nameInput.value);
+            const items = getItems(nameInput.value);
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                activeIdx = (activeIdx + 1) % Math.max(1, matches.length);
-                render(matches);
+                activeIdx = (activeIdx + 1) % Math.max(1, items.length);
+                render(items);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                activeIdx = (activeIdx - 1 + Math.max(1, matches.length)) % Math.max(1, matches.length);
-                render(matches);
+                activeIdx = (activeIdx - 1 + Math.max(1, items.length)) % Math.max(1, items.length);
+                render(items);
             } else if (e.key === 'Enter') {
                 if (list.classList.contains('open') && activeIdx >= 0) {
                     e.preventDefault();
@@ -4518,9 +4626,8 @@ const unpricedRow = cost.unpriced.length
     }
 
     // --- Metric-to-imperial auto-calc ---
-    // Grams per 1 US cup for common ingredients; used to prefill the imperial
-    // amount when the user types a metric amount (grams/ml). Unknown foods fall
-    // back to water density (240 g/cup).
+    // Grams per 1 US cup for common ingredients; used to convert volume/count
+    // measurements to grams. Unknown foods fall back to water density (240 g/cup).
     function getGramsPerCup(name) {
         const n = String(name || '').toLowerCase();
         if (/(all.purpose|plain|bread|cake|pastry|tapioca|potato).*flour|flour/.test(n)) return 120;
@@ -4542,34 +4649,199 @@ const unpricedRow = cost.unpriced.length
         return 240;
     }
 
+    // Average weight (grams) of one unit of a common ingredient for the
+    // count/size units (small, medium, large, cloves, slice, piece, whole,
+    // sprigs, pinch, cans), so those convert to grams too.
+    function getGramsPerUnit(name, unit) {
+        const n = String(name || '').toLowerCase();
+        const u = String(unit || '').toLowerCase();
+        if (u === 'small' || u === 'medium' || u === 'large') {
+            const sizes = {
+                onion: { small: 100, medium: 150, large: 220 },
+                lemon: { small: 60, medium: 90, large: 120 },
+                tomato: { small: 75, medium: 120, large: 180 },
+                apple: { small: 130, medium: 180, large: 230 },
+                potato: { small: 120, medium: 175, large: 250 },
+                carrot: { small: 40, medium: 60, large: 90 },
+                pepper: { small: 90, medium: 130, large: 200 },
+                egg: { small: 45, medium: 50, large: 60 },
+                avocado: { small: 100, medium: 150, large: 200 },
+                banana: { small: 100, medium: 120, large: 150 },
+                cucumber: { small: 100, medium: 150, large: 220 },
+                zucchini: { small: 100, medium: 150, large: 220 },
+                aubergine: { small: 150, medium: 250, large: 400 },
+                eggplant: { small: 150, medium: 250, large: 400 },
+                mango: { small: 150, medium: 200, large: 300 },
+                orange: { small: 120, medium: 150, large: 200 },
+                peach: { small: 120, medium: 150, large: 180 },
+                pear: { small: 120, medium: 170, large: 220 },
+                garlic: { small: 3, medium: 5, large: 8 },
+                chicken: { small: 100, medium: 150, large: 200 }
+            };
+            for (const [kw, perSize] of Object.entries(sizes)) {
+                if (n.includes(kw)) return perSize[u];
+            }
+            return u === 'small' ? 75 : u === 'medium' ? 125 : 175;
+        }
+        if (u === 'cloves' || u === 'clove') return 4;
+        if (u === 'slice') return 25;
+        if (u === 'piece') return 100;
+        if (u === 'whole') {
+            if (n.includes('egg')) return 50;
+            if (n.includes('lemon')) return 90;
+            if (n.includes('onion')) return 150;
+            return 150;
+        }
+        if (u === 'sprigs' || u === 'sprig') return 2;
+        if (u === 'pinch') return 0.5;
+        if (u === 'cans' || u === 'can') return 400;
+        return null;
+    }
+
+    // Grams represented by one imperial unit for the given ingredient name.
+    function imperialGramsFactor(name, unit) {
+        const u = String(unit || '').toLowerCase();
+        const gPerCup = getGramsPerCup(name);
+        if (u === 'cups' || u === 'cup') return gPerCup;
+        if (u === 'tbsp' || u === 'tablespoon' || u === 'tablespoons') return gPerCup / 16;
+        if (u === 'tsp' || u === 'teaspoon' || u === 'teaspoons') return gPerCup / 48;
+        return getGramsPerUnit(name, u);
+    }
+
+    // Parse an amount that may use decimals, unicode fractions or mixed numbers
+    // (e.g. "½", "1 1/2"), since toFractionString writes those into the fields.
+    function parseAmountValue(value) {
+        if (!value) return NaN;
+        let str = String(value).trim();
+        const fracMap = { '½': ' 1/2', '⅓': ' 1/3', '⅔': ' 2/3', '¼': ' 1/4', '¾': ' 3/4', '⅛': ' 1/8', '⅜': ' 3/8', '⅝': ' 5/8', '⅞': ' 7/8' };
+        for (const [ch, rep] of Object.entries(fracMap)) str = str.split(ch).join(rep);
+        const match = str.match(/^(\d+(?:\s+\d+)?(?:\/\d+)?|\d*\.?\d+)/);
+        if (!match) return NaN;
+        const numPart = match[1];
+        let num;
+        if (/\s/.test(numPart) && numPart.includes('/')) {
+            const [whole, frac] = numPart.split(/\s+/);
+            const [n, d] = frac.split('/');
+            num = parseFloat(whole) + parseFloat(n) / parseFloat(d);
+        } else if (numPart.includes('/')) {
+            const [n, d] = numPart.split('/');
+            num = parseFloat(n) / parseFloat(d);
+        } else {
+            num = parseFloat(numPart);
+        }
+        return isNaN(num) ? NaN : num;
+    }
+
+    function ensureUnit(sel, value) {
+        if (![...sel.options].some(o => o.value === value)) {
+            const opt = document.createElement('option');
+            opt.value = value; opt.textContent = value;
+            sel.appendChild(opt);
+        }
+        sel.value = value;
+    }
+
+    // Cup amounts render as a fraction rounded up to the nearest common fraction.
+    function formatCups(value) {
+        if (value == null || isNaN(value) || value <= 0) return '';
+        const FRACS = [0, 1 / 8, 1 / 4, 1 / 3, 3 / 8, 1 / 2, 5 / 8, 2 / 3, 3 / 4, 7 / 8, 1];
+        const whole = Math.floor(value + 1e-9);
+        const frac = value - whole;
+        let f = 0;
+        for (const fr of FRACS) {
+            if (fr >= frac - 1e-9) { f = fr; break; }
+        }
+        return toFractionString(whole + f);
+    }
+
+    // Ingredient amounts use 0 decimal places; sub-unit values keep 1 dp so a
+    // pinch or half gram never collapses to "0".
+    function formatCount(value) {
+        if (!isFinite(value) || value <= 0) return '';
+        const r = Math.round(value);
+        return r >= 1 ? String(r) : String(Math.round(value * 10) / 10);
+    }
+
+    function formatMetricAmount(value) { return formatCount(value); }
+
+    // Live metric -> imperial conversion while the user edits the metric amount.
     function autoCalcImperial(row) {
         const metricNum = row.querySelector('[data-field="metric-num"]');
         const metricUnit = row.querySelector('[data-field="metric-unit"]');
         const impNum = row.querySelector('[data-field="imperial-num"]');
         const impUnit = row.querySelector('[data-field="imperial-unit"]');
         if (!metricNum || !metricUnit || !impNum || !impUnit) return;
-        // Never overwrite an imperial value the user has typed.
-        if (impNum.value.trim() !== '') return;
-        const raw = parseFloat(metricNum.value);
+        const raw = parseAmountValue(metricNum.value);
         if (isNaN(raw) || raw <= 0) { impNum.value = ''; return; }
         const unit = (metricUnit.value || '').toLowerCase();
         let grams;
-        if (unit === 'kg') grams = raw * 1000;
-        else if (unit === 'l') grams = raw * 1000;
+        if (unit === 'kg' || unit === 'l') grams = raw * 1000;
         else if (unit === 'ml') grams = raw;
         else if (unit === 'g') grams = raw;
         else return;
         const nameInput = row.querySelector('[data-field="name"]');
-        const gPerCup = getGramsPerCup(nameInput ? nameInput.value : '');
-        const cups = grams / gPerCup;
-        if (!isFinite(cups) || cups <= 0) return;
-        impNum.value = toFractionString(cups);
-        if (![...impUnit.options].some(o => o.value === 'cups')) {
-            const opt = document.createElement('option');
-            opt.value = 'cups'; opt.textContent = 'cups';
-            impUnit.appendChild(opt);
+        const name = nameInput ? nameInput.value : '';
+        const targetUnit = (impUnit.value || '').toLowerCase();
+        const factor = imperialGramsFactor(name, targetUnit);
+        if (factor == null) {
+            // No known imperial unit yet — default to cups.
+            const cups = grams / getGramsPerCup(name);
+            impNum.value = formatCups(cups);
+            ensureUnit(impUnit, 'cups');
+        } else if (targetUnit === 'cups' || targetUnit === 'cup') {
+            impNum.value = formatCups(grams / factor);
+            ensureUnit(impUnit, 'cups');
+        } else {
+            impNum.value = formatCount(grams / factor);
+            ensureUnit(impUnit, targetUnit);
         }
-        impUnit.value = 'cups';
+        impNum.dataset.auto = '1';
+    }
+
+    // Live imperial -> metric conversion while the user edits the imperial amount.
+    function autoCalcMetric(row) {
+        const metricNum = row.querySelector('[data-field="metric-num"]');
+        const metricUnit = row.querySelector('[data-field="metric-unit"]');
+        const impNum = row.querySelector('[data-field="imperial-num"]');
+        const impUnit = row.querySelector('[data-field="imperial-unit"]');
+        if (!metricNum || !metricUnit || !impNum || !impUnit) return;
+        const raw = parseAmountValue(impNum.value);
+        if (isNaN(raw) || raw <= 0) { metricNum.value = ''; return; }
+        const nameInput = row.querySelector('[data-field="name"]');
+        const name = nameInput ? nameInput.value : '';
+        const factor = imperialGramsFactor(name, impUnit.value);
+        if (factor == null) return;
+        const grams = raw * factor;
+        if (!isFinite(grams) || grams <= 0) return;
+        metricNum.value = formatMetricAmount(grams);
+        ensureUnit(metricUnit, 'g');
+        metricNum.dataset.auto = '1';
+    }
+
+    // Keep the physical amount unchanged when the user switches a metric unit
+    // (e.g. 100 g -> 0.1 kg), so the imperial side and macros stay consistent.
+    function convertMetricNumber(numStr, fromUnit, toUnit) {
+        const raw = parseAmountValue(numStr);
+        if (isNaN(raw) || raw <= 0) return numStr;
+        const toGrams = u => (u === 'kg' || u === 'l') ? 1000 : u === 'g' ? 1 : u === 'ml' ? 1 : null;
+        const g = toGrams((fromUnit || '').toLowerCase());
+        const tg = toGrams((toUnit || '').toLowerCase());
+        if (g == null || tg == null) return numStr;
+        return formatMetricAmount(raw * g / tg);
+    }
+
+    // Keep the physical amount unchanged when the user switches an imperial unit
+    // (e.g. 2 cups -> 32 tbsp for a butter-like density).
+    function convertImperialNumber(row, numStr, fromUnit, toUnit) {
+        const raw = parseAmountValue(numStr);
+        if (isNaN(raw) || raw <= 0) return numStr;
+        const nameInput = row.querySelector('[data-field="name"]');
+        const name = nameInput ? nameInput.value : '';
+        const fromFactor = imperialGramsFactor(name, fromUnit);
+        const toFactor = imperialGramsFactor(name, toUnit);
+        if (fromFactor == null || toFactor == null) return numStr;
+        const u = String(toUnit || '').toLowerCase();
+        return (u === 'cups' || u === 'cup') ? formatCups(raw * fromFactor / toFactor) : formatCount(raw * fromFactor / toFactor);
     }
 
     function createIngredientRow(item = '', metric = '', imperial = '', foodId = '') {
@@ -4627,11 +4899,55 @@ const unpricedRow = cost.unpriced.length
 
         const nameInput = div.querySelector('[data-field="name"]');
         attachIngredientAutocomplete(div, nameInput);
-        // Re-run recalc as metric amounts change so the totals stay in sync.
+        // Live-sync the metric and imperial amounts in both directions as the
+        // user types; the field being edited is never overwritten.
         const metricNumInput = div.querySelector('[data-field="metric-num"]');
-        metricNumInput.addEventListener('input', () => {
+        const metricUnitSel = div.querySelector('[data-field="metric-unit"]');
+        const impNumInput = div.querySelector('[data-field="imperial-num"]');
+        const impUnitSel = div.querySelector('[data-field="imperial-unit"]');
+        metricUnitSel.dataset.prev = metricUnitSel.value;
+        impUnitSel.dataset.prev = impUnitSel.value;
+
+        const onMetricEdit = () => {
+            delete metricNumInput.dataset.auto;
             autoCalcImperial(div);
             recalcMacrosFromIngredients();
+        };
+        const onImperialEdit = () => {
+            delete impNumInput.dataset.auto;
+            autoCalcMetric(div);
+            recalcMacrosFromIngredients();
+        };
+        const onMetricUnitChange = () => {
+            metricNumInput.value = convertMetricNumber(metricNumInput.value, metricUnitSel.dataset.prev, metricUnitSel.value);
+            metricUnitSel.dataset.prev = metricUnitSel.value;
+            delete metricNumInput.dataset.auto;
+            autoCalcImperial(div);
+            recalcMacrosFromIngredients();
+        };
+        const onImperialUnitChange = () => {
+            const raw = parseAmountValue(metricNumInput.value);
+            const mu = (metricUnitSel.value || '').toLowerCase();
+            const metricHasWeight = ['g', 'kg', 'ml', 'l'].includes(mu) && !isNaN(raw) && raw > 0;
+            if (metricHasWeight) {
+                // Metric is authoritative — express it in the newly picked imperial unit.
+                autoCalcImperial(div);
+            } else {
+                // Imperial is authoritative — keep the physical amount in the new unit.
+                impNumInput.value = convertImperialNumber(div, impNumInput.value, impUnitSel.dataset.prev, impUnitSel.value);
+            }
+            impUnitSel.dataset.prev = impUnitSel.value;
+            delete impNumInput.dataset.auto;
+            recalcMacrosFromIngredients();
+        };
+        metricNumInput.addEventListener('input', onMetricEdit);
+        metricUnitSel.addEventListener('change', onMetricUnitChange);
+        impNumInput.addEventListener('input', onImperialEdit);
+        impUnitSel.addEventListener('change', onImperialUnitChange);
+        // Recompute the auto-derived side once the ingredient name pins the density.
+        nameInput.addEventListener('input', () => {
+            if (metricNumInput.dataset.auto === '1') autoCalcMetric(div);
+            if (impNumInput.dataset.auto === '1') autoCalcImperial(div);
         });
 
         ingContainer.appendChild(div);

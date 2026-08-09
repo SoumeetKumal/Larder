@@ -2140,6 +2140,9 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .cms-ing-suggestion:hover, .cms-ing-suggestion.active { background: var(--primary-light); color: var(--primary); }
     .cms-ing-suggestion-name { flex: 1 1 auto; min-width: 0; line-height: 1.35; overflow-wrap: anywhere; }
     .cms-ing-suggestion-cat { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; white-space: nowrap; }
+    .cms-ing-suggestion.cms-ing-create { border-top: 1px dashed var(--border); color: var(--accent-sea); font-style: italic; }
+    .cms-ing-suggestion.cms-ing-create .cms-ing-suggestion-name { font-style: italic; font-weight: 600; }
+    .cms-ing-suggestion.cms-ing-create .cms-ing-suggestion-cat { color: var(--accent-sea); font-style: normal; }
 
     /* CMS header toolbar alignment */
     body.cms-page .cms-actions { position: relative; }
