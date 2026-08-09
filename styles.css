@@ -1209,6 +1209,7 @@
         
         .recipe-step { margin-bottom: 0.75rem; display: flex; gap: 1rem; }
         .step-number { font-weight: 700; color: var(--accent-sea); font-size: 1.2rem; flex-shrink: 0; }
+        #recipe-modal .step-number { color: var(--recipe-accent, var(--accent-sea)); }
 
         /* ==========================================================================
            INGREDIENT CARDS
@@ -2334,6 +2335,8 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .recipe-table tr:last-child td { border-bottom: none; }
     .recipe-step { margin-bottom: 0.75rem; display: flex; gap: 1rem; }
     .step-number { font-weight: 700; color: var(--accent-sea); font-size: 1.2rem; flex-shrink: 0; }
+    #cms-editor-modal .step-number { color: var(--cms-accent, var(--accent-sea)); }
+    #recipe-modal .step-number { color: var(--recipe-accent, var(--accent-sea)); }
     @media (max-width: 768px) {
         .modal-body { grid-template-columns: 1fr; }
         .recipe-ingredients-col { border-right: none; border-bottom: 1px solid var(--border); }

@@ -341,6 +341,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Map a recipe category to its accent colour (mirrors cms.js getCategoryAccent).
+    function getCategoryAccent(cat) {
+        const c = (cat || '').toLowerCase();
+        if (c.includes('seafood') || c.includes('fish') || c.includes('shell')) return 'var(--accent-sea)';
+        if (c.includes('vegetable') || c.includes('veg')) return 'var(--accent-veg)';
+        if (c.includes('meat') || c.includes('poultry') || c.includes('lamb') || c.includes('beef') || c.includes('pork')) return 'var(--accent-meat)';
+        if (c.includes('grain') || c.includes('pasta') || c.includes('bread') || c.includes('rice') || c.includes('stock')) return 'var(--accent-stock)';
+        if (c.includes('baking') || c.includes('dessert') || c.includes('sweet') || c.includes('pastry')) return 'var(--accent-bake)';
+        if (c.includes('fruit') || c.includes('jam') || c.includes('jelly') || c.includes('pickle')) return 'var(--accent-jam)';
+        return 'var(--accent-sea)';
+    }
+
     // Derive a small, data-backed tag set for each item so the Tags section
     // stays functional even when entries carry no explicit tags field.
     function getRecipeTags(recipe) {
@@ -1038,18 +1050,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
         }
 
+        const headerColor = getCategoryAccent(recipe.category);
+        modalBody.style.setProperty('--recipe-accent', headerColor);
+
         let footerHtml = '';
         if (recipe.note || recipe.variations) {
             footerHtml = '<div class="recipe-footer-col">';
             if (recipe.note) {
-                footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
-                    <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
+                footerHtml += `<div class="recipe-callout" style="border-left-color: ${headerColor};">
+                    <h4 class="callout-title" style="color: ${headerColor};"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
                     <p style="font-size: 0.9rem; line-height: 1.6;">${escapeHtml(recipe.note)}</p>
                 </div>`;
             }
             if (recipe.variations) {
-                footerHtml += `<div class="recipe-callout" style="border-left-color: var(--accent-sea);">
-                    <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
+                footerHtml += `<div class="recipe-callout" style="border-left-color: ${headerColor};">
+                    <h4 class="callout-title" style="color: ${headerColor};"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
                     <p style="font-size: 0.9rem; line-height: 1.6;">${escapeHtml(recipe.variations)}</p>
                 </div>`;
             }
@@ -1057,10 +1072,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const iconTag = recipe.iconTag || 'icon-fish';
-        
-        let headerColor = 'var(--accent-sea)';
-        if (recipe.category === 'Dessert') headerColor = 'var(--accent-bake)';
-        else if (recipe.category === 'Breakfast') headerColor = 'var(--accent-stock)';
         
         const ingVis = getIngredientIcon(recipe.category);
         const ingredientsPillIcon = `<i data-lucide="${ingVis.icon}" style="width: 18px; height: 18px; stroke-width: 2; color: currentColor;"></i>`;
@@ -1134,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Content Row -->
                 <div class="recipe-ingredients-col" style="padding-top: 1rem;" id="ingredients-wrapper">
                     <div style="display: flex; align-items: flex-start; flex-wrap: wrap;">
-                        <h3 class="section-pill" style="color: ${ingVis.accent}; border-color: ${ingVis.accent};">${ingredientsPillIcon} Ingredients</h3>
+                        <h3 class="section-pill" style="color: ${headerColor}; border-color: ${headerColor};">${ingredientsPillIcon} Ingredients</h3>
                     </div>
                     ${ingredientsHtml}
                 </div>

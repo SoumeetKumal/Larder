@@ -441,6 +441,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return { accent: 'var(--accent-sea)', href: '#icon-fish', vb: '0 0 158 73', w: 26, h: 13 };
     }
 
+    // Map a recipe category to its accent colour (mirrors app.js getCategoryAccent).
+    function getCategoryAccent(cat) {
+        const c = (cat || '').toLowerCase();
+        if (c.includes('seafood') || c.includes('fish') || c.includes('shell')) return 'var(--accent-sea)';
+        if (c.includes('vegetable') || c.includes('veg')) return 'var(--accent-veg)';
+        if (c.includes('meat') || c.includes('poultry') || c.includes('lamb') || c.includes('beef') || c.includes('pork')) return 'var(--accent-meat)';
+        if (c.includes('grain') || c.includes('pasta') || c.includes('bread') || c.includes('rice') || c.includes('stock')) return 'var(--accent-stock)';
+        if (c.includes('baking') || c.includes('dessert') || c.includes('sweet') || c.includes('pastry')) return 'var(--accent-bake)';
+        if (c.includes('fruit') || c.includes('jam') || c.includes('jelly') || c.includes('pickle')) return 'var(--accent-jam)';
+        return 'var(--accent-sea)';
+    }
+
+    function applyCMSAccent() {
+        const catSelect = document.getElementById('recipe-category');
+        const accent = getCategoryAccent(catSelect ? catSelect.value : '');
+        modal.style.setProperty('--cms-accent', accent);
+        if (window.lucide) window.lucide.createIcons();
+    }
+
     // --- Custom Confirmation Dialog ---
     const confirmDialog = document.getElementById('confirm-dialog');
     const confirmTitle = document.getElementById('confirm-dialog-title');
@@ -480,6 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
             macroRefAmountGroup.style.display = 'none';
         }
     });
+
+    // Re-tint the editor's accent as the recipe category changes.
+    document.getElementById('recipe-category').addEventListener('change', () => applyCMSAccent());
 
     let recipes = [];
     let ingredients = [];
@@ -4495,6 +4517,61 @@ const unpricedRow = cost.unpriced.length
         });
     }
 
+    // --- Metric-to-imperial auto-calc ---
+    // Grams per 1 US cup for common ingredients; used to prefill the imperial
+    // amount when the user types a metric amount (grams/ml). Unknown foods fall
+    // back to water density (240 g/cup).
+    function getGramsPerCup(name) {
+        const n = String(name || '').toLowerCase();
+        if (/(all.purpose|plain|bread|cake|pastry|tapioca|potato).*flour|flour/.test(n)) return 120;
+        if (/(icing|powdered|confectioners?).*sugar|powdered/.test(n)) return 120;
+        if (/brown sugar/.test(n)) return 220;
+        if (/sugar/.test(n)) return 200;
+        if (/butter|margarine/.test(n)) return 227;
+        if (/oil/.test(n)) return 224;
+        if (/(honey|syrup|molasses|golden syrup)/.test(n)) return 340;
+        if (/peanut butter/.test(n)) return 258;
+        if (/rice/.test(n)) return 185;
+        if (/oats?/.test(n)) return 90;
+        if (/breadcrumbs?|panko/.test(n)) return 115;
+        if (/cocoa|chocolate chips?/.test(n)) return 170;
+        if (/(milk|water|stock|cream|yogurt|buttermilk)/.test(n)) return 240;
+        if (/cheese/.test(n)) return 100;
+        if (/(almond|walnut|cashew|pecan|hazelnut|pistachio|peanut|nut)/.test(n)) return 140;
+        if (/salt/.test(n)) return 290;
+        return 240;
+    }
+
+    function autoCalcImperial(row) {
+        const metricNum = row.querySelector('[data-field="metric-num"]');
+        const metricUnit = row.querySelector('[data-field="metric-unit"]');
+        const impNum = row.querySelector('[data-field="imperial-num"]');
+        const impUnit = row.querySelector('[data-field="imperial-unit"]');
+        if (!metricNum || !metricUnit || !impNum || !impUnit) return;
+        // Never overwrite an imperial value the user has typed.
+        if (impNum.value.trim() !== '') return;
+        const raw = parseFloat(metricNum.value);
+        if (isNaN(raw) || raw <= 0) { impNum.value = ''; return; }
+        const unit = (metricUnit.value || '').toLowerCase();
+        let grams;
+        if (unit === 'kg') grams = raw * 1000;
+        else if (unit === 'l') grams = raw * 1000;
+        else if (unit === 'ml') grams = raw;
+        else if (unit === 'g') grams = raw;
+        else return;
+        const nameInput = row.querySelector('[data-field="name"]');
+        const gPerCup = getGramsPerCup(nameInput ? nameInput.value : '');
+        const cups = grams / gPerCup;
+        if (!isFinite(cups) || cups <= 0) return;
+        impNum.value = toFractionString(cups);
+        if (![...impUnit.options].some(o => o.value === 'cups')) {
+            const opt = document.createElement('option');
+            opt.value = 'cups'; opt.textContent = 'cups';
+            impUnit.appendChild(opt);
+        }
+        impUnit.value = 'cups';
+    }
+
     function createIngredientRow(item = '', metric = '', imperial = '', foodId = '') {
         const isHeader = String(item).startsWith('## ');
         const div = document.createElement('div');
@@ -4551,7 +4628,11 @@ const unpricedRow = cost.unpriced.length
         const nameInput = div.querySelector('[data-field="name"]');
         attachIngredientAutocomplete(div, nameInput);
         // Re-run recalc as metric amounts change so the totals stay in sync.
-        div.querySelector('[data-field="metric-num"]').addEventListener('input', recalcMacrosFromIngredients);
+        const metricNumInput = div.querySelector('[data-field="metric-num"]');
+        metricNumInput.addEventListener('input', () => {
+            autoCalcImperial(div);
+            recalcMacrosFromIngredients();
+        });
 
         ingContainer.appendChild(div);
     }
@@ -4675,6 +4756,7 @@ const unpricedRow = cost.unpriced.length
         refreshRecipeAutoTags();
         refreshImagePreview('recipe-image', 'recipe-image-preview');
         if (window.lucide) window.lucide.createIcons();
+        applyCMSAccent();
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }

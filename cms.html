@@ -168,7 +168,7 @@
     </div>
 
     <!-- CMS Recipe Editor Modal (matches visual_direction_cms.html) -->
-    <div id="cms-editor-modal" class="modal-overlay">
+    <div id="cms-editor-modal" class="modal-overlay" style="--cms-accent: var(--accent-sea);">
         <div class="modal-content" onclick="event.stopPropagation()">
             <form id="recipe-form" style="display: contents;">
                 <div class="modal-header">
@@ -178,7 +178,7 @@
                     </div>
                     <input type="hidden" id="recipe-id">
                     <input type="hidden" name="entryType" value="recipe">
-                    <input type="text" id="recipe-title" class="seamless-input recipe-full-title" placeholder="RECIPE TITLE" style="text-align: center;">
+                    <input type="text" id="recipe-title" class="seamless-input recipe-full-title" placeholder="RECIPE TITLE" style="text-align: center; color: var(--cms-accent);">
                     <input type="text" id="recipe-desc" class="seamless-input recipe-full-desc" placeholder="Short description..." style="text-align: center; font-style: italic; color: var(--text-muted);">
                     <div id="cms-recipe-tags" class="modal-tags" style="margin-top: 0.5rem;"></div>
                 </div>
@@ -186,7 +186,7 @@
                 <div class="modal-body">
                     <!-- Stats Row -->
                     <div class="recipe-ingredients-col" style="padding: 1.5rem 1rem 1rem 2rem; border-bottom: 1px solid var(--border); border-right: none;">
-                        <div class="stat-block" style="border-top: 3px solid var(--accent-sea); width: 100%; justify-content: flex-start;">
+                        <div class="stat-block" style="border-top: 3px solid var(--cms-accent); width: 100%; justify-content: flex-start;">
                             <span class="stat-block-title">Info</span>
                             <div class="stat-group">
                                 <div class="stat-item"><span class="stat-label">Serves</span>
@@ -204,7 +204,7 @@
                         </div>
                     </div>
                     <div class="recipe-instructions-col" style="padding: 1.5rem 2rem 1rem 1rem; border-bottom: 1px solid var(--border);">
-                        <div class="stat-block" style="border-top: 3px solid var(--accent-sea); width: 100%; justify-content: flex-start;">
+                        <div class="stat-block" style="border-top: 3px solid var(--cms-accent); width: 100%; justify-content: flex-start;">
                             <span class="stat-block-title">Per Serving</span>
                             <div class="stat-group" style="gap: 1.5rem;">
                                 <div class="stat-item"><span class="stat-label">Energy</span>
@@ -238,7 +238,7 @@
 
                     <!-- Tags Row -->
                     <div class="recipe-tags-col" style="padding: 1.5rem 1rem 1rem 2rem; border-bottom: 1px solid var(--border);">
-                        <div class="stat-block" style="border-top: 3px solid var(--accent-sea); width: 100%; justify-content: flex-start;">
+                        <div class="stat-block" style="border-top: 3px solid var(--cms-accent); width: 100%; justify-content: flex-start;">
                             <span class="stat-block-title">Tags</span>
                             <div style="flex: 1; display: flex; flex-direction: column; gap: 0.6rem; width: 100%; min-width: 0;">
                                 <div class="recipe-tags-chips" id="recipe-tags-chips"></div>
@@ -253,7 +253,7 @@
 
                     <!-- Content Row: Ingredients -->
                     <div class="recipe-ingredients-col" style="padding-top: 1rem;">
-                        <h3 class="section-pill" style="color: var(--accent-sea); border-color: var(--accent-sea);"><i data-lucide="utensils" style="width: 16px; height: 16px;"></i> Ingredients</h3>
+                        <h3 class="section-pill" style="color: var(--cms-accent); border-color: var(--cms-accent);"><i data-lucide="utensils" style="width: 16px; height: 16px;"></i> Ingredients</h3>
                         <datalist id="ingredient-suggestions"></datalist>
                         <div id="ingredients-container"></div>
                         <button type="button" id="add-ing-btn" class="cms-add-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Ingredient</button>
@@ -261,19 +261,19 @@
 
                     <!-- Content Row: Instructions -->
                     <div class="recipe-instructions-col" style="padding-top: 1rem;">
-                        <h3 class="section-pill" style="color: var(--accent-sea); border-color: var(--accent-sea);"><i data-lucide="list-ordered" style="width: 16px; height: 16px;"></i> Instructions</h3>
+                        <h3 class="section-pill" style="color: var(--cms-accent); border-color: var(--cms-accent);"><i data-lucide="list-ordered" style="width: 16px; height: 16px;"></i> Instructions</h3>
                         <div id="steps-container"></div>
                         <button type="button" id="add-step-btn" class="cms-add-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Step</button>
                     </div>
 
                     <!-- Footer Row: Notes & Variations -->
                     <div class="recipe-footer-col">
-                        <div class="recipe-callout" style="border-left-color: var(--accent-sea);">
-                            <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
+                        <div class="recipe-callout" style="border-left-color: var(--cms-accent);">
+                            <h4 class="callout-title" style="color: var(--cms-accent);"><i data-lucide="lightbulb" style="width: 18px; height: 18px;"></i>Note</h4>
                             <textarea id="recipe-note" class="seamless-input seamless-textarea" placeholder="Optional notes..." style="font-size: 0.9rem; line-height: 1.6; min-height: 50px;"></textarea>
                         </div>
-                        <div class="recipe-callout" style="border-left-color: var(--accent-sea);">
-                            <h4 class="callout-title" style="color: var(--accent-sea);"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
+                        <div class="recipe-callout" style="border-left-color: var(--cms-accent);">
+                            <h4 class="callout-title" style="color: var(--cms-accent);"><i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i> Variations</h4>
                             <textarea id="recipe-variations" class="seamless-input seamless-textarea" placeholder="Optional variations..." style="font-size: 0.9rem; line-height: 1.6; min-height: 50px;"></textarea>
                         </div>
                         <details class="cms-details-section">
