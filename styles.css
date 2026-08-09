@@ -2390,6 +2390,17 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .seamless-select:hover { border-color: var(--border); background: rgba(93, 128, 134, 0.05); }
     .seamless-select:focus { border-color: var(--primary); outline: none; background: var(--bg-surface); box-shadow: var(--shadow-focus); }
 
+    .img-field-row { display: flex; gap: 0.5rem; align-items: center; }
+    .img-field-row .seamless-input { flex: 1; min-width: 0; }
+    .img-field-preview { margin-top: 0.5rem; display: none; }
+    .img-field-preview img {
+        max-width: 100%;
+        max-height: 160px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        display: block;
+    }
+
     .cms-ingredient-row { display: grid; grid-template-columns: minmax(140px, 3fr) minmax(110px, 1fr) minmax(130px, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
     .cms-ingredient-row:last-child { border-bottom: none; }
     .cms-ingredient-row .cms-btn-icon { padding: 0.25rem; }

@@ -634,8 +634,15 @@ const server = http.createServer((req, res) => {
             } catch (e) { /* fall through */ }
             const run = (cmd, args, opts = {}) => new Promise((resolve, reject) => {
                 execFile(cmd, args, { cwd: opts.cwd || repoPath, maxBuffer: 5 * 1024 * 1024, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } }, (err, stdout, stderr) => {
-                    if (err) reject(new Error((stderr || stdout || err.message).trim().split('\n')[0]));
-                    else resolve((stdout || '').trim());
+                    if (err) {
+                        // Surface the real git error (rejected push, auth, ...) instead of
+                        // only the first line, which is often just "To <url>".
+                        const text = (stderr || stdout || err.message).trim();
+                        const lines = text.split('\n').filter(l => l.trim() && !/^hint:/i.test(l));
+                        reject(new Error(lines.slice(0, 4).join('\n')));
+                    } else {
+                        resolve((stdout || '').trim());
+                    }
                 });
             });
             (async () => {
@@ -643,6 +650,21 @@ const server = http.createServer((req, res) => {
                     fs.mkdirSync(path.dirname(repoPath), { recursive: true });
                     await run('git', [...gitAuthArgs(cfg.token), 'clone', cfg.repoUrl, repoPath], { cwd: path.dirname(repoPath) });
                 }
+
+                // Sync the working clone with the remote default branch so the push
+                // below stays fast-forward even if the remote moved (e.g. edits made
+                // on GitHub, or a publish from another PC). Only data files are
+                // managed here, so a hard reset never loses app content.
+                let remoteBranch = '';
+                try {
+                    const headRef = (await run('git', ['symbolic-ref', 'refs/remotes/origin/HEAD'])).trim();
+                    remoteBranch = headRef.replace(/^refs\/remotes\/origin\//, '');
+                } catch (e) { /* fresh/empty clone; fall through */ }
+                try { await run('git', ['fetch', 'origin']); } catch (e) { /* offline; best effort */ }
+                if (remoteBranch) {
+                    try { await run('git', ['reset', '--hard', `origin/${remoteBranch}`]); } catch (e) { /* ignore */ }
+                }
+
                 const targetDir = path.join(repoPath, 'data');
                 if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
                 let copied = 0;
@@ -653,10 +675,22 @@ const server = http.createServer((req, res) => {
                         copied++;
                     }
                 });
+
+                // Nothing changed since the last publish — don't create an empty commit.
+                const statusOut = await run('git', ['status', '--porcelain']);
+                if (!statusOut.trim()) {
+                    persistWebsiteRepoPath(repoPath);
+                    sendJson(res, 200, { success: true, copied: 0, message: 'Data is already up to date — nothing to publish.' });
+                    console.log(`  ⏭️ Nothing to publish to ${repoPath}`);
+                    return;
+                }
+
                 const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
                 await run('git', ['add', 'data']);
                 const commitOut = await run('git', ['commit', '-m', `Publish data from Larder CMS (${stamp})`]);
-                const pushOut = await run('git', [...gitAuthArgs(cfg.token), 'push']);
+                const pushOut = remoteBranch
+                    ? await run('git', [...gitAuthArgs(cfg.token), 'push', 'origin', `HEAD:${remoteBranch}`])
+                    : await run('git', [...gitAuthArgs(cfg.token), 'push']);
                 persistWebsiteRepoPath(repoPath);
                 sendJson(res, 200, { success: true, copied, commit: commitOut, push: pushOut, message: `Published ${copied} data file(s). GitHub Pages will rebuild in a minute.` });
                 console.log(`  🚀 Published ${copied} data file(s) to ${repoPath}`);

@@ -4673,6 +4673,7 @@ const unpricedRow = cost.unpriced.length
         }
         renderRecipeTagsEditor();
         refreshRecipeAutoTags();
+        refreshImagePreview('recipe-image', 'recipe-image-preview');
         if (window.lucide) window.lucide.createIcons();
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -4782,6 +4783,80 @@ const unpricedRow = cost.unpriced.length
         if (el) el.addEventListener('input', refreshRecipeAutoTags);
     });
 
+    // --- Image upload (stored as a downscaled data URL so it travels with the
+    // JSON data: export/import backups, the website repo, GitHub Pages) ---
+    function resizeImageToDataUrl(file, maxDim = 1000, quality = 0.85) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    const scale = Math.min(1, maxDim / Math.max(width, height));
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    resolve(canvas.toDataURL(mime, quality));
+                };
+                img.onerror = () => reject(new Error('Could not read the selected image.'));
+                img.src = reader.result;
+            };
+            reader.onerror = () => reject(new Error('Could not read the selected file.'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function refreshImagePreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        const val = input ? input.value.trim() : '';
+        if (val) {
+            preview.innerHTML = `<img src="${escapeHtml(val)}" alt="Preview" onerror="this.parentElement.style.display='none'">`;
+            preview.style.display = '';
+        } else {
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+        }
+    }
+
+    function bindImageUpload(inputId, fileId, previewId) {
+        const fileInput = document.getElementById(fileId);
+        const uploadBtn = document.getElementById(inputId + '-upload');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                if (fileInput) fileInput.click();
+            });
+        }
+        if (fileInput) {
+            fileInput.addEventListener('change', async () => {
+                const file = fileInput.files && fileInput.files[0];
+                fileInput.value = '';
+                if (!file) return;
+                if (!file.type.startsWith('image/')) { alert('Please choose an image file.'); return; }
+                if (file.size > 8 * 1024 * 1024) { alert('That image is larger than 8 MB. Please choose a smaller one.'); return; }
+                try {
+                    const dataUrl = await resizeImageToDataUrl(file);
+                    const input = document.getElementById(inputId);
+                    if (input) input.value = dataUrl;
+                    refreshImagePreview(inputId, previewId);
+                } catch (err) {
+                    alert(err.message || 'Could not upload the image.');
+                }
+            });
+        }
+        const input = document.getElementById(inputId);
+        if (input) input.addEventListener('input', () => refreshImagePreview(inputId, previewId));
+    }
+
+    bindImageUpload('recipe-image', 'recipe-image-file', 'recipe-image-preview');
+    bindImageUpload('profile-image', 'profile-image-file', 'profile-image-preview');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -4877,6 +4952,7 @@ const unpricedRow = cost.unpriced.length
         document.getElementById('profile-category').value = (ing && ing.category) || '';
         document.getElementById('profile-description').value = (ing && ing.description) || '';
         document.getElementById('profile-image').value = (ing && ing.imageUrl) || '';
+        refreshImagePreview('profile-image', 'profile-image-preview');
         document.getElementById('profile-calories').value = (ing && ing.calories) || '';
         document.getElementById('profile-proteinG').value = (ing && ing.proteinG) || '';
         document.getElementById('profile-fatG').value = (ing && ing.fatG) || '';
