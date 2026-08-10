@@ -2471,23 +2471,26 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .mp-macro-curr { color: var(--text-main); font-weight: 700; }
     .mp-macro-target { color: var(--text-muted); }
     
-.mp-grid { display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 0.6rem; }
-    .mp-column-header { text-align: center; padding-bottom: 0.6rem; border-bottom: 2px solid var(--border); margin-bottom: 0.6rem; }
-    .mp-day-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
-    .mp-day-date { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+.mp-grid { display: grid; grid-template-columns: 100px repeat(7, minmax(0, 1fr)); gap: 0.5rem; max-width: 100%; overflow-x: auto; }
+    .mp-column-header { text-align: center; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); margin-bottom: 0.5rem; }
+    .mp-day-name { font-weight: 700; font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
+    .mp-day-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
     
-    .mp-row-label { display: flex; align-items: center; justify-content: flex-end; padding-right: 1rem; font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; height: 62px; }
+    .mp-row-label { display: flex; align-items: center; justify-content: flex-end; padding-right: 0.75rem; font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; height: 84px; white-space: nowrap; }
     
-    .mp-slot { height: 62px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--transition-fast); position: relative; overflow: hidden; }
+    .mp-slot { min-height: 84px; height: 100%; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px; display: flex; align-items: stretch; justify-content: center; cursor: pointer; transition: all var(--transition-fast); position: relative; overflow: visible; }
     .mp-slot:hover { border-color: var(--primary); background: var(--primary-light); }
-    .mp-slot:hover::after { content: '+ Add Meal'; position: absolute; font-size: 0.8rem; font-weight: 600; color: var(--primary); }
+    .mp-slot:hover::after { content: '+ Add Meal'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8rem; font-weight: 600; color: var(--primary); }
     
-.mp-meal-card { position: absolute; inset: 0; background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; padding: 0.3rem; gap: 0.45rem; transition: all var(--transition-fast); box-shadow: var(--shadow-sm); z-index: 1; }
-    .mp-meal-card:hover { border-color: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.mp-meal-card { position: relative; width: 100%; height: 100%; background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; padding: 0.4rem; gap: 0.5rem; transition: all var(--transition-fast); box-shadow: var(--shadow-sm); z-index: 1; }
+    .mp-meal-card:hover { border-color: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); z-index: 2; }
     .mp-meal-img { width: 28px; height: 28px; border-radius: 7px; object-fit: cover; background: var(--bg-surface); }
     .mp-meal-info { flex-grow: 1; overflow: hidden; }
     .mp-meal-title { font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.1rem; }
     .mp-meal-meta { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .mp-eater-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.15rem; }
+    .mp-eater-tag { font-size: 0.62rem; font-weight: 700; padding: 0.05rem 0.35rem; border-radius: 8px; background: var(--primary-light); color: var(--primary); white-space: nowrap; }
+    .mp-eater-tag-out { background: rgba(192, 57, 43, 0.12); color: var(--accent-meat); }
     .mp-cost-chip { background: rgba(79, 70, 229, 0.12); color: var(--primary); font-weight: 700; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 10px; white-space: nowrap; }
     .mp-cost-card { cursor: default; }
     .mp-cost-card:hover { border-color: var(--border); box-shadow: none; }
@@ -2497,6 +2500,49 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .mp-cost-note { margin-top: 0.35rem; font-size: 0.7rem; color: var(--text-muted); }
     .mp-eating-out { background: linear-gradient(135deg, var(--bg-surface), var(--primary-light)); border: 1px solid var(--primary); justify-content: center; flex-direction: column; gap: 0.25rem; }
     .mp-eating-out .mp-meal-title { color: var(--primary); font-weight: 700; margin: 0; }
+
+    /* Meal card tooltip — shows all eaters and their meals on hover */
+    .mp-tooltip {
+        position: fixed;
+        background: var(--bg-base);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: var(--shadow-lg);
+        font-size: 0.7rem;
+        line-height: 1.5;
+        max-width: 280px;
+        min-width: 180px;
+        z-index: 9999;
+        color: var(--text-main);
+        pointer-events: none;
+        padding: 0.6rem 0.75rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease, visibility 0.15s ease;
+        transform: translateY(4px);
+    }
+    .mp-tooltip.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .mp-tooltip::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: var(--bg-base) transparent transparent transparent;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        pointer-events: none;
+    }
+    .mp-tooltip-eater { margin-bottom: 0.35rem; }
+    .mp-tooltip-eater:last-child { margin-bottom: 0; }
+    .mp-tooltip-eater-name { font-weight: 700; color: var(--primary); display: block; margin-bottom: 0.15rem; }
+    .mp-tooltip-eater-out { font-size: 0.65rem; color: var(--accent-meat); font-style: italic; }
+    .mp-tooltip-item { font-size: 0.65rem; color: var(--text-muted); padding-left: 0.5rem; margin-top: 0.1rem; }
 
     /* Nutrition vs Budget Overview Panel */
     .mp-overview { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
@@ -2537,6 +2583,9 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .slide-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 2000; opacity: 0; visibility: hidden; transition: all var(--transition-fast); }
     .slide-panel-overlay.active { opacity: 1; visibility: visible; }
     .slide-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 480px; background: var(--bg-base); box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
+    /* In Electron, the injected 38px title bar overlays the top of the viewport;
+       drop the panel below it so the header isn't clipped. */
+    body:has(#larder-titlebar) .slide-panel { top: 38px; }
     
     /* Assign Meal Search Results */
     .mp-search-results { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
@@ -2557,7 +2606,112 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .slide-panel-header h3 { line-height: 1.4; overflow: visible; white-space: normal; text-overflow: clip; }
     .slide-panel-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
     .slide-panel-footer { padding: 1.5rem; border-top: 1px solid var(--border); background: var(--bg-surface); }
-    /* Search & Filter UI for Slide-Panel and Global CMS (scoped to CMS page only) */
+
+    /* Meal Assignment Panel — redesigned */
+    .mp-section { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; }
+    .mp-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .mp-section-title { font-size: 0.85rem; font-weight: 600; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em; }
+    .mp-section-eating-out .mp-toggle { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--bg-surface-hover); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    .mp-section-eating-out .mp-toggle-input { width: 20px; height: 20px; accent-color: var(--primary); }
+    .mp-section-eating-out .mp-toggle-label { font-weight: 600; color: var(--text-main); }
+
+    /* Serving size (grams per serving) */
+    .mp-serving-size { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .mp-serving-size-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .mp-serving-size-input { width: 88px; text-align: center; padding: 0.4rem 0.5rem; }
+    .mp-serving-size-unit { font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+    .mp-serving-size-hint { font-size: 0.7rem; color: var(--text-muted); margin-left: auto; }
+
+    /* Who's Eating — one card per person with its own item list */
+    .mp-eaters { display: flex; flex-direction: column; gap: 0.5rem; }
+    .mp-eater-card { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface-hover); overflow: hidden; transition: all var(--transition-fast); }
+    .mp-eater-card-out { border-color: var(--border); background: var(--bg-base); opacity: 0.8; }
+    .mp-eater-card-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.75rem; }
+    .mp-eater-cb-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-main); cursor: pointer; }
+    .mp-eater-cb-label input { width: 16px; height: 16px; accent-color: var(--primary); }
+    .mp-eater-name { color: var(--text-main); }
+    .mp-eater-card-out .mp-eater-name { opacity: 0.4; text-decoration: line-through; }
+    .mp-eater-subtotal { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+    .mp-eater-card-out .mp-eater-subtotal { color: var(--text-muted); }
+    .mp-eater-items { display: flex; flex-direction: column; border-top: 1px solid var(--border); background: var(--bg-base); }
+    .mp-eater-item { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .mp-eater-item:last-child { border-bottom: none; }
+    .mp-eater-item-main { min-width: 0; }
+    .mp-eater-item-name { font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mp-eater-item-serving { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; }
+    .mp-eater-serving { width: 62px; text-align: center; padding: 0.25rem 0.35rem; }
+    .mp-eater-item-grams { display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0; }
+    .mp-eater-grams { width: 84px; text-align: center; padding: 0.4rem 0.5rem; }
+    .mp-eater-grams-unit { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+    .mp-eater-item-remove { background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0.25rem; border-radius: 4px; }
+    .mp-eater-item-remove:hover { background: var(--accent-meat); color: white; }
+    .mp-eater-item-empty { padding: 0.5rem 0.75rem; font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
+
+    /* Staged item picker (search → pick amount + eater → add) */
+    .mp-picker { margin-top: 0.75rem; }
+    .mp-picker-card { border: 1px solid var(--primary); border-radius: 10px; background: var(--bg-base); padding: 0.75rem; }
+    .mp-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .mp-picker-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+    .mp-picker-type { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .mp-picker-eaters { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.5rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .mp-picker-eaters-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .mp-picker-eater-cb { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--text-main); cursor: pointer; }
+    .mp-picker-eater-cb input { accent-color: var(--primary); }
+    .mp-picker-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .mp-picker-grams { width: 88px; text-align: center; padding: 0.4rem 0.5rem; }
+    .mp-picker-unit { font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+    .mp-picker-eater { flex: 1; min-width: 110px; padding: 0.4rem 0.5rem; }
+
+    .mp-summary { margin-top: 0.75rem; padding: 0.6rem 0.75rem; background: var(--bg-surface-hover); border: 1px dashed var(--border); border-radius: 8px; font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+
+    .mp-search { position: relative; }
+    .mp-search-suggestions { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; max-height: 260px; overflow-y: auto; z-index: 10; display: none; box-shadow: var(--shadow-lg); }
+    .mp-search-suggestions.open { display: block; }
+    .mp-search-suggestion { padding: 0.75rem 1rem; cursor: pointer; font-size: 0.9rem; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border-top: 1px solid var(--border); }
+    .mp-search-suggestion:first-child { border-top: none; }
+    .mp-search-suggestion:hover { background: var(--primary-light); color: var(--primary); }
+    .mp-search-suggestion-name { flex: 1; font-weight: 500; }
+    .mp-search-suggestion-meta { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .mp-search-suggestion-eating-out { color: var(--accent-meat); font-style: italic; }
+
+    .mp-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .mp-filter-input { flex: 1; min-width: 90px; font-size: 0.8rem; }
+
+    .mp-amount { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+    .mp-amount-input { flex: 1; font-size: 0.95rem; }
+    .mp-amount-unit { color: var(--text-muted); font-size: 0.85rem; min-width: 32px; text-align: center; }
+    .mp-amount-btn { padding: 0.75rem 1.25rem; font-weight: 600; }
+
+    .mp-selected { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+    .mp-selected li { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .mp-selected li:last-child { border-bottom: none; }
+    .mp-selected-name { font-weight: 600; color: var(--text-main); }
+    .mp-selected-detail { color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem; }
+    .mp-selected-remove { background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0.25rem; border-radius: 4px; }
+    .mp-selected-remove:hover { background: var(--accent-meat); color: white; }
+    .mp-empty { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem; }
+
+    .mp-clear { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
+    .mp-clear:hover { border-color: var(--accent-meat); color: var(--accent-meat); background: rgba(192,57,43,0.08); }
+
+    .mp-templates { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 36px; }
+    .mp-template-name-row { display: flex; gap: 0.35rem; margin-bottom: 0.5rem; }
+    .mp-template-name-input { flex: 1; font-size: 0.85rem; padding: 0.4rem 0.5rem; }
+    .mp-template { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.7rem; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-surface); font-size: 0.75rem; cursor: pointer; transition: all var(--transition-fast); }
+    .mp-template:hover { border-color: var(--primary); background: var(--primary-light); }
+    .mp-template-name { font-weight: 600; }
+    .mp-template-meta { color: var(--text-muted); }
+    .mp-template-delete { background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 0.2rem; padding: 0.1rem; }
+
+    .mp-btn-sm { padding: 0.35rem 0.75rem; font-size: 0.7rem; font-weight: 600; }
+
+    .mp-days { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .mp-days label { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.7rem; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-surface); font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all var(--transition-fast); }
+    .mp-days input { width: 14px; height: 14px; accent-color: var(--primary); }
+    .mp-days label:hover { border-color: var(--primary); background: var(--primary-light); }
+    .mp-days input:checked + span { color: var(--primary); font-weight: 600; }
+    .mp-days label:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
+
     body.cms-page .filter-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; position: relative; width: 100%; }
     
     body.cms-page .search-trigger { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); flex-shrink: 0; }

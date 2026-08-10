@@ -687,86 +687,40 @@
                 <button class="modal-close" id="meal-assign-cancel" aria-label="Close panel" style="position: static; transform: none;"><i data-lucide="x"></i></button>
             </div>
             <div class="slide-panel-body">
-                <div style="margin-bottom: 1.5rem; text-align: center;">
-                    <span id="meal-assign-slot-pill" style="font-size: 0.75rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--primary-light); border: 1px solid var(--primary); padding: 0.3rem 0.9rem; border-radius: 20px;">—</span>
+                <div class="mp-section mp-section-search">
+                    <h4 class="mp-section-title">Add Recipe or Ingredient</h4>
+                    <div class="mp-search">
+                        <input type="text" id="meal-assign-search" placeholder="Search recipes or ingredients…" class="cms-input mp-search-input" autocomplete="off">
+                        <div id="meal-assign-suggestions" class="mp-search-suggestions"></div>
+                    </div>
+                    <div id="meal-assign-picker" class="mp-picker" style="display: none;"></div>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-surface-hover); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
-                    <input type="checkbox" id="meal-assign-eating-out" style="accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer;">
-                    <label for="meal-assign-eating-out" style="font-weight: 600; color: var(--text-main); cursor: pointer;">"Eating Out"</label>
+                <div class="mp-section mp-section-eaters">
+                    <div class="mp-section-header">
+                        <h4 class="mp-section-title">Who's Eating</h4>
+                        <button id="meal-assign-clear" class="mp-clear" style="display: none;">Clear All</button>
+                    </div>
+                    <div id="meal-assign-eaters-list" class="mp-eaters"></div>
+                    <div id="meal-assign-summary" class="mp-summary"></div>
                 </div>
 
-                <div id="meal-assign-eaters-row" style="margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
-                    <span style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Who is eating?</span>
-                    <div id="meal-assign-eaters-list" style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-                        <!-- Checkboxes populated via JS -->
+                <div class="mp-section mp-section-templates">
+                    <div class="mp-section-header">
+                        <h4 class="mp-section-title">Meal Templates</h4>
+                        <button id="meal-template-save" class="btn mp-btn-sm">Save Template</button>
                     </div>
+                    <div id="meal-template-name" class="mp-template-name-row" style="display: none;">
+                        <input type="text" id="meal-template-name-input" class="cms-input mp-template-name-input" placeholder="Name this template…" maxlength="60">
+                        <button id="meal-template-name-ok" class="btn primary mp-btn-sm">Save</button>
+                        <button id="meal-template-name-cancel" class="btn mp-btn-sm">Cancel</button>
+                    </div>
+                    <div id="meal-template-list" class="mp-templates"></div>
                 </div>
 
-                <div id="meal-assign-servings-row" style="margin-bottom: 1.5rem; background: var(--bg-surface); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
-                    <label for="meal-assign-servings" style="font-weight: 600; font-size: 0.85rem;">Servings</label>
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <button type="button" id="servings-decrement" class="btn secondary" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">−</button>
-                        <input type="number" id="meal-assign-servings" value="1" min="1" max="20" style="width: 56px; text-align: center; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; font-size: 0.9rem;">
-                        <button type="button" id="servings-increment" class="btn secondary" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">+</button>
-                    </div>
-                </div>
-
-                <div id="meal-assign-builder">
-                    <label for="meal-assign-search" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Add Recipe or Ingredient</label>
-
-                    <div style="position: relative; margin-bottom: 0.5rem;">
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
-                            <input type="number" id="meal-assign-max-cal" placeholder="Max Cals" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.8rem;">
-                            <input type="number" id="meal-assign-min-pro" placeholder="Min Protein" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.8rem;">
-                            <input type="number" id="meal-assign-max-carb" placeholder="Max Carbs" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.8rem;">
-                            <input type="number" id="meal-assign-max-fat" placeholder="Max Fat" style="flex: 1; min-width: 80px; padding: 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.8rem;">
-                        </div>
-                        <input type="text" id="meal-assign-search" placeholder="Search for recipes or ingredients by name..." style="width: 100%; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px;" autocomplete="off">
-                        <div id="meal-assign-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-top: none; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-                    </div>
-
-                    <div id="meal-assign-amount-group" style="display: none; gap: 0.5rem; margin-bottom: 1rem; align-items: center;">
-                        <input type="number" id="meal-assign-amount" placeholder="Amount" step="any" style="flex: 1; padding: 0.8rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px;">
-                        <span id="meal-assign-unit" style="color: var(--text-muted); font-size: 0.9rem; min-width: 30px;">g</span>
-                        <button id="meal-assign-add-btn" class="btn primary" style="padding: 0.8rem 1.2rem;">Add</button>
-                    </div>
-
-                    <div style="margin-top: 1.5rem;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Selected Items:</span>
-                        <ul id="meal-assign-selected-list" style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); min-height: 50px;">
-                            <!-- Selected items will render here -->
-                        </ul>
-                    </div>
-                </div>
-
-                <button id="meal-assign-clear" class="btn danger" style="display: none; width: 100%; margin-top: 1.5rem;">
-                    Clear Entire Slot
-                </button>
-
-                <!-- Templates -->
-                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Meal Templates</span>
-                        <button id="meal-template-save" class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.7rem;">Save as Template</button>
-                    </div>
-                    <div id="meal-template-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 30px;">
-                        <!-- Template chips render here -->
-                    </div>
-                </div>
-
-                <!-- Copy to Days -->
-                <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Also apply to:</span>
-                    <div id="meal-copy-days" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                        <label for="copy-day-0" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-0" class="copy-day-cb" value="0" style="accent-color: var(--primary); width: 14px; height: 14px;"> Mon</label>
-                        <label for="copy-day-1" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-1" class="copy-day-cb" value="1" style="accent-color: var(--primary); width: 14px; height: 14px;"> Tue</label>
-                        <label for="copy-day-2" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-2" class="copy-day-cb" value="2" style="accent-color: var(--primary); width: 14px; height: 14px;"> Wed</label>
-                        <label for="copy-day-3" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-3" class="copy-day-cb" value="3" style="accent-color: var(--primary); width: 14px; height: 14px;"> Thu</label>
-                        <label for="copy-day-4" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-4" class="copy-day-cb" value="4" style="accent-color: var(--primary); width: 14px; height: 14px;"> Fri</label>
-                        <label for="copy-day-5" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-5" class="copy-day-cb" value="5" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sat</label>
-                        <label for="copy-day-6" style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface);"><input type="checkbox" id="copy-day-6" class="copy-day-cb" value="6" style="accent-color: var(--primary); width: 14px; height: 14px;"> Sun</label>
-                    </div>
+                <div class="mp-section mp-section-copy">
+                    <h4 class="mp-section-title">Also Apply To</h4>
+                    <div id="meal-copy-days" class="mp-days"></div>
                 </div>
             </div>
             <div class="slide-panel-footer">

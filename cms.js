@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         parseReceiptText: () => []
     };
     // Escape user-controlled text before it reaches innerHTML templates (XSS).
+    const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function formatDateDMY(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr.length === 10 ? dateStr + 'T00:00:00' : dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
     function escapeHtml(value) {
         return String(value == null ? '' : value)
             .replace(/&/g, '&amp;')
@@ -773,6 +781,49 @@ document.addEventListener('DOMContentLoaded', () => {
         'Authorization': `Bearer ${API_KEY}`
     };
 
+    // Migrate legacy-format meal plans (shared items + portion map) to the
+    // per-eater format used by the redesigned assignment modal.
+    function normalizePlan(plan) {
+        if (!plan || typeof plan !== 'object') return plan;
+        // Already in per-eater format (eaters is an array of {idx, eatingOut, items}).
+        if (Array.isArray(plan.eaters) && plan.eaters.length && typeof plan.eaters[0] === 'object') return plan;
+        if (!Array.isArray(plan.items) && !plan.isEatingOut) return plan;
+
+        const profiles = (appSettings.profiles && appSettings.profiles.length)
+            ? appSettings.profiles
+            : [{ name: 'User' }];
+        const selectedEaters = Array.isArray(plan.eaters) ? plan.eaters.map(Number) : [];
+        const servingSizeG = parseFloat(plan.servingSizeG) || 250;
+
+        const eaters = profiles.map((p, idx) => {
+            const included = !plan.isEatingOut && selectedEaters.includes(idx);
+            const items = [];
+            if (included) {
+                (plan.items || []).forEach(item => {
+                    let grams = plan.portions && plan.portions[idx] != null
+                        ? parseFloat(plan.portions[idx])
+                        : null;
+                    if (!(grams > 0) && item.type === 'recipe') grams = parseFloat(item.servingSizeG) || servingSizeG;
+                    if (!(grams > 0) && item.type === 'ingredient') {
+                        const foodRef = (ingredients || []).find(f => f.foodId === item.referenceId);
+                        grams = LC.gramsOf(item.amount, item.unit, foodRef);
+                    }
+                    if (!(grams > 0)) return;
+                    items.push({
+                        type: item.type,
+                        referenceId: item.referenceId,
+                        name: item.name,
+                        servingSizeG: item.type === 'recipe' ? (parseFloat(item.servingSizeG) || servingSizeG) : undefined,
+                        grams
+                    });
+                });
+            }
+            return { idx, eatingOut: !included, items };
+        });
+
+        return { ...plan, isEatingOut: !!plan.isEatingOut, eaters };
+    }
+
     async function loadData(retryCount = 0) {
         try {
             const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts] = await Promise.all([
@@ -799,6 +850,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? { goals: resPlanner.goals || {}, items: Array.isArray(resPlanner.items) ? resPlanner.items : [] }
                 : { goals: {}, items: [] };
             receipts = Array.isArray(resReceipts) ? resReceipts : [];
+            
+            mealPlans = (mealPlans || []).map(normalizePlan);
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
             addBtn.classList.remove('hidden');
@@ -1471,7 +1524,7 @@ const norm = s => String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace
             <div class="planner-card" data-rcid="${r.id}">
                 <div class="rc-list-head">
                     <div class="rc-store-title">${escapeHtml(r.store || 'Receipt')}</div>
-                    <div class="rc-date">${escapeHtml(r.date || '')}</div>
+                    <div class="rc-date">${escapeHtml(formatDateDMY(r.date))}</div>
                     <div class="rc-total">${fmt(r.total)}</div>
                 </div>
                 <div class="rc-item-count">${(r.items || []).length} line(s) &middot; ${matched} matched</div>
@@ -1747,31 +1800,63 @@ renderItemRows();
                 || 'MUR';
         }
 
+        function recipeYield(recipe) {
+            if (!recipe || !recipe.macros) return 1;
+            const y = parseFloat(String(recipe.macros.yield || '').replace(',', '.'));
+            return y > 0 ? y : 1;
+        }
+
+        // Per-eater servings for a recipe: grams eaten / serving size, rounded to
+        // nearest half (min 1) so the kitchen cooks whole half-servings.
+        function recipeServingsToCook(plan, recipeId) {
+            let grams = 0, servingG = 250;
+            (plan && plan.eaters || []).forEach(eater => {
+                if (eater.eatingOut) return;
+                (eater.items || []).forEach(item => {
+                    if (item.type !== 'recipe' || item.referenceId !== recipeId) return;
+                    grams += parseFloat(item.grams) || 0;
+                    servingG = parseFloat(item.servingSizeG) || servingG;
+                });
+            });
+            if (!(grams > 0)) return 1;
+            return Math.max(1, Math.ceil((grams / servingG) * 2) / 2);
+        }
+
         function estimateMealCost(plan) {
-            const mult = plan.servings || 1;
-            let itemsToProcess = plan.items || [];
-            if (itemsToProcess.length === 0 && plan.type === 'recipe') itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
+            if (!plan) return { cost: 0, costed: 0, uncosted: 0 };
+            if (plan.isEatingOut || plan.type === 'eating_out') return { cost: 0, costed: 0, uncosted: 0 };
             let total = 0, uncosted = 0, costed = 0;
-            itemsToProcess.forEach(item => {
-                if (item.type === 'recipe') {
-                    const recipe = recipes.find(r => r.id === item.referenceId);
-                    if (!recipe || !recipe.ingredients) return;
-                    recipe.ingredients.forEach(ing => {
-                        if (!ing.foodId) return;
-                        const foodRef = ingredients.find(f => f.foodId === ing.foodId);
-                        const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+            const recipeCosts = {};
+            (plan.eaters || []).forEach(eater => {
+                if (eater.eatingOut) return;
+                (eater.items || []).forEach(item => {
+                    if (item.type === 'recipe') {
+                        const recipe = recipes.find(r => r.id === item.referenceId);
+                        if (!recipe || !recipe.ingredients) return;
+                        const yieldNum = recipeYield(recipe);
+                        if (!recipeCosts[item.referenceId]) {
+                            let batch = 0;
+                            recipe.ingredients.forEach(ing => {
+                                if (!ing.foodId) return;
+                                const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                                const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+                                const price = perGramPrice(foodRef);
+                                if (grams === null || !(price > 0)) { uncosted++; return; }
+                                if (grams > 0) { batch += grams * price; costed++; }
+                            });
+                            recipeCosts[item.referenceId] = batch / yieldNum;
+                        }
+                    } else if (item.type === 'ingredient' && item.referenceId) {
+                        const foodRef = ingredients.find(f => f.foodId === item.referenceId);
+                        const grams = parseFloat(item.grams) || 0;
                         const price = perGramPrice(foodRef);
-                        if (grams === null || !(price > 0)) { uncosted++; return; }
-                        if (grams > 0) { total += grams * price * mult; costed++; }
-                    });
-                } else if (item.type === 'ingredient' && item.referenceId) {
-                    const foodRef = ingredients.find(f => f.foodId === item.referenceId);
-                    const amountStr = (item.amount != null ? item.amount : '0') + (item.unit ? ' ' + item.unit : '');
-                    const grams = parseAmountToGrams(amountStr, foodRef);
-                    const price = perGramPrice(foodRef);
-                    if (grams === null || !(price > 0)) { uncosted++; return; }
-                    if (grams > 0) { total += grams * price * mult; costed++; }
-                }
+                        if (!(grams > 0) || !(price > 0)) { uncosted++; return; }
+                        total += grams * price; costed++;
+                    }
+                });
+            });
+            Object.keys(recipeCosts).forEach(rid => {
+                total += recipeCosts[rid] * recipeServingsToCook(plan, rid);
             });
             return { cost: Math.round(total * 10) / 10, costed, uncosted };
         }
@@ -1909,8 +1994,12 @@ renderItemRows();
                 };
             }
 
-            // Aggregate macros for the whole week (across all eaters for now)
+            // Aggregate macros for the whole week, per profile (each eater's own totals)
+            const profiles = (appSettings.profiles && appSettings.profiles.length)
+                ? appSettings.profiles
+                : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
             const weekTotal = { energy: 0, carbs: 0, protein: 0, fat: 0 };
+            const weekTotals = profiles.map(() => ({ energy: 0, carbs: 0, protein: 0, fat: 0 }));
             const weekDates = [];
             for (let i = 0; i < 7; i++) {
                 const d = new Date(startOfWeek);
@@ -1919,33 +2008,41 @@ renderItemRows();
                 const dateString = d.toISOString().split('T')[0];
                 slots.forEach(slot => {
                     const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
-                    if (!plan || plan.isEatingOut || plan.type === 'eating_out') return;
-                    const mult = plan.servings || 1;
-                    (plan.items || []).forEach(item => {
-                        if (item.type === 'recipe') {
-                            const r = recipes.find(rec => rec.id === item.referenceId);
-                            const m = recipeMacros(r);
-                            weekTotal.energy += m.energy * mult;
-                            weekTotal.carbs += m.carbs * mult;
-                            weekTotal.protein += m.protein * mult;
-                            weekTotal.fat += m.fat * mult;
-                        } else if (item.type === 'ingredient') {
-                            const ing = ingredients.find(f => f.foodId === item.referenceId);
-                            if (!ing) return;
-                            const grams = parseAmountToGrams((item.amount != null ? item.amount : 0) + ' ' + (item.unit || 'g'), ing);
-                            const per100 = (grams || 0) / 100;
-                            weekTotal.energy += (macroNum(ing.calories) * per100) * mult;
-                            weekTotal.carbs += (macroNum(ing.carbsG) * per100) * mult;
-                            weekTotal.protein += (macroNum(ing.proteinG) * per100) * mult;
-                            weekTotal.fat += (macroNum(ing.fatG) * per100) * mult;
-                        }
+                    if (!plan || plan.type === 'eating_out') return;
+                    if (plan.isEatingOut) return;
+                    (plan.eaters || []).forEach(eater => {
+                        if (!eater || eater.eatingOut || !Array.isArray(eater.items)) return;
+                        const wt = weekTotals[eater.idx];
+                        if (!wt) return;
+                        (eater.items || []).forEach(item => {
+                            const grams = parseFloat(item.grams) || 0;
+                            if (!(grams > 0)) return;
+                            if (item.type === 'recipe') {
+                                const r = recipes.find(rec => rec.id === item.referenceId);
+                                const m = recipeMacros(r);
+                                const servingG = parseFloat(item.servingSizeG) || 250;
+                                const f = servingG > 0 ? grams / servingG : 0;
+                                wt.energy += m.energy * f;
+                                wt.carbs += m.carbs * f;
+                                wt.protein += m.protein * f;
+                                wt.fat += m.fat * f;
+                            } else if (item.type === 'ingredient') {
+                                const ing = ingredients.find(f => f.foodId === item.referenceId);
+                                if (!ing) return;
+                                const per100 = grams / 100;
+                                wt.energy += macroNum(ing.calories) * per100;
+                                wt.carbs += macroNum(ing.carbsG) * per100;
+                                wt.protein += macroNum(ing.proteinG) * per100;
+                                wt.fat += macroNum(ing.fatG) * per100;
+                            }
+                        });
                     });
                 });
             }
 
             const weekEnd = new Date(startOfWeek);
             weekEnd.setDate(startOfWeek.getDate() + 6);
-            const weekLabel = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            const weekLabel = `${formatDateDMY(startOfWeek.toISOString().split('T')[0])} - ${formatDateDMY(weekEnd.toISOString().split('T')[0])}`;
 
             // Cost of every planned meal in the displayed week (for cost chips + summary)
             const mealCosts = new Map();
@@ -1965,9 +2062,6 @@ renderItemRows();
             weekMealCost = Math.round(weekMealCost * 10) / 10;
 
             // Build user stat cards from profiles
-            const profiles = (appSettings.profiles && appSettings.profiles.length)
-                ? appSettings.profiles
-                : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
             const avatarAccents = ['var(--accent-sea)', 'var(--accent-jam)', 'var(--accent-veg)', 'var(--accent-meat)', 'var(--accent-stock)', 'var(--accent-bake)'];
 
             function macroTargets(profile) {
@@ -1992,11 +2086,12 @@ renderItemRows();
                     carbs: target.carbs * 7,
                     fat: target.fat * 7
                 };
-                const calPct = weekTarget.energy > 0 ? Math.min(100, Math.round((weekTotal.energy / weekTarget.energy) * 100)) : 0;
+                const wt = weekTotals[idx] || { energy: 0, carbs: 0, protein: 0, fat: 0 };
+                const calPct = weekTarget.energy > 0 ? Math.min(100, Math.round((wt.energy / weekTarget.energy) * 100)) : 0;
                 const ringOffset = Math.max(0, 100 - calPct);
-                const proteinPct = weekTarget.protein > 0 ? Math.min(100, Math.round((weekTotal.protein / weekTarget.protein) * 100)) : 0;
-                const carbsPct = weekTarget.carbs > 0 ? Math.min(100, Math.round((weekTotal.carbs / weekTarget.carbs) * 100)) : 0;
-                const fatPct = weekTarget.fat > 0 ? Math.min(100, Math.round((weekTotal.fat / weekTarget.fat) * 100)) : 0;
+                const proteinPct = weekTarget.protein > 0 ? Math.min(100, Math.round((wt.protein / weekTarget.protein) * 100)) : 0;
+                const carbsPct = weekTarget.carbs > 0 ? Math.min(100, Math.round((wt.carbs / weekTarget.carbs) * 100)) : 0;
+                const fatPct = weekTarget.fat > 0 ? Math.min(100, Math.round((wt.fat / weekTarget.fat) * 100)) : 0;
                 return `
                 <div class="mp-user-stat-card">
                     <div class="mp-user-header">
@@ -2011,7 +2106,7 @@ renderItemRows();
                             </svg>
                         </div>
                         <div class="mp-user-cal">
-                            <strong>${Math.round(weekTotal.energy).toLocaleString()}</strong>
+                            <strong>${Math.round(wt.energy).toLocaleString()}</strong>
                             <span>/ ${weekTarget.energy.toLocaleString()} kcal</span>
                         </div>
                     </div>
@@ -2020,21 +2115,21 @@ renderItemRows();
                         <div class="mp-macro-row">
                             <span class="mp-macro-label"><i data-lucide="beef" style="width: 14px; height: 14px; color: var(--accent-meat);"></i> Protein</span>
                             <div class="mp-macro-vals">
-                                <span class="mp-macro-curr">${Math.round(weekTotal.protein)}g</span>
+                                <span class="mp-macro-curr">${Math.round(wt.protein)}g</span>
                                 <span class="mp-macro-target">/ ${weekTarget.protein}g</span>
                             </div>
                         </div>
                         <div class="mp-macro-row">
                             <span class="mp-macro-label"><i data-lucide="wheat" style="width: 14px; height: 14px; color: var(--accent-stock);"></i> Carbs</span>
                             <div class="mp-macro-vals">
-                                <span class="mp-macro-curr">${Math.round(weekTotal.carbs)}g</span>
+                                <span class="mp-macro-curr">${Math.round(wt.carbs)}g</span>
                                 <span class="mp-macro-target">/ ${weekTarget.carbs}g</span>
                             </div>
                         </div>
                         <div class="mp-macro-row">
                             <span class="mp-macro-label"><i data-lucide="droplet" style="width: 14px; height: 14px; color: #D4B04A;"></i> Fat</span>
                             <div class="mp-macro-vals">
-                                <span class="mp-macro-curr">${Math.round(weekTotal.fat)}g</span>
+                                <span class="mp-macro-curr">${Math.round(wt.fat)}g</span>
                                 <span class="mp-macro-target">/ ${weekTarget.fat}g</span>
                             </div>
                         </div>
@@ -2105,39 +2200,95 @@ renderItemRows();
                     const plan = mealPlans.find(p => p.date === dateString && p.slot === slot);
                     let slotInner = '';
                     if (plan) {
-                        if (plan.isEatingOut || plan.type === 'eating_out') {
+                        const eaters = plan.eaters || [];
+                        const eatingOutAll = eaters.length > 0 && eaters.every(e => e.eatingOut);
+                        const activeEaters = eaters.filter(e => !e.eatingOut);
+                        if (eatingOutAll) {
                             slotInner = `
                                 <div class="mp-meal-card mp-eating-out">
                                     <i data-lucide="coffee" style="color: var(--primary); width: 20px; height: 20px;"></i>
                                     <div class="mp-meal-title">Eating Out</div>
                                 </div>`;
-                        } else if (plan.items && plan.items.length === 1 && plan.items[0].type === 'recipe') {
-                            const r = recipes.find(rec => rec.id === plan.items[0].referenceId);
-                            const m = recipeMacros(r);
-                            const title = r ? r.title : (plan.items[0].name || 'Recipe');
-                            const img = (r && r.imageUrl)
-                                ? `<img src="${escapeHtml(r.imageUrl)}" class="mp-meal-img" onerror="this.style.display='none'">`
+                        } else {
+                            const allItems = [];
+                            activeEaters.forEach(e => (e.items || []).forEach(it => allItems.push(it)));
+                            const recipeItems = allItems.filter(it => it.type === 'recipe');
+                            const ingItems = allItems.filter(it => it.type === 'ingredient');
+                            const firstRecipe = recipes.find(rec => rec.id === (recipeItems[0] && recipeItems[0].referenceId));
+                            const img = (firstRecipe && firstRecipe.imageUrl)
+                                ? `<img src="${escapeHtml(firstRecipe.imageUrl)}" class="mp-meal-img" onerror="this.style.display='none'">`
                                 : `<div class="mp-meal-img" style="background: var(--bg-surface-hover); display: flex; align-items: center; justify-content: center;"><i data-lucide="utensils-crossed" style="width: 16px; height: 16px; color: var(--text-muted);"></i></div>`;
+                            const uniqueNames = [...new Set(allItems.map(it => it.name || (it.type === 'ingredient' ? (ingredients.find(x => x.foodId === it.referenceId) || {}).name : (recipes.find(r => r.id === it.referenceId) || {}).title) || 'Item'))];
+                            const shown = uniqueNames.length <= 2 ? uniqueNames.join(' & ') : uniqueNames.slice(0, 2).join(' & ') + ` +${uniqueNames.length - 2}`;
+                            let kcal = 0;
+                            activeEaters.forEach(e => {
+                                (e.items || []).forEach(item => {
+                                    const grams = parseFloat(item.grams) || 0;
+                                    if (!(grams > 0)) return;
+                                    if (item.type === 'recipe') {
+                                        const r = recipes.find(rec => rec.id === item.referenceId);
+                                        const m = recipeMacros(r);
+                                        const servingG = parseFloat(item.servingSizeG) || 250;
+                                        kcal += servingG > 0 ? m.energy * (grams / servingG) : 0;
+                                    } else if (item.type === 'ingredient') {
+                                        const ing = ingredients.find(f => f.foodId === item.referenceId);
+                                        if (ing) kcal += macroNum(ing.calories) * (grams / 100);
+                                    }
+                                });
+                            });
+                            const servingsParts = [];
+                            recipeItems.forEach(it => {
+                                const rid = it.referenceId;
+                                if (!servingsParts.some(p => p.rid === rid)) {
+                                    const sv = recipeServingsToCook(plan, rid);
+                                    servingsParts.push({ rid, sv });
+                                }
+                            });
+                            const servingsTxt = servingsParts.length
+                                ? ' · ×' + servingsParts.map(p => p.sv).join(' / ') : '';
                             const mealEst = (mealCosts.get(dateString + '|' + slot) || { cost: 0 });
                             const mealCostChip = mealEst.cost > 0 ? `<span class="mp-cost-chip">${formatMoney(mealEst.cost, mpCurrency)}</span>` : '';
+                            const eaterTags = eaters.map(e => {
+                                const p = profiles[e.idx];
+                                const nm = p ? p.name : 'Eater';
+                                return e.eatingOut
+                                    ? `<span class="mp-eater-tag mp-eater-tag-out">${escapeHtml(nm)} · out</span>`
+                                    : `<span class="mp-eater-tag">${escapeHtml(nm)}</span>`;
+                            }).join('');
+
+                            const tooltipContent = eaters.map(e => {
+                                const p = profiles[e.idx];
+                                const nm = p ? p.name : 'Eater';
+                                if (e.eatingOut) {
+                                    return `<div class="mp-tooltip-eater"><span class="mp-tooltip-eater-name">${escapeHtml(nm)}</span><span class="mp-tooltip-eater-out">Eating out</span></div>`;
+                                }
+                                const items = (e.items || []).map(it => {
+                                    const grams = parseFloat(it.grams) || 0;
+                                    const kcalItem = (() => {
+                                        if (!(grams > 0)) return 0;
+                                        if (it.type === 'recipe') {
+                                            const r = recipes.find(rec => rec.id === it.referenceId);
+                                            const m = recipeMacros(r);
+                                            const servingG = parseFloat(it.servingSizeG) || 250;
+                                            return servingG > 0 ? Math.round(m.energy * (grams / servingG)) : 0;
+                                        } else if (it.type === 'ingredient') {
+                                            const ing = ingredients.find(f => f.foodId === it.referenceId);
+                                            return ing ? Math.round(macroNum(ing.calories) * (grams / 100)) : 0;
+                                        }
+                                        return 0;
+                                    })();
+                                    return `<div class="mp-tooltip-item">${escapeHtml(it.name)} (${grams}g${kcalItem ? `, ${kcalItem} kcal` : ''})</div>`;
+                                }).join('');
+                                return `<div class="mp-tooltip-eater"><span class="mp-tooltip-eater-name">${escapeHtml(nm)}</span>${items}</div>`;
+                            }).join('');
+
                             slotInner = `
-                                <div class="mp-meal-card">
+                                <div class="mp-meal-card" data-tooltip-html="${escapeHtml(tooltipContent)}">
                                     ${img}
                                     <div class="mp-meal-info">
-                                        <div class="mp-meal-title">${escapeHtml(title)}</div>
-                                        <div class="mp-meal-meta">${m.energy ? Math.round(m.energy) + ' kcal' : ''}${plan.servings ? ' · ×' + plan.servings : ''}${mealCostChip}</div>
-                                    </div>
-                                </div>`;
-                        } else if (plan.items && plan.items.length > 0) {
-                            const names = plan.items.map(item => escapeHtml(item.name));
-                            const shown = names.length <= 2 ? names.join(' & ') : names.slice(0, 2).join(' & ') + ` +${names.length - 2}`;
-                            const mealEst = (mealCosts.get(dateString + '|' + slot) || { cost: 0 });
-                            const mealCostChip = mealEst.cost > 0 ? `<span class="mp-cost-chip">${formatMoney(mealEst.cost, mpCurrency)}</span>` : '';
-                            slotInner = `
-                                <div class="mp-meal-card">
-                                    <div class="mp-meal-info">
-                                        <div class="mp-meal-title">${shown}</div>
-                                        <div class="mp-meal-meta">${plan.items.length} item${plan.items.length !== 1 ? 's' : ''}${plan.servings ? ' · ×' + plan.servings : ''}${mealCostChip}</div>
+                                        <div class="mp-meal-title">${escapeHtml(shown)}</div>
+                                        <div class="mp-meal-meta">${kcal ? Math.round(kcal) + ' kcal' : ''}${servingsTxt}${mealCostChip}</div>
+                                        <div class="mp-eater-tags">${eaterTags}</div>
                                     </div>
                                 </div>`;
                         }
@@ -2157,6 +2308,39 @@ renderItemRows();
             addBtn.style.display = 'none';
             if (window.lucide) window.lucide.createIcons();
 
+            // Tooltip for meal cards
+            const tooltip = document.createElement('div');
+            tooltip.className = 'mp-tooltip';
+            document.body.appendChild(tooltip);
+
+            let tooltipHideTimer = null;
+            function showTooltip(card, e) {
+                const html = card.dataset.tooltipHtml;
+                if (!html) return;
+                tooltip.innerHTML = html;
+                tooltip.classList.add('visible');
+                const rect = card.getBoundingClientRect();
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.top = (rect.top - 8) + 'px';
+            }
+            function hideTooltip() {
+                tooltip.classList.remove('visible');
+            }
+
+            document.querySelectorAll('.mp-meal-card[data-tooltip-html]').forEach(card => {
+                card.addEventListener('mouseenter', (e) => {
+                    if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; }
+                    showTooltip(card, e);
+                });
+                card.addEventListener('mouseleave', () => {
+                    tooltipHideTimer = setTimeout(hideTooltip, 80);
+                });
+            });
+            tooltip.addEventListener('mouseenter', () => {
+                if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; }
+            });
+            tooltip.addEventListener('mouseleave', hideTooltip);
+
             document.getElementById('mp-prev-week').addEventListener('click', () => {
                 mealWeekOffset -= 1;
                 renderCMSList();
@@ -2171,39 +2355,211 @@ renderItemRows();
             const assignTitle = document.getElementById('meal-assign-title');
             const assignSubtitle = document.getElementById('meal-assign-subtitle');
 
-            const checkboxEatingOut = document.getElementById('meal-assign-eating-out');
-            const builderSection = document.getElementById('meal-assign-builder');
-
-            const servingsInput = document.getElementById('meal-assign-servings');
-            const servingsRow = document.getElementById('meal-assign-servings-row');
-            const servingsDecrement = document.getElementById('servings-decrement');
-            const servingsIncrement = document.getElementById('servings-increment');
-
+            const mealSummaryEl = document.getElementById('meal-assign-summary');
             const searchInput = document.getElementById('meal-assign-search');
             const suggestionsBox = document.getElementById('meal-assign-suggestions');
-            const amountGroup = document.getElementById('meal-assign-amount-group');
-            const amountInput = document.getElementById('meal-assign-amount');
-            const unitLabel = document.getElementById('meal-assign-unit');
-            const addBtnModal = document.getElementById('meal-assign-add-btn');
+            const pickerEl = document.getElementById('meal-assign-picker');
 
-            const selectedList = document.getElementById('meal-assign-selected-list');
             const btnClear = document.getElementById('meal-assign-clear');
             const btnCancel = document.getElementById('meal-assign-cancel');
             const btnConfirm = document.getElementById('meal-assign-confirm');
             const templateSaveBtn = document.getElementById('meal-template-save');
             const templateListEl = document.getElementById('meal-template-list');
-            const copyDayCheckboxes = document.querySelectorAll('.copy-day-cb');
+            const copyDaysEl = document.getElementById('meal-copy-days');
+            const eatersEl = document.getElementById('meal-assign-eaters-list');
 
             let activeDate = null;
             let activeSlotName = null;
-            let modalSelectedItems = [];
-            let currentStagedItem = null; // { type, referenceId, name, unit }
+            // modalEaters: array of { idx, eatingOut, items: [{type, referenceId, name, unit?, servingSizeG?, grams}] }
+            let modalEaters = [];
+            let pickerItem = null; // { type, referenceId, name, unit?, servingSizeG?, defaultGrams }
 
             // Load templates from localStorage
             let mealTemplates = JSON.parse(localStorage.getItem('larder_meal_templates') || '[]');
 
+            // Migrate legacy templates (shared items + servings) to per-eater.
+            mealTemplates.forEach(t => {
+                if (!t.eaters && t.items) {
+                    t.eaters = getProfiles().map((p, idx) => ({
+                        idx,
+                        eatingOut: !!t.isEatingOut,
+                        items: t.isEatingOut ? [] : JSON.parse(JSON.stringify(t.items || []))
+                    }));
+                }
+            });
+
             function saveTemplatesToStorage() {
                 localStorage.setItem('larder_meal_templates', JSON.stringify(mealTemplates));
+            }
+
+            function getProfiles() {
+                return (appSettings.profiles && appSettings.profiles.length)
+                    ? appSettings.profiles
+                    : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
+            }
+
+            function recipeServingGrams(recipe) {
+                if (!recipe || !recipe.ingredients || !recipe.ingredients.length) return null;
+                let total = 0;
+                recipe.ingredients.forEach(ing => {
+                    if (!ing.foodId) return;
+                    const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                    const g = parseAmountToGrams(ing.metric || ing.imperial || '', foodRef);
+                    if (g != null && g > 0) total += g;
+                });
+                const yieldNum = parseFloat(String((recipe.macros && recipe.macros.yield) || '').replace(',', '.'));
+                if (!(total > 0) || !(yieldNum > 0)) return null;
+                return Math.round(total / yieldNum);
+            }
+
+            function eaterMacros(eater) {
+                const t = { energy: 0, carbs: 0, protein: 0, fat: 0 };
+                (eater.items || []).forEach(item => {
+                    const grams = parseFloat(item.grams) || 0;
+                    if (!(grams > 0)) return;
+                    if (item.type === 'recipe') {
+                        const r = recipes.find(rec => rec.id === item.referenceId);
+                        const m = recipeMacros(r);
+                        const servingG = parseFloat(item.servingSizeG) || 250;
+                        const f = servingG > 0 ? grams / servingG : 0;
+                        t.energy += m.energy * f;
+                        t.carbs += m.carbs * f;
+                        t.protein += m.protein * f;
+                        t.fat += m.fat * f;
+                    } else if (item.type === 'ingredient') {
+                        const ing = ingredients.find(f => f.foodId === item.referenceId);
+                        if (!ing) return;
+                        const per100 = grams / 100;
+                        t.energy += macroNum(ing.calories) * per100;
+                        t.carbs += macroNum(ing.carbsG) * per100;
+                        t.protein += macroNum(ing.proteinG) * per100;
+                        t.fat += macroNum(ing.fatG) * per100;
+                    }
+                });
+                return t;
+            }
+
+            function eaterTotalGrams(eater) {
+                return (eater.items || []).reduce((a, it) => {
+                    const g = parseFloat(it.grams) || 0;
+                    return a + (g > 0 ? g : 0);
+                }, 0);
+            }
+
+            function servingsByRecipe(eaters) {
+                const map = {};
+                eaters.forEach(e => {
+                    if (e.eatingOut) return;
+                    (e.items || []).forEach(item => {
+                        if (item.type !== 'recipe') return;
+                        const servingG = parseFloat(item.servingSizeG) || 250;
+                        const grams = parseFloat(item.grams) || 0;
+                        if (!map[item.referenceId]) map[item.referenceId] = { grams: 0, servingG };
+                        map[item.referenceId].grams += grams;
+                    });
+                });
+                const out = {};
+                Object.keys(map).forEach(rid => {
+                    const m = map[rid];
+                    out[rid] = m.grams > 0 ? Math.max(1, Math.ceil((m.grams / (m.servingG || 250)) * 2) / 2) : 1;
+                });
+                return out;
+            }
+
+            function renderEaters() {
+                const profiles = getProfiles();
+                eatersEl.innerHTML = profiles.map((p, i) => {
+                    if (!modalEaters[i]) modalEaters[i] = { idx: i, eatingOut: false, items: [] };
+                    const eater = modalEaters[i];
+                    const mac = eaterMacros(eater);
+                    const grams = eaterTotalGrams(eater);
+                    const itemsHTML = (eater.items || []).map((item, j) => `
+                        <div class="mp-eater-item" data-eater="${i}" data-item="${j}">
+                            <div class="mp-eater-item-main">
+                                <span class="mp-eater-item-name">${escapeHtml(item.name)}</span>
+                                ${item.type === 'recipe'
+                                    ? `<span class="mp-eater-item-serving">1 serving = <input type="number" class="cms-input mp-eater-serving" data-eater="${i}" data-item="${j}" value="${escapeHtml(item.servingSizeG != null ? item.servingSizeG : '')}" min="1" step="5"> g</span>`
+                                    : ''}
+                            </div>
+                            <div class="mp-eater-item-grams">
+                                <input type="number" class="cms-input mp-eater-grams" data-eater="${i}" data-item="${j}" min="1" step="5" value="${escapeHtml(item.grams != null ? item.grams : '')}">
+                                <span class="mp-eater-grams-unit">g</span>
+                                <button class="mp-eater-item-remove" data-eater="${i}" data-item="${j}" aria-label="Remove">&times;</button>
+                            </div>
+                        </div>`).join('');
+                    return `
+                        <div class="mp-eater-card${eater.eatingOut ? ' mp-eater-card-out' : ''}">
+                            <div class="mp-eater-card-header">
+                                <label class="mp-eater-cb-label" title="Uncheck if eating out">
+                                    <input type="checkbox" class="meal-eater-cb" data-eater="${i}" ${!eater.eatingOut ? 'checked' : ''}>
+                                    <span class="mp-eater-name">${escapeHtml(p.name)}</span>
+                                </label>
+                                <span class="mp-eater-subtotal">${eater.eatingOut ? 'Eating out' : `${Math.round(grams)}g · ${Math.round(mac.energy)} kcal`}</span>
+                            </div>
+                            ${eater.eatingOut
+                                ? ''
+                                : `<div class="mp-eater-items">${itemsHTML || '<div class="mp-eater-item-empty">No items yet — search above to add.</div>'}</div>`}
+                        </div>`;
+                }).join('');
+
+                eatersEl.querySelectorAll('.meal-eater-cb').forEach(cb => {
+                    cb.onchange = () => {
+                        const i = parseInt(cb.dataset.eater);
+                        modalEaters[i].eatingOut = !cb.checked;
+                        renderEaters();
+                    };
+                });
+                eatersEl.querySelectorAll('.mp-eater-grams').forEach(inp => {
+                    inp.onchange = () => {
+                        const i = parseInt(inp.dataset.eater);
+                        const j = parseInt(inp.dataset.item);
+                        modalEaters[i].items[j].grams = parseFloat(inp.value) || 0;
+                        renderEaters();
+                    };
+                });
+                eatersEl.querySelectorAll('.mp-eater-serving').forEach(inp => {
+                    inp.onchange = () => {
+                        const i = parseInt(inp.dataset.eater);
+                        const j = parseInt(inp.dataset.item);
+                        const sv = parseFloat(inp.value) || 250;
+                        modalEaters[i].items[j].servingSizeG = sv;
+                        // Keep the serving size consistent across eaters for the same recipe
+                        const rid = modalEaters[i].items[j].referenceId;
+                        modalEaters.forEach(e => (e.items || []).forEach(it => {
+                            if (it.type === 'recipe' && it.referenceId === rid) it.servingSizeG = sv;
+                        }));
+                        renderEaters();
+                    };
+                });
+                eatersEl.querySelectorAll('.mp-eater-item-remove').forEach(btn => {
+                    btn.onclick = () => {
+                        const i = parseInt(btn.dataset.eater);
+                        const j = parseInt(btn.dataset.item);
+                        modalEaters[i].items.splice(j, 1);
+                        renderEaters();
+                    };
+                });
+                updateMealSummary();
+            }
+
+            function updateMealSummary() {
+                const active = modalEaters.filter(e => !e.eatingOut && (e.items || []).some(it => (parseFloat(it.grams) || 0) > 0));
+                if (modalEaters.length === 0 || active.length === 0) {
+                    const allOut = modalEaters.length > 0 && modalEaters.every(e => e.eatingOut);
+                    mealSummaryEl.innerHTML = allOut ? 'Everyone is eating out.' : 'Add items to each eater to see totals.';
+                    return;
+                }
+                let kcal = 0, grams = 0;
+                active.forEach(e => {
+                    kcal += eaterMacros(e).energy;
+                    grams += eaterTotalGrams(e);
+                });
+                const srv = servingsByRecipe(modalEaters);
+                const srvTxt = Object.keys(srv).map(rid => {
+                    const r = recipes.find(rec => rec.id === rid);
+                    return `${r ? r.title : 'Recipe'} ×${srv[rid]}`;
+                }).join(', ');
+                mealSummaryEl.innerHTML = `<strong>${active.length}</strong> eater${active.length > 1 ? 's' : ''} · ${Math.round(grams)}g · ${Math.round(kcal)} kcal${srvTxt ? ' · cooks ' + srvTxt : ''}`;
             }
 
             function renderTemplateChips() {
@@ -2211,32 +2567,31 @@ renderItemRows();
                     templateListEl.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted); padding: 0.3rem;">No templates saved yet.</span>';
                     return;
                 }
-                templateListEl.innerHTML = mealTemplates.map((t, idx) => `
-                    <div style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-surface); font-size: 0.75rem; cursor: pointer;" class="template-chip" data-idx="${idx}">
-                        <span class="template-chip-name" data-idx="${idx}" style="font-weight: 600;">${escapeHtml(t.name)}</span>
-                        <span style="color: var(--text-muted);">(${t.items.length} item${t.items.length !== 1 ? 's' : ''}, ×${t.servings})</span>
-                        <button class="template-delete" data-idx="${idx}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1rem; line-height: 1; margin-left: 0.2rem;">&times;</button>
-                    </div>
-                `).join('');
+                templateListEl.innerHTML = mealTemplates.map((t, idx) => {
+                    const itemCount = (t.eaters || []).reduce((a, e) => a + (e.items || []).length, 0);
+                    const outCount = (t.eaters || []).filter(e => e.eatingOut).length;
+                    return `
+                        <div class="mp-template" data-idx="${idx}">
+                            <span class="mp-template-name">${escapeHtml(t.name)}</span>
+                            <span class="mp-template-meta">(${itemCount} item${itemCount !== 1 ? 's' : ''}${outCount ? `, ${outCount} out` : ''})</span>
+                            <button class="mp-template-delete" data-idx="${idx}" aria-label="Delete template">&times;</button>
+                        </div>`;
+                }).join('');
 
-                // Click chip name to load
-                document.querySelectorAll('.template-chip-name').forEach(el => {
+                document.querySelectorAll('.mp-template-name').forEach(el => {
                     el.onclick = (e) => {
-                        const t = mealTemplates[parseInt(e.target.dataset.idx)];
+                        const t = mealTemplates[parseInt(e.target.closest('.mp-template').dataset.idx)];
                         if (!t) return;
-                        modalSelectedItems = JSON.parse(JSON.stringify(t.items));
-                        servingsInput.value = t.servings || 1;
-                        checkboxEatingOut.checked = false;
-                        builderSection.style.opacity = '1';
-                        builderSection.style.pointerEvents = 'auto';
-                        servingsRow.style.opacity = '1';
-                        servingsRow.style.pointerEvents = 'auto';
-                        renderModalSelectedItems();
+                        const profiles = getProfiles();
+                        modalEaters = profiles.map((p, i) => {
+                            const ex = (t.eaters || []).find(x => x.idx === i);
+                            return ex ? { idx: i, eatingOut: !!ex.eatingOut, items: JSON.parse(JSON.stringify(ex.items || [])) } : { idx: i, eatingOut: false, items: [] };
+                        });
+                        renderEaters();
                     };
                 });
 
-                // Click X to delete
-                document.querySelectorAll('.template-delete').forEach(el => {
+                document.querySelectorAll('.mp-template-delete').forEach(el => {
                     el.onclick = (e) => {
                         e.stopPropagation();
                         mealTemplates.splice(parseInt(e.target.dataset.idx), 1);
@@ -2247,49 +2602,129 @@ renderItemRows();
             }
 
             // Save as template
+            const templateNameRow = document.getElementById('meal-template-name');
+            const templateNameInput = document.getElementById('meal-template-name-input');
+            const templateNameOk = document.getElementById('meal-template-name-ok');
+            const templateNameCancel = document.getElementById('meal-template-name-cancel');
             templateSaveBtn.onclick = () => {
-                if (modalSelectedItems.length === 0 && !checkboxEatingOut.checked) {
-                    alert('Add some items first before saving a template.');
+                const hasItems = modalEaters.some(e => !e.eatingOut && (e.items || []).length);
+                const hasOut = modalEaters.some(e => e.eatingOut);
+                if (!hasItems && !hasOut) {
+                    alert('Add some items (or mark someone as eating out) before saving a template.');
                     return;
                 }
-                const name = prompt('Name this template (e.g. "My Weekday Breakfast"):');
-                if (!name || !name.trim()) return;
+                templateNameInput.value = '';
+                templateNameRow.style.display = 'flex';
+                templateNameInput.focus();
+            };
+            const commitTemplate = () => {
+                const name = templateNameInput.value.trim();
+                if (!name) return;
                 mealTemplates.push({
-                    name: name.trim(),
-                    items: JSON.parse(JSON.stringify(modalSelectedItems)),
-                    servings: parseInt(servingsInput.value) || 1,
-                    isEatingOut: checkboxEatingOut.checked
+                    name,
+                    eaters: JSON.parse(JSON.stringify(modalEaters))
                 });
                 saveTemplatesToStorage();
+                templateNameRow.style.display = 'none';
                 renderTemplateChips();
             };
+            templateNameOk.onclick = commitTemplate;
+            templateNameCancel.onclick = () => { templateNameRow.style.display = 'none'; };
+            templateNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commitTemplate(); }
+                if (e.key === 'Escape') { e.stopPropagation(); templateNameRow.style.display = 'none'; }
+            });
 
-            // Render selected items
-            function renderModalSelectedItems() {
-                if (modalSelectedItems.length === 0) {
-                    selectedList.innerHTML = '<li style="padding: 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No items added yet.</li>';
+            function renderPicker() {
+                if (!pickerItem) {
+                    pickerEl.style.display = 'none';
+                    pickerEl.innerHTML = '';
                     return;
                 }
-
-                selectedList.innerHTML = modalSelectedItems.map((item, index) => `
-                    <li style="padding: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
-                        <div>
-                            <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(item.name)}</span>
-                            <span style="color: var(--text-muted); margin-left: 0.5rem;">
-                                ${item.type === 'ingredient' ? `${escapeHtml(item.amount)} ${escapeHtml(item.unit)}` : '(Recipe)'}
-                            </span>
-                        </div>
-                        <button class="remove-item-btn" data-index="${index}" style="background: none; border: none; color: var(--accent-meat); cursor: pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
-                    </li>
+                const profiles = getProfiles();
+                const eaterCheckboxes = profiles.map((p, i) => `
+                    <label class="mp-picker-eater-cb">
+                        <input type="checkbox" class="mp-picker-cb" value="${i}" checked>
+                        <span>${escapeHtml(p.name)}</span>
+                    </label>
                 `).join('');
 
-                document.querySelectorAll('.remove-item-btn').forEach(btn => {
-                    btn.onclick = (e) => {
-                        const idx = parseInt(e.target.dataset.index);
-                        modalSelectedItems.splice(idx, 1);
-                        renderModalSelectedItems();
-                    };
+                const defaultGrams = pickerItem.defaultGrams || (pickerItem.type === 'recipe' ? (pickerItem.servingSizeG || 250) : 100);
+                pickerEl.innerHTML = `
+                    <div class="mp-picker-card">
+                        <div class="mp-picker-head">
+                            <span class="mp-picker-name">${escapeHtml(pickerItem.name)}</span>
+                            <span class="mp-picker-type">${pickerItem.type === 'recipe' ? 'Recipe' : 'Ingredient'}</span>
+                        </div>
+                        <div class="mp-picker-eaters">
+                            <label class="mp-picker-eater-cb mp-picker-select-all" style="font-weight: 700;">
+                                <input type="checkbox" id="mp-picker-all-cb" checked>
+                                <span>All / None</span>
+                            </label>
+                            <div class="mp-picker-eaters-list">${eaterCheckboxes}</div>
+                        </div>
+                        <div class="mp-picker-row" style="margin-top: 0.5rem;">
+                            <input type="number" class="cms-input mp-picker-grams" value="${defaultGrams}" min="1" step="5">
+                            <span class="mp-picker-unit">g</span>
+                            <div style="flex:1;"></div>
+                            <button class="cms-btn-icon mp-picker-add" style="color: var(--primary);" title="Add" aria-label="Add"><i data-lucide="plus-circle" style="width: 20px; height: 20px;"></i></button>
+                            <button class="cms-btn-icon mp-picker-cancel" title="Cancel" aria-label="Cancel"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+                        </div>
+                    </div>`;
+                pickerEl.style.display = 'block';
+                if (window.lucide) window.lucide.createIcons();
+
+                const selectAllCb = pickerEl.querySelector('#mp-picker-all-cb');
+                const eaterCbs = pickerEl.querySelectorAll('.mp-picker-cb');
+                
+                selectAllCb.addEventListener('change', () => {
+                    eaterCbs.forEach(cb => cb.checked = selectAllCb.checked);
                 });
+                eaterCbs.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        selectAllCb.checked = Array.from(eaterCbs).every(c => c.checked);
+                    });
+                });
+
+                pickerEl.querySelector('.mp-picker-add').onclick = () => {
+                    const grams = parseFloat(pickerEl.querySelector('.mp-picker-grams').value);
+                    if (!(grams > 0)) {
+                        alert('Enter a valid amount in grams.');
+                        return;
+                    }
+                    
+                    let addedAny = false;
+                    eaterCbs.forEach(cb => {
+                        if (cb.checked) {
+                            addedAny = true;
+                            const eIdx = parseInt(cb.value);
+                            if (!modalEaters[eIdx]) modalEaters[eIdx] = { idx: eIdx, eatingOut: false, items: [] };
+                            modalEaters[eIdx].eatingOut = false;
+                            modalEaters[eIdx].items.push({
+                                type: pickerItem.type,
+                                referenceId: pickerItem.referenceId,
+                                name: pickerItem.name,
+                                servingSizeG: pickerItem.type === 'recipe' ? (pickerItem.servingSizeG || 250) : undefined,
+                                grams
+                            });
+                        }
+                    });
+
+                    if (!addedAny) {
+                        alert('Select at least one eater.');
+                        return;
+                    }
+
+                    pickerItem = null;
+                    searchInput.value = '';
+                    renderPicker();
+                    renderEaters();
+                };
+                pickerEl.querySelector('.mp-picker-cancel').onclick = () => {
+                    pickerItem = null;
+                    searchInput.value = '';
+                    renderPicker();
+                };
             }
 
             document.querySelectorAll('.mp-slot').forEach(slotEl => {
@@ -2297,140 +2732,110 @@ renderItemRows();
                     activeDate = slotEl.dataset.date;
                     activeSlotName = slotEl.dataset.slot;
 
-                    assignTitle.textContent = `Plan ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
-                    const slotPill = document.getElementById('meal-assign-slot-pill');
-                    if (slotPill) {
-                        const dateObj = new Date(activeDate + 'T00:00:00');
-                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                        slotPill.textContent = `${dayName} · ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
-                    }
-                    assignSubtitle.textContent = `For ${activeDate}`;
+                    const dateObj = new Date(activeDate + 'T00:00:00');
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                    assignTitle.textContent = `${dayName} · ${activeSlotName.charAt(0).toUpperCase() + activeSlotName.slice(1)}`;
+                    assignSubtitle.textContent = `${formatDateDMY(activeDate)}`;
 
                     const existingPlan = mealPlans.find(p => p.date === activeDate && p.slot === activeSlotName);
 
                     // Reset modal state
                     searchInput.value = '';
                     suggestionsBox.style.display = 'none';
-                    amountGroup.style.display = 'none';
-                    currentStagedItem = null;
-                    checkboxEatingOut.checked = false;
-                    builderSection.style.opacity = '1';
-                    builderSection.style.pointerEvents = 'auto';
-                    servingsInput.value = 1;
-                    servingsRow.style.opacity = '1';
-                    servingsRow.style.pointerEvents = 'auto';
+                    pickerItem = null;
+                    renderPicker();
+
+                    // Build per-eater state from the existing plan (if any)
+                    const profiles = getProfiles();
+                    modalEaters = profiles.map((p, i) => {
+                        let eater = { idx: i, eatingOut: false, items: [] };
+                        if (existingPlan) {
+                            const ex = (existingPlan.eaters || []).find(x => x.idx === i);
+                            if (ex) eater = { idx: i, eatingOut: !!ex.eatingOut, items: JSON.parse(JSON.stringify(ex.items || [])) };
+                            else if (existingPlan.isEatingOut) eater.eatingOut = true;
+                        }
+                        return eater;
+                    });
+                    if (existingPlan && existingPlan.isEatingOut) {
+                        modalEaters.forEach(e => { e.eatingOut = true; e.items = []; });
+                    }
 
                     // Reset copy-to-days checkboxes; auto-check the current day
                     const currentDayIdx = (new Date(activeDate + 'T00:00:00')).getDay();
                     // Convert JS getDay (0=Sun) to our checkbox order (0=Mon...6=Sun)
                     const mappedIdx = currentDayIdx === 0 ? 6 : currentDayIdx - 1;
-                    copyDayCheckboxes.forEach(cb => {
-                        cb.checked = false;
-                        cb.disabled = (parseInt(cb.value) === mappedIdx);
-                        if (parseInt(cb.value) === mappedIdx) {
-                            cb.closest('label').style.opacity = '0.4';
-                        } else {
-                            cb.closest('label').style.opacity = '1';
-                        }
-                    });
 
+                    renderEaters();
+                    renderCopyDays(mappedIdx);
                     renderTemplateChips();
 
-                    // Populate eater checkboxes from profiles
-                    const eatersList = document.getElementById('meal-assign-eaters-list');
-                    if (eatersList) {
-                        const eaters = (appSettings.profiles && appSettings.profiles.length) ? appSettings.profiles : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
-                        eatersList.innerHTML = eaters.map((p, i) => `
-                            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
-                                <input type="checkbox" class="meal-eater-cb" value="${i}" ${existingPlan && (existingPlan.eaters || []).includes(i) ? 'checked' : ''} style="accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer;">
-                                <span>${escapeHtml(p.name)}</span>
-                            </label>
-                        `).join('');
-                    }
-
-                    if (existingPlan) {
-                        btnClear.style.display = 'block';
-                        if (existingPlan.isEatingOut) {
-                            checkboxEatingOut.checked = true;
-                            builderSection.style.opacity = '0.5';
-                            builderSection.style.pointerEvents = 'none';
-                            servingsRow.style.opacity = '0.5';
-                            servingsRow.style.pointerEvents = 'none';
-                            modalSelectedItems = [];
-                        } else {
-                            modalSelectedItems = JSON.parse(JSON.stringify(existingPlan.items || []));
-                            servingsInput.value = existingPlan.servings || 1;
-                            // Backwards compatibility for old data model
-                            if (existingPlan.type === 'recipe') {
-                                const r = recipes.find(rec => rec.id === existingPlan.referenceId);
-                                if (r && modalSelectedItems.length === 0) {
-                                    modalSelectedItems.push({ type: 'recipe', referenceId: r.id, name: r.title });
-                                }
-                            }
-                        }
-                    } else {
-                        btnClear.style.display = 'none';
-                        modalSelectedItems = [];
-                    }
-
-                    renderModalSelectedItems();
                     assignModal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
                 });
             });
 
-            // Toggle Eating Out
-            checkboxEatingOut.onchange = (e) => {
-                if (e.target.checked) {
-                    builderSection.style.opacity = '0.5';
-                    builderSection.style.pointerEvents = 'none';
-                    servingsRow.style.opacity = '0.5';
-                    servingsRow.style.pointerEvents = 'none';
-                } else {
-                    builderSection.style.opacity = '1';
-                    builderSection.style.pointerEvents = 'auto';
-                    servingsRow.style.opacity = '1';
-                    servingsRow.style.pointerEvents = 'auto';
+            function renderCopyDays(mappedIdx) {
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                copyDaysEl.innerHTML = days.map((d, i) => `
+                    <label>
+                        <input type="checkbox" class="copy-day-cb" value="${i}" ${i === mappedIdx ? 'checked' : ''} ${i === mappedIdx ? 'disabled' : ''}>
+                        <span>${d}</span>
+                    </label>
+                `).join('');
+                if (mappedIdx >= 0) {
+                    const disabledLabel = copyDaysEl.querySelector('input[disabled]');
+                    if (disabledLabel) disabledLabel.closest('label').style.opacity = '0.4';
                 }
-            };
-            
-            // Servings +/- buttons
-            servingsDecrement.onclick = () => {
-                const cur = parseInt(servingsInput.value) || 1;
-                if (cur > 1) servingsInput.value = cur - 1;
-            };
-            servingsIncrement.onclick = () => {
-                const cur = parseInt(servingsInput.value) || 1;
-                if (cur < 20) servingsInput.value = cur + 1;
-            };
-            
+            }
+
             // Autocomplete Search
+            let searchHighlightIdx = -1;
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (suggestionsBox.style.display === 'none') return;
+                const items = suggestionsBox.querySelectorAll('.autocomplete-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    searchHighlightIdx = Math.min(searchHighlightIdx + 1, items.length - 1);
+                    updateSearchHighlight(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    searchHighlightIdx = Math.max(searchHighlightIdx - 1, -1);
+                    updateSearchHighlight(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (searchHighlightIdx >= 0 && items[searchHighlightIdx]) {
+                        items[searchHighlightIdx].click();
+                    }
+                }
+            });
+
+            function updateSearchHighlight(items) {
+                items.forEach((item, idx) => {
+                    if (idx === searchHighlightIdx) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
             searchInput.oninput = (e) => {
                 const query = e.target.value.toLowerCase();
+                searchHighlightIdx = -1;
                 if (!query) {
                     suggestionsBox.style.display = 'none';
                     return;
                 }
 
-                // Read macro filters
-                const maxCal = parseFloat(document.getElementById('meal-assign-max-cal')?.value) || 0;
-                const minPro = parseFloat(document.getElementById('meal-assign-min-pro')?.value) || 0;
-                const maxCarb = parseFloat(document.getElementById('meal-assign-max-carb')?.value) || 0;
-                const maxFat = parseFloat(document.getElementById('meal-assign-max-fat')?.value) || 0;
-
-                const matchesMacros = (r) => {
-                    const m = recipeMacros(r);
-                    if (maxCal && m.energy > maxCal) return false;
-                    if (minPro && m.protein < minPro) return false;
-                    if (maxCarb && m.carbs > maxCarb) return false;
-                    if (maxFat && m.fat > maxFat) return false;
-                    return true;
-                };
-
-                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query) && matchesMacros(r)).map(r => ({ ...r, _type: 'recipe' }));
+                const matchedRecipes = recipes.filter(r => r.title.toLowerCase().includes(query)).map(r => ({ ...r, _type: 'recipe' }));
                 const matchedIngredients = ingredients.filter(i => i.name.toLowerCase().includes(query)).map(i => ({ ...i, _type: 'ingredient' }));
-                
+
                 const combined = [...matchedRecipes, ...matchedIngredients].slice(0, 15); // Top 15
-                
+
                 if (combined.length === 0) {
                     suggestionsBox.innerHTML = '<div style="padding: 0.8rem; color: var(--text-muted); font-size: 0.85rem;">No results found.</div>';
                 } else {
@@ -2440,29 +2845,21 @@ renderItemRows();
                             <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
                         </div>
                     `).join('');
-                    
+
                     document.querySelectorAll('.autocomplete-item').forEach(el => {
                         el.onclick = () => {
                             const selected = combined[parseInt(el.dataset.idx)];
                             searchInput.value = selected._type === 'recipe' ? selected.title : selected.name;
                             suggestionsBox.style.display = 'none';
-                            
-                            currentStagedItem = {
-                                type: selected._type,
-                                referenceId: selected._type === 'recipe' ? selected.id : selected.foodId,
-                                name: selected._type === 'recipe' ? selected.title : selected.name,
-                                unit: selected._type === 'ingredient' ? (selected.servingUnit || 'g') : null
-                            };
-                            
-                            if (selected._type === 'ingredient') {
-                                unitLabel.textContent = currentStagedItem.unit;
-                                amountInput.value = '';
-                                amountGroup.style.display = 'flex';
+
+                            if (selected._type === 'recipe') {
+                                const sv = recipeServingGrams(selected) || 250;
+                                pickerItem = { type: 'recipe', referenceId: selected.id, name: selected.title, servingSizeG: sv, defaultGrams: sv };
                             } else {
-                                amountGroup.style.display = 'none';
-                                // Auto-add recipe
-                                addBtnModal.click();
+                                const sv = parseFloat(selected.servingSizeG) || 100;
+                                pickerItem = { type: 'ingredient', referenceId: selected.foodId, name: selected.name, defaultGrams: sv };
                             }
+                            renderPicker();
                         };
                     });
                 }
@@ -2471,33 +2868,10 @@ renderItemRows();
             
             // Hide autocomplete on click outside
             document.addEventListener('click', (e) => {
-                if (e.target !== searchInput && e.target !== suggestionsBox) {
+                if (e.target !== searchInput && e.target !== suggestionsBox && !pickerEl.contains(e.target)) {
                     suggestionsBox.style.display = 'none';
                 }
             });
-            
-            // Add item to slot list
-            addBtnModal.onclick = () => {
-                if (!currentStagedItem) return;
-                
-                if (currentStagedItem.type === 'ingredient') {
-                    const amt = parseFloat(amountInput.value);
-                    if (!amt || amt <= 0) {
-                        alert('Please enter a valid amount.');
-                        return;
-                    }
-                    currentStagedItem.amount = amt;
-                }
-                
-                modalSelectedItems.push({ ...currentStagedItem });
-                renderModalSelectedItems();
-                
-                // Reset inputs
-                searchInput.value = '';
-                amountInput.value = '';
-                amountGroup.style.display = 'none';
-                currentStagedItem = null;
-            };
             
             btnCancel.onclick = () => {
                 assignModal.classList.remove('active');
@@ -2520,15 +2894,17 @@ renderItemRows();
                 const startOfWeek = new Date(today);
                 startOfWeek.setDate(today.getDate() - dayOfWeek + 1 + mealWeekOffset * 7);
 
-                // Collect selected eaters
-                const selectedEaters = [];
-                document.querySelectorAll('.meal-eater-cb').forEach(cb => {
-                    if (cb.checked) selectedEaters.push(parseInt(cb.value));
-                });
+                // Per-eater state: only keep eaters that matter (eating out or with items)
+                const eatersToSave = modalEaters.map(e => ({
+                    idx: e.idx,
+                    eatingOut: !!e.eatingOut,
+                    items: e.eatingOut ? [] : JSON.parse(JSON.stringify(e.items || []))
+                }));
+                const allOut = eatersToSave.length > 0 && eatersToSave.every(e => e.eatingOut);
 
                 // Collect all target dates: the active date + any checked copy-to days
                 const targetDates = [activeDate];
-                copyDayCheckboxes.forEach(cb => {
+                document.querySelectorAll('.copy-day-cb').forEach(cb => {
                     if (cb.checked && !cb.disabled) {
                         const d = new Date(startOfWeek);
                         d.setDate(startOfWeek.getDate() + parseInt(cb.value));
@@ -2542,29 +2918,14 @@ renderItemRows();
                     // Remove existing for this date+slot
                     mealPlans = mealPlans.filter(p => !(p.date === dateStr && p.slot === activeSlotName));
                     
-                    if (checkboxEatingOut.checked) {
-                        mealPlans.push({
-                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
-                            date: dateStr,
-                            slot: activeSlotName,
-                            isEatingOut: true,
-                            items: [],
-                            eaters: selectedEaters,
-                            servings: 1,
-                            isConsumed: false
-                        });
-                    } else if (modalSelectedItems.length > 0) {
-                        mealPlans.push({
-                            id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
-                            date: dateStr,
-                            slot: activeSlotName,
-                            isEatingOut: false,
-                            items: JSON.parse(JSON.stringify(modalSelectedItems)),
-                            eaters: selectedEaters,
-                            servings: parseInt(servingsInput.value) || 1,
-                            isConsumed: false
-                        });
-                    }
+                    mealPlans.push({
+                        id: 'mp_' + Date.now().toString(36) + Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2),
+                        date: dateStr,
+                        slot: activeSlotName,
+                        isEatingOut: allOut,
+                        eaters: JSON.parse(JSON.stringify(eatersToSave)),
+                        isConsumed: false
+                    });
                 });
                 
                 assignModal.classList.remove('active');
@@ -2755,7 +3116,7 @@ renderItemRows();
                                         <input type="number" step="any" min="0" class="p-days" value="${days || ''}" ${!isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per unit" style="width: 56px; padding: 0.25rem 0.35rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.78rem;">
                                     </label>
                                     ${depletion
-                                        ? `<span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}" style="font-size:0.72rem;">Runs out ${escapeHtml(depletion)}${daysLeft != null ? ' · ' + daysLeft + 'd' : ''}</span>`
+                                        ? `<span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}" style="font-size:0.72rem;">Runs out ${escapeHtml(formatDateDMY(depletion))}${daysLeft != null ? ' · ' + daysLeft + 'd' : ''}</span>`
                                         : '<span class="vd-pantry-qty" style="font-size: 0.72rem; color: var(--text-muted);">set days to estimate</span>'}
                                 </div>
                             </div>
@@ -2807,7 +3168,7 @@ renderItemRows();
                                     <td><input type="number" step="any" min="0" class="p-days" value="${days || ''}" ${!isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per unit"></td>
                                     <td>
                                         ${depletion
-                                            ? `${escapeHtml(depletion)} <span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${daysLeft != null ? daysLeft + 'd' : ''})</span>`
+                                            ? `${escapeHtml(formatDateDMY(depletion))} <span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${daysLeft != null ? daysLeft + 'd' : ''})</span>`
                                             : '<span style="color: var(--text-muted);">—</span>'}
                                     </td>
                                     <td><input type="checkbox" class="p-track-check" ${isTracked ? 'checked' : ''} aria-label="Track stock"></td>
@@ -3042,7 +3403,7 @@ renderItemRows();
                                 ${s.depletion
                                     ? `<div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                         <span style="color: var(--text-muted);">Runs out</span>
-                                        <span style="color: var(--text-main); font-weight: 600;">${escapeHtml(s.depletion)}</span>
+                                        <span style="color: var(--text-main); font-weight: 600;">${escapeHtml(formatDateDMY(s.depletion))}</span>
                                         <span class="hh-days-left ${s.daysLeft !== null && s.daysLeft <= 7 ? 'hh-days-urgent' : ''}">${s.daysLeft !== null ? 'in ' + s.daysLeft + 'd' : ''}</span>
                                     </div>`
                                     : '<div style="color: var(--text-muted); font-size: 0.8rem;">Set avg. duration to estimate depletion</div>'}
@@ -3087,7 +3448,7 @@ renderItemRows();
                                     <td>${avg > 0 ? avg + ' days' : '—'}</td>
                                     <td>
                                         ${s.depletion
-                                            ? `${escapeHtml(s.depletion)} <span class="hh-days-left ${s.daysLeft !== null && s.daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${s.daysLeft !== null ? 'in ' + s.daysLeft + 'd' : ''})</span>`
+                                            ? `${escapeHtml(formatDateDMY(s.depletion))} <span class="hh-days-left ${s.daysLeft !== null && s.daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${s.daysLeft !== null ? 'in ' + s.daysLeft + 'd' : ''})</span>`
                                             : '<span style="color: var(--text-muted);">—</span>'}
                                     </td>
                                     <td>${price > 0 ? 'Rs ' + price.toFixed(0) : '—'}</td>
@@ -3266,38 +3627,47 @@ renderItemRows();
                 };
 
                 plans.forEach(plan => {
-                    const mult = plan.servings || 1;
-                    let itemsToProcess = plan.items || [];
-                    if (itemsToProcess.length === 0 && plan.type === 'recipe') itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
-                    itemsToProcess.forEach(item => {
-                        if (item.type === 'recipe') {
-                            const recipe = recipes.find(r => r.id === item.referenceId);
-                            if (!recipe || !recipe.ingredients) return;
-                            recipe.ingredients.forEach(ing => {
-                                if (!ing.foodId) return;
-                                const foodRef = ingredients.find(f => f.foodId === ing.foodId);
-                                const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
-                                const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
-                                const price = perGramPrice(foodRef);
-                                if (grams === null) { addUnpriced(name, 'unknown unit'); return; }
-                                if (!(price > 0)) { addUnpriced(name, 'no price set'); return; }
-                                const scaled = grams * mult;
-                                const ex = agg.get(ing.foodId);
-                                if (ex) { ex.grams += scaled; if (recipe.title) ex.recipes.add(recipe.title); }
-                                else agg.set(ing.foodId, { name, grams: scaled, recipes: recipe.title ? new Set([recipe.title]) : new Set(), category: (foodRef && foodRef.category) || 'Other' });
-                            });
-                        } else if (item.type === 'ingredient' && item.referenceId) {
-                            const foodRef = ingredients.find(f => f.foodId === item.referenceId);
-                            const name = foodRef ? foodRef.name : item.name;
-                            const amountStr = (item.amount != null ? item.amount : '0') + (item.unit ? ' ' + item.unit : '');
-                            const grams = parseAmountToGrams(amountStr, foodRef);
+                    const recipeMult = {}; // recipeId -> servings to cook
+                    const ingGrams = {}; // foodId -> total grams
+                    (plan.eaters || []).forEach(eater => {
+                        if (eater.eatingOut) return;
+                        (eater.items || []).forEach(item => {
+                            const grams = parseFloat(item.grams) || 0;
+                            if (!(grams > 0)) return;
+                            if (item.type === 'recipe') {
+                                recipeMult[item.referenceId] = recipeServingsToCook(plan, item.referenceId);
+                            } else if (item.type === 'ingredient' && item.referenceId) {
+                                ingGrams[item.referenceId] = (ingGrams[item.referenceId] || 0) + grams;
+                            }
+                        });
+                    });
+                    Object.keys(recipeMult).forEach(rid => {
+                        const recipe = recipes.find(r => r.id === rid);
+                        if (!recipe || !recipe.ingredients) return;
+                        const mult = recipeMult[rid];
+                        recipe.ingredients.forEach(ing => {
+                            if (!ing.foodId) return;
+                            const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                            const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
+                            const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
                             const price = perGramPrice(foodRef);
-                            if (grams === null || !(price > 0)) { addUnpriced(name, grams === null ? 'unknown unit' : 'no price set'); return; }
+                            if (grams === null) { addUnpriced(name, 'unknown unit'); return; }
+                            if (!(price > 0)) { addUnpriced(name, 'no price set'); return; }
                             const scaled = grams * mult;
-                            const ex = agg.get(item.referenceId);
-                            if (ex) ex.grams += scaled;
-                            else agg.set(item.referenceId, { name, grams: scaled, recipes: new Set(), category: (foodRef && foodRef.category) || 'Other' });
-                        }
+                            const ex = agg.get(ing.foodId);
+                            if (ex) { ex.grams += scaled; if (recipe.title) ex.recipes.add(recipe.title); }
+                            else agg.set(ing.foodId, { name, grams: scaled, recipes: recipe.title ? new Set([recipe.title]) : new Set(), category: (foodRef && foodRef.category) || 'Other' });
+                        });
+                    });
+                    Object.keys(ingGrams).forEach(foodId => {
+                        const foodRef = ingredients.find(f => f.foodId === foodId);
+                        const name = foodRef ? foodRef.name : 'Ingredient';
+                        const price = perGramPrice(foodRef);
+                        if (!(price > 0)) { addUnpriced(name, 'no price set'); return; }
+                        const scaled = ingGrams[foodId];
+                        const ex = agg.get(foodId);
+                        if (ex) ex.grams += scaled;
+                        else agg.set(foodId, { name, grams: scaled, recipes: new Set(), category: (foodRef && foodRef.category) || 'Other' });
                     });
                 });
 
@@ -3585,28 +3955,39 @@ const unpricedRow = cost.unpriced.length
                 if (useMeals) {
                     const plans = currentWeekPlans();
                     plans.forEach(plan => {
-                        const mult = plan.servings || 1;
-                        let itemsToProcess = plan.items || [];
-                        if (itemsToProcess.length === 0 && plan.type === 'recipe') itemsToProcess.push({ type: 'recipe', referenceId: plan.referenceId });
-                        itemsToProcess.forEach(item => {
-                            if (item.type === 'recipe') {
-                                const recipe = recipes.find(r => r.id === item.referenceId);
-                                if (!recipe || !recipe.ingredients) return;
-                                recipe.ingredients.forEach(ing => {
-                                    if (!ing.foodId) return;
-                                    const foodRef = ingredients.find(f => f.foodId === ing.foodId);
-                                    const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
-                                    const grams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
-                                    if (grams === null || grams <= 0) return;
-                                    addNeed(ing.foodId, name, grams * mult, recipe.title, (foodRef && foodRef.category) || 'Other', 'meals');
-                                });
-                            } else if (item.type === 'ingredient' && item.referenceId) {
-                                const foodRef = ingredients.find(f => f.foodId === item.referenceId);
-                                const amountStr = (item.amount != null ? item.amount : 0) + (item.unit ? ' ' + item.unit : '');
-                                const grams = parseAmountToGrams(amountStr, foodRef);
-                                if (grams === null || grams <= 0) return;
-                                addNeed(item.referenceId, foodRef ? foodRef.name : item.name, grams * mult, '', (foodRef && foodRef.category) || 'Other', 'meals');
-                            }
+                        const recipeMult = {}; // recipeId -> servings to cook
+                        const ingGrams = {}; // foodId -> total grams
+                        (plan.eaters || []).forEach(eater => {
+                            if (eater.eatingOut) return;
+                            (eater.items || []).forEach(item => {
+                                const grams = parseFloat(item.grams) || 0;
+                                if (!(grams > 0)) return;
+                                if (item.type === 'recipe') {
+                                    recipeMult[item.referenceId] = recipeServingsToCook(plan, item.referenceId);
+                                } else if (item.type === 'ingredient' && item.referenceId) {
+                                    ingGrams[item.referenceId] = (ingGrams[item.referenceId] || 0) + grams;
+                                }
+                            });
+                        });
+                        Object.keys(recipeMult).forEach(rid => {
+                            const recipe = recipes.find(r => r.id === rid);
+                            if (!recipe || !recipe.ingredients) return;
+                            const mult = recipeMult[rid];
+                            const yieldNum = recipeYield(recipe);
+                            recipe.ingredients.forEach(ing => {
+                                if (!ing.foodId) return;
+                                const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+                                const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
+                                const batchGrams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+                                if (batchGrams === null || batchGrams <= 0) return;
+                                const perServingGrams = batchGrams / yieldNum;
+                                addNeed(ing.foodId, name, perServingGrams * mult, recipe.title, (foodRef && foodRef.category) || 'Other', 'meals');
+                            });
+                        });
+                        Object.keys(ingGrams).forEach(foodId => {
+                            const foodRef = ingredients.find(f => f.foodId === foodId);
+                            if (!(ingGrams[foodId] > 0)) return;
+                            addNeed(foodId, foodRef ? foodRef.name : 'Ingredient', ingGrams[foodId], '', (foodRef && foodRef.category) || 'Other', 'meals');
                         });
                     });
                 }
