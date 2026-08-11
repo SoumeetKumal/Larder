@@ -218,8 +218,8 @@ works; consumption log persists and exports.
       stock; a product above max isn't restocked.
 
 ### 3.3 Running expected total (GAP-13, part)
-- [ ] Ticking an item updates "expected total" live (sum of unchecked costs).
-- [ ] **Manual:** tick items → running total decreases; untick → increases.
+- [x] Ticking an item updates "expected total" live (sum of unchecked costs).
+- [x] **Manual:** tick items → running total decreases; untick → increases.
 
 **Phase 3 acceptance:** every list is saved, dated, traceable; per-item controls work;
 totals tick correctly.
