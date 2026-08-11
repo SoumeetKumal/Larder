@@ -181,6 +181,24 @@ const r = await req('/api/settings');
         ok(manual.recipeId === null, 'manual record has null recipeId');
     }
 
+    // --- Shopping List History ---
+    console.log('[shopping list history]');
+    {
+        const today = new Date().toISOString().split('T')[0];
+        const put = await req('/api/shoppinglists', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'sl_test', date: today, items: [{ foodId: 'tagliatelle', name: 'Tagliatelle', amount: 500, unit: 'g', checked: false }] }])
+        });
+        ok(put.status === 200, 'PUT /api/shoppinglists accepts dated records');
+        const get = await req('/api/shoppinglists');
+        ok(get.body.some(r => r.id === 'sl_test'), 'shopping list record persisted');
+        ok(get.body[0].items && get.body[0].items[0].foodId === 'tagliatelle', 'items array in record');
+    }
+    {
+        const bad = await req('/api/shoppinglists', { method: 'PUT', body: 'not an array' });
+        ok(bad.status === 400, 'PUT /api/shoppinglists rejects non-array');
+    }
+
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
 

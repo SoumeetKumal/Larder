@@ -195,18 +195,18 @@ works; consumption log persists and exports.
 ## Phase 3 — Shopping list history & totals
 
 ### 3.1 Dated list records (GAP-11)
-- [ ] `cms-utils.js`: `wrapListRecords(shoppingLists)` migration (single list →
+- [x] `cms-utils.js`: `wrapListRecords(shoppingLists)` migration (single list →
       one dated record) + `createListRecord(items, date)` + `upsertTodayRecord`.
       Unit tests.
-- [ ] `cms.js`: `shoppingLists` becomes a list of records; Generate creates/updates
+- [x] `cms.js`: `shoppingLists` becomes a list of records; Generate creates/updates
       today's record; Save persists it (keep revert-on-fail behaviour,
       `cms.js:2989-2995`).
-- [ ] Past-lists view: list dated records, reopen any with its items + checkboxes.
-- [ ] **Migration:** on load, existing flat `shoppinglists.json` wrapped into a
+- [x] Past-lists view: list dated records, reopen any with its items + checkboxes.
+- [x] **Migration:** on load, existing flat `shoppinglists.json` wrapped into a
       record without data loss.
-- [ ] **Unit:** migration, create, upsert.
-- [ ] **Integration:** PUT/GET shoppinglists round-trips the record shape.
-- [ ] **Manual:** generate → save → tick a few → regenerate tomorrow → today's
+- [x] **Unit:** migration, create, upsert (6 tests in larder-math.test.js).
+- [x] **Integration:** PUT/GET shoppinglists round-trips the record shape (larder.test.js).
+- [x] **Manual:** generate → save → tick a few → regenerate tomorrow → today's
       record updated, yesterday's still browsable with its ticks.
 
 ### 3.2 Include/exclude + at-home (GAP-16)
@@ -347,6 +347,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 2.1 | ✅ | 2026-08-12 | `calc.js` `consumptionFor` + `parseAmountToGrams`; `consumption.json` dataset + API; CMS "I cooked this" dialog with per-item override & pantry decrement; unit (5 new `parseAmountToGrams` + 5 `consumptionFor` checks) + integration tests green. |
 | 2.2 | ✅ | 2026-08-12 | Pantry "Used" button (card + table) with inline dialog; writes `consumption.json` with `source: "manual"`; decrements specific pantry item; integration test for manual source. |
 | 2.3 | ✅ | 2026-08-12 | `calc.js` `rollingAvgDuration` (5 tests); learns `avgDurationDays` from consumption events (>=3); auto-updates pantry items after cooked/used logging; integration via existing tests. |
+| 3.1 | ✅ | 2026-08-12 | `cms-utils.js` `wrapListRecords`/`createListRecord`/`upsertTodayRecord` (6 tests); `shoppingLists` migrated to dated records; Generate upserts today's record; Past Lists view with date, totals, checked counts; integration test for record shape. |
 | 2 | ☐ | | |
 | 3 | ☐ | | |
 | 4 | ☐ | | |

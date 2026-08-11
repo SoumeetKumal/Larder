@@ -736,6 +736,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pantry = resPantry; // legacy tracking data
             pantryItems = Array.isArray(resPantryItems) ? resPantryItems : [];
             shoppingLists = resShoppingLists;
+            // Migrate flat shopping list to dated records
+            shoppingLists = u.wrapListRecords(shoppingLists);
             householdItems = Array.isArray(resHousehold) ? resHousehold : [];
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
                 ? resSettings
@@ -2987,6 +2989,8 @@ if (currentCMSTab === 'pantry') {
         }
 
         if (currentCMSTab === 'shopping') {
+            // View state for shopping list history
+            const shopView = { mode: 'current' }; // 'current' or 'past'
             const uiHTML = `
                 <div class="shop-gen-panel">
                     <div class="shop-gen-head"><i data-lucide="sliders-horizontal" style="width: 15px; height: 15px;"></i> What to include in this list?</div>
@@ -3003,17 +3007,23 @@ if (currentCMSTab === 'pantry') {
                         <span class="shop-gen-hint">Tracked pantry stock is subtracted from every included source automatically.</span>
                     </div>
                 </div>
+                <div class="shop-view-toggle" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                    <button type="button" id="shop-view-current" class="btn view-btn active" style="flex: 1;"><i data-lucide="shopping-basket" style="width: 14px; height: 14px;"></i> Current List</button>
+                    <button type="button" id="shop-view-past" class="btn view-btn" style="flex: 1;"><i data-lucide="history" style="width: 14px; height: 14px;"></i> Past Lists</button>
+                </div>
                 <div id="shopping-budget-card" style="margin-bottom: 1.5rem;"></div>
                 <div id="shopping-list-results" style="display: grid; gap: 1rem;">
                     <!-- Results render here -->
                     <div class="empty-state">Tick what to include and click "Generate" to calculate your shopping needs.</div>
                 </div>
+                <div id="shopping-past-lists" style="display: none;"></div>
             `;
             listContainer.innerHTML = uiHTML;
             addBtn.style.display = 'none';
 
             const resultsContainer = document.getElementById('shopping-list-results');
             const saveListBtn = document.getElementById('save-list-btn');
+            const pastListsContainer = document.getElementById('shopping-past-lists');
 
             async function persistShoppingList() {
                 try {
@@ -3030,6 +3040,70 @@ if (currentCMSTab === 'pantry') {
                     alert('Failed to save shopping list. Reverting to previous state.');
                     loadData();
                 }
+            }
+
+            // View toggle handlers
+            function setShopView(mode) {
+                shopView.mode = mode;
+                const currentBtn = document.getElementById('shop-view-current');
+                const pastBtn = document.getElementById('shop-view-past');
+                if (mode === 'current') {
+                    currentBtn.classList.add('active');
+                    pastBtn.classList.remove('active');
+                    resultsContainer.style.display = 'grid';
+                    pastListsContainer.style.display = 'none';
+                    // Render today's record
+                    const today = new Date().toISOString().split('T')[0];
+                    const todayRecord = shoppingLists.find(r => r.date === today) || shoppingLists[0];
+                    renderShoppingList(backfillListCosts(todayRecord ? todayRecord.items : []));
+                } else {
+                    pastBtn.classList.add('active');
+                    currentBtn.classList.remove('active');
+                    resultsContainer.style.display = 'none';
+                    pastListsContainer.style.display = 'block';
+                    renderPastLists();
+                }
+            }
+            document.getElementById('shop-view-current').addEventListener('click', () => setShopView('current'));
+            document.getElementById('shop-view-past').addEventListener('click', () => setShopView('past'));
+
+            // Render past shopping lists
+            function renderPastLists() {
+                if (!shoppingLists || shoppingLists.length === 0) {
+                    pastListsContainer.innerHTML = '<div class="empty-state">No past shopping lists yet.</div>';
+                    return;
+                }
+                const today = new Date().toISOString().split('T')[0];
+                const past = shoppingLists.filter(r => r.date !== today);
+                if (past.length === 0) {
+                    pastListsContainer.innerHTML = '<div class="empty-state">No past shopping lists yet.</div>';
+                    return;
+                }
+                let html = '<div class="past-lists">';
+                past.forEach(record => {
+                    const total = record.items.reduce((s, i) => s + (parseFloat(i.cost) || 0), 0);
+                    const checkedCount = record.items.filter(i => i.checked).length;
+                    const totalCount = record.items.length;
+                    const currency = mealPlanCurrency();
+                    html += `
+                        <div class="past-list-card" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; background: var(--bg-surface);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <div style="font-weight: 600;">${escapeHtml(u.formatDateDMY(record.date))}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${checkedCount}/${totalCount} checked · ${escapeHtml(u.formatMoney(total, currency))}</div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                ${record.items.slice(0, 6).map(item => `
+                                    <span class="past-list-item" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; background: var(--bg-raised); border-radius: 4px; ${item.checked ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">
+                                        ${escapeHtml(item.name)} ${escapeHtml(u.formatAmountDisplay(item.amount, item.unit))}
+                                    </span>
+                                `).join('')}
+                                ${record.items.length > 6 ? `<span class="past-list-item" style="font-size: 0.75rem; color: var(--text-muted);">+${record.items.length - 6} more</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                pastListsContainer.innerHTML = html;
             }
 
             // --- Budget vs meal plan cost ---
@@ -3310,7 +3384,9 @@ const unpricedRow = cost.unpriced.length
 
             // Load a previously saved list if one exists
             if (Array.isArray(shoppingLists) && shoppingLists.length > 0) {
-                renderShoppingList(backfillListCosts(shoppingLists));
+                const today = new Date().toISOString().split('T')[0];
+                const todayRecord = shoppingLists.find(r => r.date === today) || shoppingLists[0];
+                renderShoppingList(backfillListCosts(todayRecord ? todayRecord.items : []));
             }
             renderBudget();
 
@@ -3536,8 +3612,11 @@ const unpricedRow = cost.unpriced.length
 
             document.getElementById('generate-list-btn').onclick = () => {
                 const list = generateList();
-                shoppingLists = list;
-                renderShoppingList(list);
+                shoppingLists = u.upsertTodayRecord(shoppingLists, list);
+                // Render today's record
+                const today = new Date().toISOString().split('T')[0];
+                const todayRecord = shoppingLists.find(r => r.date === today) || shoppingLists[0];
+                renderShoppingList(todayRecord ? todayRecord.items : []);
                 renderBudget();
                 persistShoppingList();
             };

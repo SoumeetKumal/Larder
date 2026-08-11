@@ -374,6 +374,43 @@
         return segments;
     }
 
+    // --- Shopping List History (dated records) ---
+    // Migration: wrap existing flat list into a single dated record.
+    function wrapListRecords(shoppingLists) {
+        if (!Array.isArray(shoppingLists)) return [];
+        if (shoppingLists.length === 0) return [];
+        // If already in record format (has 'items' array), assume already migrated
+        if (shoppingLists[0] && Array.isArray(shoppingLists[0].items)) return shoppingLists;
+        // Flat list -> single record dated today
+        return [createListRecord(shoppingLists, new Date().toISOString().split('T')[0])];
+    }
+
+    // Create a new dated shopping list record
+    function createListRecord(items, date) {
+        return {
+            id: 'sl_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+            date: date,
+            items: (items || []).map(it => ({ ...it, checked: !!it.checked })),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    // Upsert today's record: if a record for today exists, replace its items;
+    // otherwise prepend a new record for today.
+    function upsertTodayRecord(shoppingLists, items) {
+        const today = new Date().toISOString().split('T')[0];
+        const lists = Array.isArray(shoppingLists) ? [...shoppingLists] : [];
+        const todayIdx = lists.findIndex(r => r.date === today);
+        const record = createListRecord(items, today);
+        if (todayIdx >= 0) {
+            lists[todayIdx] = { ...lists[todayIdx], ...record, updatedAt: new Date().toISOString() };
+        } else {
+            lists.unshift(record);
+        }
+        return lists;
+    }
+
     root.LarderCalcUtils = {
         MONTHS_SHORT,
         formatDateDMY,
@@ -401,6 +438,9 @@
         formatCups,
         formatCount,
         formatMetricAmount,
-        parseStepLinks
+        parseStepLinks,
+        wrapListRecords,
+        createListRecord,
+        upsertTodayRecord
     };
 })(typeof self !== 'undefined' ? self : this);

@@ -2,6 +2,7 @@
 // Run: node tests/larder-math.test.js
 'use strict';
 const c = require('../calc.js');
+const u = require('../cms-utils.js').LarderCalcUtils;
 const assert = require('assert');
 
 let passed = 0, failed = 0;
@@ -84,6 +85,56 @@ check('< 2 events returns null', () => {
     assert.equal(c.rollingAvgDuration(null), null);
 });
 
+console.log('\n-- Shopping List History --');
+check('wrapListRecords: flat list -> single dated record', () => {
+    const flat = [{ foodId: 'rice', name: 'Rice', amount: 1000, unit: 'g', checked: false }];
+    const wrapped = u.wrapListRecords(flat);
+    assert.ok(Array.isArray(wrapped));
+    assert.equal(wrapped.length, 1);
+    assert.ok(wrapped[0].id && wrapped[0].date);
+    assert.ok(Array.isArray(wrapped[0].items));
+    assert.equal(wrapped[0].items[0].foodId, 'rice');
+    assert.equal(wrapped[0].items[0].checked, false);
+});
+check('wrapListRecords: empty array -> empty', () => {
+    assert.deepEqual(u.wrapListRecords([]), []);
+});
+check('wrapListRecords: already records -> unchanged', () => {
+    const records = [{ id: 'sl_1', date: '2026-08-01', items: [{ foodId: 'rice', checked: true }] }];
+    const wrapped = u.wrapListRecords(records);
+    assert.equal(wrapped.length, 1);
+    assert.equal(wrapped[0].id, 'sl_1');
+});
+check('createListRecord: creates record with id, date, items', () => {
+    const items = [{ foodId: 'rice', amount: 1000, unit: 'g', checked: true }];
+    const rec = u.createListRecord(items, '2026-08-12');
+    assert.ok(rec.id && rec.id.startsWith('sl_'));
+    assert.equal(rec.date, '2026-08-12');
+    assert.equal(rec.items[0].checked, true);
+    assert.ok(rec.createdAt && rec.updatedAt);
+});
+check('upsertTodayRecord: new date -> prepends record', () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const lists = [{ id: 'sl_1', date: yesterdayStr, items: [] }];
+    const items = [{ foodId: 'rice', checked: false }];
+    const updated = u.upsertTodayRecord(lists, items);
+    const today = new Date().toISOString().split('T')[0];
+    assert.equal(updated[0].date, today);
+    assert.equal(updated[0].items[0].foodId, 'rice');
+    assert.equal(updated.length, 2); // old + new
+});
+check('upsertTodayRecord: existing today -> replaces items', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const lists = [{ id: 'sl_1', date: today, items: [{ foodId: 'old', checked: true }] }];
+    const items = [{ foodId: 'new', checked: false }];
+    const updated = u.upsertTodayRecord(lists, items);
+    assert.equal(updated.length, 1);
+    assert.equal(updated[0].items[0].foodId, 'new');
+    assert.ok(new Date(updated[0].updatedAt) >= new Date(updated[0].createdAt));
+});
+
 console.log('\n-- computeTotals --');
 check('basic totals 1kg rice', () => {
     const t = c.computeTotals([{ ingredientId: 'rice', amount: 1000, unit: 'g' }], ING);
@@ -147,9 +198,6 @@ check('skips header/TAX lines', () => {
     assert.equal(r.length, 1);
     assert.equal(r[0].name, 'Eggs');
 });
-
-// --- Step ingredient-link tokens (cms-utils.parseStepLinks) ---
-const u = require('../cms-utils.js').LarderCalcUtils;
 
 console.log('\n-- parseStepLinks (instruction ingredient links) --');
 check('plain text only', () => {
