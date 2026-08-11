@@ -3312,6 +3312,7 @@ const unpricedRow = cost.unpriced.length
                             <span class="vd-shop-recipe-tag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> ${escapeHtml(r)}</span>
                         `).join('');
                         const isChecked = item.checked ? ' checked' : '';
+                        const isIncluded = item.included !== false ? ' included' : ''; // default true
                         const costLabel = (item.cost != null && item.cost > 0)
                             ? `<span class="vd-shop-cost">≈ ${formatMoney(item.cost, currency)}</span>`
                             : `<span class="vd-shop-no-cost" title="No price set for this item — not included in the list total"><i data-lucide="triangle-alert" style="width: 13px; height: 13px;"></i> No price</span>`;
@@ -3319,14 +3320,41 @@ const unpricedRow = cost.unpriced.length
                         const suggLabel = sugg
                             ? `<div class="vd-shop-suggestion"><i data-lucide="sparkles" style="width: 12px; height: 12px;"></i> Cheaper swap: ${escapeHtml(sugg.name)} — save ≈ ${formatMoney(sugg.save, currency)}</div>`
                             : '';
+
+                        // At-home stock (pantry)
+                        let atHomeGrams = 0;
+                        if (item.foodId) {
+                            // Legacy pantry
+                            const legacyPantry = pantry.find(p => p.foodId === item.foodId && p.isTracked);
+                            if (legacyPantry) {
+                                const ing = ingredients.find(f => f.foodId === item.foodId);
+                                const u = String(ing && ing.servingUnit || 'g').toLowerCase();
+                                const q = parseFloat(legacyPantry.quantity) || 0;
+                                if (u === 'g' || u === 'ml') atHomeGrams += q;
+                                else if (u === 'kg' || u === 'l') atHomeGrams += q * 1000;
+                                else atHomeGrams += q * (parseFloat(ing && ing.servingSizeG) || 100);
+                            }
+                            // New pantry items
+                            pantryItems.filter(p => p.ingredientFoodId === item.foodId && p.isTracked).forEach(pItem => {
+                                atHomeGrams += (parseFloat(pItem.quantity) || 0) * (parseFloat(pItem.packSize) || 0);
+                            });
+                        }
+                        const atHomeLabel = atHomeGrams > 0
+                            ? `<span class="vd-shop-at-home" title="In pantry"><i data-lucide="home" style="width: 12px; height: 12px; vertical-align: -2px;"></i> ${Math.round(atHomeGrams / 100) / 10} kg</span>`
+                            : `<span class="vd-shop-at-home" style="color: var(--text-muted);">—</span>`;
+
                         listHTML += `
-                        <div class="vd-shop-item${isChecked}" data-cat="${escapeHtml(cat)}" data-idx="${itemIdx}">
+                        <div class="vd-shop-item${isChecked}${isIncluded}" data-cat="${escapeHtml(cat)}" data-idx="${itemIdx}">
                             <div class="vd-shop-checkbox" role="checkbox" tabindex="0" aria-checked="${item.checked ? 'true' : 'false'}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="vd-shop-include-toggle" role="checkbox" tabindex="0" aria-checked="${item.included !== false ? 'true' : 'false'}" title="Include/exclude from list">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                            </div>
                             <div class="vd-shop-item-details">
                                 <div class="vd-shop-item-title">${escapeHtml(item.name)}</div>
                                 <div class="vd-shop-item-meta">
                                     <span class="vd-shop-qty">${escapeHtml(formatAmountDisplay(item.amount, item.unit))}</span>
                                     ${costLabel}
+                                    ${atHomeLabel}
                                     ${recipeTags}
                                 </div>
                             </div>
