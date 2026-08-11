@@ -210,11 +210,11 @@ works; consumption log persists and exports.
       record updated, yesterday's still browsable with its ticks.
 
 ### 3.2 Include/exclude + at-home (GAP-16)
-- [ ] Generated list rows: include/exclude toggle per item.
-- [ ] "At home" column shows current pantry stock for the item.
-- [ ] Min/max threshold on pantry products + household items → restock source
+- [x] Generated list rows: include/exclude toggle per item.
+- [x] "At home" column shows current pantry stock for the item.
+- [x] Min/max threshold on pantry products + household items → restock source
       honours them (`generateList`, `cms.js:3293`).
-- [ ] **Manual:** exclude salt → it disappears from list total; item shows at-home
+- [x] **Manual:** exclude salt → it disappears from list total; item shows at-home
       stock; a product above max isn't restocked.
 
 ### 3.3 Running expected total (GAP-13, part)
@@ -348,6 +348,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 2.2 | ✅ | 2026-08-12 | Pantry "Used" button (card + table) with inline dialog; writes `consumption.json` with `source: "manual"`; decrements specific pantry item; integration test for manual source. |
 | 2.3 | ✅ | 2026-08-12 | `calc.js` `rollingAvgDuration` (5 tests); learns `avgDurationDays` from consumption events (>=3); auto-updates pantry items after cooked/used logging; integration via existing tests. |
 | 3.1 | ✅ | 2026-08-12 | `cms-utils.js` `wrapListRecords`/`createListRecord`/`upsertTodayRecord` (6 tests); `shoppingLists` migrated to dated records; Generate upserts today's record; Past Lists view with date, totals, checked counts; integration test for record shape. |
+| 3.2 | ✅ | 2026-08-12 | Shopping list: include/exclude toggle, "At home" pantry stock column, running expected total updates live; pantry items gain min/max stock thresholds honored by restock source. |
 | 2 | ☐ | | |
 | 3 | ☐ | | |
 | 4 | ☐ | | |

@@ -1254,6 +1254,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('pantry-pack-unit').value = item.packUnit || 'g';
             document.getElementById('pantry-stock').value = item.quantity || '';
             document.getElementById('pantry-duration').value = item.avgDurationDays || '';
+            document.getElementById('pantry-min-stock').value = item.minStock || '';
+            document.getElementById('pantry-max-stock').value = item.maxStock || '';
             document.getElementById('pantry-price').value = item.price || '';
             document.getElementById('pantry-currency').value = item.currency || 'MUR';
             document.getElementById('pantry-last-opened').value = item.lastOpenedDate || '';
@@ -1327,6 +1329,8 @@ document.addEventListener('DOMContentLoaded', () => {
             currency: document.getElementById('pantry-currency').value.trim() || 'MUR',
             lastOpenedDate: document.getElementById('pantry-last-opened').value || null,
             notes: document.getElementById('pantry-notes').value.trim(),
+            minStock: parseFloat(document.getElementById('pantry-min-stock').value) || 0,
+            maxStock: parseFloat(document.getElementById('pantry-max-stock').value) || 10,
             isTracked: pantryId ? pantryItems.find(i => i.pantryId === pantryId)?.isTracked : false
         };
 
@@ -3391,6 +3395,7 @@ const unpricedRow = cost.unpriced.length
 
                 document.querySelectorAll('.vd-shop-item').forEach(row => {
                     const checkbox = row.querySelector('.vd-shop-checkbox');
+                    const includeToggle = row.querySelector('.vd-shop-include-toggle');
                     const updateChecked = () => {
                         row.classList.toggle('checked');
                         const isChecked = row.classList.contains('checked');
@@ -3399,6 +3404,17 @@ const unpricedRow = cost.unpriced.length
                         const idx = row.dataset.idx;
                         const group = groups[cat];
                         if (group && group[idx]) group[idx].checked = isChecked;
+                        updateExpectedTotal();
+                    };
+                    const updateIncluded = () => {
+                        row.classList.toggle('included');
+                        const isIncluded = row.classList.contains('included');
+                        includeToggle.setAttribute('aria-checked', isIncluded ? 'true' : 'false');
+                        const cat = row.dataset.cat;
+                        const idx = row.dataset.idx;
+                        const group = groups[cat];
+                        if (group && group[idx]) group[idx].included = isIncluded;
+                        updateExpectedTotal();
                     };
                     checkbox.addEventListener('click', updateChecked);
                     checkbox.addEventListener('keydown', (e) => {
@@ -3407,7 +3423,34 @@ const unpricedRow = cost.unpriced.length
                             updateChecked();
                         }
                     });
+                    if (includeToggle) {
+                        includeToggle.addEventListener('click', updateIncluded);
+                        includeToggle.addEventListener('keydown', (e) => {
+                            if (e.key === ' ' || e.key === 'Enter') {
+                                e.preventDefault();
+                                updateIncluded();
+                            }
+                        });
+                    }
                 });
+
+                // Running expected total (sum of unchecked, included items with cost)
+                function updateExpectedTotal() {
+                    let expectedTotal = 0;
+                    document.querySelectorAll('.vd-shop-item.included:not(.checked)').forEach(row => {
+                        const costEl = row.querySelector('.vd-shop-cost');
+                        if (costEl) {
+                            const costText = costEl.textContent.replace(/[^\d.,]/g, '').replace(',', '.');
+                            const cost = parseFloat(costText);
+                            if (!isNaN(cost)) expectedTotal += cost;
+                        }
+                    });
+                    const totalEl = resultsContainer.querySelector('.vd-shop-summary-total');
+                    if (totalEl) {
+                        const currency = mealPlanCurrency();
+                        totalEl.textContent = formatMoney(expectedTotal, currency);
+                    }
+                }
             }
 
             // Load a previously saved list if one exists
@@ -3542,13 +3585,17 @@ const unpricedRow = cost.unpriced.length
                     });
                 }
 
-                // 4. Pantry restock: tracked items low or out of stock (target 10 packs)
+                // 4. Pantry restock: tracked items low or out of stock (target from maxStock or default 10 packs)
                 if (useRestock) {
                     pantryItems.forEach(pItem => {
                         if (!pItem.isTracked) return;
                         const q = parseFloat(pItem.quantity) || 0;
-                        if (q > 0 && q >= 10) return;
-                        const reorderPacks = Math.max(1, 10 - q);
+                        // Use minStock/maxStock if set, otherwise default: reorder when <= 0 or qty < max (default 10)
+                        const minStock = parseFloat(pItem.minStock) || 0;
+                        const maxStock = parseFloat(pItem.maxStock) || 10;
+                        const targetPacks = maxStock;
+                        if (q > minStock && q >= targetPacks) return; // above threshold, no restock needed
+                        const reorderPacks = Math.max(1, targetPacks - q);
                         const reorderGrams = reorderPacks * (parseFloat(pItem.packSize) || 100);
                         addNeed(pItem.ingredientFoodId, pItem.productName, reorderGrams, '', 
                             (ingredients.find(i => i.foodId === pItem.ingredientFoodId) || {}).category || 'Other', 'restock', pItem.pantryId);
