@@ -167,6 +167,19 @@ const r = await req('/api/settings');
         const bad = await req('/api/consumption', { method: 'PUT', body: 'not an array' });
         ok(bad.status === 400, 'PUT /api/consumption rejects non-array');
     }
+    // Verify manual consumption records work
+    {
+        const put = await req('/api/consumption', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'cons_manual_test', date: '2026-08-12', recipeId: null, recipeTitle: 'Manual use: Salt', servingsCooked: null, source: 'manual', items: [{ foodId: 'salt', grams: 10 }] }])
+        });
+        ok(put.status === 200, 'PUT /api/consumption accepts manual source');
+        const get = await req('/api/consumption');
+        const manual = get.body.find(c => c.source === 'manual');
+        ok(manual, 'manual source consumption record exists');
+        ok(manual.items && manual.items.length > 0, 'manual record has items');
+        ok(manual.recipeId === null, 'manual record has null recipeId');
+    }
 
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });

@@ -784,6 +784,27 @@
         </div>
     </div>
 
+    <!-- Manual Used Dialog -->
+    <div id="used-dialog" class="modal-overlay">
+        <div class="confirm-dialog-content" style="max-width: 480px;">
+            <div class="confirm-dialog-icon">📦</div>
+            <h3 id="used-dialog-title">Log Used Amount</h3>
+            <p id="used-item-name" style="font-weight: 500; margin: 0.5rem 0; font-size: 1rem;"></p>
+            <p id="used-max-stock" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;"></p>
+            <div style="margin: 1rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+                    <span style="min-width: 100px;">Grams used:</span>
+                    <input type="number" id="used-grams" class="seamless-input" min="0.1" step="0.1" style="width: 100px; text-align: right;" placeholder="e.g. 200">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">g</span>
+                </label>
+            </div>
+            <div class="confirm-dialog-actions" style="margin-top: 1rem;">
+                <button id="used-dialog-cancel" class="btn secondary">Cancel</button>
+                <button id="used-dialog-ok" class="btn primary" style="background: var(--accent-veg); border-color: var(--accent-veg);">Log & Decrement Stock</button>
+            </div>
+        </div>
+    </div>
+
     <div id="gdpr-banner" class="hidden no-print">
         <p>Larder uses local storage solely to save your display preferences. We do not track or collect personal data.</p>
         <button id="gdpr-accept" class="btn btn-primary" style="align-self: flex-start; padding: 0.5rem 1rem;">Got it</button>

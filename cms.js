@@ -1033,6 +1033,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => savePantryTrackingFromUI(), 50);
             });
         });
+        // Used button handlers
+        container.querySelectorAll('[id^="pantry-used-btn-"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const pantryId = btn.dataset.pantryId;
+                openUsedDialog(pantryId);
+            });
+        });
     } catch (err) {
         console.error('[Pantry] renderPantryTab error:', err);
         container.innerHTML = `<div class="empty-state" style="color: var(--accent-danger);">Error loading pantry: ${err.message}</div>`;
@@ -1079,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="vd-pantry-info">
                         <div class="vd-pantry-title-row">
                             <h4>${escapeHtml(item.brand ? item.brand + ' ' + item.productName : item.productName)}</h4>
+                            <button type="button" class="cms-btn-icon used" id="pantry-used-btn-${escapeHtml(item.pantryId)}" data-pantry-id="${escapeHtml(item.pantryId)}" title="Log used amount" aria-label="Log used amount" style="color: var(--accent-veg); margin-right: 0.25rem;"><i data-lucide="minus-circle" style="width: 15px; height: 15px;"></i></button>
                             <button type="button" class="cms-btn-icon delete pantry-item-delete-btn" data-pantry-id="${escapeHtml(item.pantryId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                         </div>
                         <p style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(ingredientName)} · ${escapeHtml(ingredientCategory)}</p>
@@ -1180,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </td>
                             <td><input type="checkbox" class="p-track-check" data-pantry-id="${escapeHtml(item.pantryId)}" ${item.isTracked ? 'checked' : ''} aria-label="Track stock"></td>
                             <td>
+                                <button type="button" class="cms-btn-icon used" id="pantry-used-btn-${escapeHtml(item.pantryId)}" data-pantry-id="${escapeHtml(item.pantryId)}" title="Log used amount" aria-label="Log used amount" style="color: var(--accent-veg);"><i data-lucide="minus-circle" style="width: 15px; height: 15px;"></i></button>
                                 <button type="button" class="cms-btn-icon delete pantry-item-delete-btn" data-pantry-id="${escapeHtml(item.pantryId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
                             </td>
                         </tr>`;
@@ -5552,6 +5562,119 @@ const unpricedRow = cost.unpriced.length
         okBtn.addEventListener('click', onOk);
         cancelBtn.addEventListener('click', onCancel);
         cookedDialog.addEventListener('click', onOverlayClick);
+    }
+
+    // --- Used Dialog for Pantry (manual consumption) ---
+    async function openUsedDialog(pantryId) {
+        const pantryItem = pantryItems.find(p => p.pantryId === pantryId);
+        if (!pantryItem) return;
+
+        const usedDialog = document.getElementById('used-dialog');
+        if (!usedDialog) return;
+
+        // Find ingredient for name
+        const ingredient = ingredients.find(i => i.foodId === pantryItem.ingredientFoodId);
+        const ingredientName = ingredient ? ingredient.name : pantryItem.productName;
+
+        // Pre-fill with current pack size in grams
+        const packSize = parseFloat(pantryItem.packSize) || 100;
+        const currentQty = parseFloat(pantryItem.quantity) || 0;
+        const maxGrams = currentQty * packSize;
+
+        usedDialog.querySelector('#used-item-name').textContent = `${escapeHtml(ingredientName)} (${escapeHtml(pantryItem.brand || '')} ${escapeHtml(pantryItem.productName)})`;
+        usedDialog.querySelector('#used-max-stock').textContent = `Available: ${maxGrams.toFixed(1)} g (${currentQty} × ${packSize} ${pantryItem.packUnit})`;
+
+        const gramsInput = usedDialog.querySelector('#used-grams');
+        gramsInput.value = '';
+        gramsInput.max = maxGrams;
+        gramsInput.placeholder = `e.g. ${packSize} (1 pack)`;
+
+        // Show dialog
+        usedDialog.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        gramsInput.focus();
+
+        const okBtn = usedDialog.querySelector('#used-dialog-ok');
+        const cancelBtn = usedDialog.querySelector('#used-dialog-cancel');
+
+        const cleanup = () => {
+            okBtn.removeEventListener('click', onOk);
+            cancelBtn.removeEventListener('click', onCancel);
+            usedDialog.removeEventListener('click', onOverlayClick);
+        };
+
+        const onCancel = () => {
+            cleanup();
+            closeUsedDialog();
+        };
+
+        const onOverlayClick = (e) => {
+            if (e.target === usedDialog) onCancel();
+        };
+
+        const onOk = async () => {
+            const grams = parseFloat(gramsInput.value) || 0;
+            if (grams <= 0) {
+                alert('Please enter an amount > 0');
+                return;
+            }
+            if (grams > maxGrams) {
+                if (!confirm(`Amount exceeds available stock (${maxGrams.toFixed(1)} g). Continue anyway?`)) return;
+            }
+
+            cleanup();
+            closeUsedDialog();
+
+            // Write to consumption.json with source "manual"
+            const record = {
+                id: 'cons_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+                date: new Date().toISOString().split('T')[0],
+                recipeId: null,
+                recipeTitle: 'Manual use: ' + ingredientName,
+                servingsCooked: null,
+                source: 'manual',
+                items: [{ foodId: pantryItem.ingredientFoodId, grams: Math.round(grams * 10) / 10 }]
+            };
+
+            let consumption = [];
+            try {
+                const res = await fetch('/api/consumption', { headers: CMSState.headers });
+                if (res.ok) consumption = await res.json();
+            } catch (e) { /* ignore */ }
+            consumption.unshift(record);
+
+            await fetch('/api/consumption', {
+                method: 'PUT',
+                headers: CMSState.headers,
+                body: JSON.stringify(consumption)
+            });
+
+            // Decrement this specific pantry item
+            const packsUsed = grams / packSize;
+            pantryItem.quantity = Math.max(0, Math.round((currentQty - packsUsed) * 100) / 100);
+            pantryItem.lastOpenedDate = new Date().toISOString().split('T')[0];
+
+            await fetch('/api/pantry-items', {
+                method: 'PUT',
+                headers: CMSState.headers,
+                body: JSON.stringify(pantryItems)
+            });
+
+            // Refresh pantry display
+            if (currentCMSTab === 'pantry') renderPantryTab();
+
+            statusText.innerHTML = `<span class="status-dot" style="background: var(--accent-veg);"></span> Logged ${grams.toFixed(1)} g used & decremented stock`;
+        };
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        usedDialog.addEventListener('click', onOverlayClick);
+    }
+
+    function closeUsedDialog() {
+        const usedDialog = document.getElementById('used-dialog');
+        if (usedDialog) usedDialog.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     function closeFoodModal() {
