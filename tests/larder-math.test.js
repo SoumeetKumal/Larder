@@ -59,6 +59,31 @@ check('1 1/2 cups -> 360', () => assert.equal(c.parseAmountToGrams('1 1/2 cups',
 check('½ cup -> 120', () => assert.equal(c.parseAmountToGrams('½ cup', null), 120));
 check('invalid -> null', () => assert.equal(c.parseAmountToGrams('xyz', null), null));
 
+console.log('\n-- rollingAvgDuration --');
+check('3 events evenly spaced 7 days -> 7', () => {
+    const events = [{ date: '2026-08-01' }, { date: '2026-08-08' }, { date: '2026-08-15' }];
+    assert.equal(c.rollingAvgDuration(events), 7);
+});
+check('4 events irregular -> average of diffs', () => {
+    const events = [{ date: '2026-08-01' }, { date: '2026-08-05' }, { date: '2026-08-12' }, { date: '2026-08-22' }];
+    // diffs: 4, 7, 10 -> avg = 7
+    assert.equal(c.rollingAvgDuration(events), 7);
+});
+check('outlier > 365 days ignored', () => {
+    const events = [{ date: '2026-01-01' }, { date: '2026-01-08' }, { date: '2027-02-01' }];
+    // diffs: 7, 389 -> 389 ignored -> avg = 7
+    assert.equal(c.rollingAvgDuration(events), 7);
+});
+check('zero/negative diffs ignored', () => {
+    const events = [{ date: '2026-08-01' }, { date: '2026-08-01' }, { date: '2026-08-08' }];
+    assert.equal(c.rollingAvgDuration(events), 7);
+});
+check('< 2 events returns null', () => {
+    assert.equal(c.rollingAvgDuration([]), null);
+    assert.equal(c.rollingAvgDuration([{ date: '2026-08-01' }]), null);
+    assert.equal(c.rollingAvgDuration(null), null);
+});
+
 console.log('\n-- computeTotals --');
 check('basic totals 1kg rice', () => {
     const t = c.computeTotals([{ ingredientId: 'rice', amount: 1000, unit: 'g' }], ING);

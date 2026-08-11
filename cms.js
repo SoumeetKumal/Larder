@@ -5556,6 +5556,11 @@ const unpricedRow = cost.unpriced.length
             // Refresh pantry display if on pantry tab
             if (currentCMSTab === 'pantry') renderPantryTab();
 
+            // Learn duration from consumption events
+            for (const item of consumptionItems) {
+                await learnDurationFromConsumption(item.foodId);
+            }
+
             statusText.innerHTML = `<span class="status-dot" style="background: var(--accent-veg);"></span> Logged cooked recipe & decremented stock`;
         };
 
@@ -5663,6 +5668,9 @@ const unpricedRow = cost.unpriced.length
             // Refresh pantry display
             if (currentCMSTab === 'pantry') renderPantryTab();
 
+            // Learn duration from consumption events
+            await learnDurationFromConsumption(pantryItem.ingredientFoodId);
+
             statusText.innerHTML = `<span class="status-dot" style="background: var(--accent-veg);"></span> Logged ${grams.toFixed(1)} g used & decremented stock`;
         };
 
@@ -5675,6 +5683,44 @@ const unpricedRow = cost.unpriced.length
         const usedDialog = document.getElementById('used-dialog');
         if (usedDialog) usedDialog.classList.remove('active');
         document.body.style.overflow = '';
+    }
+
+    // Learn avgDurationDays from consumption events for a foodId
+    // Called after logging consumption; updates pantryItems if >= 3 events exist
+    async function learnDurationFromConsumption(foodId) {
+        try {
+            const res = await fetch('/api/consumption', { headers: CMSState.headers });
+            if (!res.ok) return;
+            const consumption = await res.json();
+            // Filter events for this foodId, sort by date
+            const events = consumption
+                .filter(c => c.items && c.items.some(i => i.foodId === foodId))
+                .map(c => ({ date: c.date }))
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (events.length >= 3) {
+                const avgDays = LC.rollingAvgDuration(events);
+                if (avgDays && avgDays > 0) {
+                    // Update matching pantry items
+                    let changed = false;
+                    pantryItems.forEach(p => {
+                        if (p.ingredientFoodId === foodId && p.avgDurationDays !== avgDays) {
+                            p.avgDurationDays = avgDays;
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        await fetch('/api/pantry-items', {
+                            method: 'PUT',
+                            headers: CMSState.headers,
+                            body: JSON.stringify(pantryItems)
+                        });
+                        if (currentCMSTab === 'pantry') renderPantryTab();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[Duration learning] failed:', e);
+        }
     }
 
     function closeFoodModal() {

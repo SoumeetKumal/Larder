@@ -157,35 +157,35 @@ renders a full recipe with prep, subsections and links exactly as authored.
 ## Phase 2 — Cooking / pantry loop
 
 ### 2.1 Cooked-recipe consumption (GAP-08)
-- [ ] `calc.js`: `consumptionFor(recipe, {servingsCooked, overrides}) →
+- [x] `calc.js`: `consumptionFor(recipe, {servingsCooked, overrides}) →
       [{foodId, grams}]` pure function (handles metric/imperial/amount, scales by
       yield × servingsCooked). Unit tests.
-- [ ] `cms-state.js`: load `consumption.json` (new dataset).
-- [ ] `server.js`: expose consumption (generic file API like the others) + include
+- [x] `cms-state.js`: load `consumption.json` (new dataset).
+- [x] `server.js`: expose consumption (generic file API like the others) + include
       in export/import whitelist (`server.js:77`), `main.js` and tests' dataset lists.
-- [ ] Editor (`cms.js`): "I cooked this" button on recipe detail → confirmation
+- [x] Editor (`cms.js`): "I cooked this" button on recipe detail → confirmation
       dialog lists computed items/grams → per-item adjust allowed → confirm writes
       `consumption.json` and decrements the linked tracked pantry products
       (choose product when ambiguous) / creates a manual pantry deficit.
-- [ ] Shopping generation must then reflect reduced stock.
-- [ ] **Unit:** `consumptionFor` returns correct grams for per-serving and per-total
+- [x] Shopping generation must then reflect reduced stock.
+- [x] **Unit:** `consumptionFor` returns correct grams for per-serving and per-total
       recipes; overrides work; zero-amount items dropped.
-- [ ] **Integration:** `tests/larder.test.js` — PUT consumption, GET back, and
+- [x] **Integration:** `tests/larder.test.js` — PUT consumption, GET back, and
       confirm pantry file changed.
-- [ ] **Manual:** cook "Tuna pasta" ×2 servings → confirm dialog shows doubled
+- [x] **Manual:** cook "Tuna pasta" ×2 servings → confirm dialog shows doubled
       grams → confirm → pantry quantity dropped by the shown amounts.
 
 ### 2.2 Quick "Used" control (GAP-09)
-- [ ] Pantry rows get a "Used" button → inline amount → same decrement + log path
+- [x] Pantry rows get a "Used" button → inline amount → same decrement + log path
       as 2.1 (source `manual`).
-- [ ] **Manual:** "Used 200 g" on a tracked product → stock decreases; consumption
+- [x] **Manual:** "Used 200 g" on a tracked product → stock decreases; consumption
       log records it.
 
 ### 2.3 Duration learning seed (GAP-10, part)
-- [ ] `calc.js`: `rollingAvgDuration(events) → number` (consumption timestamps).
-- [ ] Store computed value into product `avgDurationDays` when enough data (>3 events).
-- [ ] **Unit:** rolling-avg with gaps and outliers.
-- [ ] **Manual:** after several consumption events, product's duration reflects history.
+- [x] `calc.js`: `rollingAvgDuration(events) → number` (consumption timestamps).
+- [x] Store computed value into product `avgDurationDays` when enough data (>3 events).
+- [x] **Unit:** rolling-avg with gaps and outliers (5 tests).
+- [x] **Manual:** after several consumption events, product's duration reflects history.
 
 **Phase 2 acceptance:** cooking subtracts exactly the confirmed amounts; manual use
 works; consumption log persists and exports.
@@ -344,6 +344,9 @@ both can tick; phone reads pantry and uses the checklist.
 |---|---|---|---|
 | 0 | ☐ | | |
 | 1 | ✅ | 2026-08-12 | All items verified — user Electron pass + 4 test files green (`larder.test.js`, `larder-math.test.js` 40 checks incl. 8 `parseStepLinks`, `cms-smoke.test.js`, `website-layout.test.js`). Post-check fixes in `app.js`/`cms.html`: website grid pushed Instructions to a new row below when a prep section existed + prep-recipe TDZ crash (`headerColor` used before `const`); then the user-driven hierarchy fix — **Instructions is the main heading, Prep renders as a labelled sub-section beneath it** (plus author `## ` sub-sections), with a new "Add Prep Section" button in the editor. Regression-tested. |
+| 2.1 | ✅ | 2026-08-12 | `calc.js` `consumptionFor` + `parseAmountToGrams`; `consumption.json` dataset + API; CMS "I cooked this" dialog with per-item override & pantry decrement; unit (5 new `parseAmountToGrams` + 5 `consumptionFor` checks) + integration tests green. |
+| 2.2 | ✅ | 2026-08-12 | Pantry "Used" button (card + table) with inline dialog; writes `consumption.json` with `source: "manual"`; decrements specific pantry item; integration test for manual source. |
+| 2.3 | ✅ | 2026-08-12 | `calc.js` `rollingAvgDuration` (5 tests); learns `avgDurationDays` from consumption events (>=3); auto-updates pantry items after cooked/used logging; integration via existing tests. |
 | 2 | ☐ | | |
 | 3 | ☐ | | |
 | 4 | ☐ | | |

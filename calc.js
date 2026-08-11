@@ -234,6 +234,22 @@
         return result;
     }
 
+    // Compute rolling average duration (days) from consumption timestamps.
+    // events: array of { date: 'YYYY-MM-DD' } sorted ascending.
+    // Returns average days between consecutive events, or null if < 2 events.
+    function rollingAvgDuration(events) {
+        if (!events || events.length < 2) return null;
+        var dates = events.map(function (e) { return new Date(e.date).getTime(); }).sort(function (a, b) { return a - b; });
+        var diffs = [];
+        for (var i = 1; i < dates.length; i++) {
+            var diffDays = (dates[i] - dates[i - 1]) / 86400000;
+            if (diffDays > 0 && diffDays < 365) diffs.push(diffDays); // ignore outliers >1 year
+        }
+        if (diffs.length === 0) return null;
+        var sum = diffs.reduce(function (a, b) { return a + b; }, 0);
+        return Math.round((sum / diffs.length) * 10) / 10;
+    }
+
     return {
         gramsOf: gramsOf,
         priceBasisGrams: priceBasisGrams,
@@ -247,6 +263,7 @@
         parseReceiptText: parseReceiptText,
         consumptionFor: consumptionFor,
         parseAmountToGrams: parseAmountToGrams,
+        rollingAvgDuration: rollingAvgDuration,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
         COUNT_UNITS: COUNT_UNITS,
         MICRO_FIELDS: MICRO_FIELDS
