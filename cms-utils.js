@@ -352,6 +352,28 @@
 
     function formatMetricAmount(value) { return formatCount(value); }
 
+    // Parse inline ingredient-link tokens (`[[foodId|Label]]`) inside instruction
+    // text into safe segments: text runs and link tokens. A token only renders as
+    // a link when its foodId resolves to an ingredient, so a literal `[[ foo ]]`
+    // (contains a space, never matches), `[[[escaped]]]` (extra bracket, see the
+    // negative lookbehind) or an unknown foodId stays plain text.
+    function parseStepLinks(text) {
+        const src = String(text || '');
+        const re = /(?<!\[)\[\[([^\s\[\]|]+)(?:\|([^\]]+))?\]\]/g;
+        const segments = [];
+        let last = 0;
+        let m;
+        while ((m = re.exec(src)) !== null) {
+            const foodId = m[1].trim();
+            if (!foodId) continue;
+            if (m.index > last) segments.push({ type: 'text', text: src.slice(last, m.index) });
+            segments.push({ type: 'link', foodId, label: (m[2] || '').trim() || foodId });
+            last = m.index + m[0].length;
+        }
+        if (last < src.length) segments.push({ type: 'text', text: src.slice(last) });
+        return segments;
+    }
+
     root.LarderCalcUtils = {
         MONTHS_SHORT,
         formatDateDMY,
@@ -378,6 +400,7 @@
         parseAmountValue,
         formatCups,
         formatCount,
-        formatMetricAmount
+        formatMetricAmount,
+        parseStepLinks
     };
 })(typeof self !== 'undefined' ? self : this);

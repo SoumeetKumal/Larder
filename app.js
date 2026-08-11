@@ -311,6 +311,29 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFilters();
         renderTagChips();
         renderGrid();
+
+        // Deep links: ingredients.html?foodId=... (or ?name=...) opens the
+        // ingredient profile immediately, so recipe ingredient links can send
+        // visitors straight to the detail view in their own tab.
+        if (isIngredientsPage) {
+            const params = new URLSearchParams(window.location.search);
+            const foodId = params.get('foodId');
+            const name = params.get('name');
+            let target = null;
+            if (foodId) {
+                target = recipesData.find(r => r.entryType === 'ingredient'
+                    && String(r.foodId || r.id).toLowerCase() === String(foodId).toLowerCase());
+            }
+            if (!target && name) {
+                const q = name.toLowerCase();
+                target = recipesData.find(r => r.entryType === 'ingredient'
+                    && ((r.title || r.name || '').toLowerCase() === q));
+            }
+            if (target) {
+                if (searchInput) searchInput.value = '';
+                openModal(target.foodId || target.id);
+            }
+        }
     }
 
     function renderFilters() {
@@ -696,6 +719,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return formatScaledAmount(parsed.value * multiplier, parsed.unit);
     }
 
+    function resolveIngredientProfile(ing) {
+        // Exact foodId first (the recipe already stores it), then a name fallback
+        // for legacy data authored before links existed.
+        if (ing.foodId) {
+            const byId = recipesData.find(r => r.entryType === 'ingredient'
+                && String(r.foodId || r.id).toLowerCase() === String(ing.foodId).toLowerCase());
+            if (byId) return byId;
+        }
+        return recipesData.find(r => r.entryType === 'ingredient'
+            && (ing.item || '').toLowerCase().includes((r.title || r.name || '').toLowerCase()));
+    }
+
     function renderIngredientsHTML(recipe, scale) {
         if (!recipe.ingredients || recipe.ingredients.length === 0) return '';
         
@@ -707,9 +742,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<tr><td colspan="3" style="border-bottom: none;"><h4 style="margin-top: 1rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${escapeHtml(ing.item.substring(3))}</h4></td></tr>`;
             }
 
-            const profile = recipesData.find(r => r.entryType === 'ingredient' && ing.item.toLowerCase().includes(r.title.toLowerCase()));
-            const itemNameHtml = profile 
-                ? `<button class="ingredient-link" data-id="${escapeHtml(profile.id)}" style="background:none;border:none;padding:0;color:var(--text-main);font-weight:500;font-family:inherit;font-size:inherit;cursor:pointer;transition:all 0.2s; text-align: left;" onmouseover="this.style.color='var(--accent-sea)'" onmouseout="this.style.color='var(--text-main)'">${safeItem}</button>`
+            const profile = resolveIngredientProfile(ing);
+            const itemNameHtml = profile
+                ? `<a class="ingredient-link" href="ingredients.html?foodId=${encodeURIComponent(profile.foodId || profile.id)}" target="_blank" rel="noopener" title="View ${escapeHtml(profile.title || profile.name)}">${safeItem}</a>`
                 : `<span style="font-weight: 500;">${safeItem}</span>`;
 
             let metricAmt = ing.metric ? scaleAmount(ing.metric, scale) : '';
@@ -1021,6 +1056,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseYield = getYieldNumber(recipe);
         const scaledServes = (baseYield != null) ? fmtAmount(baseYield * currentScale) : null;
         const recipeTime = getRecipeTime(recipe);
+        const headerColor = getCategoryAccent(recipe.category);
+        modalBody.style.setProperty('--recipe-accent', headerColor);
 
         // Servings stepper: adjust by exactly one serving, never below 1
         let minusScale = null, plusScale = null, minusDisabled = true, plusDisabled = false;
@@ -1030,6 +1067,18 @@ document.addEventListener('DOMContentLoaded', () => {
             plusScale = (curServings + 1) / baseYield;
             minusDisabled = curServings <= 1;
             plusDisabled = curServings >= 100;
+        }
+
+        // Render a step's inline ingredient tokens ([[foodId|Label]]) as links.
+        // Tokens that don't resolve to a known ingredient stay as plain text.
+        function renderStepHtml(step) {
+            return escapeHtml(step).replace(/(?<!\[)\[\[([\w\-_.]+)(?:\|([^\]]+))?\]\]/g, (match, foodId, label) => {
+                const resolved = recipesData.find(r => r.entryType === 'ingredient'
+                    && String(r.foodId || r.id).toLowerCase() === String(foodId).toLowerCase());
+                if (!resolved) return label ? escapeHtml(label) : match;
+                const linkLabel = escapeHtml((label || resolved.title || resolved.name || foodId).trim());
+                return `<a class="ingredient-link" href="ingredients.html?foodId=${encodeURIComponent(foodId)}" target="_blank" rel="noopener" title="View ${linkLabel}">${linkLabel}</a>`;
+            });
         }
 
         let stepsHtml = '';
@@ -1043,15 +1092,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 const html = `
                 <div class="recipe-step">
                     <span class="step-number">${stepNum}</span>
-                    <p>${escapeHtml(step)}</p>
+                    <p>${renderStepHtml(step)}</p>
                 </div>`;
                 stepNum++;
                 return html;
             }).join('');
         }
 
-        const headerColor = getCategoryAccent(recipe.category);
-        modalBody.style.setProperty('--recipe-accent', headerColor);
+        let prepHtml = '';
+        if (recipe.prepSteps && recipe.prepSteps.length) {
+            let prepNum = 1;
+            prepHtml = `
+                <div class="recipe-instructions-subsection">
+                    <h4 class="recipe-subsection-title">
+                        <i data-lucide="timer" style="width: 15px; height: 15px;"></i> Prep
+                        ${recipe.prepTime ? `<span style="font-size: 0.78rem; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-muted);">${escapeHtml(recipe.prepTime)}</span>` : ''}
+                    </h4>
+                    ${recipe.prepSteps.map((step) => {
+                        if (step.startsWith('## ')) {
+                            prepNum = 1;
+                            return `<h4 style="margin-top: 1rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">${escapeHtml(step.substring(3))}</h4>`;
+                        }
+                        const html = `
+                        <div class="recipe-step">
+                            <span class="step-number">${prepNum}</span>
+                            <p>${renderStepHtml(step)}</p>
+                        </div>`;
+                        prepNum++;
+                        return html;
+                    }).join('')}
+                </div>`;
+        }
 
         let footerHtml = '';
         if (recipe.note || recipe.variations) {
@@ -1154,6 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="section-pill" style="color: ${headerColor}; border-color: ${headerColor};">
                         <i data-lucide="utensils" style="width: 18px; height: 18px;"></i> <span style="position: relative; top: 1px;">Instructions</span>
                     </h3>
+                    ${prepHtml}
                     ${stepsHtml}
                 </div>
                 
@@ -1165,7 +1237,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attachModalListeners();
     }
     function attachModalListeners() {
-        const ingredientLinks = modalBody.querySelectorAll('.ingredient-link, .ingredient-recipe-link');
+        // `.ingredient-link` anchors are real <a target="_blank"> now — let the
+        // browser open them in a new tab. Keep the in-modal fallback for any
+        // legacy `.ingredient-recipe-link` buttons.
+        const ingredientLinks = modalBody.querySelectorAll('.ingredient-recipe-link');
         ingredientLinks.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();

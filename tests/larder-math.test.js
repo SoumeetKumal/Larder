@@ -111,6 +111,60 @@ check('skips header/TAX lines', () => {
     assert.equal(r[0].name, 'Eggs');
 });
 
+// --- Step ingredient-link tokens (cms-utils.parseStepLinks) ---
+const u = require('../cms-utils.js').LarderCalcUtils;
+
+console.log('\n-- parseStepLinks (instruction ingredient links) --');
+check('plain text only', () => {
+    const seg = u.parseStepLinks('Boil a large pot of water.');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+    assert.equal(seg[0].text, 'Boil a large pot of water.');
+});
+check('single token with label', () => {
+    const seg = u.parseStepLinks('Add the [[tagliatelle|Tagliatelle]] to the water.');
+    assert.deepEqual(seg, [
+        { type: 'text', text: 'Add the ' },
+        { type: 'link', foodId: 'tagliatelle', label: 'Tagliatelle' },
+        { type: 'text', text: ' to the water.' }
+    ]);
+});
+check('token without label falls back to foodId', () => {
+    const seg = u.parseStepLinks('Season with [[salt]].');
+    assert.deepEqual(seg[1], { type: 'link', foodId: 'salt', label: 'salt' });
+});
+check('multiple tokens in one step', () => {
+    const seg = u.parseStepLinks('Toss [[pasta|Pasta]] with [[tuna_flakes|Tuna]].');
+    assert.equal(seg.filter(s => s.type === 'link').length, 2);
+    assert.equal(seg.filter(s => s.type === 'text').length, 3);
+});
+check('empty / missing foodId token stays plain text', () => {
+    const seg = u.parseStepLinks('Literal [[]] brackets are safe.');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+});
+check('space inside token never matches (escape hatch)', () => {
+    const seg = u.parseStepLinks('Write [[not a token]] literally.');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+});
+check('unbalanced token stays text', () => {
+    const seg = u.parseStepLinks('An [[open token at end');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+});
+check('extra bracket [[[ escapes a literal token', () => {
+    const seg = u.parseStepLinks('Escape [[[salt]] literally.');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+    assert.equal(seg[0].text, 'Escape [[[salt]] literally.');
+});
+check('[[foo bar]] keeps space escape', () => {
+    const seg = u.parseStepLinks('Write [[ not a token ]] as-is.');
+    assert.equal(seg.length, 1);
+    assert.equal(seg[0].type, 'text');
+});
+
 run();
 
 function run() { console.log('\n' + passed + ' passed, ' + failed + ' failed'); process.exit(failed ? 1 : 0); }

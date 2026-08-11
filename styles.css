@@ -1211,6 +1211,41 @@
         .step-number { font-weight: 700; color: var(--accent-sea); font-size: 1.2rem; flex-shrink: 0; }
         #recipe-modal .step-number { color: var(--recipe-accent, var(--accent-sea)); }
 
+        /* Ingredient links inside recipes: clear "opens in a new tab" affordance */
+        .ingredient-link {
+            color: var(--accent-sea);
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-color: color-mix(in srgb, var(--accent-sea) 45%, transparent);
+            text-underline-offset: 3px;
+            text-decoration-thickness: 1px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+        .ingredient-link:hover {
+            color: var(--text-main);
+            text-decoration-color: var(--accent-sea);
+            text-decoration-thickness: 2px;
+        }
+        .ingredient-link:hover::after {
+            content: "";
+            display: inline-block;
+            width: 0.8em;
+            height: 0.8em;
+            margin-left: 0.3em;
+            background: var(--accent-sea);
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>') center/contain no-repeat;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>') center/contain no-repeat;
+            vertical-align: -0.15em;
+        }
+        .recipe-instructions-subsection { margin-top: 1.5rem; }
+        .recipe-subsection-title {
+            display: flex; align-items: center; gap: 0.4rem;
+            margin: 0 0 0.75rem; padding-bottom: 0.25rem;
+            color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+        }
+
         /* ==========================================================================
            INGREDIENT CARDS
            ========================================================================== */
@@ -2424,9 +2459,26 @@ body.cms-page { background-color: var(--bg-surface-hover); }
     .cms-unit-group select { border: none; border-radius: 0; padding: 0.4rem; background: var(--bg-surface-hover); color: var(--text-muted); font-weight: 600; cursor: pointer; outline: none; }
     .cms-add-btn { background: none; border: 1px dashed var(--border); border-radius: 8px; padding: 0.5rem 1rem; color: var(--primary); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all var(--transition-fast); margin-top: 0.75rem; }
     .cms-add-btn:hover { background: var(--primary-light); border-color: var(--primary); }
-    .cms-step-row { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: flex-start; }
+    .cms-step-row { position: relative; display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: flex-start; }
     .cms-step-row .step-number { flex-shrink: 0; margin-top: 0.25rem; }
     .cms-step-row textarea { flex-grow: 1; }
+    .cms-step-link-picker { position: absolute; left: 0; right: 0; top: 100%; z-index: 60; display: none; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); margin-top: 0.25rem; padding: 0.5rem; }
+    .cms-step-link-picker.open { display: block; }
+    .cms-step-link-hint { margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text-muted); }
+    .cms-step-link-hint code { font-family: var(--font-mono, ui-monospace, monospace); background: var(--bg-raised, rgba(0,0,0,0.05)); padding: 0.05rem 0.3rem; border-radius: 4px; }
+    .cms-prep-subsection { margin: 1.5rem 0 1.25rem; }
+    .cms-subsection-title { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 0.75rem; padding-bottom: 0.25rem; color: var(--text-main); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .cms-step-link-results { max-height: 200px; overflow-y: auto; margin-top: 0.35rem; display: flex; flex-direction: column; gap: 0.2rem; }
+    .cms-step-link-item { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; text-align: left; padding: 0.4rem 0.6rem; background: none; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; color: var(--text-main); transition: background var(--transition-fast); }
+    .cms-step-link-item:hover { background: var(--bg-surface-hover); }
+    .cms-step-link-empty { padding: 0.4rem; color: var(--text-muted); font-size: 0.8rem; }
+    .cms-incomplete-badge { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.45rem; border-radius: 999px; background: rgba(231, 186, 111, 0.18); color: #a67c2e; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle; }
+    .cms-toast-host { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(380px, calc(100vw - 2rem)); }
+    .cms-toast { display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; background: var(--bg-surface); border: 1px solid var(--border); border-left: 3px solid var(--accent-sea); border-radius: 10px; box-shadow: var(--shadow-lg); font-size: 0.85rem; line-height: 1.5; color: var(--text-main); opacity: 0; transform: translateY(8px); transition: all var(--transition-fast); }
+    .cms-toast.show { opacity: 1; transform: translateY(0); }
+    .cms-toast-msg { flex: 1; }
+    .cms-toast-action { background: var(--accent-sea); color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.7rem; font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+    .cms-toast-action:hover { filter: brightness(1.08); }
 
     .modal-footer-actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem 2rem; border-top: 1px solid var(--border); background: var(--bg-surface-hover); grid-column: 1 / -1; }
     .modal-footer-left { display: flex; align-items: center; gap: 1rem; color: var(--text-muted); font-size: 0.85rem; }

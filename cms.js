@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { escapeHtml, toFractionString, formatAmountDisplay, slugify, splitAmount, composeAmount, parseTimeToHM, composeTimeString, cmsParseTimeToMinutes, cmsGetStandardMacros, cmsGetRecipeTags, formatMoney, hhDaysBetween, hhAddDays, estimateDepletionDate, getCategoryIcon, getCategoryAccent, getGramsPerCup, getGramsPerUnit, imperialGramsFactor, parseAmountValue, formatCups, formatCount, formatMetricAmount, formatDateDMY } = window.LarderCalcUtils || {};
+    const { escapeHtml, toFractionString, formatAmountDisplay, slugify, splitAmount, composeAmount, parseTimeToHM, composeTimeString, cmsParseTimeToMinutes, cmsGetStandardMacros, cmsGetRecipeTags, formatMoney, hhDaysBetween, hhAddDays, estimateDepletionDate, getCategoryIcon, getCategoryAccent, getGramsPerCup, getGramsPerUnit, imperialGramsFactor, parseAmountValue, formatCups, formatCount, formatMetricAmount, formatDateDMY, parseStepLinks } = window.LarderCalcUtils || {};
     const { render: renderReceipts } = window.CMSReceipts || { render() {} };
+    const { render: renderPlanner } = window.CMSPlanner || { render() {} };
 
     // Shared pure-math module (calc.js) loaded before cms.js. Fall back to a
     // minimal local version only if it is missing, so the app never breaks.
@@ -59,6 +60,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('add-recipe-btn');
     const statusText = document.getElementById('status-text');
     const listContainer = document.getElementById('cms-recipe-list');
+
+    // Lightweight toast for transient user guidance (e.g. "finish this new
+    // ingredient"). Optional action button wires a callback, e.g. jump to Foods.
+    function showToast(message, onAction) {
+        let host = document.querySelector('.cms-toast-host');
+        if (!host) {
+            host = document.createElement('div');
+            host.className = 'cms-toast-host';
+            document.body.appendChild(host);
+        }
+        const el = document.createElement('div');
+        el.className = 'cms-toast';
+        el.innerHTML = `<span class="cms-toast-msg">${message}</span>${onAction ? '<button type="button" class="cms-toast-action">Open</button>' : ''}`;
+        host.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('show'));
+        const dismiss = () => { el.classList.remove('show'); setTimeout(() => el.remove(), 250); };
+        if (onAction) el.querySelector('.cms-toast-action').addEventListener('click', () => { onAction(); dismiss(); });
+        setTimeout(dismiss, 6000);
+        return el;
+    }
     
     // Recipe Modal
     const modal = document.getElementById('cms-editor-modal');
@@ -66,8 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = modal.querySelector('.cms-close');
     const ingContainer = document.getElementById('ingredients-container');
     const addIngBtn = document.getElementById('add-ing-btn');
+    const addIngGroupBtn = document.getElementById('add-ing-group-btn');
     const stepsContainer = document.getElementById('steps-container');
     const addStepBtn = document.getElementById('add-step-btn');
+    const addSectionBtn = document.getElementById('add-section-btn');
+    const prepStepsContainer = document.getElementById('prep-steps-container');
+    const addPrepStepBtn = document.getElementById('add-prep-step-btn');
+    const addPrepSectionBtn = document.getElementById('add-prep-section-btn');
     const macroRefSelect = document.getElementById('macro-reference');
     const macroRefAmountGroup = document.getElementById('macro-ref-amount-group');
     const cmsDeleteBtn = document.getElementById('cms-delete-btn');
@@ -399,7 +425,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCMSList: () => renderCMSList(),
         saveReceipts,
         savePantry,
-        savePantryItems
+        savePantryItems,
+        savePlanner,
+        activateTab: (tab) => activateTab(tab)
     };
 
     // Filters are tracked per tab (Recipes vs Ingredients vs Pantry vs Household)
@@ -874,454 +902,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const datalist = document.getElementById('ingredient-suggestions');
         if (!datalist) return;
         datalist.innerHTML = ingredients.map(f => `<option value="${escapeHtml(f.name)}">`).join('');
-    }
-
-function renderPlanner() {
-        const container = document.getElementById('cms-recipe-list');
-        if (!container) return;
-
-const goals = Object.assign({
-            energyMin: 0, energyMax: 0, carbsMin: 0, carbsMax: 0,
-            proteinMin: 0, proteinMax: 0, fatMin: 0, fatMax: 0,
-            satFatMax: 0, transFatMax: 0, fiberMin: 0,
-            sodiumMax: 0, potassiumMin: 0, potassiumMax: 0, calciumMin: 0,
-            magnesiumMin: 0, magnesiumMax: 0, phosphorusMin: 0, phosphorusMax: 0,
-            ironMin: 0, ironMax: 0, zincMin: 0, zincMax: 0,
-            copperMin: 0, copperMax: 0, seleniumMin: 0, seleniumMax: 0,
-            vitAMin: 0, vitAMax: 0, vitCMin: 0, vitCMax: 0, vitDMin: 0, vitDMax: 0,
-            vitEMin: 0, vitEMax: 0, vitKMin: 0, vitKMax: 0,
-            thiaminMin: 0, thiaminMax: 0, riboflavinMin: 0, riboflavinMax: 0,
-            niacinMin: 0, niacinMax: 0, vitB6Min: 0, vitB6Max: 0,
-            folateMin: 0, folateMax: 0, b12Min: 0, b12Max: 0,
-            meatProteinPct: 50, budget: 0, currency: ''
-        }, planner.goals || {});
-        const currency = goals.currency
-            || (appSettings.shopping && appSettings.shopping.currency)
-            || (ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
-            || 'MUR';
-        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
-        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        function findIng(id) { return ingredients.find(f => f.foodId === id); }
-        function gramsOf(item) { return LC.gramsOf(item && item.amount, item && item.unit, findIng(item.ingredientId)); }
-        function perGramOf(ing) { return LC.perGram(ing); }
-
-        // Energy & Macros goals come from the eater profiles by default: sum every
-        // eater's daily targets and scale to a 30-day month. Prefills the goal
-        // inputs but stays editable as a manual override.
-        function profileMonthTargets() {
-            const profiles = (appSettings.profiles && appSettings.profiles.length)
-                ? appSettings.profiles
-                : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }];
-            const num = v => (parseFloat(v) || 0);
-            const daily = { energy: 0, protein: 0, carbs: 0, fat: 0 };
-            profiles.forEach(p => {
-                const cal = num(p.calories);
-                daily.energy += cal;
-                daily.protein += Math.round(cal * (num(p.protein) / 100) / 4);
-                daily.carbs += Math.round(cal * (num(p.carbs) / 100) / 4);
-                daily.fat += Math.round(cal * (num(p.fat) / 100) / 9);
-            });
-            return {
-                energy: Math.round(daily.energy * 30),
-                protein: Math.round(daily.protein * 30),
-                carbs: Math.round(daily.carbs * 30),
-                fat: Math.round(daily.fat * 30)
-            };
-        }
-        const macroDefaults = profileMonthTargets();
-        const macroKeys = { energy: 'energy', protein: 'protein', carbs: 'carbs', fat: 'fat' };
-        // Effective goal for a key: the saved value if set, else the profile-derived
-        // month target. Used by the goal inputs, the flag() checks and total bars.
-        function effGoal(key) {
-            const v = parseFloat(goals[key]) || 0;
-            if (v > 0) return v;
-            const base = key.replace(/Min$|Max$/, '');
-            return macroKeys[base] ? macroDefaults[macroKeys[base]] : 0;
-        }
-
-        const t = LC.computeTotals(planner.items, ingredients);
-
-        // Unified unit list shared by the planner builder (add + per-item rows).
-        // Standardised across the app for consistent buys/weights.
-        const UNIT_OPTIONS = ['g', 'kg', 'ml', 'L', 'cups', 'tbsp', 'tsp',
-            'piece', 'pieces', 'each', 'whole', 'clove', 'cloves', 'slice', 'slices',
-            'can', 'cans', 'pinch', 'sprig', 'sprigs', 'bunch', 'medium', 'large', 'small', 'head'];
-        function unitSelect(cur, attrs) {
-            const safe = (cur || 'g') === '' ? 'g' : (cur || 'g');
-            const opts = UNIT_OPTIONS.concat(safe).filter((v, i, a) => a.indexOf(v) === i);
-            return `<select class="${attrs.cls || 'pl-unit sel-unit'}" ${attrs.id ? `id="${attrs.id}"` : ''} ${attrs.data || ''}>
-                ${opts.map(u => `<option value="${escapeHtml(u)}" ${u === safe ? 'selected' : ''}>${escapeHtml(u)}</option>`).join('')}
-            </select>`;
-        }
-
-function flag(minKey, maxKey, value) {
-            const mn = parseFloat(effGoal(minKey)) || 0;
-            const mx = parseFloat(effGoal(maxKey)) || 0;
-            if (mx > 0 && value > mx) return 'over';
-            if (mn > 0 && value < mn) return 'under';
-            if (mx > 0 || mn > 0) return 'ok';
-            return '';
-        }
-function totalRow(label, value, unit, minKey, maxKey) {
-            const fg = flag(minKey, maxKey, value);
-            const mx = parseFloat(effGoal(maxKey)) || 0;
-            const mn = parseFloat(effGoal(minKey)) || 0;
-            const barPct = mx > 0 ? Math.min(100, value / mx * 100) : (mn > 0 ? Math.min(100, value / mn * 100) : 0);
-            const isOver = fg === 'over';
-            const isUnder = fg === 'under';
-            const cls = (isOver || isUnder) ? 'red' : 'blue';
-            // Arrow indicator saves horizontal space vs a text flag.
-            const arrow = isOver ? '&#9650;' : (isUnder ? '&#9660;' : '&nbsp;');
-            const title = isOver ? 'Over target' : (isUnder ? 'Under target' : '');
-            const target = mx > 0 ? mx : (mn > 0 ? mn : 0);
-            const valueTxt = value.toFixed(0).toLocaleString();
-            const targetTxt = target > 0 ? target.toLocaleString() : '';
-            return `<div class="pl-total-row">
-                <div class="pl-total-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
-                <div class="pl-total-bar"><div class="pl-total-fill ${cls}" style="width:${barPct}%"></div></div>
-                <div class="pl-total-val ${cls}"><span class="pl-total-now">${valueTxt}<span class="pl-total-unit">${unit}</span></span>${target > 0 ? `<span class="pl-total-target">/ ${targetTxt}${unit}</span>` : ''}</div>
-                <div class="pl-total-flag ${cls}" title="${title}">${arrow}</div>
-            </div>`;
-        }
-
-// --- Goals card ---
-        // A group keeps the grid tidy: headings first, then each nutrient that
-        // maps to a min/max input. Micro fields use their computed-total keys.
-        const GOAL_GROUPS = [
-            {
-                title: 'Energy & Macros', values: 'kcal / g',
-                cells: [
-                    ['energy', 'Energy', 'kcal', 'both'],
-                    ['protein', 'Protein', 'g', 'both'],
-                    ['carbs', 'Carbs', 'g', 'both'],
-                    ['fat', 'Fat', 'g', 'both']
-                ]
-            },
-            {
-                title: 'Fats & Fibre', values: 'g',
-                cells: [
-                    ['satFat', 'Saturated fat', 'g', 'max'],
-                    ['transFat', 'Trans fat', 'g', 'max'],
-                    ['fiber', 'Fiber', 'g', 'min']
-                ]
-            },
-            {
-                title: 'Minerals', values: 'mg (Se μg)',
-                cells: [
-                    ['sodium', 'Sodium', 'mg', 'max'],
-                    ['potassium', 'Potassium', 'mg', 'both'],
-                    ['calcium', 'Calcium', 'mg', 'min'],
-                    ['magnesium', 'Magnesium', 'mg', 'both'],
-                    ['phosphorus', 'Phosphorus', 'mg', 'both'],
-                    ['iron', 'Iron', 'mg', 'both'],
-                    ['zinc', 'Zinc', 'mg', 'both'],
-                    ['copper', 'Copper', 'mg', 'both'],
-                    ['selenium', 'Selenium', 'μg', 'both']
-                ]
-            },
-            {
-                title: 'Vitamins', values: 'μg / mg',
-                cells: [
-                    ['vitA', 'Vitamin A', 'μg RAE', 'both'],
-                    ['vitC', 'Vitamin C', 'mg', 'both'],
-                    ['vitD', 'Vitamin D', 'μg', 'both'],
-                    ['vitE', 'Vitamin E', 'mg', 'both'],
-                    ['vitK', 'Vitamin K', 'μg', 'both'],
-                    ['thiamin', 'Vitamin B1 (thiamin)', 'mg', 'both'],
-                    ['riboflavin', 'Vitamin B2', 'mg', 'both'],
-                    ['niacin', 'Vitamin B3 (niacin)', 'mg', 'both'],
-                    ['vitB6', 'Vitamin B6', 'mg', 'both'],
-                    ['folate', 'Folate (B9)', 'μg', 'both'],
-                    ['b12', 'Vitamin B12', 'μg', 'both']
-                ]
-            }
-        ];
-        // Map each goal key to the computed-totals field it tracks.
-        const GOAL_TOTALS = {
-            energy: 'energy', protein: 'protein', carbs: 'carbs', fat: 'fat',
-            satFat: 'satFat', transFat: 'transFatG', fiber: 'fiber',
-            sodium: 'sodiumMg', potassium: 'potassiumMg', calcium: 'calciumMg',
-            magnesium: 'magnesiumMg', phosphorus: 'phosphorusMg', iron: 'ironMg',
-            zinc: 'zincMg', copper: 'copperMg', selenium: 'seleniumMcg',
-            vitA: 'vitaminAMcg', vitC: 'vitaminCMg', vitD: 'vitD',
-            vitE: 'vitaminEMg', vitK: 'vitaminKMcg', thiamin: 'thiaminMg',
-            riboflavin: 'riboflavinMg', niacin: 'niacinMg', vitB6: 'vitaminB6Mg',
-            folate: 'folateMcg', b12: 'vitaminB12Mcg'
-        };
-        const goalCells = GOAL_GROUPS.map((group, gi) => `
-            <details class="pln-goal-group">
-                <summary class="pln-goal-group-title">
-                    <i data-lucide="chevron-right" class="pln-chev"></i>
-                    ${group.title} <span class="pln-goal-group-unit">(${group.values})</span>
-                </summary>
-                <div class="pln-goal-group-grid">
-                ${group.cells.map(([key, label, unit, mode]) => {
-                    const showMin = mode === 'both' || mode === 'min';
-                    const showMax = mode === 'both' || mode === 'max';
-                    const isMacro = !!macroKeys[key];
-                    const minVal = goals[key + 'Min'] || '';
-                    const maxVal = goals[key + 'Max'] || '';
-                    const minPh = isMacro ? effGoal(key + 'Min') : '–';
-                    const maxPh = isMacro ? effGoal(key + 'Max') : '–';
-                    return `
-                    <div class="pln-goal-cell">
-                        <div class="pln-goal-label">${label}<span class="pln-goal-unit">${unit}</span></div>
-                        <div class="pln-goal-inputs">
-                            ${showMin ? `<div class="pln-goal-min"><span class="pln-input-tag">min</span><input type="number" class="pln-goal-input" data-goal="${key}Min" value="${minVal}" placeholder="${minPh}"></div>` : ''}
-                            ${showMax ? `<div class="pln-goal-max"><span class="pln-input-tag">max</span><input type="number" class="pln-goal-input" data-goal="${key}Max" value="${maxVal}" placeholder="${maxPh}"></div>` : ''}
-                        </div>
-                    </div>`;
-                }).join('')}
-                </div>
-            </details>
-        `).join('');
-
-let html = '';
-        // Toolbar: inline-editable monthly budget (auto-saves on blur) + a button
-        // that opens the Monthly Nutrition Goals editor in a modal.
-        html += `
-        <div class="planner-wrap">
-        <div class="planner-toolbar">
-            <label class="pl-budget-editor" title="Monthly budget — edit in place, saved on leave">
-                <i data-lucide="wallet" style="width:15px;height:15px;color:var(--accent-sea);"></i>
-                <span class="pl-budget-label">Budget</span>
-                <input type="number" class="pl-budget-input" value="${goals.budget || 0}" min="0" step="any">
-                <span class="pl-budget-c">${currency}</span>
-            </label>
-            <div class="pl-toolbar-spacer"></div>
-            <button class="btn secondary" id="planner-open-goals" style="font-size:14px;"><i data-lucide="target" style="width:15px;height:15px;"></i> Monthly Nutrition Goals</button>
-        </div>
-        <div class="planner-grid">
-        <div class="planner-main">`;
-
-// --- Live totals vs goals (all tracked nutrients, grouped like the goals) ---
-        const animalPct = t.meat > 0 ? Math.round(t.animal / t.meat * 100) : 0;
-        const aGoal = parseFloat(goals.meatProteinPct) || 0;
-        const aCls = (aGoal > 0 && Math.abs(animalPct - aGoal) > 10) ? 'red' : (aGoal > 0 ? 'blue' : '');
-        const totGroupRows = GOAL_GROUPS.map(g => `
-            <div class="pl-total-group">
-                <div class="pl-total-group-title">${g.title} <span class="pln-goal-group-unit">(${g.values})</span></div>
-${g.cells.map(([key, label, unit]) => {
-                    const totKey = GOAL_TOTALS[key];
-                    const value = typeof t[totKey] === 'number' ? t[totKey] : 0;
-                    return totalRow(label, value, (key === 'sodium' ? 'mg' : unit), key + 'Min', key + 'Max');
-                }).join('')}
-            </div>`).join('');
-const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.budget);
-        const projectedCard = `
-        <aside class="planner-side">
-        <div class="planner-card">
-            <div class="planner-card-head"><i data-lucide="gauge" style="width:18px;height:18px;"></i> Projected month totals <span class="planner-hint">live vs your goals</span></div>
-            <div class="pl-totals">${totGroupRows}\n                <div class="pl-total-row"><div class="pl-total-label">Animal protein %</div><div class="pl-total-bar"><div class="pl-total-fill ${aCls}" style="width:${Math.min(100, animalPct)}%"></div></div><div class="pl-total-val ${aCls}">${animalPct}% / ${aGoal}%</div><div class="pl-total-flag ${aCls}">&nbsp;</div></div>
-            </div>
-            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(t.cost)}</strong> <span class="pln-note">/ ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
-        </div>
-        </aside>`;
-
-// --- Builder ---
-        const suggestionChips = ingredients.slice().sort((a, b) => (parseFloat(b.averagePrice) || 0) - (parseFloat(a.averagePrice) || 0)).slice(0, 8)
-            .map(s => `<button type="button" class="pl-sugg-chip" data-name="${escapeHtml(s.name)}" data-foodid="${escapeHtml(s.foodId)}">${escapeHtml(s.name)}</button>`).join('');
-        const rows = (planner.items || []).map((it, i) => {
-            const ing = findIng(it.ingredientId);
-            const c = perGramOf(ing) * gramsOf(it);
-            const scopeOn = it.scope === 'month';
-return `<div class="pl-item" data-idx="${i}">
-                <div class="pl-item-name" title="${escapeHtml(ing ? ing.name : (it.name || '?'))}">${escapeHtml(ing ? ing.name : (it.name || '?'))}</div>
-                <div class="pl-item-amount"><label class="pl-amount-label"><input type="number" class="pl-amount seamless-input" data-idx="${i}" value="${it.amount || ''}" step="any" min="0" style="width:64px;"></label>${unitSelect(it.unit, { cls: 'pl-unit sel-unit seamless-select', data: `data-idx="${i}"` })}</div>
-                <div class="pl-item-cost">${fmt(c)}</div>
-                <label class="pln-check" title="Apply existing pantry/household stock so this stays off the shopping list"><input type="checkbox" class="pl-usesock" data-idx="${i}" ${it.useStock ? 'checked' : ''}><span>use stock</span></label>
-                <label class="pln-check" title="Long-life staple bought once for the month; otherwise refreshed weekly"><input type="checkbox" class="pl-scope" data-idx="${i}" ${scopeOn ? 'checked' : ''}><span>month</span></label>
-                <button class="pl-item-remove" data-idx="${i}" title="Remove">&times;</button>
-            </div>`;
-        }).join('');
-        html += `
-        <div class="planner-card">
-            <div class="planner-card-head"><i data-lucide="plus-square" style="width:18px;height:18px;"></i> Build the ingredient list <span class="planner-hint"><span class="red-note">red</span> over target &middot; <span class="blue-note">blue</span> near target</span></div>
-<div class="pl-add-row">
-<div class="pl-picker">
-                    <input class="seamless-input pl-ing-picker" id="pl-ing-name" placeholder="Search ingredient&hellip;" autocomplete="off">
-                    <div class="pl-picker-results" id="pl-ing-results"></div>
-                </div>
-                <label class="pl-amount-label pl-new-amount-label"><input type="number" class="seamless-input pl-new-amount" id="pl-new-amount" placeholder="Qty" step="any" min="0" style="width:64px;"></label>
-                ${unitSelect('g', { cls: 'pl-new-unit sel-unit seamless-select', id: 'pl-new-unit' })}
-                <button class="btn primary" id="pl-add-btn">Add</button>
-            </div>
-            ${suggestionChips ? `<div class="pl-sugg">Suggestions: ${suggestionChips}</div>` : ''}
-            <div class="pl-list">${rows || '<div class="empty-state">No planned items yet &mdash; add your month&apos;s groceries above.</div>'}</div>
-            <div class="plorer-list-actions"><button class="btn primary" id="pl-generate-btn"><i data-lucide="shopping-basket"></i> Generate shopping list</button></div>
-        </div>
-        <div id="pl-generated" class="planner-card"></div>
-        </div>
-        ${projectedCard}
-        </div>
-        <div class="pl-modal-backdrop" id="pl-goals-modal">
-            <div class="pl-modal">
-                <div class="pl-modal-head">
-                    <div class="pl-modal-title"><i data-lucide="target" style="width:18px;height:18px;"></i> Monthly Nutrition Goals</div>
-                    <button type="button" class="pl-modal-close" id="pl-goals-close" aria-label="Close">&times;</button>
-                </div>
-                <p class="pl-modal-desc">Energy &amp; macros default from your eater profiles (automatically summed over 30 days). Adjust min&ndash;max boundaries for the month if you need to override them.</p>
-                <div class="pl-modal-body">${goalCells}
-                    <div class="planner-goals-sub">
-                        <div class="pln-sub-item"><label>Protein from animal sources</label><input type="number" class="pln-goal-sub" data-goal="meatProteinPct" value="${goals.meatProteinPct || 0}" min="0" max="100" style="width:70px;text-align:right;"> %</div>
-                    </div>
-                </div>
-                <div class="pl-modal-foot">
-                    <button type="button" class="btn secondary" id="pl-goals-cancel" style="font-size:14px;">Cancel</button>
-                    <button type="button" class="btn primary" id="planner-save-goals" style="font-size:14px;"><i data-lucide="save" style="width:15px;height:15px;"></i> Save goals</button>
-                </div>
-            </div>
-        </div>
-        </div>`;
-
-        container.innerHTML = html;
-        if (window.lucide) window.lucide.createIcons();
-
-const saveGoalsFromDOM = () => {
-            container.querySelectorAll('[data-goal]').forEach(el => {
-                const key = el.dataset.goal;
-                if (key === 'currency') planner.goals[key] = el.value || 'MUR';
-                else planner.goals[key] = parseFloat(el.value) || 0;
-            });
-        };
-
-        // Modal open / close
-        const openGoalModal = () => {
-            const m = container.querySelector('#pl-goals-modal');
-            if (m) m.classList.add('open');
-        };
-        const closeGoalModal = () => {
-            const m = container.querySelector('#pl-goals-modal');
-            if (m) m.classList.remove('open');
-        };
-        const openBtn = container.querySelector('#planner-open-goals');
-        if (openBtn) openBtn.addEventListener('click', openGoalModal);
-        const closeBtn = container.querySelector('#pl-goals-close');
-        if (closeBtn) closeBtn.addEventListener('click', closeGoalModal);
-        const cancelBtn = container.querySelector('#pl-goals-cancel');
-        if (cancelBtn) cancelBtn.addEventListener('click', closeGoalModal);
-
-        // Save goals from the modal (re-renders so projected totals update).
-        const saveGoalsBtn = container.querySelector('#planner-save-goals');
-        if (saveGoalsBtn) saveGoalsBtn.addEventListener('click', async () => {
-            saveGoalsFromDOM();
-            await savePlanner();
-            closeGoalModal();
-            renderPlanner();
-        });
-
-        // Budget: saved automatically when the input loses focus / on Enter.
-        const budgetInput = container.querySelector('.pl-budget-input');
-        if (budgetInput) {
-            const persistBudget = async () => {
-                const val = parseFloat(budgetInput.value);
-                planner.goals.budget = (val && val > 0) ? val : 0;
-                await savePlanner();
-                renderPlanner();
-            };
-            budgetInput.addEventListener('change', persistBudget);
-            budgetInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); budgetInput.blur(); }
-            });
-        }
-
-        const addBtn = container.querySelector('#pl-add-btn');
-        if (addBtn) addBtn.addEventListener('click', () => {
-            const nameEl = container.querySelector('#pl-ing-name');
-            const amtEl = container.querySelector('#pl-new-amount');
-            const unitEl = container.querySelector('#pl-new-unit');
-            const name = (nameEl ? nameEl.value : '').trim();
-            const pickedId = nameEl ? nameEl.dataset.foodId : '';
-            const ing = (pickedId && ingredients.find(f => f.foodId === pickedId))
-                || ingredients.find(f => f.name.toLowerCase() === name.toLowerCase());
-            if (!ing) { alert('Choose an ingredient from the list.'); return; }
-            planner.items.push({
-                ingredientId: ing.foodId, name: ing.name,
-                amount: parseFloat(amtEl && amtEl.value) || 0,
-                unit: (unitEl && unitEl.value.trim()) || 'g',
-                scope: /can|tinned|jar|frozen|oil|condiment|spice|grain|legume|pasta|rice|flour|sugar|honey|bean/i.test(ing.category || '') ? 'month' : 'fresh',
-useStock: false
-            });
-            renderPlanner();
-            savePlanner();
-        });
-
-        container.querySelectorAll('.pl-sugg-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const nameEl = container.querySelector('#pl-ing-name');
-                const resultsEl = container.querySelector('#pl-ing-results');
-                if (nameEl) { nameEl.value = chip.dataset.name; nameEl.dataset.foodId = chip.dataset.foodId || ''; }
-                if (resultsEl) resultsEl.innerHTML = '';
-            });
-        });
-
-        // --- Ingredient picker: live search over the catalogue ---
-        const nameEl = container.querySelector('#pl-ing-name');
-        const resultsEl = container.querySelector('#pl-ing-results');
-        const plSearch = (query) => {
-            const q = (query || '').trim().toLowerCase();
-            const hay = ingredients.filter(f => f && f.name);
-            let matches = q
-                ? hay.filter(f => f.name.toLowerCase().includes(q) || (f.category || '').toLowerCase().includes(q))
-                : hay;
-            matches = matches.slice(0, 12);
-            if (!resultsEl) return;
-            if (!matches.length) { resultsEl.innerHTML = ''; return; }
-            resultsEl.innerHTML = matches.map(f => `
-                <button type="button" class="pl-picker-item" data-foodid="${escapeHtml(f.foodId)}" data-name="${escapeHtml(f.name)}">
-                    <span class="pl-picker-item-name">${escapeHtml(f.name)}</span>
-                    ${f.category ? `<span class="pl-picker-item-cat">${escapeHtml(f.category)}</span>` : ''}
-                </button>`).join('');
-            resultsEl.querySelectorAll('.pl-picker-item').forEach(btn => btn.addEventListener('click', () => {
-                if (nameEl) { nameEl.value = btn.dataset.name; nameEl.dataset.foodId = btn.dataset.foodId; }
-                if (resultsEl) resultsEl.innerHTML = '';
-            }));
-        };
-        if (nameEl) {
-            nameEl.addEventListener('input', () => { nameEl.dataset.foodId = ''; plSearch(nameEl.value); });
-            nameEl.addEventListener('focus', () => plSearch(nameEl.value));
-            nameEl.addEventListener('blur', () => setTimeout(() => { if (resultsEl) resultsEl.innerHTML = ''; }, 150));
-            nameEl.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); container.querySelector('#pl-add-btn') && container.querySelector('#pl-add-btn').click(); }
-                if (e.key === 'Escape' && resultsEl) resultsEl.innerHTML = '';
-            });
-        }
-
-container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
-            el.addEventListener('change', () => {
-                const i = parseInt(el.dataset.idx);
-                if (planner.items[i]) {
-                    if (el.classList.contains('pl-amount')) planner.items[i].amount = parseFloat(el.value) || 0;
-                    else planner.items[i].unit = el.value.trim() || 'g';
-                    renderPlanner();
-                    savePlanner();
-                }
-            });
-        });
-        container.querySelectorAll('.pl-scope').forEach(el => el.addEventListener('change', () => {
-            const i = parseInt(el.dataset.idx);
-            if (planner.items[i]) { planner.items[i].scope = el.checked ? 'month' : 'fresh'; renderPlanner(); savePlanner(); }
-        }));
-        container.querySelectorAll('.pl-usesock').forEach(el => el.addEventListener('change', () => {
-            const i = parseInt(el.dataset.idx);
-            if (planner.items[i]) { planner.items[i].useStock = el.checked; renderPlanner(); savePlanner(); }
-        }));
-        container.querySelectorAll('.pl-item-remove').forEach(btn => btn.addEventListener('click', () => {
-            const i = parseInt(btn.dataset.idx);
-            if (planner.items[i]) { planner.items.splice(i, 1); renderPlanner(); savePlanner(); }
-        }));
-
-        const genBtn = container.querySelector('#pl-generate-btn');
-        if (genBtn) genBtn.addEventListener('click', () => {
-            saveGoalsFromDOM();
-            // Generate the shopping list in the Shopping tab, with the monthly
-            // planner already ticked as a source.
-            pendingShoppingSources = ['planner', 'meals'];
-const shoppingTab = document.querySelector('.cms-tab[data-tab="shopping"]');
-            if (shoppingTab) activateTab(shoppingTab);
-            else renderCMSList();
-        });
     }
 
     function renderPantryTab() {
@@ -4014,6 +3594,14 @@ const unpricedRow = cost.unpriced.length
                 const c = cheapestByCat[ing.category || 'Other'];
                 return !!(c && c.foodId === ing.foodId);
             };
+            // Inline-created ingredients start empty; flag them until fleshed out.
+            const isIncomplete = (ing) => {
+                const hasMacros = (parseFloat(ing.calories) || 0)
+                    + (parseFloat(ing.proteinG) || 0)
+                    + (parseFloat(ing.fatG) || 0)
+                    + (parseFloat(ing.carbsG) || 0) > 0;
+                return !(ing.category || '').trim() || !hasMacros;
+            };
 
             if (cmsListView === 'grid') {
                 listContainer.innerHTML = `
@@ -4029,7 +3617,7 @@ const unpricedRow = cost.unpriced.length
                                 </div>
                                 <div class="cms-card-body">
                                     <div class="cms-card-title-row">
-                                        <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}</div>
+                                        <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}${isIncomplete(ing) ? `<span class="cms-incomplete-badge">Incomplete</span>` : ''}</div>
                                         <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                     </div>
                                     <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}${cheapest ? `<span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i> Cheapest</span>` : ''}</div>
@@ -4069,7 +3657,7 @@ const unpricedRow = cost.unpriced.length
                                             </div>
                                         </td>
                                         <td>${escapeHtml(ing.category || '—')}</td>
-                                        <td><span class="cms-badge published">Published</span></td>
+                                        <td>${isIncomplete(ing) ? '<span class="cms-badge draft">Incomplete</span>' : '<span class="cms-badge published">Complete</span>'}</td>
                                         <td class="cms-actions-cell">
                                             <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                         </td>
@@ -4861,6 +4449,11 @@ const unpricedRow = cost.unpriced.length
             recalcMacrosFromIngredients();
             statusText.innerHTML = `<span class="status-dot"></span> Created ingredient “${escapeHtml(f.name)}”`;
             await saveIngredients();
+            showToast(`Created ingredient <strong>“${escapeHtml(f.name)}”</strong> — add its nutrition and category so recipes can use it fully.`, () => {
+                const foodTab = document.querySelector('.cms-tab[data-tab="food"]');
+                if (foodTab) activateTab(foodTab);
+                setTimeout(() => openProfileEditor(newFoodId), 60);
+            });
         }
         function apply(idx) {
             const items = getItems(nameInput.value);
@@ -5156,38 +4749,124 @@ const unpricedRow = cost.unpriced.length
     }
 
     // --- Step Rows ---
-    function renumberSteps() {
+    function renumberSteps(container) {
         let n = 1;
-        stepsContainer.querySelectorAll('.cms-step-row').forEach(row => {
+        (container || stepsContainer).querySelectorAll('.cms-step-row').forEach(row => {
             if (row.querySelector('textarea')) {
                 row.querySelector('.step-number').textContent = n++;
             }
         });
     }
 
-    function createStepRow(text = '') {
+    // Pick an ingredient from the catalog and insert a `[[foodId|Label]]` token
+    // into a step's text at the caret. Tokens render as links on the website.
+    function attachStepLinkPicker(div, textarea) {
+        const btn = div.querySelector('.step-link');
+        if (!btn) return;
+        const picker = document.createElement('div');
+        picker.className = 'cms-step-link-picker';
+        picker.innerHTML = `
+            <input type="text" class="seamless-input cms-step-link-search" placeholder="Search ingredient to link..." autocomplete="off">
+            <div class="cms-step-link-results"></div>
+            <div class="cms-step-link-hint">Show literal brackets with <code>[[[foo]]</code> or a space inside: <code>[[ foo ]]</code></div>
+        `;
+        div.appendChild(picker);
+
+        const searchInput = picker.querySelector('.cms-step-link-search');
+        const resultsEl = picker.querySelector('.cms-step-link-results');
+
+        function renderResults(q) {
+            const query = String(q || '').toLowerCase().trim();
+            const matches = query
+                ? ingredients.filter(f => f.name.toLowerCase().includes(query)).slice(0, 12)
+                : ingredients.slice(0, 12);
+            if (!matches.length) {
+                resultsEl.innerHTML = '<div class="cms-step-link-empty">No ingredients match.</div>';
+                return;
+            }
+            resultsEl.innerHTML = matches.map(f => `
+                <button type="button" class="cms-step-link-item" data-food-id="${escapeHtml(f.foodId)}">
+                    <span class="cms-step-link-name">${escapeHtml(f.name)}</span>
+                    ${f.category ? `<span class="cms-ing-suggestion-cat">${escapeHtml(f.category)}</span>` : ''}
+                </button>`).join('');
+            resultsEl.querySelectorAll('.cms-step-link-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    insertToken(el.dataset.foodId, el.querySelector('.cms-step-link-name').textContent.trim());
+                });
+            });
+        }
+
+        function insertToken(foodId, label) {
+            // Sanitise the label so it can never break the [[foodId|Label]] token.
+            const cleanLabel = String(label || '').replace(/[[\]|]/g, '').trim() || foodId;
+            const token = `[[${foodId}|${cleanLabel}]]`;
+            const start = textarea.selectionStart != null ? textarea.selectionStart : textarea.value.length;
+            const end = textarea.selectionEnd != null ? textarea.selectionEnd : textarea.value.length;
+            textarea.value = textarea.value.slice(0, start) + token + textarea.value.slice(end);
+            textarea.focus();
+            const pos = start + token.length;
+            textarea.setSelectionRange(pos, pos);
+            close();
+        }
+
+        function close() {
+            picker.classList.remove('open');
+            searchInput.value = '';
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (picker.classList.contains('open')) close();
+            else {
+                renderResults(searchInput.value);
+                picker.classList.add('open');
+                searchInput.focus();
+            }
+        });
+        searchInput.addEventListener('input', () => renderResults(searchInput.value));
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') close();
+            else if (e.key === 'Enter' && resultsEl.querySelector('.cms-step-link-item')) {
+                e.preventDefault();
+                resultsEl.querySelector('.cms-step-link-item').click();
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if (!picker.contains(e.target) && !btn.contains(e.target)) close();
+        });
+    }
+
+    function createStepRow(text = '', container) {
+        container = container || stepsContainer;
         const div = document.createElement('div');
         div.className = 'cms-step-row';
         const isHeader = String(text).startsWith('## ');
         if (isHeader) {
             div.innerHTML = `
                 <input type="text" data-field="step" class="seamless-input" value="${escapeHtml(String(text).replace(/^##\s*/, ''))}" placeholder="Section header..." style="flex-grow: 1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                <button type="button" class="cms-btn-icon delete" aria-label="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+                <button type="button" class="cms-btn-icon delete" aria-label="Remove section" title="Remove section"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
             `;
         } else {
-            const num = stepsContainer.querySelectorAll('.cms-step-row textarea').length + 1;
+            const num = container.querySelectorAll('.cms-step-row textarea').length + 1;
             div.innerHTML = `
                 <span class="step-number">${num}</span>
                 <textarea class="seamless-input seamless-textarea" data-field="step" placeholder="Step..." style="min-height: 50px;">${escapeHtml(String(text))}</textarea>
+                <button type="button" class="cms-btn-icon step-link" aria-label="Link an ingredient" title="Link an ingredient in this step"><i data-lucide="link" style="width: 14px; height: 14px;"></i></button>
                 <button type="button" class="cms-btn-icon delete" aria-label="Remove step" title="Remove step"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
             `;
         }
-        div.querySelector('.delete').addEventListener('click', () => { div.remove(); renumberSteps(); });
-        stepsContainer.appendChild(div);
+        div.querySelector('.delete').addEventListener('click', () => { div.remove(); renumberSteps(container); });
+        container.appendChild(div);
+        if (!isHeader) attachStepLinkPicker(div, div.querySelector('textarea'));
+        return div;
     }
 
     addIngBtn.addEventListener('click', () => createIngredientRow());
+    if (addIngGroupBtn) addIngGroupBtn.addEventListener('click', () => createIngredientRow('## '));
     addStepBtn.addEventListener('click', () => createStepRow());
+    if (addSectionBtn) addSectionBtn.addEventListener('click', () => createStepRow('## '));
+    if (addPrepStepBtn) addPrepStepBtn.addEventListener('click', () => createStepRow('', prepStepsContainer));
+    if (addPrepSectionBtn) addPrepSectionBtn.addEventListener('click', () => createStepRow('## ', prepStepsContainer));
 
     const macroAutoCalcBtn = document.getElementById('macro-auto-calc-btn');
     if (macroAutoCalcBtn) macroAutoCalcBtn.addEventListener('click', () => {
@@ -5250,6 +4929,18 @@ const unpricedRow = cost.unpriced.length
             }
 
             (recipe.steps || []).forEach(step => createStepRow(step));
+            prepStepsContainer.innerHTML = '';
+            const prepHrsEl = document.getElementById('prep-time-hours');
+            const prepMinsEl = document.getElementById('prep-time-mins');
+            if (recipe.prepTime) {
+                const pt = parseTimeToHM(recipe.prepTime);
+                prepHrsEl.value = pt.hours || '';
+                prepMinsEl.value = pt.mins || '';
+            } else {
+                prepHrsEl.value = '';
+                prepMinsEl.value = '';
+            }
+            (recipe.prepSteps || []).forEach(step => createStepRow(step, prepStepsContainer));
             document.getElementById('recipe-note').value = recipe.note || '';
             document.getElementById('recipe-variations').value = recipe.variations || '';
             const cmsTagsEl = document.getElementById('cms-recipe-tags');
@@ -5265,6 +4956,9 @@ const unpricedRow = cost.unpriced.length
             setMacroField('macro-fat', '', 'g');
             if (recipeStatusSelect) recipeStatusSelect.value = 'published';
             createIngredientRow();
+            prepStepsContainer.innerHTML = '';
+            document.getElementById('prep-time-hours').value = '0';
+            document.getElementById('prep-time-mins').value = '0';
             const cmsTagsEl = document.getElementById('cms-recipe-tags');
             if (cmsTagsEl) cmsTagsEl.innerHTML = '';
             recipeManualTags = [];
@@ -5496,6 +5190,14 @@ const unpricedRow = cost.unpriced.length
             return row.querySelector('textarea') ? text : '## ' + text;
         }).filter(Boolean);
 
+        const prepStepRows = Array.from(prepStepsContainer.querySelectorAll('.cms-step-row'));
+        const prepSteps = prepStepRows.map(row => {
+            const field = row.querySelector('[data-field="step"]');
+            const text = field.value.trim();
+            if (!text) return null;
+            return row.querySelector('textarea') ? text : '## ' + text;
+        }).filter(Boolean);
+
         const newRecipe = {
             id: document.getElementById('recipe-id').value,
             entryType: 'recipe',
@@ -5505,6 +5207,11 @@ const unpricedRow = cost.unpriced.length
                 document.getElementById('recipe-time-hours').value,
                 document.getElementById('recipe-time-mins').value
             ),
+            prepTime: composeTimeString(
+                document.getElementById('prep-time-hours').value,
+                document.getElementById('prep-time-mins').value
+            ),
+            prepSteps,
             iconTag: document.getElementById('recipe-icon').value,
             description: document.getElementById('recipe-desc').value,
             imageUrl: document.getElementById('recipe-image').value,

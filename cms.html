@@ -256,14 +256,40 @@
                         <h3 class="section-pill" style="color: var(--cms-accent); border-color: var(--cms-accent);"><i data-lucide="utensils" style="width: 16px; height: 16px;"></i> Ingredients</h3>
                         <datalist id="ingredient-suggestions"></datalist>
                         <div id="ingredients-container"></div>
-                        <button type="button" id="add-ing-btn" class="cms-add-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Ingredient</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" id="add-ing-btn" class="cms-add-btn" style="flex: 1;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Ingredient</button>
+                            <button type="button" id="add-ing-group-btn" class="cms-add-btn" title="Add a grouping header (e.g. For the sauce)" style="flex: 1;"><i data-lucide="heading" style="width: 16px; height: 16px;"></i> Add Group</button>
+                        </div>
                     </div>
 
-                    <!-- Content Row: Instructions -->
+                    <!-- Content Row: Instructions (with Prep as a subsection) -->
                     <div class="recipe-instructions-col" style="padding-top: 1rem;">
                         <h3 class="section-pill" style="color: var(--cms-accent); border-color: var(--cms-accent);"><i data-lucide="list-ordered" style="width: 16px; height: 16px;"></i> Instructions</h3>
+
+                        <div class="cms-prep-subsection">
+                            <h4 class="cms-subsection-title">
+                                <i data-lucide="timer" style="width: 15px; height: 15px;"></i> Prep
+                                <span style="font-size: 0.72rem; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-muted);">(mise en place)</span>
+                            </h4>
+                            <div style="display: flex; align-items: center; gap: 0.35rem; margin: 0.5rem 0;">
+                                <span class="stat-label">Prep time</span>
+                                <input type="number" id="prep-time-hours" class="seamless-input stat-value" placeholder="0" min="0" value="0" style="width: 60px; text-align: right;">
+                                <span class="cms-macro-unit" data-for="prep-time-hours">h</span>
+                                <input type="number" id="prep-time-mins" class="seamless-input stat-value" placeholder="0" min="0" max="59" value="0" style="width: 60px; text-align: right;">
+                                <span class="cms-macro-unit" data-for="prep-time-mins">min</span>
+                            </div>
+                            <div id="prep-steps-container"></div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="add-prep-step-btn" class="cms-add-btn" style="flex: 1;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Prep Step</button>
+                                <button type="button" id="add-prep-section-btn" class="cms-add-btn" title="Add a subsection heading under Prep (e.g. For the sauce)" style="flex: 1;"><i data-lucide="heading" style="width: 16px; height: 16px;"></i> Add Prep Section</button>
+                            </div>
+                        </div>
+
                         <div id="steps-container"></div>
-                        <button type="button" id="add-step-btn" class="cms-add-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Step</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" id="add-step-btn" class="cms-add-btn" style="flex: 1;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Step</button>
+                            <button type="button" id="add-section-btn" class="cms-add-btn" title="Add a subsection heading (e.g. For the sauce)" style="flex: 1;"><i data-lucide="heading" style="width: 16px; height: 16px;"></i> Add Section</button>
+                        </div>
                     </div>
 
                     <!-- Footer Row: Notes & Variations -->
@@ -911,6 +937,7 @@
     <script src="cms-utils.js"></script>
     <script src="cms-state.js"></script>
     <script src="cms-receipts.js"></script>
+    <script src="cms-planner.js"></script>
     <script src="cms.js"></script>
 
     <script src="theme.js"></script>
