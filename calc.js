@@ -22,6 +22,29 @@
     var COUNT_UNITS = ['pc', 'pcs', 'piece', 'pieces', 'each', 'whole', 'can', 'cans', 'tin', 'tins', 'bottle', 'bottles', 'bag', 'bags', 'pack', 'packet', 'packets', 'clove', 'cloves', 'sprig', 'sprigs', 'slice', 'slices', 'pinch', 'pinches', 'stalk', 'stalks', 'bunch', 'medium', 'large', 'small', 'head', 'heads'];
 
     var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : 0; };
+    // Parse an amount string like "315g", "45ml", "2 tbsp", "1 cup" into grams.
+    // Falls back to ingredient's servingSizeG for count units.
+    function parseAmountToGrams(amountStr, ing) {
+        if (typeof amountStr === 'number') return amountStr;
+        if (!amountStr) return 0;
+        var s = String(amountStr).trim();
+        var FRACTION_CHARS = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8' };
+        for (var ch in FRACTION_CHARS) {
+            if (s.includes(ch)) s = s.split(ch).join(FRACTION_CHARS[ch]);
+        }
+        var m = s.match(/^([\d\s./-]+)\s*([a-zA-Zµ]+)?$/);
+        if (!m) return null;
+        var qty = 0;
+        for (var part of m[1].trim().split(/[\s-]+/)) {
+            if (!part) continue;
+            if (part.includes('/')) { var f = part.split('/'); qty += (parseFloat(f[0]) || 0) / (parseFloat(f[1]) || 1); }
+            else qty += parseFloat(part) || 0;
+        }
+        var u = (m[2] || '').toLowerCase();
+        if (u in UNIT_TO_GRAMS) return qty * UNIT_TO_GRAMS[u];
+        if (COUNT_UNITS.includes(u)) return qty * (num(ing && ing.servingSizeG) || 100);
+        return null;
+    }
     // Weight/volume of one of the given unit. Count units fall back to one
     // serving-size of the ingredient (or 100 g when unknown, e.g. a receipt line).
     function gramsOf(amount, unit, ing) {
@@ -176,6 +199,41 @@
         return out;
     }
 
+    // Compute per-ingredient consumption (grams) for a cooked recipe.
+    // recipe: recipe object with ingredients[] having foodId, metric, imperial, amount, unit
+    // options: { servingsCooked: number, overrides?: { foodId: { grams: number } } }
+    // Returns array of { foodId: string, grams: number }
+    function consumptionFor(recipe, options) {
+        var servingsCooked = (options && options.servingsCooked) || 1;
+        var overrides = (options && options.overrides) || {};
+        if (!recipe || !recipe.ingredients || !recipe.ingredients.length) return [];
+        var yieldNum = 1;
+        if (recipe.macros) {
+            var y = parseFloat(String(recipe.macros.yield || '').replace(',', '.'));
+            if (y > 0) yieldNum = y;
+        }
+        var result = [];
+        recipe.ingredients.forEach(function (ing) {
+            if (!ing.foodId) return;
+            var batchGrams = null;
+            if (ing.metric) batchGrams = parseAmountToGrams(ing.metric, null);
+            else if (ing.imperial) batchGrams = parseAmountToGrams(ing.imperial, null);
+            else if (typeof ing.amount === 'number') batchGrams = ing.amount;
+            else if (typeof ing.amount === 'string' && ing.amount) batchGrams = parseAmountToGrams(ing.amount, null);
+            if (batchGrams === null || batchGrams <= 0) return;
+            var perServingGrams = batchGrams / yieldNum;
+            var grams = perServingGrams * servingsCooked;
+            var ov = overrides[ing.foodId];
+            if (ov && typeof ov.grams === 'number' && ov.grams >= 0) {
+                grams = ov.grams;
+            }
+            if (grams > 0) {
+                result.push({ foodId: ing.foodId, grams: Math.round(grams * 10) / 10 });
+            }
+        });
+        return result;
+    }
+
     return {
         gramsOf: gramsOf,
         priceBasisGrams: priceBasisGrams,
@@ -187,6 +245,8 @@
         matchIngredient: matchIngredient,
         parseLine: parseLine,
         parseReceiptText: parseReceiptText,
+        consumptionFor: consumptionFor,
+        parseAmountToGrams: parseAmountToGrams,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
         COUNT_UNITS: COUNT_UNITS,
         MICRO_FIELDS: MICRO_FIELDS

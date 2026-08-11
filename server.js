@@ -75,7 +75,7 @@ const API_KEY = 'larder_local_sync_8f92k';
 const DATA_FILES = [
     'recipes.json', 'ingredients.json', 'mealplans.json',
     'pantry.json', 'pantry-items.json', 'shoppinglists.json', 'household.json',
-    'receipts.json', 'planner.json', 'settings.json',
+    'receipts.json', 'consumption.json', 'planner.json', 'settings.json',
     'exercises.json', 'workoutTemplates.json'
 ];
 const KNOWN_DATA_FILES = new Set(DATA_FILES);
@@ -123,6 +123,7 @@ const defaultFiles = {
     'shoppinglists.json': '[]',
     'household.json': '[]',
     'receipts.json': '[]',
+    'consumption.json': '[]',
     'planner.json': '{"goals": {"energyMax": 0, "carbsMax": 0, "fatMax": 0, "satFatMax": 0, "sugarMax": 0, "proteinMin": 0, "vitDMin": 0, "meatProteinPct": 50, "budget": 0, "currency": "MUR"}, "items": []}',
     'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}',
     'exercises.json': '[]',
@@ -427,6 +428,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
     if (req.url === '/api/household' && handleGenericFileAPI(req, res, HOUSEHOLD_PATH, 'household')) return;
     if (req.url === '/api/receipts' && handleGenericFileAPI(req, res, RECEIPTS_PATH, 'receipts')) return;
+    if (req.url === '/api/consumption' && handleGenericFileAPI(req, res, path.join(DATA_DIR, 'consumption.json'), 'consumption')) return;
     if (req.url === '/api/exercises' && handleGenericFileAPI(req, res, EXERCISES_PATH, 'exercises')) return;
     if (req.url === '/api/workout-templates' && handleGenericFileAPI(req, res, WORKOUT_TEMPLATES_PATH, 'workoutTemplates')) return;
 

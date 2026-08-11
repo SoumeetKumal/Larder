@@ -14,6 +14,7 @@
         householdItems: [],
         planner: { goals: {}, items: [] },
         receipts: [],
+        consumption: [],
         appSettings: { profiles: [] },
 
         currentCMSTab: 'recipe',

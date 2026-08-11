@@ -364,6 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let householdItems = [];
     let planner = { goals: {}, items: [] };
     let receipts = [];
+    let consumption = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
@@ -401,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     defineState('householdItems', () => householdItems, v => { householdItems = v; });
     defineState('planner', () => planner, v => { planner = v; });
     defineState('receipts', () => receipts, v => { receipts = v; });
+    defineState('consumption', () => consumption, v => { consumption = v; });
     defineState('appSettings', () => appSettings, v => { appSettings = v; });
     defineState('currentCMSTab', () => currentCMSTab, v => { currentCMSTab = v; });
     defineState('cmsSearchQuery', () => cmsSearchQuery, v => { cmsSearchQuery = v; });
@@ -5400,6 +5402,158 @@ const unpricedRow = cost.unpriced.length
         document.body.style.overflow = '';
     }
 
+    function closeCookedDialog() {
+        const cookedDialog = document.getElementById('cooked-dialog');
+        if (cookedDialog) cookedDialog.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Open "I cooked this" dialog for a recipe
+    async function openCookedDialog(recipe) {
+        const cookedDialog = document.getElementById('cooked-dialog');
+        const container = document.getElementById('cooked-items-container');
+        const servingsEl = document.getElementById('cooked-servings');
+        if (!cookedDialog || !container || !servingsEl) return;
+
+        // Reset servings to 1
+        servingsEl.value = 1;
+
+        // Calculate initial consumption using LC.consumptionFor (calc.js)
+        const updateItems = () => {
+            const servings = parseFloat(servingsEl.value) || 1;
+            const yieldNum = recipe.macros ? parseFloat(String(recipe.macros.yield || '').replace(',', '.')) || 1 : 1;
+            if (yieldNum <= 0) yieldNum = 1;
+
+            const items = [];
+            (recipe.ingredients || []).forEach(ing => {
+                if (!ing.foodId) return;
+                // Use calc.js parseAmountToGrams to get batch grams from metric/imperial/amount
+                let batchGrams = null;
+                if (ing.metric) batchGrams = LC.parseAmountToGrams(ing.metric, null);
+                else if (ing.imperial) batchGrams = LC.parseAmountToGrams(ing.imperial, null);
+                else if (typeof ing.amount === 'number') batchGrams = ing.amount;
+                else if (typeof ing.amount === 'string' && ing.amount) batchGrams = LC.parseAmountToGrams(ing.amount, null);
+                if (batchGrams === null || batchGrams <= 0) return;
+                const perServingGrams = batchGrams / yieldNum;
+                const grams = perServingGrams * servings;
+                items.push({ foodId: ing.foodId, name: ing.item, grams: Math.round(grams * 10) / 10, originalGrams: Math.round(grams * 10) / 10 });
+            });
+
+            container.innerHTML = items.map(item => `
+                <div class="cooked-item" data-food-id="${escapeHtml(item.foodId)}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--border);">
+                    <span style="flex: 1; font-size: 0.9rem;">${escapeHtml(item.name)}</span>
+                    <label style="display: flex; align-items: center; gap: 0.25rem; white-space: nowrap;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">g</span>
+                        <input type="number" step="0.1" min="0" class="seamless-input cooked-grams" value="${item.grams}" style="width: 70px; text-align: right;" aria-label="Grams for ${escapeHtml(item.name)}">
+                    </label>
+                </div>
+            `).join('') || '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No ingredients with foodId found.</p>';
+        };
+
+        updateItems();
+
+        // Recalculate on servings change
+        servingsEl.addEventListener('input', updateItems);
+
+        // Show dialog
+        cookedDialog.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        servingsEl.focus();
+        servingsEl.select();
+
+        // Handle confirm/cancel
+        const okBtn = document.getElementById('cooked-dialog-ok');
+        const cancelBtn = document.getElementById('cooked-dialog-cancel');
+
+        const cleanup = () => {
+            servingsEl.removeEventListener('input', updateItems);
+            okBtn.removeEventListener('click', onOk);
+            cancelBtn.removeEventListener('click', onCancel);
+            cookedDialog.removeEventListener('click', onOverlayClick);
+        };
+
+        const onCancel = () => {
+            cleanup();
+            closeCookedDialog();
+        };
+
+        const onOverlayClick = (e) => {
+            if (e.target === cookedDialog) onCancel();
+        };
+
+        const onOk = async () => {
+            const servings = parseFloat(servingsEl.value) || 1;
+            const itemElements = container.querySelectorAll('.cooked-item');
+            const consumptionItems = [];
+            itemElements.forEach(el => {
+                const foodId = el.dataset.foodId;
+                const grams = parseFloat(el.querySelector('.cooked-grams').value) || 0;
+                if (grams > 0) consumptionItems.push({ foodId, grams });
+            });
+
+            if (consumptionItems.length === 0) {
+                alert('No consumption items to log.');
+                return;
+            }
+
+            cleanup();
+            closeCookedDialog();
+
+            // Write to consumption.json
+            const record = {
+                id: 'cons_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+                date: new Date().toISOString().split('T')[0],
+                recipeId: recipe.id,
+                recipeTitle: recipe.title,
+                servingsCooked: servings,
+                items: consumptionItems
+            };
+
+            // Get current consumption array
+            let consumption = [];
+            try {
+                const res = await fetch('/api/consumption', { headers: CMSState.headers });
+                if (res.ok) consumption = await res.json();
+            } catch (e) { /* ignore */ }
+            consumption.unshift(record);
+
+            // Save consumption
+            await fetch('/api/consumption', {
+                method: 'PUT',
+                headers: CMSState.headers,
+                body: JSON.stringify(consumption)
+            });
+
+            // Decrement pantry items
+            for (const item of consumptionItems) {
+                // Find matching pantry item (tracked, same foodId)
+                const pantryItem = pantryItems.find(p => p.ingredientFoodId === item.foodId && p.isTracked);
+                if (pantryItem) {
+                    const packSize = parseFloat(pantryItem.packSize) || 100;
+                    const packsNeeded = item.grams / packSize;
+                    const currentQty = parseFloat(pantryItem.quantity) || 0;
+                    pantryItem.quantity = Math.max(0, Math.round((currentQty - packsNeeded) * 100) / 100);
+                    // Update lastOpenedDate
+                    pantryItem.lastOpenedDate = new Date().toISOString().split('T')[0];
+                }
+            }
+            await fetch('/api/pantry-items', {
+                method: 'PUT',
+                headers: CMSState.headers,
+                body: JSON.stringify(pantryItems)
+            });
+
+            // Refresh pantry display if on pantry tab
+            if (currentCMSTab === 'pantry') renderPantryTab();
+
+            statusText.innerHTML = `<span class="status-dot" style="background: var(--accent-veg);"></span> Logged cooked recipe & decremented stock`;
+        };
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        cookedDialog.addEventListener('click', onOverlayClick);
+    }
+
     function closeFoodModal() {
         foodModal.classList.remove('active');
         document.body.style.overflow = '';
@@ -5476,6 +5630,15 @@ const unpricedRow = cost.unpriced.length
             renderCMSList();
             statusText.innerHTML = `<span class="status-dot"></span> Recipe deleted`;
         }
+    });
+
+    const cmsCookedBtn = document.getElementById('cms-cooked-btn');
+    if (cmsCookedBtn) cmsCookedBtn.addEventListener('click', async () => {
+        const recipeId = document.getElementById('recipe-id').value;
+        if (!recipeId) return;
+        const recipe = recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+        await openCookedDialog(recipe);
     });
 
     if (foodDeleteBtn) foodDeleteBtn.addEventListener('click', async () => {

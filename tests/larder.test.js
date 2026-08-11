@@ -148,6 +148,26 @@ const r = await req('/api/settings');
         ok(badSet.status === 400, 'settings.profiles not an array rejected');
     }
 
+    // --- Consumption API ---
+    console.log('[consumption]');
+    {
+        const cons = await req('/api/consumption');
+        ok(cons.status === 200 && Array.isArray(cons.body), 'GET /api/consumption returns array');
+    }
+    {
+        const put = await req('/api/consumption', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'cons_test', date: '2026-08-12', recipeId: '1', recipeTitle: 'Test', servingsCooked: 2, items: [{ foodId: 'tagliatelle', grams: 300 }] }])
+        });
+        ok(put.status === 200, 'PUT /api/consumption accepts an array');
+        const get = await req('/api/consumption');
+        ok(get.body.some(c => c.id === 'cons_test'), 'consumption record persisted');
+    }
+    {
+        const bad = await req('/api/consumption', { method: 'PUT', body: 'not an array' });
+        ok(bad.status === 400, 'PUT /api/consumption rejects non-array');
+    }
+
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
 

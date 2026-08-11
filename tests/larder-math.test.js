@@ -47,6 +47,18 @@ check('3 each uses ingredient serving (55) -> 165', () => assert.ok(close(c.gram
 check('2 pc unknown -> 200', () => assert.ok(close(c.gramsOf(2, 'pc', null), 200)));
 check('unknown unit falls back to serving (0 -> 0)', () => assert.equal(c.gramsOf(5, 'furlong', null), 500));
 
+console.log('\n-- parseAmountToGrams --');
+check('315g -> 315', () => assert.equal(c.parseAmountToGrams('315g', null), 315));
+check('45ml -> 45', () => assert.equal(c.parseAmountToGrams('45ml', null), 45));
+check('170g -> 170', () => assert.equal(c.parseAmountToGrams('170g', null), 170));
+check('2 tbsp -> 30', () => assert.equal(c.parseAmountToGrams('2 tbsp', null), 30));
+check('1 cup -> 240', () => assert.equal(c.parseAmountToGrams('1 cup', null), 240));
+check('2 each (serving 55g) -> 110', () => assert.equal(c.parseAmountToGrams('2 each', ING[2]), 110));
+check('1/2 cup -> 120', () => assert.equal(c.parseAmountToGrams('1/2 cup', null), 120));
+check('1 1/2 cups -> 360', () => assert.equal(c.parseAmountToGrams('1 1/2 cups', null), 360));
+check('½ cup -> 120', () => assert.equal(c.parseAmountToGrams('½ cup', null), 120));
+check('invalid -> null', () => assert.equal(c.parseAmountToGrams('xyz', null), null));
+
 console.log('\n-- computeTotals --');
 check('basic totals 1kg rice', () => {
     const t = c.computeTotals([{ ingredientId: 'rice', amount: 1000, unit: 'g' }], ING);
@@ -163,6 +175,49 @@ check('[[foo bar]] keeps space escape', () => {
     const seg = u.parseStepLinks('Write [[ not a token ]] as-is.');
     assert.equal(seg.length, 1);
     assert.equal(seg[0].type, 'text');
+});
+
+console.log('\n-- consumptionFor --');
+const recipeTuna = {
+    macros: { yield: '3' },
+    ingredients: [
+        { foodId: 'tagliatelle', metric: '315g' },
+        { foodId: 'tuna_flakes', metric: '170g' },
+        { foodId: 'onion', metric: '150g' },
+        { foodId: 'garlic', metric: '20g' },
+        { foodId: 'olive_oil', metric: '45ml' }
+    ]
+};
+check('Tuna pasta 3 servings -> per-serving grams', () => {
+    const cons = c.consumptionFor(recipeTuna, { servingsCooked: 3 });
+    const tuna = cons.find(x => x.foodId === 'tuna_flakes');
+    assert.ok(tuna);
+    assert.equal(tuna.grams, 170); // 170g / 3 yield * 3 servings = 170
+    const pasta = cons.find(x => x.foodId === 'tagliatelle');
+    assert.ok(pasta);
+    assert.equal(pasta.grams, 315); // 315g / 3 * 3 = 315
+});
+check('2 servings scaled from yield 3', () => {
+    const cons = c.consumptionFor(recipeTuna, { servingsCooked: 2 });
+    const tuna = cons.find(x => x.foodId === 'tuna_flakes');
+    assert.ok(tuna);
+    assert.equal(tuna.grams, 113.3); // 170/3*2 = 113.333 -> 113.3
+});
+check('overrides replace computed grams', () => {
+    const cons = c.consumptionFor(recipeTuna, { servingsCooked: 3, overrides: { tuna_flakes: { grams: 200 } } });
+    const tuna = cons.find(x => x.foodId === 'tuna_flakes');
+    assert.equal(tuna.grams, 200);
+});
+check('ingredients without foodId skipped', () => {
+    const r = { macros: { yield: '2' }, ingredients: [{ foodId: 'rice', metric: '200g' }, { item: 'Salt', metric: '10g' }] };
+    const cons = c.consumptionFor(r, { servingsCooked: 2 });
+    assert.equal(cons.length, 1);
+    assert.equal(cons[0].foodId, 'rice');
+});
+check('empty recipe returns empty', () => {
+    assert.deepEqual(c.consumptionFor(null, {}), []);
+    assert.deepEqual(c.consumptionFor({}, {}), []);
+    assert.deepEqual(c.consumptionFor({ ingredients: [] }, {}), []);
 });
 
 run();
