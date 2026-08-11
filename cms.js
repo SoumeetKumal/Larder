@@ -515,7 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let recipes = [];
     let ingredients = [];
     let mealPlans = [];
-    let pantry = [];
+    let pantry = []; // legacy - tracking only, will be migrated
+    let pantryItems = []; // new structure: { pantryId, ingredientFoodId, brand, productName, packSize, packUnit, price, currency, quantity, isTracked, avgDurationDays, lastOpenedDate, notes }
     let shoppingLists = [];
     let householdItems = [];
     let planner = { goals: {}, items: [] };
@@ -826,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
@@ -835,12 +836,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('/api/household', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] }),
                 fetch('/api/planner', { headers: HEADERS }).then(r => r.ok ? r.json() : null),
-                fetch('/api/receipts', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/receipts', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/pantry-items', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
             mealPlans = resMealPlans;
-            pantry = resPantry;
+            pantry = resPantry; // legacy tracking data
+            pantryItems = Array.isArray(resPantryItems) ? resPantryItems : [];
             shoppingLists = resShoppingLists;
             householdItems = Array.isArray(resHousehold) ? resHousehold : [];
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
@@ -851,9 +854,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 : { goals: {}, items: [] };
             receipts = Array.isArray(resReceipts) ? resReceipts : [];
             
+            // Migrate legacy pantry tracking data to new pantry items if needed
+            if (pantryItems.length === 0 && pantry.length > 0) {
+                migrateLegacyPantry();
+            }
+            
             mealPlans = (mealPlans || []).map(normalizePlan);
             
-            statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients`;
+            statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients · ${pantryItems.length} pantry items`;
             addBtn.classList.remove('hidden');
             if (cmsTabs) cmsTabs.classList.remove('hidden');
             renderCMSList();
@@ -917,6 +925,42 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Save failed. Reverting to previous state.');
             loadData();
         }
+    }
+
+    async function savePantryItems() {
+        try {
+            const res = await fetch('/api/pantry-items', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(pantryItems)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            statusText.innerHTML = `<span class="status-dot"></span> Saved pantry items`;
+        } catch(e) {
+            alert('Save failed. Reverting to previous state.');
+            loadData();
+        }
+    }
+
+    function migrateLegacyPantry() {
+        // Convert legacy pantry tracking entries to new pantry items
+        const newItems = pantry.map(p => ({
+            pantryId: `legacy-${p.foodId}`,
+            ingredientFoodId: p.foodId,
+            brand: '',
+            productName: (ingredients.find(i => i.foodId === p.foodId) || {}).name || 'Unknown',
+            packSize: parseFloat((ingredients.find(i => i.foodId === p.foodId) || {}).servingSizeG) || 100,
+            packUnit: (ingredients.find(i => i.foodId === p.foodId) || {}).servingUnit || 'g',
+            price: 0,
+            currency: 'MUR',
+            quantity: p.quantity || 0,
+            isTracked: p.isTracked || false,
+            avgDurationDays: parseFloat(p.avgDurationDays) || 0,
+            lastOpenedDate: p.lastOpenedDate || null,
+            notes: ''
+        }));
+        pantryItems = newItems;
+        savePantryItems();
     }
 
     async function savePlanner() {
@@ -1413,11 +1457,482 @@ container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
             // Generate the shopping list in the Shopping tab, with the monthly
             // planner already ticked as a source.
             pendingShoppingSources = ['planner', 'meals'];
-            const shoppingTab = document.querySelector('.cms-tab[data-tab="shopping"]');
+const shoppingTab = document.querySelector('.cms-tab[data-tab="shopping"]');
             if (shoppingTab) activateTab(shoppingTab);
             else renderCMSList();
         });
-}
+    }
+
+    function renderPantryTab() {
+        const container = document.getElementById('cms-recipe-list');
+        if (!container) {
+            console.error('[Pantry] Container not found');
+            return;
+        }
+
+        try {
+            // Filter pantry items by search
+            let filteredItems = pantryItems.filter(item => {
+                const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+                const ingredientName = ingredient ? ingredient.name : '';
+                const searchLower = cmsSearchQuery.toLowerCase();
+                return item.productName.toLowerCase().includes(searchLower) ||
+                       item.brand.toLowerCase().includes(searchLower) ||
+                       ingredientName.toLowerCase().includes(searchLower) ||
+                       (item.notes || '').toLowerCase().includes(searchLower);
+            });
+
+            // Category filter
+            if (cmsCategoryFilter !== 'All') {
+                filteredItems = filteredItems.filter(item => {
+                    const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+                    return (ingredient && ingredient.category) === cmsCategoryFilter;
+                });
+            }
+
+            // Sort: tracked first, then by name
+            filteredItems.sort((a, b) => {
+                const ta = a.isTracked ? 1 : 0;
+                const tb = b.isTracked ? 1 : 0;
+                return tb - ta || a.productName.localeCompare(b.productName);
+            });
+
+        const pantryView = localStorage.getItem('larder_pantry_view') || 'cards';
+        addBtn.style.display = 'flex';
+        setAddBtnLabel('Add Pantry Item');
+
+        // Restock alert
+        const restockItems = pantryItems
+            .filter(item => item.isTracked && (item.quantity || 0) <= 0)
+            .sort((a, b) => (a.quantity || 0) - (b.quantity || 0));
+        const restockRows = restockItems.slice(0, 12).map(item => {
+            const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+            const unit = item.packUnit || 'pack';
+            const reorder = Math.max(1, 10 - (item.quantity || 0));
+            return `<div class="rst-row">
+                <span class="rst-name">${escapeHtml(item.brand ? item.brand + ' ' + item.productName : item.productName)}</span>
+                <span class="vd-pantry-status ${(item.quantity || 0) <= 0 ? 'out-of-stock' : 'low-stock'}">${(item.quantity || 0) <= 0 ? 'Out' : 'Low'}</span>
+                <span class="rst-qty">${(item.quantity || 0).toFixed(0)} ${escapeHtml(unit)} left</span>
+                <button type="button" class="btn secondary rst-add-btn" data-pantry-id="${escapeHtml(item.pantryId)}" data-name="${escapeHtml(item.productName)}" data-reorder="${reorder.toFixed(2)}" style="font-size:12px;padding:.25rem .55rem;">Add ${reorder.toFixed(0)} to planner</button>
+            </div>`;
+        }).join('');
+        const restockHTML = restockItems.length
+            ? `<div class="planner-card rst-card">
+                <div class="planner-card-head"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--accent-danger,#c0392b);"></i> Restock needed <span class="planner-hint">${restockItems.length} tracked item(s) low or out of stock</span></div>
+                <div class="rst-list">${restockRows}</div>
+            </div>`
+            : '';
+
+        const cardsHTML = `
+            ${restockHTML}
+            <div style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1.5rem;">
+                Pantry items are your specific products (brand, pack size, price). Link them to ingredients for nutrition data.
+            </div>
+            <div id="pantry-content">
+                ${pantryView === 'table' ? renderPantryTable(filteredItems) : renderPantryCards(filteredItems)}
+            </div>
+        `;
+        container.innerHTML = cardsHTML;
+        if (window.lucide) window.lucide.createIcons();
+
+        // "Add to planner" from restock alert
+        container.querySelectorAll('.rst-add-btn').forEach(btn => btn.addEventListener('click', async () => {
+            const item = pantryItems.find(i => i.pantryId === btn.dataset.pantryId);
+            if (!item) return;
+            const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+            planner.items = planner.items || [];
+            planner.items.push({
+                ingredientId: item.ingredientFoodId,
+                name: btn.dataset.name,
+                amount: parseFloat(btn.dataset.reorder),
+                unit: ingredient ? ingredient.servingUnit || 'g' : 'g',
+                scope: 'fresh',
+                useStock: false
+            });
+            await savePlanner();
+            statusText.innerHTML = `<span class="status-dot"></span> Added ${escapeHtml(btn.dataset.name)} to the monthly planner`;
+        }));
+
+        // Card click -> open pantry item editor
+        container.querySelectorAll('.vd-pantry-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+                openPantryItemEditor(card.dataset.pantryId);
+            });
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openPantryItemEditor(card.dataset.pantryId);
+                }
+            });
+        });
+
+        // Table row click
+        container.querySelectorAll('.vd-pantry-table tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+                openPantryItemEditor(row.dataset.pantryId);
+            });
+            row.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openPantryItemEditor(row.dataset.pantryId);
+                }
+            });
+        });
+
+        // Save tracking changes (auto-save on input change)
+        container.querySelectorAll('.p-qty, .p-days, .p-track-check').forEach(input => {
+            input.addEventListener('change', () => savePantryTrackingFromUI());
+        });
+        container.querySelectorAll('.p-track').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setTimeout(() => savePantryTrackingFromUI(), 50);
+            });
+        });
+    } catch (err) {
+        console.error('[Pantry] renderPantryTab error:', err);
+        container.innerHTML = `<div class="empty-state" style="color: var(--accent-danger);">Error loading pantry: ${err.message}</div>`;
+    }
+    }
+
+    function renderPantryCards(items) {
+        if (items.length === 0) {
+            return `<div class="empty-state">
+                <div style="margin-bottom: 1rem;"><i data-lucide="archive" style="width: 48px; height: 48px; color: var(--text-muted);"></i></div>
+                <p>No pantry items yet.</p>
+                <button class="btn primary" id="add-first-pantry-btn" style="margin-top: 1rem;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Your First Item</button>
+            </div>`;
+        }
+        return `<div class="vd-pantry-grid" id="pantry-grid">
+            ${items.map(item => {
+                const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+                const ingredientName = ingredient ? ingredient.name : 'Unknown ingredient';
+                const ingredientCategory = ingredient ? ingredient.category : 'Uncategorized';
+                const vis = getCategoryIcon(ingredientCategory);
+                const unitLabel = item.packUnit || 'pack';
+                const qty = item.quantity || 0;
+                const days = parseFloat(item.avgDurationDays) || 0;
+                const depletion = item.isTracked && days > 0 && qty > 0 ? estimateDepletionDate({ currentStock: qty, avgDurationDays: days, lastOpenedDate: item.lastOpenedDate || new Date().toISOString().split('T')[0] }) : null;
+                const daysLeft = depletion ? Math.max(0, Math.round((new Date(depletion) - new Date()) / 86400000)) : null;
+                const pricePerPack = item.price || 0;
+                const totalValue = pricePerPack * qty;
+
+                let statusCls = 'not-tracked', statusLabel = 'Not Tracked';
+                if (item.isTracked) {
+                    if (qty <= 0) { statusCls = 'out-of-stock'; statusLabel = 'Out of Stock'; }
+                    else if (qty < 2) { statusCls = 'low-stock'; statusLabel = 'Low Stock'; }
+                    else { statusCls = 'in-stock'; statusLabel = 'In Stock'; }
+                }
+
+                return `
+                <div class="vd-pantry-card" data-pantry-id="${escapeHtml(item.pantryId)}" role="button" tabindex="0" title="Edit pantry item">
+                    <div class="vd-pantry-header">
+                        <div class="vd-pantry-icon">
+                            <svg viewBox="${vis.vb}" style="width:22px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+                        </div>
+                        <button type="button" class="vd-pantry-status ${statusCls} p-track" data-pantry-id="${escapeHtml(item.pantryId)}" role="checkbox" aria-checked="${item.isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${statusLabel}</button>
+                    </div>
+                    <div class="vd-pantry-info">
+                        <div class="vd-pantry-title-row">
+                            <h4>${escapeHtml(item.brand ? item.brand + ' ' + item.productName : item.productName)}</h4>
+                            <button type="button" class="cms-btn-icon delete pantry-item-delete-btn" data-pantry-id="${escapeHtml(item.pantryId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(ingredientName)} · ${escapeHtml(ingredientCategory)}</p>
+                        ${item.brand ? `<p style="font-size: 0.75rem; color: var(--accent-stock);">${escapeHtml(item.brand)}</p>` : ''}
+                    </div>
+                    <div class="vd-pantry-tracker">
+                        <div class="vd-pantry-row">
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <input type="number" step="any" min="0" class="p-qty" data-pantry-id="${escapeHtml(item.pantryId)}" value="${qty}" ${!item.isTracked ? 'disabled' : ''} aria-label="Quantity (packs)" style="width: 64px; padding: 0.3rem 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem;">
+                                <span class="vd-pantry-qty" style="font-size: 0.75rem;">${escapeHtml(unitLabel)}</span>
+                            </div>
+                            <span class="vd-pantry-qty">${qty}${qty !== 1 ? ' packs' : ' pack'} left${totalValue > 0 ? ` · ≈ ${formatMoney(totalValue, item.currency || 'MUR')}` : ''}</span>
+                        </div>
+                        <div class="vd-pantry-row" style="margin-top: 0.45rem;">
+                            <label class="vd-pantry-days" title="Average days each pack lasts">
+                                <span>≈ days/pack</span>
+                                <input type="number" step="any" min="0" class="p-days" data-pantry-id="${escapeHtml(item.pantryId)}" value="${days || ''}" ${!item.isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per pack" style="width: 56px; padding: 0.25rem 0.35rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.78rem;">
+                            </label>
+                            ${depletion
+                                ? `<span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}" style="font-size:0.72rem;">Runs out ${escapeHtml(formatDateDMY(depletion))}${daysLeft != null ? ' · ' + daysLeft + 'd' : ''}</span>`
+                                : '<span class="vd-pantry-qty" style="font-size: 0.72rem; color: var(--text-muted);">set days to estimate</span>'}
+                        </div>
+                        <div class="vd-pantry-row" style="margin-top: 0.35rem; font-size: 0.7rem; color: var(--text-muted);">
+                            Pack: ${item.packSize} ${item.packUnit} · ${pricePerPack > 0 ? formatMoney(pricePerPack, item.currency || 'MUR') + '/pack' : 'No price set'}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        </div>`;
+    }
+
+    function renderPantryTable(items) {
+        if (items.length === 0) {
+            return `<div class="empty-state">
+                <div style="margin-bottom: 1rem;"><i data-lucide="archive" style="width: 48px; height: 48px; color: var(--text-muted);"></i></div>
+                <p>No pantry items yet.</p>
+                <button class="btn primary" id="add-first-pantry-btn" style="margin-top: 1rem;"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Your First Item</button>
+            </div>`;
+        }
+        return `<div class="vd-pantry-table-wrap">
+            <table class="vd-pantry-table">
+                <thead>
+                    <tr>
+                        ${sortTh('name', 'Product')}
+                        ${sortTh('brand', 'Brand')}
+                        ${sortTh('ingredient', 'Ingredient')}
+                        ${sortTh('category', 'Category')}
+                        ${sortTh('status', 'Status')}
+                        ${sortTh('quantity', 'Qty (packs)')}
+                        ${sortTh('pack', 'Pack Size')}
+                        ${sortTh('price', 'Price/Pack')}
+                        ${sortTh('days', 'Days/Pack')}
+                        ${sortTh('depletion', 'Est. Depletion')}
+                        ${sortTh('track', 'Track')}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(item => {
+                        const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+                        const ingredientName = ingredient ? ingredient.name : 'Unknown';
+                        const ingredientCategory = ingredient ? ingredient.category : 'Uncategorized';
+                        const vis = getCategoryIcon(ingredientCategory);
+                        const unitLabel = item.packUnit || 'pack';
+                        const qty = item.quantity || 0;
+                        const days = parseFloat(item.avgDurationDays) || 0;
+                        const depletion = item.isTracked && days > 0 && qty > 0 ? estimateDepletionDate({ currentStock: qty, avgDurationDays: days, lastOpenedDate: item.lastOpenedDate || new Date().toISOString().split('T')[0] }) : null;
+                        const daysLeft = depletion ? Math.max(0, Math.round((new Date(depletion) - new Date()) / 86400000)) : null;
+                        const pricePerPack = item.price || 0;
+
+                        let statusCls = 'not-tracked', statusLabel = 'Not Tracked';
+                        if (item.isTracked) {
+                            if (qty <= 0) { statusCls = 'out-of-stock'; statusLabel = 'Out of Stock'; }
+                            else if (qty < 2) { statusCls = 'low-stock'; statusLabel = 'Low Stock'; }
+                            else { statusCls = 'in-stock'; statusLabel = 'In Stock'; }
+                        }
+
+                        return `
+                        <tr data-pantry-id="${escapeHtml(item.pantryId)}">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <svg viewBox="${vis.vb}" style="width:18px;height:${vis.h}px;fill:${vis.accent};flex-shrink:0;"><use href="${vis.href}"></use></svg>
+                                    <span style="font-weight: 600;">${escapeHtml(item.productName)}</span>
+                                </div>
+                            </td>
+                            <td style="color: var(--text-muted);">${escapeHtml(item.brand || '—')}</td>
+                            <td style="color: var(--text-secondary);">${escapeHtml(ingredientName)}</td>
+                            <td style="color: var(--text-muted);">${escapeHtml(ingredientCategory)}</td>
+                            <td><span class="vd-pantry-status ${statusCls}">${statusLabel}</span></td>
+                            <td><input type="number" step="any" min="0" class="p-qty" data-pantry-id="${escapeHtml(item.pantryId)}" value="${qty}" ${!item.isTracked ? 'disabled' : ''} aria-label="Quantity" style="width: 70px;"></td>
+                            <td style="color: var(--text-muted);">${item.packSize} ${escapeHtml(unitLabel)}</td>
+                            <td style="color: var(--text-main); font-weight: 500;">${pricePerPack > 0 ? formatMoney(pricePerPack, item.currency || 'MUR') : '<span style="color:var(--text-muted)">—</span>'}</td>
+                            <td><input type="number" step="any" min="0" class="p-days" data-pantry-id="${escapeHtml(item.pantryId)}" value="${days || ''}" ${!item.isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per pack" style="width: 70px;"></td>
+                            <td>
+                                ${depletion
+                                    ? `${escapeHtml(formatDateDMY(depletion))} <span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${daysLeft != null ? daysLeft + 'd' : ''})</span>`
+                                    : '<span style="color: var(--text-muted);">—</span>'}
+                            </td>
+                            <td><input type="checkbox" class="p-track-check" data-pantry-id="${escapeHtml(item.pantryId)}" ${item.isTracked ? 'checked' : ''} aria-label="Track stock"></td>
+                            <td>
+                                <button type="button" class="cms-btn-icon delete pantry-item-delete-btn" data-pantry-id="${escapeHtml(item.pantryId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    async function savePantryTrackingFromUI() {
+        const container = document.getElementById('cms-recipe-list');
+        if (!container) return;
+
+        let changed = false;
+        container.querySelectorAll('[data-pantry-id]').forEach(el => {
+            const pantryId = el.dataset.pantryId;
+            const item = pantryItems.find(i => i.pantryId === pantryId);
+            if (!item) return;
+
+            if (el.classList.contains('p-qty')) {
+                const val = parseFloat(el.value) || 0;
+                if (item.quantity !== val) { item.quantity = val; changed = true; }
+            }
+            if (el.classList.contains('p-days')) {
+                const val = parseFloat(el.value) || 0;
+                if (item.avgDurationDays !== val) { item.avgDurationDays = val; changed = true; }
+            }
+            if (el.classList.contains('p-track-check')) {
+                if (item.isTracked !== el.checked) { item.isTracked = el.checked; changed = true; }
+            }
+            if (el.classList.contains('p-track')) {
+                const tracked = el.dataset.tracked === '1';
+                if (item.isTracked !== tracked) { item.isTracked = tracked; changed = true; }
+            }
+        });
+
+        if (changed) {
+            await savePantryItems();
+            // Re-render to update status badges
+            renderPantryTab();
+        }
+    }
+
+    function openPantryItemEditor(pantryId) {
+        const modal = document.getElementById('cms-pantry-modal');
+        const form = document.getElementById('pantry-item-form');
+        const item = pantryId ? pantryItems.find(i => i.pantryId === pantryId) : null;
+
+        form.reset();
+        document.getElementById('pantry-item-id').value = '';
+        document.getElementById('pantry-ingredient-foodid').value = '';
+        document.getElementById('pantry-ingredient-link').value = '';
+        document.getElementById('pantry-ingredient-link').dataset.ingredientId = '';
+
+        if (item) {
+            document.getElementById('pantry-item-id').value = item.pantryId;
+            document.getElementById('pantry-product-name').value = item.productName || '';
+            document.getElementById('pantry-brand').value = item.brand || '';
+            document.getElementById('pantry-pack-size').value = item.packSize || '';
+            document.getElementById('pantry-pack-unit').value = item.packUnit || 'g';
+            document.getElementById('pantry-stock').value = item.quantity || '';
+            document.getElementById('pantry-duration').value = item.avgDurationDays || '';
+            document.getElementById('pantry-price').value = item.price || '';
+            document.getElementById('pantry-currency').value = item.currency || 'MUR';
+            document.getElementById('pantry-last-opened').value = item.lastOpenedDate || '';
+            document.getElementById('pantry-notes').value = item.notes || '';
+            document.getElementById('pantry-ingredient-foodid').value = item.ingredientFoodId || '';
+
+            const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
+            if (ingredient) {
+                document.getElementById('pantry-ingredient-link').value = ingredient.name;
+                document.getElementById('pantry-ingredient-link').dataset.ingredientId = ingredient.foodId;
+            }
+        }
+
+        // Ingredient search/link
+        const linkInput = document.getElementById('pantry-ingredient-link');
+        const suggestionsBox = document.getElementById('pantry-ingredient-suggestions');
+        linkInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (!query) { suggestionsBox.style.display = 'none'; suggestionsBox.innerHTML = ''; return; }
+            const matches = ingredients.filter(i => i.name.toLowerCase().includes(query)).slice(0, 10);
+            if (matches.length === 0) { suggestionsBox.style.display = 'none'; suggestionsBox.innerHTML = ''; return; }
+            suggestionsBox.innerHTML = matches.map(ing => `<button type="button" class="ing-suggestion-item" data-foodid="${escapeHtml(ing.foodId)}">${escapeHtml(ing.name)} <span style="color:var(--text-muted);font-size:0.75rem;">(${ing.category || 'Uncategorized'})</span></button>`).join('');
+            suggestionsBox.style.display = 'block';
+            suggestionsBox.querySelectorAll('.ing-suggestion-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    linkInput.value = btn.textContent.split(' (')[0];
+                    linkInput.dataset.ingredientId = btn.dataset.foodid;
+                    document.getElementById('pantry-ingredient-foodid').value = btn.dataset.foodid;
+                    suggestionsBox.style.display = 'none';
+                    suggestionsBox.innerHTML = '';
+                });
+            });
+        });
+        linkInput.addEventListener('focus', () => {
+            if (linkInput.value) linkInput.dispatchEvent(new Event('input'));
+        });
+        document.addEventListener('click', (e) => {
+            if (!suggestionsBox.contains(e.target) && e.target !== linkInput) {
+                suggestionsBox.style.display = 'none';
+            }
+        }, true);
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closePantryModal() {
+        const modal = document.getElementById('cms-pantry-modal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Pantry modal event handlers
+    document.getElementById('pantry-item-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pantryId = document.getElementById('pantry-item-id').value;
+        const ingredientFoodId = document.getElementById('pantry-ingredient-foodid').value;
+        if (!ingredientFoodId) { alert('Please select a linked ingredient.'); return; }
+
+        const itemData = {
+            pantryId: pantryId || 'pantry_' + Date.now().toString(36) + Math.random().toString(36).substr(2),
+            ingredientFoodId,
+            productName: document.getElementById('pantry-product-name').value.trim(),
+            brand: document.getElementById('pantry-brand').value.trim(),
+            packSize: parseFloat(document.getElementById('pantry-pack-size').value) || 0,
+            packUnit: document.getElementById('pantry-pack-unit').value,
+            quantity: parseFloat(document.getElementById('pantry-stock').value) || 0,
+            avgDurationDays: parseFloat(document.getElementById('pantry-duration').value) || 0,
+            price: parseFloat(document.getElementById('pantry-price').value) || 0,
+            currency: document.getElementById('pantry-currency').value.trim() || 'MUR',
+            lastOpenedDate: document.getElementById('pantry-last-opened').value || null,
+            notes: document.getElementById('pantry-notes').value.trim(),
+            isTracked: pantryId ? pantryItems.find(i => i.pantryId === pantryId)?.isTracked : false
+        };
+
+        if (!itemData.productName) { alert('Please enter a product name.'); return; }
+
+        if (pantryId) {
+            const idx = pantryItems.findIndex(i => i.pantryId === pantryId);
+            if (idx >= 0) pantryItems[idx] = itemData;
+        } else {
+            pantryItems.push(itemData);
+        }
+
+        await savePantryItems();
+        closePantryModal();
+        renderPantryTab();
+    });
+
+    document.getElementById('cancel-pantry-btn').addEventListener('click', closePantryModal);
+    document.querySelector('.pantry-close').addEventListener('click', closePantryModal);
+    document.getElementById('pantry-delete-btn').addEventListener('click', async () => {
+        const pantryId = document.getElementById('pantry-item-id').value;
+        if (!pantryId) return;
+        const item = pantryItems.find(i => i.pantryId === pantryId);
+        const confirmed = await showConfirmDialog(
+            'Delete Pantry Item',
+            `Delete "${item?.productName || 'this item'}"?`,
+            'Delete'
+        );
+        if (confirmed) {
+            pantryItems = pantryItems.filter(i => i.pantryId !== pantryId);
+            await savePantryItems();
+            closePantryModal();
+            renderPantryTab();
+        }
+    });
+
+    // "Add first pantry item" buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'add-first-pantry-btn' || e.target.closest('#add-first-pantry-btn')) {
+            openPantryItemEditor(null);
+        }
+    });
+
+    // Delete pantry item from list
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.pantry-item-delete-btn');
+        if (!btn) return;
+        e.stopPropagation();
+        const pantryId = btn.dataset.pantryId;
+        const item = pantryItems.find(i => i.pantryId === pantryId);
+        const confirmed = await showConfirmDialog(
+            'Delete Pantry Item',
+            `Delete "${item?.productName || 'this item'}"?`,
+            'Delete'
+        );
+        if (confirmed) {
+            pantryItems = pantryItems.filter(i => i.pantryId !== pantryId);
+            await savePantryItems();
+            renderPantryTab();
+        }
+    });
 
 function renderReceipts() {
         const container = document.getElementById('cms-recipe-list');
@@ -1666,6 +2181,40 @@ renderItemRows();
             renderReceipts();
         }));
     }
+    function sortTh(key, label, style) {
+        const st = cmsTableSort[currentCMSTab];
+        const active = st && st.key === key;
+        const arrow = active ? (st.dir === 1 ? '↑' : '↓') : '';
+        return `<th data-sort="${key}" class="sortable${active ? ' sort-active' : ''}"${style ? ` style="${style}"` : ''} title="Sort by ${label}">${label}<span class="sort-ind" aria-hidden="true">${arrow}</span></th>`;
+    }
+
+    function formatMoney(amount, currency) {
+        const symbols = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+        const sym = symbols[currency] || (currency ? currency + ' ' : '');
+        const n = (amount || 0).toFixed(2);
+        return sym + n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    // --- Shared household helpers (used by Household tab and Shopping list) ---
+    function hhDaysBetween(from, to) {
+        const ms = new Date(to) - new Date(from);
+        return Math.max(0, Math.round(ms / 86400000));
+    }
+    function hhAddDays(dateStr, days) {
+        const d = new Date(dateStr);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    }
+    function estimateDepletionDate(item) {
+        if (!item || item.currentStock == null) return null;
+        const avg = parseFloat(item.avgDurationDays) || 0;
+        const stock = parseFloat(item.currentStock) || 0;
+        if (avg <= 0 || stock <= 0) return null;
+        const anchor = item.lastOpenedDate || new Date().toISOString().split('T')[0];
+        const firstUnitEnd = hhAddDays(anchor, avg);
+        return hhAddDays(firstUnitEnd, Math.max(0, stock - 1) * avg);
+    }
+
     function renderCMSList() {
         populateIngredientSuggestions();
 
@@ -1680,12 +2229,6 @@ renderItemRows();
         function sortRows(arr, key, dir, get) {
             if (!key) return arr;
             return arr.slice().sort((x, y) => cmpValue(get(x, key), get(y, key), dir));
-        }
-        function sortTh(key, label, style) {
-            const st = cmsTableSort[currentCMSTab];
-            const active = st && st.key === key;
-            const arrow = active ? (st.dir === 1 ? '↑' : '↓') : '';
-            return `<th data-sort="${key}" class="sortable${active ? ' sort-active' : ''}"${style ? ` style="${style}"` : ''} title="Sort by ${label}">${label}<span class="sort-ind" aria-hidden="true">${arrow}</span></th>`;
         }
         function bindSortHandlers(root) {
             root.querySelectorAll('th.sortable').forEach(th => {
@@ -1745,32 +2288,6 @@ renderItemRows();
             return b > 0 ? avg / b : 0;
         }
 
-        function formatMoney(amount, currency) {
-            const symbols = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
-            const sym = symbols[currency] || (currency ? currency + ' ' : '');
-            const n = (amount || 0).toFixed(2);
-            return sym + n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        }
-
-        // --- Shared household helpers (used by Household tab and Shopping list) ---
-        function hhDaysBetween(from, to) {
-            const ms = new Date(to) - new Date(from);
-            return Math.max(0, Math.round(ms / 86400000));
-        }
-        function hhAddDays(dateStr, days) {
-            const d = new Date(dateStr);
-            d.setDate(d.getDate() + days);
-            return d.toISOString().split('T')[0];
-        }
-        function estimateDepletionDate(item) {
-            if (!item || item.currentStock == null) return null;
-            const avg = parseFloat(item.avgDurationDays) || 0;
-            const stock = parseFloat(item.currentStock) || 0;
-            if (avg <= 0 || stock <= 0) return null;
-            const anchor = item.lastOpenedDate || new Date().toISOString().split('T')[0];
-            const firstUnitEnd = hhAddDays(anchor, avg);
-            return hhAddDays(firstUnitEnd, Math.max(0, stock - 1) * avg);
-        }
         function householdRunningLow() {
             const today = new Date().toISOString().split('T')[0];
             return (householdItems || []).filter(item => {
@@ -2434,6 +2951,15 @@ renderItemRows();
                         t.carbs += macroNum(ing.carbsG) * per100;
                         t.protein += macroNum(ing.proteinG) * per100;
                         t.fat += macroNum(ing.fatG) * per100;
+                    } else if (item.type === 'pantry') {
+                        // Use linked ingredient's nutrition data
+                        const ing = ingredients.find(f => f.foodId === item.ingredientFoodId);
+                        if (!ing) return;
+                        const per100 = grams / 100;
+                        t.energy += macroNum(ing.calories) * per100;
+                        t.carbs += macroNum(ing.carbsG) * per100;
+                        t.protein += macroNum(ing.proteinG) * per100;
+                        t.fat += macroNum(ing.fatG) * per100;
                     }
                 });
                 return t;
@@ -2650,12 +3176,28 @@ renderItemRows();
                 `).join('');
 
                 const defaultGrams = pickerItem.defaultGrams || (pickerItem.type === 'recipe' ? (pickerItem.servingSizeG || 250) : 100);
+                
+                // Show pantry item details if applicable
+                let pantryDetailsHtml = '';
+                if (pickerItem.type === 'pantry' && pickerItem.pantryItem) {
+                    const p = pickerItem.pantryItem;
+                    pantryDetailsHtml = `
+                        <div class="mp-picker-pantry-details" style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem;">
+                            <div><strong>Brand:</strong> ${escapeHtml(p.brand || '—')}</div>
+                            <div><strong>Pack:</strong> ${p.packSize} ${p.packUnit}</div>
+                            <div><strong>Price:</strong> ${p.price > 0 ? formatMoney(p.price, p.currency || 'MUR') + '/pack' : 'Not set'}</div>
+                            <div><strong>Stock:</strong> ${p.quantity || 0} packs${p.isTracked ? ' (tracked)' : ''}</div>
+                        </div>
+                    `;
+                }
+
                 pickerEl.innerHTML = `
                     <div class="mp-picker-card">
                         <div class="mp-picker-head">
                             <span class="mp-picker-name">${escapeHtml(pickerItem.name)}</span>
-                            <span class="mp-picker-type">${pickerItem.type === 'recipe' ? 'Recipe' : 'Ingredient'}</span>
+                            <span class="mp-picker-type">${pickerItem.type === 'recipe' ? 'Recipe' : pickerItem.type === 'pantry' ? 'Pantry Item' : 'Ingredient'}</span>
                         </div>
+                        ${pantryDetailsHtml}
                         <div class="mp-picker-eaters">
                             <label class="mp-picker-eater-cb mp-picker-select-all" style="font-weight: 700;">
                                 <input type="checkbox" id="mp-picker-all-cb" checked>
@@ -2700,13 +3242,18 @@ renderItemRows();
                             const eIdx = parseInt(cb.value);
                             if (!modalEaters[eIdx]) modalEaters[eIdx] = { idx: eIdx, eatingOut: false, items: [] };
                             modalEaters[eIdx].eatingOut = false;
-                            modalEaters[eIdx].items.push({
+                            const itemData = {
                                 type: pickerItem.type,
                                 referenceId: pickerItem.referenceId,
                                 name: pickerItem.name,
                                 servingSizeG: pickerItem.type === 'recipe' ? (pickerItem.servingSizeG || 250) : undefined,
                                 grams
-                            });
+                            };
+                            if (pickerItem.type === 'pantry') {
+                                itemData.pantryId = pickerItem.referenceId;
+                                itemData.ingredientFoodId = pickerItem.ingredientFoodId;
+                            }
+                            modalEaters[eIdx].items.push(itemData);
                         }
                     });
 
@@ -2839,12 +3386,30 @@ renderItemRows();
                 if (combined.length === 0) {
                     suggestionsBox.innerHTML = '<div style="padding: 0.8rem; color: var(--text-muted); font-size: 0.85rem;">No results found.</div>';
                 } else {
-                    suggestionsBox.innerHTML = combined.map((item, idx) => `
-                        <div class="autocomplete-item" data-idx="${idx}" style="padding: 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem;">
-                            <span style="font-weight: 600;">${escapeHtml(item._type === 'recipe' ? item.title : item.name)}</span>
-                            <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
-                        </div>
-                    `).join('');
+                    suggestionsBox.innerHTML = combined.map((item, idx) => {
+                        let pantryItemsHtml = '';
+                        if (item._type === 'ingredient') {
+                            const pantryItemsForIng = pantryItems.filter(p => p.ingredientFoodId === item.foodId);
+                            if (pantryItemsForIng.length > 0) {
+                                pantryItemsHtml = `<div class="pantry-items-sub" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem;">Your pantry items:</div>
+                                    ${pantryItemsForIng.map(p => `
+                                        <button type="button" class="pantry-item-pick" data-pantry-id="${escapeHtml(p.pantryId)}" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.6rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.25rem; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;">
+                                            ${escapeHtml(p.brand ? p.brand + ' ' + p.productName : p.productName)}
+                                            <span style="float: right; color: var(--text-muted); font-size: 0.7rem;">${p.packSize} ${p.packUnit} · ${p.price > 0 ? formatMoney(p.price, p.currency || 'MUR') : 'no price'}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>`;
+                            }
+                        }
+                        return `
+                            <div class="autocomplete-item" data-idx="${idx}" style="padding: 0.8rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem;">
+                                <span style="font-weight: 600;">${escapeHtml(item._type === 'recipe' ? item.title : item.name)}</span>
+                                <span style="float: right; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">${item._type}</span>
+                                ${pantryItemsHtml}
+                            </div>
+                        `;
+                    }).join('');
 
                     document.querySelectorAll('.autocomplete-item').forEach(el => {
                         el.onclick = () => {
@@ -2856,11 +3421,39 @@ renderItemRows();
                                 const sv = recipeServingGrams(selected) || 250;
                                 pickerItem = { type: 'recipe', referenceId: selected.id, name: selected.title, servingSizeG: sv, defaultGrams: sv };
                             } else {
+                                // Check if a pantry item was clicked
+                                const pantryItemBtn = el.querySelector('.pantry-item-pick');
+                                if (pantryItemBtn) {
+                                    // This is handled by the pantry-item-pick click handler below
+                                    return;
+                                }
                                 const sv = parseFloat(selected.servingSizeG) || 100;
                                 pickerItem = { type: 'ingredient', referenceId: selected.foodId, name: selected.name, defaultGrams: sv };
                             }
                             renderPicker();
                         };
+                    });
+
+                    // Pantry item pick handlers
+                    document.querySelectorAll('.pantry-item-pick').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const pantryId = btn.dataset.pantryId;
+                            const pantryItem = pantryItems.find(p => p.pantryId === pantryId);
+                            if (!pantryItem) return;
+                            searchInput.value = pantryItem.brand ? pantryItem.brand + ' ' + pantryItem.productName : pantryItem.productName;
+                            suggestionsBox.style.display = 'none';
+                            const sv = pantryItem.packSize || 100;
+                            pickerItem = { 
+                                type: 'pantry', 
+                                referenceId: pantryItem.pantryId, 
+                                ingredientFoodId: pantryItem.ingredientFoodId,
+                                name: pantryItem.brand ? pantryItem.brand + ' ' + pantryItem.productName : pantryItem.productName, 
+                                defaultGrams: sv,
+                                pantryItem: pantryItem
+                            };
+                            renderPicker();
+                        });
                     });
                 }
                 suggestionsBox.style.display = 'block';
@@ -2903,7 +3496,7 @@ renderItemRows();
                 const allOut = eatersToSave.length > 0 && eatersToSave.every(e => e.eatingOut);
 
                 // Collect all target dates: the active date + any checked copy-to days
-                const targetDates = [activeDate];
+const targetDates = [activeDate];
                 document.querySelectorAll('.copy-day-cb').forEach(cb => {
                     if (cb.checked && !cb.disabled) {
                         const d = new Date(startOfWeek);
@@ -2950,369 +3543,12 @@ renderItemRows();
             
             return;
         }
-
-        if (currentCMSTab === 'pantry') {
-            let filteredIngredients = ingredients.filter(ing => 
-                ing.name.toLowerCase().includes(cmsSearchQuery) || 
-                (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
-            );
-            if (cmsCategoryFilter !== 'All') {
-                filteredIngredients = filteredIngredients.filter(ing => (ing.category || 'Uncategorized') === cmsCategoryFilter);
-            }
-
-            // Tracked (in / out of stock) items first, then untracked, alphabetically within each band.
-            filteredIngredients = filteredIngredients
-                .slice()
-                .sort((a, b) => {
-                    const pa = pantry.find(p => p.foodId === a.foodId);
-                    const pb = pantry.find(p => p.foodId === b.foodId);
-                    const ta = pa && pa.isTracked ? 1 : 0;
-                    const tb = pb && pb.isTracked ? 1 : 0;
-                    return tb - ta || a.name.localeCompare(b.name);
-                });
-
-            const pantryView = (localStorage.getItem('larder_pantry_view') || 'cards');
-            const statusInfo = (ing, pItem) => {
-                const isTracked = !!pItem.isTracked;
-                const qty = pItem.quantity || 0;
-                let cls = 'not-tracked', label = 'Not Tracked';
-                if (isTracked) {
-                    if (qty <= 0) { cls = 'out-of-stock'; label = 'Out of Stock'; }
-                    else if (qty < 10) { cls = 'low-stock'; label = 'Low Stock'; }
-                    else { cls = 'in-stock'; label = 'In Stock'; }
-                }
-                return { cls, label, isTracked, qty };
-            };
-            // Days-per-unit estimation, mirroring household items so pantry stock can forecast depletion.
-            const pantryDaysLeft = (ing, pItem) => {
-                if (!pItem || !pItem.isTracked) return null;
-                const avg = parseFloat(pItem.avgDurationDays) || 0;
-                const qty = parseFloat(pItem.quantity) || 0;
-                if (avg <= 0 || qty <= 0) return null;
-                const anchor = pItem.lastOpenedDate || new Date().toISOString().split('T')[0];
-                return estimateDepletionDate({ currentStock: qty, avgDurationDays: avg, lastOpenedDate: anchor });
-            };
-
-            // Pantry sort accessor
-            const pantrySortVal = (ing, key) => {
-                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0, avgDurationDays: 0 };
-                const { label, isTracked } = statusInfo(ing, pItem);
-                switch (key) {
-                    case 'name': return (ing.name || '').toLowerCase();
-                    case 'category': return (ing.category || '').toLowerCase();
-                    case 'status': return label.toLowerCase();
-                    case 'quantity': return pItem.quantity || 0;
-                    case 'unit': return (ing.servingUnit || 'g').toLowerCase();
-                    case 'days': return parseFloat(pItem.avgDurationDays) > 0 ? parseFloat(pItem.avgDurationDays) : null;
-                    case 'depletion': return pantryDaysLeft(ing, pItem) || null;
-                    case 'track': return isTracked;
-                }
-                return null;
-            };
-            const pantrySort = cmsTableSort.pantry;
-            if (pantrySort && pantrySort.key) filteredIngredients = sortRows(filteredIngredients, pantrySort.key, pantrySort.dir, pantrySortVal);
-
-            addBtn.style.display = 'flex';
-            setAddBtnLabel('Add Item');
-
-            // Restock/reorder alert: tracked items out of or below a healthy level.
-            const restockItems = ingredients
-                .map(ing => { const p = pantry.find(x => x.foodId === ing.foodId) || { isTracked: false, quantity: 0 }; return { ing, p }; })
-                .filter(({ ing, p }) => {
-                    if (!p.isTracked) return false;
-                    const q = parseFloat(p.quantity) || 0;
-                    return q <= 0 || q < 10;
-                })
-                .sort((a, b) => (parseFloat(a.p.quantity) || 0) - (parseFloat(b.p.quantity) || 0));
-            const restockRows = restockItems.slice(0, 12).map(({ ing, p }) => {
-                const q = parseFloat(p.quantity) || 0;
-                const reorder = Math.max(1, 10 - q);
-                const unit = ing.servingUnit || 'g';
-                return `<div class="rst-row">
-                    <span class="rst-name">${escapeHtml(ing.name)}</span>
-                    <span class="vd-pantry-status ${q <= 0 ? 'out-of-stock' : 'low-stock'}">${q <= 0 ? 'Out' : 'Low'}</span>
-                    <span class="rst-qty">${q.toFixed(0)} ${escapeHtml(unit)} left</span>
-                    <button type="button" class="btn secondary rst-add-btn" data-foodid="${escapeHtml(ing.foodId)}" data-name="${escapeHtml(ing.name)}" data-reorder="${reorder.toFixed(2)}" style="font-size:12px;padding:.25rem .55rem;">Add ${reorder.toFixed(0)} to planner</button>
-                </div>`;
-            }).join('');
-            const restockHTML = restockItems.length
-                ? `<div class="planner-card rst-card">
-                    <div class="planner-card-head"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--accent-danger,#c0392b);"></i> Restock needed <span class="planner-hint">${restockItems.length} tracked item(s) low or out of stock</span></div>
-                    <div class="rst-list">${restockRows}</div>
-                </div>`
-                : '';
-
-            const cardsHTML = `
-                ${restockHTML}
-                <div style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1.5rem;">
-                    Click a card's status badge to track its stock. Tracked items are subtracted from shopping lists automatically.
-                </div>
-                <div id="pantry-content">
-                    ${pantryView === 'table' ? renderPantryTable(filteredIngredients, statusInfo) : renderPantryCards(filteredIngredients, statusInfo)}
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button id="save-pantry-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Pantry</button>
-                </div>
-            `;
-            listContainer.innerHTML = cardsHTML;
-            if (window.lucide) window.lucide.createIcons();
-
-            // "Add to planner" from the restock alert
-            listContainer.querySelectorAll('.rst-add-btn').forEach(btn => btn.addEventListener('click', async () => {
-                planner.items = planner.items || [];
-                planner.items.push({
-                    ingredientId: btn.dataset.foodid,
-                    name: btn.dataset.name,
-                    amount: parseFloat(btn.dataset.reorder),
-                    unit: (ingredients.find(x => x.foodId === btn.dataset.foodid) || {}).servingUnit || 'g',
-                    scope: 'fresh',
-                    useStock: false
-                });
-                await savePlanner();
-                statusText.innerHTML = `<span class="status-dot"></span> Added ${escapeHtml(btn.dataset.name)} to the monthly planner`;
-            }));
-
-            function renderPantryCards(items, statusInfo) {
-                if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
-                return `<div class="vd-pantry-grid" id="pantry-grid">
-                    ${items.map((ing) => {
-                        const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
-                        const qty = pItem.quantity || 0;
-                        const unit = ing.servingUnit || 'g';
-                        const { cls, label, isTracked } = statusInfo(ing, pItem);
-                        const pct = !isTracked ? 0 : Math.min(100, Math.round((qty / 100) * 100));
-                        const vis = getCategoryIcon(ing.category);
-                        const unitLabel = unit || 'g';
-                        const days = parseFloat(pItem.avgDurationDays) > 0 ? parseFloat(pItem.avgDurationDays) : 0;
-                        const depletion = pantryDaysLeft(ing, pItem);
-                        const daysLeft = depletion ? Math.max(0, Math.round((new Date(depletion) - new Date()) / 86400000)) : null;
-                        return `
-                        <div class="vd-pantry-card" data-foodid="${escapeHtml(ing.foodId)}" role="button" tabindex="0" title="Edit ingredient">
-                            <div class="vd-pantry-header">
-                                <div class="vd-pantry-icon">
-                                    <svg viewBox="${vis.vb}" style="width:22px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
-                                </div>
-                                <button type="button" class="vd-pantry-status ${cls} p-track" role="checkbox" aria-checked="${isTracked ? 'true' : 'false'}" style="border: none; cursor: pointer;">${label}</button>
-                            </div>
-                            <div class="vd-pantry-info">
-                                <div class="vd-pantry-title-row">
-                                    <h4>${escapeHtml(ing.name)}</h4>
-                                    <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
-                                </div>
-                                <p>${escapeHtml(ing.category || 'Uncategorized')}</p>
-                            </div>
-                            <div class="vd-pantry-tracker">
-                                <div class="vd-pantry-progress"><div class="vd-pantry-bar" style="width: ${pct}%;"></div></div>
-                                <div class="vd-pantry-row">
-                                    <div style="display: flex; align-items: center; gap: 0.35rem;">
-                                        <input type="number" step="any" min="0" class="p-qty" value="${qty}" ${!isTracked ? 'disabled' : ''} aria-label="Quantity" style="width: 64px; padding: 0.3rem 0.4rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.85rem;">
-                                        <span class="vd-pantry-qty" style="font-size: 0.75rem;">${escapeHtml(unitLabel)}</span>
-                                    </div>
-                                    <span class="vd-pantry-qty">${Math.round(qty)}${escapeHtml(unitLabel)} left</span>
-                                </div>
-                                <div class="vd-pantry-row" style="margin-top: 0.45rem;">
-                                    <label class="vd-pantry-days" title="Average days each unit / serving lasts">
-                                        <span>≈ days/unit</span>
-                                        <input type="number" step="any" min="0" class="p-days" value="${days || ''}" ${!isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per unit" style="width: 56px; padding: 0.25rem 0.35rem; background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 0.78rem;">
-                                    </label>
-                                    ${depletion
-                                        ? `<span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}" style="font-size:0.72rem;">Runs out ${escapeHtml(formatDateDMY(depletion))}${daysLeft != null ? ' · ' + daysLeft + 'd' : ''}</span>`
-                                        : '<span class="vd-pantry-qty" style="font-size: 0.72rem; color: var(--text-muted);">set days to estimate</span>'}
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                    }).join('')}
-                </div>`;
-            }
-
-            function renderPantryTable(items, statusInfo) {
-                if (items.length === 0) return '<div class="empty-state">No ingredients match. Add ingredients first.</div>';
-                return `<div class="vd-pantry-table-wrap">
-                    <table class="vd-pantry-table">
-                        <thead>
-                            <tr>
-                                ${sortTh('name', 'Ingredient')}
-                                ${sortTh('category', 'Category')}
-                                ${sortTh('status', 'Status')}
-                                ${sortTh('quantity', 'Quantity')}
-                                ${sortTh('unit', 'Unit')}
-                                ${sortTh('days', 'Days/Unit')}
-                                ${sortTh('depletion', 'Est. Depletion')}
-                                ${sortTh('track', 'Track')}
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${items.map((ing) => {
-                                const pItem = pantry.find(p => p.foodId === ing.foodId) || { isTracked: false, quantity: 0 };
-                                const qty = pItem.quantity || 0;
-                                const unit = ing.servingUnit || 'g';
-                                const { cls, label, isTracked } = statusInfo(ing, pItem);
-                                const vis = getCategoryIcon(ing.category);
-                                const days = parseFloat(pItem.avgDurationDays) > 0 ? parseFloat(pItem.avgDurationDays) : 0;
-                                const depletion = pantryDaysLeft(ing, pItem);
-                                const daysLeft = depletion ? Math.max(0, Math.round((new Date(depletion) - new Date()) / 86400000)) : null;
-                                return `
-                                <tr data-foodid="${escapeHtml(ing.foodId)}">
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                                            <svg viewBox="${vis.vb}" style="width:18px;height:${vis.h}px;fill:${vis.accent};flex-shrink:0;"><use href="${vis.href}"></use></svg>
-                                            <span style="font-weight: 600;">${escapeHtml(ing.name)}</span>
-                                        </div>
-                                    </td>
-                                    <td style="color: var(--text-muted);">${escapeHtml(ing.category || 'Uncategorized')}</td>
-                                    <td><span class="vd-pantry-status ${cls}">${label}</span></td>
-                                    <td><input type="number" step="any" min="0" class="p-qty" value="${qty}" ${!isTracked ? 'disabled' : ''} aria-label="Quantity"></td>
-                                    <td style="color: var(--text-muted);">${escapeHtml(unit || 'g')}</td>
-                                    <td><input type="number" step="any" min="0" class="p-days" value="${days || ''}" ${!isTracked ? 'disabled' : ''} placeholder="—" aria-label="Days per unit"></td>
-                                    <td>
-                                        ${depletion
-                                            ? `${escapeHtml(formatDateDMY(depletion))} <span class="hh-days-left ${daysLeft <= 7 ? 'hh-days-urgent' : ''}">(${daysLeft != null ? daysLeft + 'd' : ''})</span>`
-                                            : '<span style="color: var(--text-muted);">—</span>'}
-                                    </td>
-                                    <td><input type="checkbox" class="p-track-check" ${isTracked ? 'checked' : ''} aria-label="Track stock"></td>
-                                    <td>
-                                        <button type="button" class="cms-btn-icon delete pantry-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete from pantry" aria-label="Delete"><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i></button>
-                                    </td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>`;
-            }
-
-            // Toggle tracking via status badge; toggle quantity input accordingly
-            function refreshTrackState(btn) {
-                const card = btn.closest('.vd-pantry-card');
-                if (!card) return;
-                const isTracked = btn.dataset.tracked === '1';
-                const qtyInput = card.querySelector('.p-qty');
-                const daysInput = card.querySelector('.p-days');
-                if (isTracked) {
-                    if (qtyInput) qtyInput.removeAttribute('disabled');
-                    if (daysInput) daysInput.removeAttribute('disabled');
-                } else {
-                    if (qtyInput) qtyInput.setAttribute('disabled', 'true');
-                    if (daysInput) daysInput.setAttribute('disabled', 'true');
-                }
-            }
-            document.querySelectorAll('.p-track').forEach(btn => {
-                const card = btn.closest('.vd-pantry-card');
-                const pItem = pantry.find(p => p.foodId === card.dataset.foodid);
-                btn.dataset.tracked = (pItem && pItem.isTracked) ? '1' : '0';
-                refreshTrackState(btn);
-                btn.addEventListener('click', () => {
-                    const wasTracked = btn.dataset.tracked === '1';
-                    btn.dataset.tracked = wasTracked ? '0' : '1';
-                    const isTracked = !wasTracked;
-                    const qtyInput = btn.closest('.vd-pantry-card').querySelector('.p-qty');
-                    const daysInput = btn.closest('.vd-pantry-card').querySelector('.p-days');
-                    if (isTracked) {
-                        btn.textContent = qtyInput.value > 0 ? 'In Stock' : 'Low Stock';
-                        btn.className = 'vd-pantry-status ' + (qtyInput.value > 0 ? 'in-stock' : 'low-stock') + ' p-track';
-                        qtyInput.removeAttribute('disabled');
-                        if (daysInput) daysInput.removeAttribute('disabled');
-                    } else {
-                        btn.textContent = 'Not Tracked';
-                        btn.className = 'vd-pantry-status not-tracked p-track';
-                        qtyInput.setAttribute('disabled', 'true');
-                        if (daysInput) daysInput.setAttribute('disabled', 'true');
-                    }
-                    btn.setAttribute('aria-checked', isTracked ? 'true' : 'false');
-                    refreshTrackState(btn);
-                });
-            });
-
-            // Table view: checkbox toggles the tracked state and enables the qty/days inputs.
-            document.querySelectorAll('.p-track-check').forEach(chk => {
-                chk.addEventListener('change', () => {
-                    const row = chk.closest('tr');
-                    const qtyInput = row.querySelector('.p-qty');
-                    const daysInput = row.querySelector('.p-days');
-                    if (chk.checked) {
-                        qtyInput.removeAttribute('disabled');
-                        if (daysInput) daysInput.removeAttribute('disabled');
-                    } else {
-                        qtyInput.setAttribute('disabled', 'true');
-                        if (daysInput) daysInput.setAttribute('disabled', 'true');
-                    }
-                });
-            });
-
-            document.getElementById('save-pantry-btn').addEventListener('click', async () => {
-                const updatedPantry = [];
-
-                document.querySelectorAll('.vd-pantry-card').forEach(card => {
-                    const foodId = card.dataset.foodid;
-                    const btn = card.querySelector('.p-track');
-                    const isTracked = btn.dataset.tracked === '1';
-                    const quantity = parseFloat(card.querySelector('.p-qty').value) || 0;
-                    const days = parseFloat(card.querySelector('.p-days').value) || 0;
-                    const prev = pantry.find(p => p.foodId === foodId);
-                    const rec = { foodId, isTracked, quantity };
-                    if (days > 0) rec.avgDurationDays = days;
-                    if (prev && prev.lastOpenedDate) rec.lastOpenedDate = prev.lastOpenedDate;
-                    if (isTracked || quantity > 0) updatedPantry.push(rec);
-                });
-
-                document.querySelectorAll('.vd-pantry-table tbody tr').forEach(row => {
-                    const foodId = row.dataset.foodid;
-                    const isTracked = row.querySelector('.p-track-check').checked;
-                    const quantity = parseFloat(row.querySelector('.p-qty').value) || 0;
-                    const days = parseFloat(row.querySelector('.p-days').value) || 0;
-                    const prev = pantry.find(p => p.foodId === foodId);
-                    const rec = { foodId, isTracked, quantity };
-                    if (days > 0) rec.avgDurationDays = days;
-                    if (prev && prev.lastOpenedDate) rec.lastOpenedDate = prev.lastOpenedDate;
-                    if (isTracked || quantity > 0) updatedPantry.push(rec);
-                });
-
-                pantry = updatedPantry;
-                await savePantry();
-            });
-
-            // Clicking a pantry card opens the ingredient profile editor. Interactive
-            // controls inside the card (status toggle, qty input, delete) are excluded.
-            document.querySelectorAll('.vd-pantry-card[data-foodid], tr[data-foodid]').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    if (e.target.closest('button') || e.target.closest('input')) return;
-                    openProfileEditor(card.dataset.foodid);
-                });
-                card.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        openProfileEditor(card.dataset.foodid);
-                    }
-                });
-            });
-
-            // Delete a pantry item: remove it from the ingredients DB (and pantry) after confirmation.
-            document.querySelectorAll('.pantry-delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const foodId = btn.dataset.id;
-                    const ing = ingredients.find(f => f.foodId === foodId);
-                    const name = ing ? ing.name : 'this ingredient';
-                    const confirmed = await showConfirmDialog(
-                        'Remove from Pantry',
-                        `Remove "${name}" from the pantry? This deletes the ingredient profile.`,
-                        'Remove'
-                    );
-                    if (!confirmed) return;
-                    ingredients = ingredients.filter(f => f.foodId !== foodId);
-                    pantry = pantry.filter(p => p.foodId !== foodId);
-                    renderCMSList();
-                    await saveIngredients();
-                    await savePantry();
-                    statusText.innerHTML = `<span class="status-dot"></span> Removed "${name}" from pantry`;
-                });
-            });
-
-            bindSortHandlers(listContainer);
+        
+if (currentCMSTab === 'pantry') {
+            renderPantryTab();
             return;
         }
-
+        
         if (currentCMSTab === 'household') {
             let hhItems = householdItems
                 .filter(item => !cmsSearchQuery || (item.name || '').toLowerCase().includes(cmsSearchQuery) || (item.category || '').toLowerCase().includes(cmsSearchQuery));
@@ -3923,24 +4159,37 @@ const unpricedRow = cost.unpriced.length
                 const useRestock = selected.has('restock');
                 const useHousehold = selected.has('household');
 
-                const need = new Map(); // foodId -> { name, grams, unit, recipes:Set, category, sources:Set }
-                const addNeed = (foodId, name, grams, recipeTitle, category, source) => {
+                const need = new Map(); // foodId -> { name, grams, unit, recipes:Set, category, sources:Set, pantryIds:Set }
+                const addNeed = (foodId, name, grams, recipeTitle, category, source, pantryId = null) => {
                     if (!foodId || !(grams > 0)) return;
                     const ex = need.get(foodId);
                     if (ex) {
                         ex.grams += grams;
                         if (recipeTitle) ex.recipes.add(recipeTitle);
                         if (source) ex.sources.add(source);
+                        if (pantryId) ex.pantryIds.add(pantryId);
                     } else {
                         need.set(foodId, {
                             name, grams,
                             unit: 'g',
                             recipes: recipeTitle ? new Set([recipeTitle]) : new Set(),
                             category: category || 'Other',
-                            sources: source ? new Set([source]) : new Set()
+                            sources: source ? new Set([source]) : new Set(),
+                            pantryIds: pantryId ? new Set([pantryId]) : new Set()
                         });
                     }
                 };
+                
+                // Get pantry stock for new pantry items (in grams)
+                const pantryItemStockGrams = (pantryId) => {
+                    const pItem = pantryItems.find(p => p.pantryId === pantryId);
+                    if (!pItem || !pItem.isTracked) return 0;
+                    const qty = parseFloat(pItem.quantity) || 0;
+                    const packSize = parseFloat(pItem.packSize) || 0;
+                    return qty * packSize;
+                };
+                
+                // Get pantry stock for legacy pantry (for backwards compatibility)
                 const pantryStockGrams = (p) => {
                     if (!p || !p.isTracked) return 0;
                     const q = parseFloat(p.quantity) || 0;
@@ -3964,8 +4213,13 @@ const unpricedRow = cost.unpriced.length
                                 if (!(grams > 0)) return;
                                 if (item.type === 'recipe') {
                                     recipeMult[item.referenceId] = recipeServingsToCook(plan, item.referenceId);
-                                } else if (item.type === 'ingredient' && item.referenceId) {
-                                    ingGrams[item.referenceId] = (ingGrams[item.referenceId] || 0) + grams;
+                                } else if ((item.type === 'ingredient' || item.type === 'pantry') && item.referenceId) {
+                                    // For pantry items, referenceId is pantryId
+                                    if (item.type === 'pantry') {
+                                        ingGrams[item.ingredientFoodId] = (ingGrams[item.ingredientFoodId] || 0) + grams;
+                                    } else {
+                                        ingGrams[item.referenceId] = (ingGrams[item.referenceId] || 0) + grams;
+                                    }
                                 }
                             });
                         });
@@ -4005,30 +4259,67 @@ const unpricedRow = cost.unpriced.length
                     });
                 }
 
-                // 4. Pantry restock: tracked items low or out of stock (target 10 serving-size units)
+                // 4. Pantry restock: tracked items low or out of stock (target 10 packs)
                 if (useRestock) {
-                    ingredients.forEach(ing => {
-                        const p = pantry.find(x => x.foodId === ing.foodId);
-                        if (!p || !p.isTracked) return;
-                        const q = parseFloat(p.quantity) || 0;
+                    pantryItems.forEach(pItem => {
+                        if (!pItem.isTracked) return;
+                        const q = parseFloat(pItem.quantity) || 0;
                         if (q > 0 && q >= 10) return;
-                        const basisGrams = parseFloat(ing.servingSizeG) || 100;
-                        const reorderGrams = Math.max(1, 10 - q) * basisGrams;
-                        addNeed(ing.foodId, ing.name, reorderGrams, '', ing.category || 'Other', 'restock');
+                        const reorderPacks = Math.max(1, 10 - q);
+                        const reorderGrams = reorderPacks * (parseFloat(pItem.packSize) || 100);
+                        addNeed(pItem.ingredientFoodId, pItem.productName, reorderGrams, '', 
+                            (ingredients.find(i => i.foodId === pItem.ingredientFoodId) || {}).category || 'Other', 'restock', pItem.pantryId);
                     });
                 }
 
                 // 5. Subtract tracked pantry stock once for all aggregated food needs
                 const shoppingList = [];
                 need.forEach((data, foodId) => {
-                    const pantryItem = pantry.find(p => p.foodId === foodId);
-                    let deficit = data.grams - pantryStockGrams(pantryItem);
+                    // Calculate total pantry stock for this ingredient (legacy + new pantry items)
+                    let totalPantryStockGrams = 0;
+                    
+                    // Legacy pantry stock
+                    const legacyPantryItem = pantry.find(p => p.foodId === foodId);
+                    totalPantryStockGrams += pantryStockGrams(legacyPantryItem);
+                    
+                    // New pantry items stock
+                    data.pantryIds.forEach(pantryId => {
+                        totalPantryStockGrams += pantryItemStockGrams(pantryId);
+                    });
+                    
+                    let deficit = data.grams - totalPantryStockGrams;
                     if (deficit <= 0) return;
+                    
                     const foodRef = ingredients.find(f => f.foodId === foodId);
-                    const unitPrice = perGramPrice(foodRef);
+                    
+                    // Find best pricing from pantry items
+                    let unitPrice = 0;
+                    let priceCurrency = 'MUR';
+                    let bestPantryItem = null;
+                    
+                    data.pantryIds.forEach(pantryId => {
+                        const pItem = pantryItems.find(p => p.pantryId === pantryId);
+                        if (pItem && pItem.price > 0 && pItem.packSize > 0) {
+                            const pricePerGram = pItem.price / pItem.packSize;
+                            if (!unitPrice || pricePerGram < unitPrice) {
+                                unitPrice = pricePerGram;
+                                priceCurrency = pItem.currency || 'MUR';
+                                bestPantryItem = pItem;
+                            }
+                        }
+                    });
+                    
+                    // Fallback to ingredient pricing
+                    if (!unitPrice) {
+                        unitPrice = perGramPrice(foodRef);
+                        if (foodRef && foodRef.priceCurrency) priceCurrency = foodRef.priceCurrency;
+                    }
+                    
+                    const pantryItemNames = bestPantryItem ? (bestPantryItem.brand ? bestPantryItem.brand + ' ' + bestPantryItem.productName : bestPantryItem.productName) : data.name;
+                    
                     shoppingList.push({
                         foodId,
-                        name: data.name,
+                        name: pantryItemNames,
                         amount: Math.round(deficit * 10) / 10,
                         unit: 'g',
                         category: data.category,
@@ -4036,7 +4327,9 @@ const unpricedRow = cost.unpriced.length
                         checked: false,
                         grams: Math.round(deficit * 10) / 10,
                         cost: (unitPrice > 0) ? Math.round(deficit * unitPrice * 100) / 100 : null,
-                        sources: Array.from(data.sources || [])
+                        currency: priceCurrency,
+                        sources: Array.from(data.sources || []),
+                        pantryIds: Array.from(data.pantryIds || [])
                     });
                 });
 
@@ -4130,11 +4423,6 @@ const unpricedRow = cost.unpriced.length
                 const cat = ing.category || 'Other';
                 if (!cheapestByCat[cat] || ppg < cheapestByCat[cat].ppg) cheapestByCat[cat] = { ppg, foodId: ing.foodId };
             });
-            const unitPriceLabel = (ing) => {
-                const ppg = perGramPrice(ing);
-                if (!(ppg > 0)) return '';
-                return `${formatMoney(ppg * 100, priceCur)} / 100g`;
-            };
             const isCheapest = (ing) => {
                 const c = cheapestByCat[ing.category || 'Other'];
                 return !!(c && c.foodId === ing.foodId);
@@ -4146,7 +4434,6 @@ const unpricedRow = cost.unpriced.length
                         ${filteredIngredients.map(ing => {
                             const vis = getCategoryIcon(ing.category);
                             const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
-                            const unitLabel = unitPriceLabel(ing);
                             const cheapest = isCheapest(ing);
                             return `
                             <div class="cms-card" data-id="${escapeHtml(ing.foodId)}" role="button" tabindex="0" title="Edit ingredient">
@@ -4159,7 +4446,7 @@ const unpricedRow = cost.unpriced.length
                                         <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
                                     </div>
                                     <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}${cheapest ? `<span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i> Cheapest</span>` : ''}</div>
-                                    <div class="cms-card-meta"><span>${escapeHtml(serving)}</span>${unitLabel ? `<span class="cms-price-chip">${unitLabel}</span>` : ''}</div>
+                                    <div class="cms-card-meta"><span>${escapeHtml(serving)}</span></div>
                                 </div>
                             </div>`;
                         }).join('')}
@@ -4190,7 +4477,7 @@ const unpricedRow = cost.unpriced.length
                                                 </div>
                                                 <div>
                                                     <div>${escapeHtml(ing.name || 'Unnamed ingredient')}${isCheapest(ing) ? ` <span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i></span>` : ''}</div>
-                                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}${unitPriceLabel(ing) ? ` · <span class="cms-price-chip">${unitPriceLabel(ing)}</span>` : ''}</div>
+                                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -4890,8 +5177,10 @@ const unpricedRow = cost.unpriced.length
     }
 
     addBtn.addEventListener('click', () => {
-        if (currentCMSTab === 'food' || currentCMSTab === 'pantry') {
+        if (currentCMSTab === 'food') {
             openProfileEditor();
+        } else if (currentCMSTab === 'pantry') {
+            openPantryItemEditor(null);
         } else if (currentCMSTab === 'household') {
             if (householdOpenFn) householdOpenFn();
         } else {
@@ -5858,40 +6147,8 @@ const unpricedRow = cost.unpriced.length
         document.getElementById('profile-copperMg').value = (ing && ing.copperMg) || '';
         document.getElementById('profile-seleniumMcg').value = (ing && ing.seleniumMcg) || '';
 
-        // Pricing
-        document.getElementById('profile-averagePrice').value = (ing && ing.averagePrice) || '';
-        document.getElementById('profile-priceCurrency').value = (ing && ing.priceCurrency) || 'MUR';
-        document.getElementById('profile-priceBasisAmount').value = (ing && ing.priceBasisAmount) || '';
-        document.getElementById('profile-priceBasisUnit').value = (ing && ing.priceBasisUnit) || 'g';
-        updatePricePerLabel();
-
         foodModal.classList.add('active');
         document.body.style.overflow = 'hidden';
-    }
-
-    // Show "equals" clarification for the pricing basis, defaulting to the
-    // ingredient's serving size when no explicit basis is set.
-    function updatePricePerLabel() {
-        const amountEl = document.getElementById('profile-priceBasisAmount');
-        const unitEl = document.getElementById('profile-priceBasisUnit');
-        const perEl = document.getElementById('profile-price-per');
-        if (!amountEl || !unitEl || !perEl) return;
-        const amount = parseFloat(amountEl.value);
-        const unit = unitEl.value || 'g';
-        const basisGrams = amount > 0
-            ? (amount * ((unit === 'kg' || unit === 'l') ? 1000 : 1))
-            : 100;
-        const label = unit === 'cnt'
-            ? `${amount || 1} × each`
-            : `${basisGrams} g`;
-        perEl.textContent = basisGrams > 0 ? label : '—';
-    }
-
-    const pbA = document.getElementById('profile-priceBasisAmount');
-    const pbU = document.getElementById('profile-priceBasisUnit');
-    if (pbA && pbU) {
-        pbA.addEventListener('input', updatePricePerLabel);
-        pbU.addEventListener('change', updatePricePerLabel);
     }
 
     profileForm.addEventListener('submit', async (e) => {
@@ -5966,25 +6223,7 @@ const unpricedRow = cost.unpriced.length
         // Minerals
         ingredients[idx].calciumMg = parseFloat(document.getElementById('profile-calciumMg').value) || 0;
         ingredients[idx].ironMg = parseFloat(document.getElementById('profile-ironMg').value) || 0;
-        ingredients[idx].magnesiumMg = parseFloat(document.getElementById('profile-magnesiumMg').value) || 0;
-        ingredients[idx].phosphorusMg = parseFloat(document.getElementById('profile-phosphorusMg').value) || 0;
-        ingredients[idx].potassiumMg = parseFloat(document.getElementById('profile-potassiumMg').value) || 0;
-        ingredients[idx].sodiumMg = parseFloat(document.getElementById('profile-sodiumMg').value) || 0;
-        ingredients[idx].zincMg = parseFloat(document.getElementById('profile-zincMg').value) || 0;
-        ingredients[idx].copperMg = parseFloat(document.getElementById('profile-copperMg').value) || 0;
         ingredients[idx].seleniumMcg = parseFloat(document.getElementById('profile-seleniumMcg').value) || 0;
-
-        // Pricing
-        ingredients[idx].averagePrice = parseFloat(document.getElementById('profile-averagePrice').value) || 0;
-        ingredients[idx].priceCurrency = document.getElementById('profile-priceCurrency').value.trim() || 'MUR';
-        const priceBasisAmount = parseFloat(document.getElementById('profile-priceBasisAmount').value);
-        if (priceBasisAmount > 0) {
-            ingredients[idx].priceBasisAmount = priceBasisAmount;
-            ingredients[idx].priceBasisUnit = document.getElementById('profile-priceBasisUnit').value || 'g';
-        } else {
-            delete ingredients[idx].priceBasisAmount;
-            delete ingredients[idx].priceBasisUnit;
-        }
 
         closeFoodModal();
         await saveIngredients();

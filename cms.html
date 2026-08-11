@@ -395,7 +395,6 @@
                     <button type="button" class="ing-tab active" data-tab="overview">Overview</button>
                     <button type="button" class="ing-tab" data-tab="culinary">Culinary</button>
                     <button type="button" class="ing-tab" data-tab="nutrition">Nutrition</button>
-                    <button type="button" class="ing-tab" data-tab="pricing">Pricing</button>
                 </div>
             </div>
 
@@ -534,31 +533,6 @@
                         </div>
                     </div>
 
-                    <!-- Pricing Tab -->
-                    <div class="ing-tab-panel" data-panel="pricing">
-                        <div class="form-row">
-                            <div class="form-group" style="flex:1;"><label for="profile-averagePrice">Average Price</label><input type="number" step="any" id="profile-averagePrice" class="seamless-input" placeholder="0"></div>
-                            <div class="form-group" style="flex:1;"><label for="profile-priceCurrency">Currency</label><input type="text" id="profile-priceCurrency" class="seamless-input" placeholder="MUR" value="MUR"></div>
-                        </div>
-                        <div class="form-row" style="margin-top: 0.75rem; align-items: flex-end;">
-                            <div class="form-group" style="flex:1; max-width: 140px;"><label for="profile-priceBasisAmount">Price is per</label><input type="number" step="any" min="0" id="profile-priceBasisAmount" class="seamless-input" placeholder="100" value=""></div>
-                            <div class="form-group" style="flex:1;"><label for="profile-priceBasisUnit">Unit</label>
-                                <select id="profile-priceBasisUnit" class="seamless-input" style="width: 100%;">
-                                    <option value="g">g (grams)</option>
-                                    <option value="kg">kg (kilograms)</option>
-                                    <option value="ml">ml (millilitres)</option>
-                                    <option value="l">l (litres)</option>
-                                    <option value="cnt">each / piece</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="flex:1;"><label>Equals</label><div id="profile-price-per" class="seamless-input" style="display: flex; align-items: center; min-height: 38px;">—</div></div>
-                        </div>
-                        <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
-                            e.g. enter the price of a <strong>500 g</strong> pack → set <em>Price is per 500 g</em>. Formulas blend the units automatically.
-                        </div>
-                        <div id="profile-price-history" style="margin-top: 1.25rem;"></div>
-                    </div>
-
                     <!-- Footer -->
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: 1.5rem;">
                         <button type="button" class="btn secondary" id="cancel-food-btn">Cancel</button>
@@ -653,6 +627,97 @@
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: 1.5rem;">
                         <button type="button" class="btn secondary" id="cancel-household-btn">Cancel</button>
                         <button type="submit" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Item</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pantry Item Editor Modal -->
+    <div id="cms-pantry-modal" class="modal-overlay">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 680px;">
+            <form id="pantry-item-form" style="display: contents;">
+                <div class="modal-header" style="padding-bottom: 0;">
+                    <button type="button" class="modal-close pantry-close" aria-label="Close modal"><i data-lucide="x"></i></button>
+                    <div class="modal-actions">
+                        <button type="button" class="icon-btn delete" id="pantry-delete-btn" aria-label="Delete" title="Delete item" style="color: var(--accent-meat);"><i data-lucide="trash-2" style="width: 18px; height: 18px;"></i></button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.25rem;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(84,144,198,0.15), rgba(84,144,198,0.06)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="archive" style="width: 28px; height: 28px; color: var(--accent-stock);"></i>
+                        </div>
+                        <div style="flex-grow: 1; text-align: left;">
+                            <input type="text" id="pantry-product-name" class="seamless-input recipe-full-title" placeholder="PRODUCT NAME (e.g., Barilla Tagliatelle)" style="margin-bottom: 0.1rem; color: var(--accent-stock);">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <input type="text" id="pantry-brand" class="seamless-input" placeholder="Brand" style="font-size: 0.85rem; color: var(--text-muted); width: 140px;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">·</span>
+                                <input type="text" id="pantry-ingredient-link" class="seamless-input" placeholder="Linked ingredient (search…)" style="flex: 1; min-width: 200px;" autocomplete="off" data-ingredient-id="">
+                                <div id="pantry-ingredient-suggestions" class="ing-suggestions" style="display: none; position: absolute; z-index: 10; background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; max-height: 200px; overflow-y: auto; min-width: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-body" style="display: block; padding: 1.5rem 2rem;">
+                    <input type="hidden" id="pantry-item-id">
+                    <input type="hidden" id="pantry-ingredient-foodid">
+
+                    <!-- Product Details -->
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label for="pantry-pack-size">Pack size</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="number" id="pantry-pack-size" class="seamless-input" placeholder="500" min="0" step="any" style="width: 100px;">
+                            <select id="pantry-pack-unit" class="seamless-select" style="width: 120px;">
+                                <option value="g">g</option>
+                                <option value="kg">kg</option>
+                                <option value="ml">ml</option>
+                                <option value="l">l</option>
+                                <option value="pieces">pieces</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Stock Tracking -->
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div class="form-group">
+                            <label for="pantry-stock">Current stock (packs on hand)</label>
+                            <input type="number" id="pantry-stock" class="seamless-input" placeholder="0" min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label for="pantry-duration">Avg. days per pack</label>
+                            <input type="number" id="pantry-duration" class="seamless-input" placeholder="e.g. 14" min="0" step="any">
+                        </div>
+                    </div>
+
+                    <!-- Pricing -->
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div class="form-group">
+                            <label for="pantry-price">Price per pack</label>
+                            <input type="number" id="pantry-price" class="seamless-input" placeholder="0" min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label for="pantry-currency">Currency</label>
+                            <input type="text" id="pantry-currency" class="seamless-input" placeholder="MUR" value="MUR" style="width: 100px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label for="pantry-last-opened">Last opened date</label>
+                        <input type="date" id="pantry-last-opened" class="seamless-input">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label for="pantry-notes">Notes</label>
+                        <textarea id="pantry-notes" class="seamless-input seamless-textarea" placeholder="Optional notes (storage location, etc.)" rows="2"></textarea>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; background: var(--bg-surface-hover); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <strong>Linked ingredient</strong> provides nutrition & culinary data. <strong>Pantry item</strong> holds your specific product (brand, pack size, price, stock). Multiple brands of the same ingredient can coexist.
+                    </p>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); margin-top: 1.5rem;">
+                        <button type="button" class="btn secondary" id="cancel-pantry-btn">Cancel</button>
+                        <button type="submit" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Pantry Item</button>
                     </div>
                 </div>
             </form>

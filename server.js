@@ -60,6 +60,7 @@ const RECIPES_PATH = path.join(DATA_DIR, 'recipes.json');
 const INGREDIENTS_PATH = path.join(DATA_DIR, 'ingredients.json');
 const MEALPLANS_PATH = path.join(DATA_DIR, 'mealplans.json');
 const PANTRY_PATH = path.join(DATA_DIR, 'pantry.json');
+const PANTRY_ITEMS_PATH = path.join(DATA_DIR, 'pantry-items.json');
 const SHOPPINGLISTS_PATH = path.join(DATA_DIR, 'shoppinglists.json');
 const HOUSEHOLD_PATH = path.join(DATA_DIR, 'household.json');
 const RECEIPTS_PATH = path.join(DATA_DIR, 'receipts.json');
@@ -73,7 +74,7 @@ const API_KEY = 'larder_local_sync_8f92k';
 // clean bundle and by /api/import to whitelist acceptable files on restore.
 const DATA_FILES = [
     'recipes.json', 'ingredients.json', 'mealplans.json',
-    'pantry.json', 'shoppinglists.json', 'household.json',
+    'pantry.json', 'pantry-items.json', 'shoppinglists.json', 'household.json',
     'receipts.json', 'planner.json', 'settings.json',
     'exercises.json', 'workoutTemplates.json'
 ];
@@ -118,6 +119,7 @@ const defaultFiles = {
     'ingredients.json': '[]',
     'mealplans.json': '[]',
     'pantry.json': '[]',
+    'pantry-items.json': '[]',
     'shoppinglists.json': '[]',
     'household.json': '[]',
     'receipts.json': '[]',
@@ -371,9 +373,15 @@ const server = http.createServer((req, res) => {
         }
         if (!Array.isArray(parsed)) return err(`${name} payload must be an array`);
         const records = parsed;
-        if (name === 'ingredients' || name === 'pantry') {
+        if (name === 'ingredients' || name === 'pantry' || name === 'pantry-items') {
             for (const r of records) {
-                if (badObject(r) || typeof r.foodId !== 'string' || !r.foodId) return err(`${name} records need a non-empty foodId`);
+                if (badObject(r)) return err(`${name} records must be objects`);
+                if (name === 'pantry-items') {
+                    if (typeof r.pantryId !== 'string' || !r.pantryId) return err('pantry-items records need a non-empty pantryId');
+                    if (typeof r.ingredientFoodId !== 'string' || !r.ingredientFoodId) return err('pantry-items records need a non-empty ingredientFoodId');
+                } else if (typeof r.foodId !== 'string' || !r.foodId) {
+                    return err(`${name} records need a non-empty foodId`);
+                }
             }
         } else if (name === 'receipts') {
             for (const r of records) {
@@ -415,6 +423,7 @@ const server = http.createServer((req, res) => {
 
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
+    if (req.url === '/api/pantry-items' && handleGenericFileAPI(req, res, PANTRY_ITEMS_PATH, 'pantry-items')) return;
     if (req.url === '/api/shoppinglists' && handleGenericFileAPI(req, res, SHOPPINGLISTS_PATH, 'shoppinglists')) return;
     if (req.url === '/api/household' && handleGenericFileAPI(req, res, HOUSEHOLD_PATH, 'household')) return;
     if (req.url === '/api/receipts' && handleGenericFileAPI(req, res, RECEIPTS_PATH, 'receipts')) return;

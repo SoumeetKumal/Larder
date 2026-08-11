@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "foodId": "tagliatelle",
+    "isTracked": true,
+    "quantity": 3,
+    "avgDurationDays": 14,
+    "lastOpenedDate": "2026-08-01"
+  },
+  {
+    "foodId": "tomato_puree",
+    "isTracked": true,
+    "quantity": 4,
+    "avgDurationDays": 30,
+    "lastOpenedDate": "2026-07-15"
+  },
+  {
+    "foodId": "garlic",
+    "isTracked": true,
+    "quantity": 5,
+    "avgDurationDays": 21,
+    "lastOpenedDate": "2026-08-05"
+  },
+  {
+    "foodId": "onion",
+    "isTracked": true,
+    "quantity": 3,
+    "avgDurationDays": 30,
+    "lastOpenedDate": "2026-08-02"
+  },
+  {
+    "foodId": "chicken_breast_skinless",
+    "isTracked": true,
+    "quantity": 2,
+    "avgDurationDays": 5,
+    "lastOpenedDate": "2026-08-08"
+  },
+  {
+    "foodId": "beef_ground_8515",
+    "isTracked": true,
+    "quantity": 1,
+    "avgDurationDays": 4,
+    "lastOpenedDate": "2026-08-09"
+  }
+]
