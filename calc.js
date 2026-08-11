@@ -250,6 +250,53 @@
         return Math.round((sum / diffs.length) * 10) / 10;
     }
 
+    // Update price history for a product with a new price observation.
+    // product: object with priceHistory[], averagePrice, lastPrice, lastPriceDate
+    // obs: { price: number, date: 'YYYY-MM-DD' }
+    // Returns { history: [...], averagePrice: number, lastPrice: number, lastPriceDate: string }
+    function applyPriceUpdate(product, obs) {
+        if (!obs || typeof obs.price !== 'number' || !obs.date) return product;
+        var history = Array.isArray(product.priceHistory) ? [...product.priceHistory] : [];
+        var price = Math.round(obs.price * 100) / 100;
+        var date = obs.date;
+        // Upsert same-date entry
+        var idx = history.findIndex(function (h) { return h.date === date; });
+        if (idx >= 0) history[idx] = { date: date, price: price };
+        else history.push({ date: date, price: price });
+        // Sort by date ascending
+        history.sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+        // Compute average
+        var sum = history.reduce(function (a, b) { return a + b.price; }, 0);
+        var averagePrice = history.length > 0 ? Math.round((sum / history.length) * 100) / 100 : 0;
+        return {
+            history: history,
+            averagePrice: averagePrice,
+            lastPrice: price,
+            lastPriceDate: date
+        };
+    }
+
+    // Normalize price history arrays across products for comparison charting.
+    // historyByProduct: { foodId: [{ date, price }, ...] }
+    // Returns array of { date: string, values: { foodId: price } } sorted by date
+    function normalizeForCompare(historyByProduct) {
+        var allDates = new Set();
+        Object.values(historyByProduct || {}).forEach(function (h) {
+            (h || []).forEach(function (p) { allDates.add(p.date); });
+        });
+        var dates = Array.from(allDates).sort();
+        return dates.map(function (d) {
+            var values = {};
+            Object.entries(historyByProduct || {}).forEach(function (entry) {
+                var foodId = entry[0];
+                var h = entry[1];
+                var point = h.find(function (p) { return p.date === d; });
+                if (point) values[foodId] = point.price;
+            });
+            return { date: d, values: values };
+        });
+    }
+
     return {
         gramsOf: gramsOf,
         priceBasisGrams: priceBasisGrams,
@@ -264,6 +311,8 @@
         consumptionFor: consumptionFor,
         parseAmountToGrams: parseAmountToGrams,
         rollingAvgDuration: rollingAvgDuration,
+        applyPriceUpdate: applyPriceUpdate,
+        normalizeForCompare: normalizeForCompare,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
         COUNT_UNITS: COUNT_UNITS,
         MICRO_FIELDS: MICRO_FIELDS

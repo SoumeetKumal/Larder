@@ -135,6 +135,54 @@ check('upsertTodayRecord: existing today -> replaces items', () => {
     assert.ok(new Date(updated[0].updatedAt) >= new Date(updated[0].createdAt));
 });
 
+console.log('\n-- Price History --');
+check('applyPriceUpdate: first entry creates history + avg', () => {
+    const prod = { priceHistory: [] };
+    const r = c.applyPriceUpdate(prod, { price: 100, date: '2026-08-01' });
+    assert.equal(r.history.length, 1);
+    assert.equal(r.averagePrice, 100);
+    assert.equal(r.lastPrice, 100);
+    assert.equal(r.lastPriceDate, '2026-08-01');
+});
+check('applyPriceUpdate: second entry updates avg', () => {
+    const prod = { priceHistory: [{ date: '2026-08-01', price: 100 }] };
+    const r = c.applyPriceUpdate(prod, { price: 110, date: '2026-08-08' });
+    assert.equal(r.history.length, 2);
+    assert.equal(r.averagePrice, 105);
+    assert.equal(r.lastPrice, 110);
+    assert.equal(r.lastPriceDate, '2026-08-08');
+});
+check('applyPriceUpdate: same-date upsert replaces price', () => {
+    const prod = { priceHistory: [{ date: '2026-08-01', price: 100 }] };
+    const r = c.applyPriceUpdate(prod, { price: 120, date: '2026-08-01' });
+    assert.equal(r.history.length, 1);
+    assert.equal(r.history[0].price, 120);
+    assert.equal(r.averagePrice, 120);
+});
+check('applyPriceUpdate: history sorted by date', () => {
+    const prod = { priceHistory: [{ date: '2026-08-08', price: 110 }] };
+    const r = c.applyPriceUpdate(prod, { price: 100, date: '2026-08-01' });
+    assert.equal(r.history[0].date, '2026-08-01');
+    assert.equal(r.history[1].date, '2026-08-08');
+});
+check('normalizeForCompare: aligns dates across products', () => {
+    const h = {
+        rice: [{ date: '2026-08-01', price: 100 }, { date: '2026-08-08', price: 105 }],
+        wheat: [{ date: '2026-08-01', price: 80 }, { date: '2026-08-15', price: 85 }]
+    };
+    const norm = c.normalizeForCompare(h);
+    assert.equal(norm.length, 3); // 01, 08, 15
+    assert.equal(norm[0].date, '2026-08-01');
+    assert.equal(norm[0].values.rice, 100);
+    assert.equal(norm[0].values.wheat, 80);
+    assert.equal(norm[1].date, '2026-08-08');
+    assert.equal(norm[1].values.rice, 105);
+    assert.ok(!('wheat' in norm[1].values)); // wheat missing on 08
+    assert.equal(norm[2].date, '2026-08-15');
+    assert.ok(!('rice' in norm[2].values));
+    assert.equal(norm[2].values.wheat, 85);
+});
+
 console.log('\n-- computeTotals --');
 check('basic totals 1kg rice', () => {
     const t = c.computeTotals([{ ingredientId: 'rice', amount: 1000, unit: 'g' }], ING);

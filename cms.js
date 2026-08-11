@@ -735,6 +735,13 @@ document.addEventListener('DOMContentLoaded', () => {
             mealPlans = resMealPlans;
             pantry = resPantry; // legacy tracking data
             pantryItems = Array.isArray(resPantryItems) ? resPantryItems : [];
+            // Migrate pantry items: add price history fields if missing
+            pantryItems = pantryItems.map(p => ({
+                ...p,
+                priceHistory: Array.isArray(p.priceHistory) ? p.priceHistory : (p.price ? [{ date: new Date().toISOString().split('T')[0], price: parseFloat(p.price) || 0 }] : []),
+                lastPrice: typeof p.lastPrice === 'number' ? p.lastPrice : (parseFloat(p.price) || 0),
+                lastPriceDate: p.lastPriceDate || (p.price ? new Date().toISOString().split('T')[0] : null)
+            }));
             shoppingLists = resShoppingLists;
             // Migrate flat shopping list to dated records
             shoppingLists = u.wrapListRecords(shoppingLists);
@@ -850,7 +857,10 @@ document.addEventListener('DOMContentLoaded', () => {
             isTracked: p.isTracked || false,
             avgDurationDays: parseFloat(p.avgDurationDays) || 0,
             lastOpenedDate: p.lastOpenedDate || null,
-            notes: ''
+            notes: '',
+            priceHistory: [],
+            lastPrice: 0,
+            lastPriceDate: null
         }));
         pantryItems = newItems;
         savePantryItems();

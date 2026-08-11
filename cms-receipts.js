@@ -83,6 +83,67 @@
             </div>
         </div>`;
 
+        // ---- Price History Chart ----
+        const priceHistoryHTML = (() => {
+            // Collect price history from pantry items and ingredients
+            const histories = {};
+            S.pantryItems.forEach(p => {
+                if (p.priceHistory && p.priceHistory.length > 1) {
+                    histories[p.ingredientFoodId] = histories[p.ingredientFoodId] || { name: p.productName, points: [] };
+                    p.priceHistory.forEach(h => histories[p.ingredientFoodId].points.push({ date: h.date, price: h.price }));
+                }
+            });
+            S.ingredients.forEach(i => {
+                if (i.priceHistory && i.priceHistory.length > 1) {
+                    histories[i.foodId] = histories[i.foodId] || { name: i.name, points: [] };
+                    i.priceHistory.forEach(h => histories[i.foodId].points.push({ date: h.date, price: h.price }));
+                }
+            });
+            const items = Object.entries(histories);
+            if (items.length === 0) return '';
+            // Build chart data
+            const allDates = new Set();
+            items.forEach(([_, data]) => data.points.forEach(p => allDates.add(p.date)));
+            const sortedDates = Array.from(allDates).sort();
+            const minPrice = Math.min(...items.flatMap(([_, d]) => d.points.map(p => p.price)));
+            const maxPrice = Math.max(...items.flatMap(([_, d]) => d.points.map(p => p.price)));
+            const priceRange = maxPrice - minPrice || 1;
+            const chartHeight = 120;
+            const chartWidth = Math.max(400, sortedDates.length * 40);
+            
+            let svgPaths = '';
+            let legendHTML = '';
+            const colors = ['#5c90c6', '#d1777d', '#7ebc59', '#e8b84d', '#c47fd5', '#5cc8c8', '#f39c12', '#e74c3c'];
+            items.forEach(([foodId, data], idx) => {
+                const pts = data.points.sort((a, b) => a.date.localeCompare(b.date));
+                if (pts.length < 2) return;
+                const path = pts.map((p, i) => {
+                    const x = (i / (pts.length - 1)) * chartWidth;
+                    const y = chartHeight - ((p.price - minPrice) / priceRange) * (chartHeight - 20) - 10;
+                    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                }).join(' ');
+                svgPaths += `<path d="${path}" stroke="${colors[idx % colors.length]}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+                legendHTML += `<span style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.75rem;font-size:.75rem;color:var(--text-secondary);"><span style="width:12px;height:2px;background:${colors[idx % colors.length]};border-radius:1px;"></span> ${U.escapeHtml(data.name)}</span>`;
+            });
+            
+            return `
+            <div class="planner-card rc-price-history">
+                <div class="planner-card-head"><i data-lucide="chart-line" style="width:18px;height:18px;"></i> Price History <span class="planner-hint">from receipts & pantry items</span></div>
+                <div class="rc-price-chart" style="position:relative;height:140px;margin-bottom:.75rem;background:var(--bg-surface);border-radius:8px;overflow:hidden;">
+                    <svg width="${chartWidth + 20}" height="${chartHeight + 20}" viewBox="0 0 ${chartWidth + 20} ${chartHeight + 20}" style="display:block;margin:10px auto;">
+                        <!-- Grid lines -->
+                        ${[0, 0.25, 0.5, 0.75, 1].map(f => {
+                            const y = 10 + f * (chartHeight - 20);
+                            const val = maxPrice - f * priceRange;
+                            return `<line x1="10" y1="${y.toFixed(1)}" x2="${chartWidth + 10}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.5" /><text x="5" y="${(y + 3).toFixed(1)}" font-size="8" fill="var(--text-muted)" text-anchor="end">${val.toFixed(0)}</text>`;
+                        }).join('')}
+                        ${svgPaths}
+                    </svg>
+                </div>
+                <div class="rc-price-legend" style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;padding:.5rem 0;">${legendHTML}</div>
+            </div>`;
+        })();
+
         // ---- Add-receipt form ----
         const storesList = [...new Set(S.receipts.map(r => r.store).filter(Boolean))];
         const storeOpts = storesList.map(s => `<option value="${U.escapeHtml(s)}">`).join('');
@@ -137,7 +198,7 @@
             if (u in UN) return UN[u];
             return parseFloat(ing && ing.servingSizeG) || 100;
         }
-        container.innerHTML = `<div class="planner-wrap rc-page"><div class="rc-top">${anHTML}${addForm}</div>${listHTML}</div>`;
+        container.innerHTML = `<div class="planner-wrap rc-page"><div class="rc-top">${anHTML}${priceHistoryHTML}${addForm}</div>${listHTML}</div>`;
         if (root.lucide) root.lucide.createIcons();
 
         // Build item rows (for manual entry)
@@ -219,14 +280,19 @@
                 return { name: it.name, qty: it.qty, unit: it.unit || 'g', price: it.price || 0, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null };
             });
             const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-            S.receipts.push({
+            const newReceipt = {
                 id: 'rc_' + Date.now(),
                 store, date, total: total || Math.round(computed * 100) / 100,
                 currency: currency,
                 items,
                 enteredTotal: total
-            });
+            };
+            S.receipts.push(newReceipt);
             await App.saveReceipts();
+
+            // --- Price comparison: compare receipt items with pantry/ingredient prices ---
+            await showPriceComparison(newReceipt, S, U, App);
+            
             renderReceipts();
             return;
         });
@@ -254,6 +320,128 @@
             await App.saveReceipts();
             renderReceipts();
         }));
+    }
+
+    // --- Price Comparison Dialog ---
+    async function showPriceComparison(receipt, S, U, App) {
+        const currency = (S.appSettings.shopping && S.appSettings.shopping.currency)
+            || (S.ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
+            || 'MUR';
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const comparisons = [];
+        (receipt.items || []).forEach(it => {
+            if (!it.foodId) return;
+            // Find pantry item
+            const pantryItem = S.pantryItems.find(p => p.ingredientFoodId === it.foodId && p.isTracked);
+            const ingredient = S.ingredients.find(i => i.foodId === it.foodId);
+            
+            const receiptPrice = it.price && it.grams ? (it.price / it.grams) : 0;
+            const pantryPrice = pantryItem && pantryItem.price && pantryItem.packSize ? (pantryItem.price / pantryItem.packSize) : 0;
+            const ingredientPrice = ingredient && ingredient.averagePrice ? (ingredient.averagePrice / (ingredient.priceBasisGrams || ingredient.servingSizeG || 100)) : 0;
+            
+            const lastPrice = pantryItem ? (pantryItem.lastPrice || pantryPrice) : (ingredientPrice || 0);
+            
+            if (receiptPrice > 0 && lastPrice > 0) {
+                const pct = lastPrice > 0 ? Math.round(((receiptPrice - lastPrice) / lastPrice) * 100) : 0;
+                comparisons.push({
+                    foodId: it.foodId,
+                    name: it.name,
+                    receiptPrice: Math.round(receiptPrice * 10000) / 10000,
+                    lastPrice: Math.round(lastPrice * 10000) / 10000,
+                    pct,
+                    pantryItem,
+                    ingredient
+                });
+            }
+        });
+
+        if (comparisons.length === 0) return;
+
+        // Build dialog
+        const dialog = document.createElement('div');
+        dialog.className = 'modal-overlay';
+        dialog.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 style="margin:0;color:var(--text-main);"><i data-lucide="tag" style="width:20px;height:20px;vertical-align:-3px;"></i> Price Changes Detected</h3>
+                    <button class="modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+                </div>
+                <div style="padding:1.5rem;max-height:70vh;overflow-y:auto;">
+                    <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem;">The following items from your receipt have price differences vs. your recorded prices. Review and choose which to update.</p>
+                    <div style="display:flex;gap:.5rem;margin-bottom:1rem;padding:.5rem;background:var(--bg-raised);border-radius:6px;font-size:.8rem;">
+                        <span style="flex:1;font-weight:600;">Item</span>
+                        <span style="width:100px;text-align:right;font-weight:600;">Last Price</span>
+                        <span style="width:100px;text-align:right;font-weight:600;">Receipt Price</span>
+                        <span style="width:80px;text-align:center;font-weight:600;">Change</span>
+                        <span style="width:120px;text-align:center;font-weight:600;">Action</span>
+                    </div>
+                    ${comparisons.map((c, i) => `
+                        <div style="display:flex;gap:.5rem;padding:.5rem;border-bottom:1px solid var(--border);align-items:center;">
+                            <span style="flex:1;font-size:.85rem;">${U.escapeHtml(c.name)}</span>
+                            <span style="width:100px;text-align:right;font-size:.85rem;">${fmt(c.lastPrice)}</span>
+                            <span style="width:100px;text-align:right;font-size:.85rem;">${fmt(c.receiptPrice)}</span>
+                            <span style="width:80px;text-align:center;font-size:.85rem;color:${c.pct > 0 ? 'var(--accent-meat)' : c.pct < 0 ? 'var(--accent-veg)' : 'var(--text-muted)'};">
+                                ${c.pct >= 0 ? '+' : ''}${c.pct}%
+                            </span>
+                            <span style="width:120px;text-align:center;">
+                                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                                    <input type="checkbox" data-idx="${i}" ${c.pct !== 0 ? 'checked' : ''}>
+                                    <span style="font-size:.75rem;">Update</span>
+                                </label>
+                            </span>
+                        </div>
+                    `).join('')}
+                    <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;gap:.5rem;">
+                        <button class="btn secondary" id="price-cmp-cancel">Cancel</button>
+                        <button class="btn primary" id="price-cmp-ok">Update Selected Prices</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+        if (window.lucide) window.lucide.createIcons();
+
+        return new Promise(resolve => {
+            const close = () => { dialog.remove(); resolve(); };
+            dialog.querySelector('.modal-close').onclick = close;
+            dialog.onclick = (e) => { if (e.target === dialog) close(); };
+            dialog.querySelector('#price-cmp-cancel').onclick = close;
+            dialog.querySelector('#price-cmp-ok').onclick = async () => {
+                const checks = dialog.querySelectorAll('input[type="checkbox"]:checked');
+                for (const cb of checks) {
+                    const idx = parseInt(cb.dataset.idx);
+                    const c = comparisons[idx];
+                    if (!c) continue;
+                    const newPrice = c.receiptPrice;
+                    // Update pantry item
+                    if (c.pantryItem) {
+                        c.pantryItem.priceHistory = c.pantryItem.priceHistory || [];
+                        c.pantryItem.priceHistory.push({ date: receipt.date, price: newPrice });
+                        c.pantryItem.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        c.pantryItem.lastPrice = newPrice;
+                        c.pantryItem.lastPriceDate = receipt.date;
+                        // Recompute average
+                        const sum = c.pantryItem.priceHistory.reduce((s, h) => s + h.price, 0);
+                        c.pantryItem.averagePrice = c.pantryItem.priceHistory.length ? sum / c.pantryItem.priceHistory.length : 0;
+                    }
+                    // Update ingredient
+                    if (c.ingredient) {
+                        c.ingredient.priceHistory = c.ingredient.priceHistory || [];
+                        c.ingredient.priceHistory.push({ date: receipt.date, price: newPrice });
+                        c.ingredient.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        c.ingredient.averagePrice = c.ingredient.priceHistory.length ? c.ingredient.priceHistory.reduce((s, h) => s + h.price, 0) / c.ingredient.priceHistory.length : 0;
+                    }
+                }
+                // Persist
+                await Promise.all([
+                    App.savePantryItems ? App.savePantryItems() : Promise.resolve(),
+                    App.saveIngredients ? App.saveIngredients() : Promise.resolve()
+                ]);
+                close();
+            };
+        });
     }
 
     root.CMSReceipts = { render: renderReceipts };

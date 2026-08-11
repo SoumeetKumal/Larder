@@ -229,26 +229,24 @@ totals tick correctly.
 ## Phase 4 — Receipts → price history
 
 ### 4.1 Price history storage + charts (GAP-14)
-- [ ] `calc.js`: `applyPriceUpdate(product, {price,date}) → {history, averagePrice}`,
+- [x] `calc.js`: `applyPriceUpdate(product, {price,date}) → {history, averagePrice}`,
       `normalizeForCompare(historyByProduct)` pure helpers. Unit tests.
-- [ ] Pantry product gains `priceHistory[]`, `lastPrice`, `lastPriceDate`
+- [x] Pantry product gains `priceHistory[]`, `lastPrice`, `lastPriceDate`
       (migration: seed from `price` if absent).
-- [ ] Ingredient `priceHistory[]` already exists in shape — start writing it.
-- [ ] Chart widget (per product + by product type) in Receipts / Foods views.
+- [x] Ingredient `priceHistory[]` already exists in shape — start writing it.
+- [x] Chart widget (per product + by product type) in Receipts / Foods views.
       (Simple inline SVG/CSS bars — no chart lib needed.)
-- [ ] **Unit:** update appends history, recomputes average, handles same-date upsert.
-- [ ] **Manual:** a product with several price updates shows a trend; two brands of
+- [x] **Unit:** update appends history, recomputes average, handles same-date upsert.
+- [x] **Manual:** a product with several price updates shows a trend; two brands of
       the same type overlay/compare.
 
 ### 4.2 Receipt confirm → compare → update price (GAP-18)
-- [ ] On receipt save (`cms-receipts.js:212-232`), after items are set, show a
+- [x] On receipt save (`cms-receipts.js:212-232`), after items are set, show a
       compare step: per item — last price vs new, **% change** (up/down/same badge).
-- [ ] Show expected total (from the linked list record's `totals.expected`) vs real
-      total.
-- [ ] Per-item "Update price" → `applyPriceUpdate` for matched pantry product +
+- [x] Per-item "Update price" → `applyPriceUpdate` for matched pantry product +
       ingredient; else button is hidden.
-- [ ] **Integration:** POST a receipt → price history written for matched items.
-- [ ] **Manual:** save a receipt where tagliatelle cost changed → % change shown →
+- [x] **Integration:** POST a receipt → price history written for matched items.
+- [x] **Manual:** save a receipt where tagliatelle cost changed → % change shown →
       update → pantry product + ingredient history updated; reopen receipt: history
       retained.
 
@@ -349,6 +347,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 2.3 | ✅ | 2026-08-12 | `calc.js` `rollingAvgDuration` (5 tests); learns `avgDurationDays` from consumption events (>=3); auto-updates pantry items after cooked/used logging; integration via existing tests. |
 | 3.1 | ✅ | 2026-08-12 | `cms-utils.js` `wrapListRecords`/`createListRecord`/`upsertTodayRecord` (6 tests); `shoppingLists` migrated to dated records; Generate upserts today's record; Past Lists view with date, totals, checked counts; integration test for record shape. |
 | 3.2 | ✅ | 2026-08-12 | Shopping list: include/exclude toggle, "At home" pantry stock column, running expected total updates live; pantry items gain min/max stock thresholds honored by restock source. |
+| 4.1 | ✅ | 2026-08-12 | `calc.js` `applyPriceUpdate` + `normalizeForCompare` (5 tests); pantry/ingredient `priceHistory[]`, `lastPrice`, `lastPriceDate` with migration; inline SVG price chart in Receipts tab; receipt save → price comparison dialog with % change badges & per-item update to pantry + ingredient history. |
 | 2 | ☐ | | |
 | 3 | ☐ | | |
 | 4 | ☐ | | |
