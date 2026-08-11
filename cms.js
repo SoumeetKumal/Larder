@@ -357,6 +357,42 @@ document.addEventListener('DOMContentLoaded', () => {
     let householdOpenFn = null;
     let cmsTableSort = {};
 
+    // Live state bridge: expose the closure's state to per-tab modules (loaded
+    // after this file) via window.CMSState getters/setters.
+    const defineState = (name, getFn, setFn) => Object.defineProperty(window.CMSState, name, {
+        configurable: true,
+        enumerable: true,
+        get: getFn,
+        set: setFn
+    });
+    defineState('recipes', () => recipes, v => { recipes = v; });
+    defineState('ingredients', () => ingredients, v => { ingredients = v; });
+    defineState('mealPlans', () => mealPlans, v => { mealPlans = v; });
+    defineState('pantry', () => pantry, v => { pantry = v; });
+    defineState('pantryItems', () => pantryItems, v => { pantryItems = v; });
+    defineState('shoppingLists', () => shoppingLists, v => { shoppingLists = v; });
+    defineState('householdItems', () => householdItems, v => { householdItems = v; });
+    defineState('planner', () => planner, v => { planner = v; });
+    defineState('receipts', () => receipts, v => { receipts = v; });
+    defineState('appSettings', () => appSettings, v => { appSettings = v; });
+    defineState('currentCMSTab', () => currentCMSTab, v => { currentCMSTab = v; });
+    defineState('cmsSearchQuery', () => cmsSearchQuery, v => { cmsSearchQuery = v; });
+    defineState('mealWeekOffset', () => mealWeekOffset, v => { mealWeekOffset = v; });
+    defineState('cmsCategoryFilter', () => cmsCategoryFilter, v => { cmsCategoryFilter = v; });
+    defineState('cmsStatusFilter', () => cmsStatusFilter, v => { cmsStatusFilter = v; });
+    defineState('cmsSelectedTags', () => cmsSelectedTags, v => { cmsSelectedTags = v; });
+    defineState('cmsTagSearch', () => cmsTagSearch, v => { cmsTagSearch = v; });
+    defineState('cmsMacroFilters', () => cmsMacroFilters, v => { cmsMacroFilters = v; });
+    defineState('cmsListView', () => cmsListView, v => { cmsListView = v; });
+    defineState('lastMacroBreakdown', () => lastMacroBreakdown, v => { lastMacroBreakdown = v; });
+    defineState('cmsTableSort', () => cmsTableSort, v => { cmsTableSort = v; });
+    defineState('cmsSlidersInitialized', () => cmsSlidersInitialized, v => { cmsSlidersInitialized = v; });
+    defineState('pendingShoppingSources', () => pendingShoppingSources, v => { pendingShoppingSources = v; });
+    defineState('recipeManualTags', () => recipeManualTags, v => { recipeManualTags = v; });
+    defineState('householdOpenFn', () => householdOpenFn, v => { householdOpenFn = v; });
+    defineState('apiKey', () => API_KEY, v => {});
+    defineState('headers', () => HEADERS, v => {});
+
     // Filters are tracked per tab (Recipes vs Ingredients vs Pantry vs Household)
     // so choosing a filter on one screen never leaks onto another. The live
     // state above mirrors the active tab's filters; switching tabs snapshots
