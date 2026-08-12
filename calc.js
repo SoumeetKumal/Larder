@@ -297,6 +297,124 @@
         });
     }
 
+    // Compute weighted household inflation index from price histories.
+    // historyByProduct: { foodId: [{ date, price }, ...] }
+    // weights: { foodId: number } relative weights (sum need not be 1)
+    // period: { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' } optional date range
+    // Returns { index: number (e.g. 5.3 for +5.3%), contributions: { foodId: { weight, priceChangePct, contribution } } }
+    function householdInflationIndex(historyByProduct, weights, period) {
+        var from = period && period.from ? period.from : null;
+        var to = period && period.to ? period.to : null;
+        var changes = {};
+        Object.entries(historyByProduct || {}).forEach(function (entry) {
+            var foodId = entry[0];
+            var history = entry[1].filter(function (h) {
+                if (from && h.date < from) return false;
+                if (to && h.date > to) return false;
+                return true;
+            });
+            if (history.length < 2) return;
+            var first = history[0];
+            var last = history[history.length - 1];
+            if (first.price <= 0) return;
+            var pct = ((last.price - first.price) / first.price) * 100;
+            changes[foodId] = pct;
+        });
+        var weightSum = 0;
+        var validWeights = {};
+        Object.entries(weights || {}).forEach(function (entry) {
+            var foodId = entry[0];
+            var w = entry[1];
+            if (changes[foodId] !== undefined && w > 0) {
+                validWeights[foodId] = w;
+                weightSum += w;
+            }
+        });
+        if (weightSum === 0) return { index: 0, contributions: {} };
+        var contributions = {};
+        var index = 0;
+        Object.entries(validWeights).forEach(function (entry) {
+            var foodId = entry[0];
+            var w = entry[1] / weightSum;
+            var pct = changes[foodId] || 0;
+            var contrib = pct * w;
+            index += contrib;
+            contributions[foodId] = { weight: w, priceChangePct: Math.round(pct * 100) / 100, contribution: Math.round(contrib * 100) / 100 };
+        });
+        return { index: Math.round(index * 100) / 100, contributions: contributions };
+    }
+
+    // Aggregate category spend from receipts.
+    // receipts: array of { date, store, total, currency, items: [{ name, price, qty, unit, foodId, category }] }
+    // period: { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' } optional date range
+    // Returns { byCategory: { category: { total, count, avg } }, overall: { total, count, avg } }
+    function categorySpend(receipts, period) {
+        var from = period && period.from ? period.from : null;
+        var to = period && period.to ? period.to : null;
+        var byCategory = {};
+        var total = 0, count = 0;
+        (receipts || []).forEach(function (r) {
+            if (from && r.date < from) return;
+            if (to && r.date > to) return;
+            var receiptTotal = num(r.total);
+            total += receiptTotal;
+            count++;
+            (r.items || []).forEach(function (it) {
+                var cat = it.category || 'Uncategorized';
+                if (!byCategory[cat]) byCategory[cat] = { total: 0, count: 0 };
+                byCategory[cat].total += num(it.price);
+                byCategory[cat].count++;
+            });
+        });
+        Object.values(byCategory).forEach(function (v) { v.avg = v.count ? Math.round((v.total / v.count) * 100) / 100 : 0; });
+        return {
+            byCategory: byCategory,
+            overall: { total: Math.round(total * 100) / 100, count: count, avg: count ? Math.round((total / count) * 100) / 100 : 0 }
+        };
+    }
+
+    // Detect savings signals: products where switching brands saved money.
+    // historyByProduct: { foodId: [{ date, price, brand }, ...] }
+    // Returns array of { foodId, brandA, brandB, savingsPerUnit, totalSavings, purchaseCount }
+    function savingsSignals(historyByProduct) {
+        var signals = [];
+        Object.entries(historyByProduct || {}).forEach(function (entry) {
+            var foodId = entry[0];
+            var history = entry[1];
+            var byBrand = {};
+            history.forEach(function (h) {
+                var brand = h.brand || 'Unknown';
+                if (!byBrand[brand]) byBrand[brand] = [];
+                byBrand[brand].push(h.price);
+            });
+            var brands = Object.entries(byBrand);
+            if (brands.length < 2) return;
+            for (var i = 0; i < brands.length; i++) {
+                for (var j = i + 1; j < brands.length; j++) {
+                    var b1 = brands[i][0], p1 = brands[i][1];
+                    var b2 = brands[j][0], p2 = brands[j][1];
+                    var avg1 = p1.reduce(function (a, b) { return a + b; }, 0) / p1.length;
+                    var avg2 = p2.reduce(function (a, b) { return a + b; }, 0) / p2.length;
+                    var savings = Math.abs(avg1 - avg2);
+                    if (savings <= 0) continue;
+                    var cheaper = avg1 < avg2 ? b1 : b2;
+                    var expensive = avg1 < avg2 ? b2 : b1;
+                    var totalSavings = savings * Math.min(p1.length, p2.length);
+                    signals.push({
+                        foodId: foodId,
+                        cheaperBrand: cheaper,
+                        expensiveBrand: expensive,
+                        savingsPerUnit: Math.round(savings * 100) / 100,
+                        totalSavings: Math.round(totalSavings * 100) / 100,
+                        purchaseCount: Math.min(p1.length, p2.length)
+                    });
+                }
+            }
+        });
+        signals.sort(function (a, b) { return b.totalSavings - a.totalSavings; });
+        return signals;
+    }
+
     return {
         gramsOf: gramsOf,
         priceBasisGrams: priceBasisGrams,
@@ -313,6 +431,9 @@
         rollingAvgDuration: rollingAvgDuration,
         applyPriceUpdate: applyPriceUpdate,
         normalizeForCompare: normalizeForCompare,
+        householdInflationIndex: householdInflationIndex,
+        categorySpend: categorySpend,
+        savingsSignals: savingsSignals,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
         COUNT_UNITS: COUNT_UNITS,
         MICRO_FIELDS: MICRO_FIELDS

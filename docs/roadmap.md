@@ -55,6 +55,10 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-20 household inflation index from our own purchases.
 - **Done when:** a Stats view shows at least: product price trend, spend trends,
   and an inflation number computed from our receipts.
+- **Status:** ✅ Phase 5 complete (Aug 2026). New Stats tab ships KPI cards
+  (inflation index, total spend, avg/receipt, savings found), inflation-contributor
+  bars, spend-by-category bars and savings-signal rows; period selector
+  (All/3m/6m/1y). Electron-verified with live receipts.
 
 ## Phase 6 — Meal planning smartness
 **Goal:** monthly planning gets easier every month.

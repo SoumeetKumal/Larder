@@ -175,7 +175,7 @@ Legend — status:
 ### GAP-19 — Receipt line → pantry stock update `[works]`
 - "Add items to pantry" per receipt (`cms-receipts.js:235-251`).
 
-### GAP-20 — Receipts → price history → stats/inflation `[open]` · M
+### GAP-20 — Receipts → price history → stats/inflation `[works]` · M
 - **User expects:** over time, per-product price trends and our own household
   inflation from what we actually buy.
 - **Today:** receipts are stored but never feed price history; analytics in the
@@ -216,7 +216,7 @@ Legend — status:
 
 ## 6. Stats / insights (personal)
 
-### GAP-24 — Stats screens (patterns, savings, inflation) `[open]` · M
+### GAP-24 — Stats screens (patterns, savings, inflation) `[works]` · M
 - **User expects:** totals, patterns, what we like, what we can save on, our own
   inflation.
 - **Today:** only the Receipts analytics card (spend by month/store/week).
@@ -268,9 +268,9 @@ Legend — status:
 | GAP-01..07 | Recipe authoring & website | 3 open / 3 partial / 1 works | 1 |
 | GAP-08..10 | Cooking & pantry | 2 open / 1 partial | 2 |
 | GAP-11..16 | Shopping list | 2 open / 2 partial / 1 works / 1 L | 3 (+7 for sync) |
-| GAP-17..20 | Receipts & prices | 3 open / 1 works | 4 |
+| GAP-17..20 | Receipts & prices | 2 open / 2 works | 4 |
 | GAP-21..23 | Meal planning | 1 open / 2 partial | 6 |
-| GAP-24 | Stats | open | 5 |
+| GAP-24 | Stats | works | 5 |
 | GAP-25..26 | Sync & mobile | open (A) | 7 |
 | GAP-27..28 | Foundations | open | 0 / ongoing |
 

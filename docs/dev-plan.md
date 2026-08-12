@@ -264,15 +264,16 @@ expected-vs-real are visible; charts render; pasted-text flow unaffected.
 
 ## Phase 5 — Stats & inflation
 
-- [ ] `calc.js`: `householdInflationIndex(historyByProduct, weights)`,
-      `categorySpend(receipts)`, `savingsSignals(historyByProduct)` pure + tests.
-- [ ] Stats view (extend Receipts tab or new tab): per-product price chart
+- [x] `calc.js`: `householdInflationIndex(historyByProduct, weights, period)`,
+      `categorySpend(receipts, period)`, `savingsSignals(historyByProduct)` pure + tests.
+- [x] Stats view (extend Receipts tab or new tab): per-product price chart
       (reuse 4.1 widget), category spend trends, savings signals ("Barilla vs
       Granoro saves Rs X/Y over N purchases").
-- [ ] Inflation card: index computed from our receipts, with period selector.
-- [ ] **Unit:** inflation index math (weighted), savings signal detection.
-- [ ] **Manual:** after a few receipts, stats show product trends + an inflation
-      number that changes when a price rises.
+- [x] Inflation card: index computed from our receipts, with period selector.
+- [x] **Unit:** inflation index math (weighted), savings signal detection.
+- [x] **Manual:** after a few receipts, stats show product trends + an inflation
+      number that changes when a price rises (Electron pass with live data:
+      index -54.9%, Rs10.00 / 1 receipt, 7 savings found).
 
 **Phase 5 acceptance:** a Stats screen shows product price trends, spend trends and
 a household inflation number computed from our own receipts.
@@ -351,7 +352,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 2 | ☐ | | |
 | 3 | ☐ | | |
 | 4 | ☐ | | |
-| 5 | ☐ | | |
+| 5 | ✅ | 2026-08-13 | New Stats tab (Shop & Track): `calc.js` `householdInflationIndex`/`categorySpend`/`savingsSignals` (period-filtered) + tests; KPI cards (inflation index, total spend, avg/receipt, savings found), inflation-contributor bars, spend-by-category bars, savings-signal rows; period selector (All/3m/6m/1y, persisted `larder_stats_period`). Electron manual pass: index -54.9%, Rs10.00 / 1 receipt, 7 savings found. |
 | 6 | ☐ | | |
 | 7 | ☐ | | |
 

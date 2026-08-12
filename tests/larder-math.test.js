@@ -341,6 +341,109 @@ check('empty recipe returns empty', () => {
     assert.deepEqual(c.consumptionFor({ ingredients: [] }, {}), []);
 });
 
+console.log('\n-- householdInflationIndex --');
+check('weighted average of price changes', () => {
+    const history = {
+        rice: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 110 }],
+        wheat: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 120 }],
+        oil: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 100 }]
+    };
+    const weights = { rice: 0.5, wheat: 0.3, oil: 0.2 };
+    const result = c.householdInflationIndex(history, weights, { from: '2026-01-01', to: '2026-06-01' });
+    // rice: +10% * 0.5 = 5%, wheat: +20% * 0.3 = 6%, oil: 0% * 0.2 = 0% => total 11%
+    assert.equal(result.index, 11);
+    assert.ok(result.contributions.rice);
+    assert.equal(result.contributions.rice.contribution, 5);
+    assert.equal(result.contributions.wheat.contribution, 6);
+    assert.equal(result.contributions.oil.contribution, 0);
+});
+check('householdInflationIndex: normalizes weights', () => {
+    const history = {
+        rice: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 110 }],
+        wheat: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 120 }]
+    };
+    const weights = { rice: 5, wheat: 3 }; // unnormalized
+    const result = c.householdInflationIndex(history, weights);
+    // rice 10% * 0.625 = 6.25%, wheat 20% * 0.375 = 7.5% => 13.75%
+    assert.equal(result.index, 13.75);
+});
+check('householdInflationIndex: filters by period', () => {
+    const history = {
+        rice: [{ date: '2025-12-01', price: 100 }, { date: '2026-01-01', price: 105 }, { date: '2026-06-01', price: 110 }]
+    };
+    const weights = { rice: 1 };
+    const result = c.householdInflationIndex(history, weights, { from: '2026-01-01', to: '2026-06-01' });
+    // Only Jan-Jun change: 105->110 = ~4.76%
+    assert.ok(Math.abs(result.index - 4.76) < 0.1);
+});
+check('householdInflationIndex: missing product skipped', () => {
+    const history = {
+        rice: [{ date: '2026-01-01', price: 100 }, { date: '2026-06-01', price: 110 }]
+    };
+    const weights = { rice: 0.5, wheat: 0.5 };
+    const result = c.householdInflationIndex(history, weights);
+    // wheat has no history, should be skipped, rice gets full weight
+    assert.equal(result.index, 10);
+    assert.ok(!result.contributions.wheat);
+});
+
+console.log('\n-- categorySpend --');
+check('categorySpend: aggregates by category', () => {
+    const receipts = [
+        { date: '2026-01-01', total: 100, items: [{ category: 'Grains', price: 50 }, { category: 'Vegetables', price: 50 }] },
+        { date: '2026-01-15', total: 200, items: [{ category: 'Grains', price: 100 }, { category: 'Meat', price: 100 }] }
+    ];
+    const result = c.categorySpend(receipts);
+    assert.equal(result.overall.total, 300);
+    assert.equal(result.overall.count, 2);
+    assert.equal(result.byCategory.Grains.total, 150);
+    assert.equal(result.byCategory.Grains.count, 2);
+    assert.equal(result.byCategory.Vegetables.total, 50);
+    assert.equal(result.byCategory.Meat.total, 100);
+    assert.equal(result.byCategory.Grains.avg, 75);
+});
+check('categorySpend: filters by period', () => {
+    const receipts = [
+        { date: '2025-12-01', total: 100, items: [{ category: 'Grains', price: 100 }] },
+        { date: '2026-01-01', total: 200, items: [{ category: 'Grains', price: 200 }] }
+    ];
+    const result = c.categorySpend(receipts, { from: '2026-01-01' });
+    assert.equal(result.overall.total, 200);
+    assert.equal(result.byCategory.Grains.total, 200);
+});
+
+console.log('\n-- savingsSignals --');
+check('savingsSignals: detects brand savings', () => {
+    const history = {
+        rice: [
+            { price: 100, brand: 'BrandA' },
+            { price: 110, brand: 'BrandA' },
+            { price: 80, brand: 'BrandB' },
+            { price: 90, brand: 'BrandB' }
+        ]
+    };
+    const signals = c.savingsSignals(history);
+    assert.equal(signals.length, 1);
+    assert.equal(signals[0].foodId, 'rice');
+    // BrandA avg = 105, BrandB avg = 85, savings = 20
+    assert.equal(signals[0].savingsPerUnit, 20);
+    assert.equal(signals[0].cheaperBrand, 'BrandB');
+    assert.equal(signals[0].expensiveBrand, 'BrandA');
+    assert.equal(signals[0].totalSavings, 40); // 20 * min(2,2) = 40
+});
+check('savingsSignals: ignores single brand', () => {
+    const history = { rice: [{ price: 100, brand: 'A' }, { price: 110, brand: 'A' }] };
+    assert.deepEqual(c.savingsSignals(history), []);
+});
+check('savingsSignals: sorts by totalSavings desc', () => {
+    const history = {
+        rice: [{ price: 100, brand: 'A' }, { price: 120, brand: 'B' }],
+        wheat: [{ price: 50, brand: 'C' }, { price: 90, brand: 'D' }]
+    };
+    const signals = c.savingsSignals(history);
+    assert.equal(signals[0].foodId, 'wheat'); // savings 40 > rice 20
+});
+
 run();
 
 function run() { console.log('\n' + passed + ' passed, ' + failed + ' failed'); process.exit(failed ? 1 : 0); }

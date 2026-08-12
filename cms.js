@@ -1,7 +1,141 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { escapeHtml, toFractionString, formatAmountDisplay, slugify, splitAmount, composeAmount, parseTimeToHM, composeTimeString, cmsParseTimeToMinutes, cmsGetStandardMacros, cmsGetRecipeTags, formatMoney, hhDaysBetween, hhAddDays, estimateDepletionDate, getCategoryIcon, getCategoryAccent, getGramsPerCup, getGramsPerUnit, imperialGramsFactor, parseAmountValue, formatCups, formatCount, formatMetricAmount, formatDateDMY, parseStepLinks } = window.LarderCalcUtils || {};
+    const { escapeHtml, toFractionString, formatAmountDisplay, slugify, splitAmount, composeAmount, parseTimeToHM, composeTimeString, cmsParseTimeToMinutes, cmsGetStandardMacros, cmsGetRecipeTags, formatMoney, hhDaysBetween, hhAddDays, estimateDepletionDate, getCategoryIcon, getCategoryAccent, getGramsPerCup, getGramsPerUnit, imperialGramsFactor, parseAmountValue, formatCups, formatCount, formatMetricAmount, formatDateDMY, parseStepLinks, wrapListRecords, upsertTodayRecord } = window.LarderCalcUtils || {};
     const { render: renderReceipts } = window.CMSReceipts || { render() {} };
     const { render: renderPlanner } = window.CMSPlanner || { render() {} };
+
+    // Stats tab render function
+    function renderStatsTab() {
+        const container = listContainer;
+        if (!container) return;
+        addBtn.style.display = 'none';
+
+        const currency = (appSettings.shopping && appSettings.shopping.currency)
+            || (ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
+            || 'MUR';
+
+        // Period selector
+        const periodPresets = [
+            { key: 'all', label: 'All time', months: 0 },
+            { key: '3m', label: 'Last 3 months', months: 3 },
+            { key: '6m', label: 'Last 6 months', months: 6 },
+            { key: '1y', label: 'Last 12 months', months: 12 }
+        ];
+        const savedPeriod = localStorage.getItem('larder_stats_period') || '6m';
+        const period = periodPresets.find(p => p.key === savedPeriod) || periodPresets[2];
+        let periodObj = null;
+        if (period.months > 0) {
+            const from = new Date();
+            from.setMonth(from.getMonth() - period.months);
+            periodObj = { from: from.toISOString().slice(0, 10) };
+        }
+
+        // Build price histories from pantry items and ingredients
+        const historyByProduct = {};
+        pantryItems.forEach(p => {
+            if (!p.ingredientFoodId) return;
+            const id = p.ingredientFoodId;
+            historyByProduct[id] = historyByProduct[id] || { name: p.productName || '', brand: p.brand || '' };
+            (p.priceHistory || []).forEach(h => {
+                if (h && h.date && h.price != null) {
+                    historyByProduct[id].points = historyByProduct[id].points || [];
+                    historyByProduct[id].points.push({ date: h.date, price: parseFloat(h.price), brand: p.brand || '' });
+                }
+            });
+        });
+        ingredients.forEach(i => {
+            if (!i.foodId) return;
+            const id = i.foodId;
+            historyByProduct[id] = historyByProduct[id] || { name: i.name || '' };
+            (i.priceHistory || []).forEach(h => {
+                if (h && h.date && h.price != null) {
+                    historyByProduct[id].points = historyByProduct[id].points || [];
+                    historyByProduct[id].points.push({ date: h.date, price: parseFloat(h.price) });
+                }
+            });
+        });
+
+        // Weights from purchase frequency in receipts
+        const purchaseCount = {};
+        receipts.forEach(r => (r.items || []).forEach(it => {
+            if (!it.foodId) return;
+            purchaseCount[it.foodId] = (purchaseCount[it.foodId] || 0) + (parseFloat(it.qty) || 1);
+        }));
+        const weights = {};
+        Object.keys(historyByProduct).forEach(id => { weights[id] = purchaseCount[id] || 1; });
+
+        // Run stats calculations
+        const historyPoints = Object.fromEntries(Object.entries(historyByProduct).map(([k, v]) => [k, v.points || []]));
+        const infl = LC.householdInflationIndex ? LC.householdInflationIndex(historyPoints, weights, periodObj)
+            : { index: 0, contributions: {} };
+        const spend = LC.categorySpend ? LC.categorySpend(receipts, periodObj)
+            : { byCategory: {}, overall: { total: 0, count: 0, avg: 0 } };
+        const signals = LC.savingsSignals ? LC.savingsSignals(historyPoints).slice(0, 10) : [];
+
+        const inflCls = infl.index > 0 ? 'red' : infl.index < 0 ? 'blue' : '';
+        const inflArrow = infl.index > 0 ? '+' : '';
+
+        // Inflation contributors table
+        const inflRows = Object.entries(infl.contributions)
+            .sort((a, b) => Math.abs(b[1].contribution) - Math.abs(a[1].contribution))
+            .slice(0, 12)
+            .map(([foodId, c]) => {
+                const name = (historyByProduct[foodId] && historyByProduct[foodId].name) || foodId;
+                return `<div class="rc-store-row">
+                    <span class="rc-store-name" title="${escapeHtml(foodId)}">${escapeHtml(name)}</span>
+                    <div class="pl-total-bar" style="flex:1"><div class="pl-total-fill ${c.priceChangePct > 0 ? 'red' : 'blue'}" style="width:${Math.min(100, Math.abs(c.contribution) * 4)}%"></div></div>
+                    <span class="rc-store-amt">${c.priceChangePct >= 0 ? '+' : ''}${c.priceChangePct.toFixed(1)}% <span class="planner-hint">w ${(c.weight * 100).toFixed(0)}%</span></span>
+                </div>`;
+            }).join('');
+
+        // Category spend table
+        const catRows = Object.entries(spend.byCategory)
+            .sort((a, b) => b[1].total - a[1].total)
+            .map(([cat, d]) => `<div class="rc-store-row">
+                <span class="rc-store-name">${escapeHtml(cat)}</span>
+                <div class="pl-total-bar" style="flex:1"><div class="pl-total-fill blue" style="width:${spend.overall.total ? Math.min(100, d.total / spend.overall.total * 100) : 0}%"></div></div>
+                <span class="rc-store-amt">${formatMoney(d.total, currency)}</span>
+            </div>`).join('') || '<div class="empty-state" style="padding:.4rem">No receipts in this period.</div>';
+
+        // Savings signals table
+        const signalRows = signals.map(s => {
+            const name = (historyByProduct[s.foodId] && historyByProduct[s.foodId].name) || s.foodId;
+            return `<div class="rc-store-row">
+                <span class="rc-store-name" title="${escapeHtml(s.foodId)}">${escapeHtml(name)}</span>
+                <span class="planner-hint" style="flex:1">switch ${escapeHtml(s.expensiveBrand)} \u2192 ${escapeHtml(s.cheaperBrand)}</span>
+                <span class="rc-store-amt" style="color:var(--accent-veg)">save ${formatMoney(s.savingsPerUnit, currency)}/unit</span>
+            </div>`;
+        }).join('') || '<div class="empty-state" style="padding:.4rem">No brand-switch savings found yet.</div>';
+
+        const periodOpts = periodPresets.map(p =>
+            `<option value="${p.key}"${p.key === savedPeriod ? ' selected' : ''}>${p.label}</option>`).join('');
+
+        container.innerHTML = `
+        <div class="planner-wrap">
+            <div class="planner-card rc-analytics">
+                <div class="planner-card-head"><i data-lucide="chart-bar" style="width:18px;height:18px;"></i> Stats <span class="planner-hint">household prices & spending</span>
+                    <select id="stats-period" style="margin-left:auto;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:.25rem .5rem;font-size:.8rem;">${periodOpts}</select>
+                </div>
+                <div class="rc-kpis">
+                    <div class="rc-kpi"><div class="rc-kpi-label">Inflation index</div><div class="rc-kpi-val ${inflCls}">${inflArrow}${infl.index.toFixed(1)}%</div><div class="rc-kpi-sub">weighted price change</div></div>
+                    <div class="rc-kpi"><div class="rc-kpi-label">Total spend</div><div class="rc-kpi-val">${formatMoney(spend.overall.total, currency)}</div><div class="rc-kpi-sub">${spend.overall.count} receipt${spend.overall.count === 1 ? '' : 's'}</div></div>
+                    <div class="rc-kpi"><div class="rc-kpi-label">Avg / receipt</div><div class="rc-kpi-val">${formatMoney(spend.overall.avg, currency)}</div><div class="rc-kpi-sub">${period.label.toLowerCase()}</div></div>
+                    <div class="rc-kpi"><div class="rc-kpi-label">Savings found</div><div class="rc-kpi-val">${signals.length}</div><div class="rc-kpi-sub">brand switches</div></div>
+                </div>
+                <div class="rc-split">
+                    <div class="rc-stores"><div class="rc-subhead">Inflation contributors \u00b7 price change</div>${inflRows || '<div class="empty-state" style="padding:.4rem">Need 2+ price points per product.</div>'}</div>
+                    <div class="rc-stores"><div class="rc-subhead">Spend by category</div>${catRows}</div>
+                </div>
+                <div class="rc-stores" style="margin-top:1.2rem;"><div class="rc-subhead">Savings signals \u00b7 brand switching</div>${signalRows}</div>
+            </div>
+        </div>`;
+        if (window.lucide) window.lucide.createIcons();
+
+        const periodSel = container.querySelector('#stats-period');
+        if (periodSel) periodSel.addEventListener('change', () => {
+            localStorage.setItem('larder_stats_period', periodSel.value);
+            renderStatsTab();
+        });
+    }
 
     // Shared pure-math module (calc.js) loaded before cms.js. Fall back to a
     // minimal local version only if it is missing, so the app never breaks.
@@ -744,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
             shoppingLists = resShoppingLists;
             // Migrate flat shopping list to dated records
-            shoppingLists = u.wrapListRecords(shoppingLists);
+            shoppingLists = wrapListRecords(shoppingLists);
             householdItems = Array.isArray(resHousehold) ? resHousehold : [];
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
                 ? resSettings
@@ -1593,7 +1727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Per-tab page title.
         const headerTitle = document.getElementById('cms-header-title');
         if (headerTitle) {
-            const titles = { recipe: 'Recipes', food: 'Ingredients', mealplan: 'Meal Plan', planner: 'Monthly Planner', pantry: 'Pantry', household: 'Household', shopping: 'Shopping Lists', receipts: 'Receipts', settings: 'Settings' };
+            const titles = { recipe: 'Recipes', food: 'Ingredients', mealplan: 'Meal Plan', planner: 'Monthly Planner', pantry: 'Pantry', household: 'Household', shopping: 'Shopping Lists', receipts: 'Receipts', stats: 'Stats', settings: 'Settings' };
             headerTitle.textContent = titles[currentCMSTab] || 'Recipes';
         }
 
@@ -1677,6 +1811,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentCMSTab === 'receipts') {
             renderReceipts();
+            return;
+        }
+
+        if (currentCMSTab === 'stats') {
+            renderStatsTab();
             return;
         }
 
@@ -3102,13 +3241,13 @@ if (currentCMSTab === 'pantry') {
                     html += `
                         <div class="past-list-card" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; background: var(--bg-surface);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <div style="font-weight: 600;">${escapeHtml(u.formatDateDMY(record.date))}</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">${checkedCount}/${totalCount} checked · ${escapeHtml(u.formatMoney(total, currency))}</div>
+                                <div style="font-weight: 600;">${escapeHtml(formatDateDMY(record.date))}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${checkedCount}/${totalCount} checked · ${escapeHtml(formatMoney(total, currency))}</div>
                             </div>
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 ${record.items.slice(0, 6).map(item => `
                                     <span class="past-list-item" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; background: var(--bg-raised); border-radius: 4px; ${item.checked ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">
-                                        ${escapeHtml(item.name)} ${escapeHtml(u.formatAmountDisplay(item.amount, item.unit))}
+                                        ${escapeHtml(item.name)} ${escapeHtml(formatAmountDisplay(item.amount, item.unit))}
                                     </span>
                                 `).join('')}
                                 ${record.items.length > 6 ? `<span class="past-list-item" style="font-size: 0.75rem; color: var(--text-muted);">+${record.items.length - 6} more</span>` : ''}
@@ -3697,7 +3836,7 @@ const unpricedRow = cost.unpriced.length
 
             document.getElementById('generate-list-btn').onclick = () => {
                 const list = generateList();
-                shoppingLists = u.upsertTodayRecord(shoppingLists, list);
+                shoppingLists = upsertTodayRecord(shoppingLists, list);
                 // Render today's record
                 const today = new Date().toISOString().split('T')[0];
                 const todayRecord = shoppingLists.find(r => r.date === today) || shoppingLists[0];
