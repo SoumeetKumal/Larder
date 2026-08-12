@@ -69,6 +69,8 @@ const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
 const EXERCISES_PATH = path.join(DATA_DIR, 'exercises.json');
 const WORKOUT_TEMPLATES_PATH = path.join(DATA_DIR, 'workoutTemplates.json');
 const PRODUCT_PREFS_PATH = path.join(DATA_DIR, 'product-prefs.json');
+const PLAN_TEMPLATES_PATH = path.join(DATA_DIR, 'planner-templates.json');
+const PLAN_VERSIONS_PATH = path.join(DATA_DIR, 'plan-versions.json');
 const API_KEY = 'larder_local_sync_8f92k';
 
 // The only files Larder keeps as user data. Used by /api/export to produce a
@@ -77,7 +79,8 @@ const DATA_FILES = [
     'recipes.json', 'ingredients.json', 'mealplans.json',
     'pantry.json', 'pantry-items.json', 'shoppinglists.json', 'household.json',
     'receipts.json', 'consumption.json', 'planner.json', 'settings.json',
-    'exercises.json', 'workoutTemplates.json', 'product-prefs.json'
+    'exercises.json', 'workoutTemplates.json', 'product-prefs.json',
+    'planner-templates.json', 'plan-versions.json'
 ];
 const KNOWN_DATA_FILES = new Set(DATA_FILES);
 
@@ -129,7 +132,9 @@ const defaultFiles = {
     'settings.json': '{"profiles": [{"name": "User", "calories": 2000, "carbs": 40, "protein": 30, "fat": 30}]}',
     'exercises.json': '[]',
     'workoutTemplates.json': '[]',
-    'product-prefs.json': '[]'
+    'product-prefs.json': '[]',
+    'planner-templates.json': '[]',
+    'plan-versions.json': '[]'
 };
 Object.entries(defaultFiles).forEach(([file, content]) => {
     const p = path.join(DATA_DIR, file);
@@ -427,6 +432,17 @@ const server = http.createServer((req, res) => {
                 if (typeof r.pantryId !== 'string' || !r.pantryId) return err('product-prefs records need a non-empty pantryId');
             }
         }
+        if (name === 'planner-templates') {
+            for (const r of records) {
+                if (typeof r.name !== 'string' || !r.name) return err('planner-templates records need a non-empty name');
+            }
+        }
+        if (name === 'plan-versions') {
+            for (const r of records) {
+                if (typeof r.id !== 'string' || !r.id) return err('plan-versions records need a non-empty id');
+                if (typeof r.confirmedAt !== 'string' || !r.confirmedAt) return err('plan-versions records need a confirmedAt');
+            }
+        }
         return { ok: true };
     }
 
@@ -440,6 +456,8 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/exercises' && handleGenericFileAPI(req, res, EXERCISES_PATH, 'exercises')) return;
     if (req.url === '/api/workout-templates' && handleGenericFileAPI(req, res, WORKOUT_TEMPLATES_PATH, 'workoutTemplates')) return;
     if (req.url === '/api/product-prefs' && handleGenericFileAPI(req, res, PRODUCT_PREFS_PATH, 'product-prefs')) return;
+    if (req.url === '/api/planner-templates' && handleGenericFileAPI(req, res, PLAN_TEMPLATES_PATH, 'planner-templates')) return;
+    if (req.url === '/api/plan-versions' && handleGenericFileAPI(req, res, PLAN_VERSIONS_PATH, 'plan-versions')) return;
 
     // --- API: planner (object payload: { goals, items }) ---
     if (req.url === '/api/planner' && req.method === 'GET') {

@@ -221,6 +221,39 @@ const r = await req('/api/settings');
         ok(bad2.status === 400, 'PUT /api/product-prefs rejects non-array');
     }
 
+    // --- Planner templates & plan versions API ---
+    console.log('[planner templates & versions]');
+    {
+        const get = await req('/api/planner-templates');
+        ok(get.status === 200 && Array.isArray(get.body), 'GET /api/planner-templates returns array');
+    }
+    {
+        const put = await req('/api/planner-templates', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'tpl_test', name: 'August week template', savedOn: '2026-08-13T09:00:00.000Z', eaters: [{ idx: 0, eatingOut: false, items: [{ type: 'recipe', referenceId: 'r1', name: 'Tuna pasta', grams: 250 }] }] }])
+        });
+        ok(put.status === 200, 'PUT /api/planner-templates accepts an array');
+        const get = await req('/api/planner-templates');
+        ok(get.body.some(t => t.id === 'tpl_test'), 'planner template persisted');
+    }
+    {
+        const bad = await req('/api/planner-templates', { method: 'PUT', body: JSON.stringify([{ eaters: [] }]) });
+        ok(bad.status === 400, 'PUT /api/planner-templates rejects record without name');
+    }
+    {
+        const put = await req('/api/plan-versions', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'pv_test', confirmedAt: '2026-08-13T09:05:00.000Z', itemCount: 7, plannedMealCount: 3, slotCount: 28, plans: [] }])
+        });
+        ok(put.status === 200, 'PUT /api/plan-versions accepts an array');
+        const get = await req('/api/plan-versions');
+        ok(get.body.some(v => v.id === 'pv_test'), 'plan version persisted');
+    }
+    {
+        const bad = await req('/api/plan-versions', { method: 'PUT', body: JSON.stringify([{ itemCount: 1 }]) });
+        ok(bad.status === 400, 'PUT /api/plan-versions rejects record without id');
+    }
+
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
 

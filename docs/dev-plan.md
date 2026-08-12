@@ -291,10 +291,15 @@ a household inflation number computed from our own receipts.
       switch to Barilla → next defaults to Barilla.
 
 ### 6.2 Plan templates with name/date (GAP-22)
-- [ ] `cms-planner.js`/`cms.js`: save current plan as template (name + saved-on
-      date/time); reopen, edit, confirm.
-- [ ] Confirm-plan records the plan version used (for shopping + stats).
-- [ ] **Manual:** save month template → next month reopen → edit → confirm → the
+- [x] `cms-planner.js`/`cms.js`: save current plan as template (name + saved-on
+      date/time); reopen, edit, confirm. Templates now server-backed
+      (`data/planner-templates.json` + `GET/PUT /api/planner-templates`), migrated
+      from the previous localStorage store on first load.
+- [x] Confirm-plan records the plan version used (for shopping + stats).
+      "Confirm Plan" persists the current meal plan and appends a version snapshot
+      (`data/plan-versions.json` + `GET/PUT /api/plan-versions`) with `confirmedAt`
+      datetime, slot/meal/item counts and the full plan.
+- [x] **Manual:** save month template → next month reopen → edit → confirm → the
       saved-on date is recorded and shopping list reflects the confirmed version.
 
 ### 6.3 Macro help (GAP-23)
@@ -355,6 +360,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 4 | ☐ | | |
 | 5 | ✅ | 2026-08-13 | New Stats tab (Shop & Track): `calc.js` `householdInflationIndex`/`categorySpend`/`savingsSignals` (period-filtered) + tests; KPI cards (inflation index, total spend, avg/receipt, savings found), inflation-contributor bars, spend-by-category bars, savings-signal rows; period selector (All/3m/6m/1y, persisted `larder_stats_period`). Electron manual pass: index -54.9%, Rs10.00 / 1 receipt, 7 savings found. |
 | 6.1 | ✅ | 2026-08-13 | `data/product-prefs.json` (foodId → pantryId) + `GET/PUT /api/product-prefs` (in `DATA_FILES` for export/import/publish); brand memory in the meal-assign picker: preferred pantry product sorted first with a "✓ last used" badge, saved on pick; 5 integration tests. Electron manual pass on Tagliatelle (Barilla/De Cecco): pick one → next defaults to it; switch → remembers the new one. |
+| 6.2 | ✅ | 2026-08-13 | Templates server-backed: `data/planner-templates.json` + `GET/PUT /api/planner-templates` (localStorage migrated once); Save Template records name + `savedOn` datetime (chip shows "saved <date>", tooltip shows full stamp). "Confirm Plan" button persists the meal plan and appends a version to `data/plan-versions.json` (`confirmedAt`, counts, full `plans` snapshot); footer shows last-confirmed version with date/time. 8 new integration tests. Electron manual pass: save "Standard month" → reopen → assign → confirm → version + saved-on recorded; app data restored after test. |
 | 6 | ☐ | | |
 | 7 | ☐ | | |
 

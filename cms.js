@@ -500,6 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let receipts = [];
     let consumption = [];
     let productPrefs = [];
+    let planTemplates = [];
+    let planVersions = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
@@ -853,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs, resPlanTemplates, resPlanVersions] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
@@ -864,7 +866,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('/api/planner', { headers: HEADERS }).then(r => r.ok ? r.json() : null),
                 fetch('/api/receipts', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/pantry-items', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/product-prefs', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/product-prefs', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/planner-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/plan-versions', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
@@ -890,6 +894,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 : { goals: {}, items: [] };
             receipts = Array.isArray(resReceipts) ? resReceipts : [];
             productPrefs = Array.isArray(resProductPrefs) ? resProductPrefs : [];
+            planTemplates = Array.isArray(resPlanTemplates) ? resPlanTemplates : [];
+            planVersions = Array.isArray(resPlanVersions) ? resPlanVersions : [];
+
+            // Migrate legacy localStorage templates to the server-backed store once
+            if (planTemplates.length === 0) {
+                try {
+                    const legacy = JSON.parse(localStorage.getItem('larder_meal_templates') || '[]');
+                    if (Array.isArray(legacy) && legacy.length) {
+                        planTemplates = legacy.map(t => {
+                            if (!t.eaters && t.items) {
+                                t.eaters = (appSettings.profiles && appSettings.profiles.length ? appSettings.profiles : [{ name: 'User', calories: 2000, carbs: 40, protein: 30, fat: 30 }])
+                                    .map((p, idx) => ({ idx, eatingOut: !!t.isEatingOut, items: t.isEatingOut ? [] : JSON.parse(JSON.stringify(t.items || [])) }));
+                            }
+                            return { id: t.id || 'tpl_' + Date.now().toString(36) + Math.random().toString(36).slice(2), name: t.name || 'Imported template', savedOn: t.savedOn || new Date().toISOString(), eaters: Array.isArray(t.eaters) ? t.eaters : [] };
+                        });
+                        savePlanTemplates();
+                    }
+                } catch (e) { /* ignore malformed legacy data */ }
+            }
             
             // Migrate legacy pantry tracking data to new pantry items if needed
             if (pantryItems.length === 0 && pantry.length > 0) {
@@ -1001,6 +1024,32 @@ document.addEventListener('DOMContentLoaded', () => {
             updatedAt: new Date().toISOString()
         });
         saveProductPrefs();
+    }
+
+    async function savePlanTemplates() {
+        try {
+            const res = await fetch('/api/planner-templates', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(planTemplates)
+            });
+            if (!res.ok) throw new Error('Save failed');
+        } catch(e) {
+            console.warn('Plan template save failed', e);
+        }
+    }
+
+    async function savePlanVersions() {
+        try {
+            const res = await fetch('/api/plan-versions', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(planVersions)
+            });
+            if (!res.ok) throw new Error('Save failed');
+        } catch(e) {
+            console.warn('Plan version save failed', e);
+        }
     }
 
     function migrateLegacyPantry() {
@@ -2176,9 +2225,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             gridHTML += '</div>'; // close mp-grid
+            const lastVersion = planVersions[0] || null;
+            const lastConfirmedTxt = lastVersion
+                ? `Version saved on ${formatDateDMY(lastVersion.confirmedAt.slice(0, 10))} ${new Date(lastVersion.confirmedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${lastVersion.itemCount || 0} item${(lastVersion.itemCount || 0) === 1 ? '' : 's'}`
+                : 'No confirmed version yet — confirm after planning to record the version used.';
             gridHTML += `
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; align-items: center; flex-wrap: wrap;">
                     <button id="save-mealplan-btn" class="btn primary"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Plan</button>
+                    <button id="confirm-plan-btn" class="btn"><i data-lucide="check-check" style="width: 16px; height: 16px;"></i> Confirm Plan</button>
+                    <span class="planner-hint" style="margin-left:auto;">${escapeHtml(lastConfirmedTxt)}</span>
                 </div>
             </div>`; // close mp-dashboard
 
@@ -2252,22 +2307,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let modalEaters = [];
             let pickerItem = null; // { type, referenceId, name, unit?, servingSizeG?, defaultGrams }
 
-            // Load templates from localStorage
-            let mealTemplates = JSON.parse(localStorage.getItem('larder_meal_templates') || '[]');
-
-            // Migrate legacy templates (shared items + servings) to per-eater.
-            mealTemplates.forEach(t => {
-                if (!t.eaters && t.items) {
-                    t.eaters = getProfiles().map((p, idx) => ({
-                        idx,
-                        eatingOut: !!t.isEatingOut,
-                        items: t.isEatingOut ? [] : JSON.parse(JSON.stringify(t.items || []))
-                    }));
-                }
-            });
+            // Templates are server-backed (planTemplates loaded in loadData)
+            let mealTemplates = planTemplates;
 
             function saveTemplatesToStorage() {
-                localStorage.setItem('larder_meal_templates', JSON.stringify(mealTemplates));
+                savePlanTemplates();
             }
 
             function getProfiles() {
@@ -2457,10 +2501,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 templateListEl.innerHTML = mealTemplates.map((t, idx) => {
                     const itemCount = (t.eaters || []).reduce((a, e) => a + (e.items || []).length, 0);
                     const outCount = (t.eaters || []).filter(e => e.eatingOut).length;
+                    const savedTxt = t.savedOn ? ' · saved ' + formatDateDMY(t.savedOn.slice(0, 10)) : '';
                     return `
-                        <div class="mp-template" data-idx="${idx}">
+                        <div class="mp-template" data-idx="${idx}" title="${escapeHtml('Saved ' + (t.savedOn ? new Date(t.savedOn).toLocaleString() : ''))}">
                             <span class="mp-template-name">${escapeHtml(t.name)}</span>
-                            <span class="mp-template-meta">(${itemCount} item${itemCount !== 1 ? 's' : ''}${outCount ? `, ${outCount} out` : ''})</span>
+                            <span class="mp-template-meta">(${itemCount} item${itemCount !== 1 ? 's' : ''}${outCount ? `, ${outCount} out` : ''}${savedTxt})</span>
                             <button class="mp-template-delete" data-idx="${idx}" aria-label="Delete template">&times;</button>
                         </div>`;
                 }).join('');
@@ -2508,7 +2553,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = templateNameInput.value.trim();
                 if (!name) return;
                 mealTemplates.push({
+                    id: 'tpl_' + Date.now().toString(36) + Math.random().toString(36).slice(2),
                     name,
+                    savedOn: new Date().toISOString(),
                     eaters: JSON.parse(JSON.stringify(modalEaters))
                 });
                 saveTemplatesToStorage();
@@ -2907,6 +2954,38 @@ const targetDates = [activeDate];
                 } catch(e) {
                     alert('Save failed. Reverting to previous state.');
                     loadData();
+                }
+            };
+
+            document.getElementById('confirm-plan-btn').onclick = async () => {
+                const now = new Date();
+                try {
+                    const mpRes = await fetch('/api/mealplans', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(mealPlans)
+                    });
+                    if (!mpRes.ok) throw new Error('Could not save the meal plan');
+                    const planned = mealPlans.filter(p => !p.isEatingOut && (p.eaters || []).some(e => !e.eatingOut && (e.items || []).length));
+                    const itemCount = planned.reduce((a, p) => a + (p.eaters || []).reduce((x, e) => x + (e.items || []).length, 0), 0);
+                    planVersions.unshift({
+                        id: 'pv_' + Date.now().toString(36) + Math.random().toString(36).slice(2),
+                        confirmedAt: now.toISOString(),
+                        slotCount: mealPlans.length,
+                        plannedMealCount: planned.length,
+                        itemCount,
+                        plans: JSON.parse(JSON.stringify(mealPlans))
+                    });
+                    const pvRes = await fetch('/api/plan-versions', {
+                        method: 'PUT',
+                        headers: HEADERS,
+                        body: JSON.stringify(planVersions)
+                    });
+                    if (!pvRes.ok) throw new Error('Could not record the plan version');
+                    statusText.innerHTML = `<span class="status-dot"></span> Plan confirmed · saved on ${formatDateDMY(now.toISOString().split('T')[0])} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    renderCMSList();
+                } catch(e) {
+                    alert('Could not confirm plan. ' + e.message);
                 }
             };
             

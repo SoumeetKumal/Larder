@@ -135,7 +135,7 @@ A `pantry`-type item carries the chosen product (`pantryId`); the picker exists 
 **Generic file API** (`handleGenericFileAPI`): `/api/mealplans`, `/api/pantry`,
 `/api/pantry-items`, `/api/shoppinglists`, `/api/household`, `/api/receipts`,
 `/api/exercises`, `/api/workout-templates`, `/api/consumption`,
-`/api/product-prefs`.
+`/api/product-prefs`, `/api/planner-templates`, `/api/plan-versions`.
 **Other:** `GET/PUT /api/planner`, `GET /api/network-info`, `GET/PUT /api/settings`,
 `GET /api/export` (ZIP), `POST /api/import` (ZIP), `POST /api/publish` (git push).
 

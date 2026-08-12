@@ -198,7 +198,7 @@ Legend — status:
   /api/product-prefs`; picker saves on pick and renders the preferred product first
   with a "✓ last used" badge (Electron-verified, Barilla/De Cecco switch works).
 
-### GAP-22 — Plan templates saved with name + date, reloadable `[partial]` · M
+### GAP-22 — Plan templates saved with name + date, reloadable `[works]` · M
 - **User expects:** end-of-month plan saves as a template; next month reopen, edit,
   confirm; confirmation records date/month/time.
 - **Today:** template chips exist (`cms.js:2233`); planner goals exist
@@ -206,6 +206,10 @@ Legend — status:
   saved-on timestamp + "confirm plan" record.
 - **Change:** plan snapshot save/load with metadata; confirm-plan records the plan
   version used (which then drives shopping lists & stats).
+- **Done:** templates persisted to `data/planner-templates.json` with `savedOn`
+  (migrated from localStorage once); "Confirm Plan" records a version snapshot
+  (`data/plan-versions.json` with `confirmedAt`, counts, full plan). Electron
+  manual pass complete (save → reopen → edit → confirm → saved-on recorded).
 
 ### GAP-23 — Macro-driven suggestions while building the plan `[partial]` · M
 - **User expects:** targets from settings (energy/macros/micros); the app helps reach
@@ -272,7 +276,7 @@ Legend — status:
 | GAP-08..10 | Cooking & pantry | 2 open / 1 partial | 2 |
 | GAP-11..16 | Shopping list | 2 open / 2 partial / 1 works / 1 L | 3 (+7 for sync) |
 | GAP-17..20 | Receipts & prices | 2 open / 2 works | 4 |
-| GAP-21..23 | Meal planning | 1 works / 2 partial | 6 |
+| GAP-21..23 | Meal planning | 2 works / 1 partial | 6 |
 | GAP-24 | Stats | works | 5 |
 | GAP-25..26 | Sync & mobile | open (A) | 7 |
 | GAP-27..28 | Foundations | open | 0 / ongoing |
