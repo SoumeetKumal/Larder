@@ -187,13 +187,16 @@ Legend — status:
 
 ## 5. Meal planning (personal)
 
-### GAP-21 — Remember the last chosen product per recipe `[open]` · S
+### GAP-21 — Remember the last chosen product per recipe `[works]` · S
 - **User expects:** pick Granoro this time; next time it pre-selects Granoro; switch
   to Barilla and it remembers Barilla.
 - **Today:** the planner picker lists all pantry products for an ingredient
   (`cms.js:2534-2598`) but always starts neutral — no memory of the last pick.
 - **Change:** store `lastPantryId` on the recipe ingredient (or a
   recipe-ingredient→product preference table); use as default in the picker.
+- **Done:** `data/product-prefs.json` (foodId → pantryId) + `GET/PUT
+  /api/product-prefs`; picker saves on pick and renders the preferred product first
+  with a "✓ last used" badge (Electron-verified, Barilla/De Cecco switch works).
 
 ### GAP-22 — Plan templates saved with name + date, reloadable `[partial]` · M
 - **User expects:** end-of-month plan saves as a template; next month reopen, edit,
@@ -269,7 +272,7 @@ Legend — status:
 | GAP-08..10 | Cooking & pantry | 2 open / 1 partial | 2 |
 | GAP-11..16 | Shopping list | 2 open / 2 partial / 1 works / 1 L | 3 (+7 for sync) |
 | GAP-17..20 | Receipts & prices | 2 open / 2 works | 4 |
-| GAP-21..23 | Meal planning | 1 open / 2 partial | 6 |
+| GAP-21..23 | Meal planning | 1 works / 2 partial | 6 |
 | GAP-24 | Stats | works | 5 |
 | GAP-25..26 | Sync & mobile | open (A) | 7 |
 | GAP-27..28 | Foundations | open | 0 / ongoing |

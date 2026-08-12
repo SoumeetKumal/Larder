@@ -499,6 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let planner = { goals: {}, items: [] };
     let receipts = [];
     let consumption = [];
+    let productPrefs = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let cmsSearchQuery = '';
@@ -852,7 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
@@ -862,7 +863,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('/api/settings', { headers: HEADERS }).then(r => r.ok ? r.json() : { profiles: [] }),
                 fetch('/api/planner', { headers: HEADERS }).then(r => r.ok ? r.json() : null),
                 fetch('/api/receipts', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/pantry-items', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/pantry-items', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/product-prefs', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
@@ -887,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? { goals: resPlanner.goals || {}, items: Array.isArray(resPlanner.items) ? resPlanner.items : [] }
                 : { goals: {}, items: [] };
             receipts = Array.isArray(resReceipts) ? resReceipts : [];
+            productPrefs = Array.isArray(resProductPrefs) ? resProductPrefs : [];
             
             // Migrate legacy pantry tracking data to new pantry items if needed
             if (pantryItems.length === 0 && pantry.length > 0) {
@@ -974,6 +977,30 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Save failed. Reverting to previous state.');
             loadData();
         }
+    }
+
+    async function saveProductPrefs() {
+        try {
+            const res = await fetch('/api/product-prefs', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(productPrefs)
+            });
+            if (!res.ok) throw new Error('Save failed');
+        } catch(e) {
+            console.warn('Product preference save failed', e);
+        }
+    }
+
+    function rememberProduct(pantryItem) {
+        if (!pantryItem || !pantryItem.ingredientFoodId || !pantryItem.pantryId) return;
+        productPrefs = productPrefs.filter(x => !(x.foodId === pantryItem.ingredientFoodId));
+        productPrefs.push({
+            foodId: pantryItem.ingredientFoodId,
+            pantryId: pantryItem.pantryId,
+            updatedAt: new Date().toISOString()
+        });
+        saveProductPrefs();
     }
 
     function migrateLegacyPantry() {
@@ -2723,16 +2750,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     suggestionsBox.innerHTML = combined.map((item, idx) => {
                         let pantryItemsHtml = '';
                         if (item._type === 'ingredient') {
-                            const pantryItemsForIng = pantryItems.filter(p => p.ingredientFoodId === item.foodId);
-                            if (pantryItemsForIng.length > 0) {
+                            const pref = productPrefs.find(x => x.foodId === item.foodId);
+                            const pantryListForIng = pantryItems.filter(p => p.ingredientFoodId === item.foodId);
+                            if (pref && pantryListForIng.length > 1) {
+                                const prefIdx = pantryListForIng.findIndex(p => p.pantryId === pref.pantryId);
+                                if (prefIdx > 0) pantryListForIng.unshift(pantryListForIng.splice(prefIdx, 1)[0]);
+                            }
+                            if (pantryListForIng.length > 0) {
                                 pantryItemsHtml = `<div class="pantry-items-sub" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
                                     <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem;">Your pantry items:</div>
-                                    ${pantryItemsForIng.map(p => `
-                                        <button type="button" class="pantry-item-pick" data-pantry-id="${escapeHtml(p.pantryId)}" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.6rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.25rem; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;">
+                                    ${pantryListForIng.map(p => {
+                                        const isPref = !!(pref && p.pantryId === pref.pantryId);
+                                        return `<button type="button" class="pantry-item-pick" data-pantry-id="${escapeHtml(p.pantryId)}" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.6rem; background: var(--bg-surface); border: 1px solid ${isPref ? 'var(--primary)' : 'var(--border)'}; border-radius: 6px; margin-bottom: 0.25rem; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;">
                                             ${escapeHtml(p.brand ? p.brand + ' ' + p.productName : p.productName)}
+                                            ${isPref ? '<span style="color: var(--primary); font-size: 0.7rem; font-weight: 700;">  \u2713 last used</span>' : ''}
                                             <span style="float: right; color: var(--text-muted); font-size: 0.7rem;">${p.packSize} ${p.packUnit} · ${p.price > 0 ? formatMoney(p.price, p.currency || 'MUR') : 'no price'}</span>
-                                        </button>
-                                    `).join('')}
+                                        </button>`;
+                                    }).join('')}
                                 </div>`;
                             }
                         }
@@ -2778,6 +2812,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             searchInput.value = pantryItem.brand ? pantryItem.brand + ' ' + pantryItem.productName : pantryItem.productName;
                             suggestionsBox.style.display = 'none';
                             const sv = pantryItem.packSize || 100;
+                            rememberProduct(pantryItem);
                             pickerItem = { 
                                 type: 'pantry', 
                                 referenceId: pantryItem.pantryId, 

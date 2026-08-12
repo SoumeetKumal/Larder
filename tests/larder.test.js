@@ -199,6 +199,28 @@ const r = await req('/api/settings');
         ok(bad.status === 400, 'PUT /api/shoppinglists rejects non-array');
     }
 
+    // --- Product prefs (brand memory) API ---
+    console.log('[product prefs]');
+    {
+        const get = await req('/api/product-prefs');
+        ok(get.status === 200 && Array.isArray(get.body), 'GET /api/product-prefs returns array');
+    }
+    {
+        const put = await req('/api/product-prefs', {
+            method: 'PUT',
+            body: JSON.stringify([{ foodId: 'tagliatelle', pantryId: 'p_granoro', updatedAt: '2026-08-13T00:00:00.000Z' }])
+        });
+        ok(put.status === 200, 'PUT /api/product-prefs accepts an array');
+        const get = await req('/api/product-prefs');
+        ok(get.body.some(x => x.foodId === 'tagliatelle' && x.pantryId === 'p_granoro'), 'product pref persisted');
+    }
+    {
+        const bad = await req('/api/product-prefs', { method: 'PUT', body: JSON.stringify([{ pantryId: 'p_x' }]) });
+        ok(bad.status === 400, 'PUT /api/product-prefs rejects record without foodId');
+        const bad2 = await req('/api/product-prefs', { method: 'PUT', body: 'not an array' });
+        ok(bad2.status === 400, 'PUT /api/product-prefs rejects non-array');
+    }
+
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
 

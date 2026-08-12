@@ -134,14 +134,15 @@ A `pantry`-type item carries the chosen product (`pantryId`); the picker exists 
 **Special handlers** (validation): `GET/PUT /api/recipes`, `GET/PUT /api/ingredients`.
 **Generic file API** (`handleGenericFileAPI`): `/api/mealplans`, `/api/pantry`,
 `/api/pantry-items`, `/api/shoppinglists`, `/api/household`, `/api/receipts`,
-`/api/exercises`, `/api/workout-templates`.
+`/api/exercises`, `/api/workout-templates`, `/api/consumption`,
+`/api/product-prefs`.
 **Other:** `GET/PUT /api/planner`, `GET /api/network-info`, `GET/PUT /api/settings`,
 `GET /api/export` (ZIP), `POST /api/import` (ZIP), `POST /api/publish` (git push).
 
-> **New endpoints needed** as features land (see §6): `POST /api/consumption`,
-> shopping-list history via existing generic API once the shape changes,
-> `POST /api/receipts/apply` (or fold into receipt save), price-history write
-> endpoint (or fold into ingredient/pantry save).
+> **New endpoints needed** as features land (see §6): shopping-list history via
+> existing generic API once the shape changes, `POST /api/receipts/apply` (or fold
+> into receipt save), price-history write endpoint (or fold into
+> ingredient/pantry save).
 
 ## 4. Key proposed schema changes
 

@@ -283,10 +283,11 @@ a household inflation number computed from our own receipts.
 ## Phase 6 — Meal planning smartness
 
 ### 6.1 Remember last product per recipe (GAP-21)
-- [ ] Preference table `data/product-prefs.json` (recipeId+foodId → pantryId) or
+- [x] Preference table `data/product-prefs.json` (recipeId+foodId → pantryId) or
       field on recipe ingredients (decision D7). Load in CMS.
-- [ ] Picker (`cms.js:2534-2598`): default to stored pref; save pref on pick.
-- [ ] **Manual:** add Tuna pasta → pick Granoro → next add defaults to Granoro →
+      Chosen: `data/product-prefs.json` keyed by ingredient `foodId` → `pantryId`.
+- [x] Picker (`cms.js:2534-2598`): default to stored pref; save pref on pick.
+- [x] **Manual:** add Tuna pasta → pick Granoro → next add defaults to Granoro →
       switch to Barilla → next defaults to Barilla.
 
 ### 6.2 Plan templates with name/date (GAP-22)
@@ -353,6 +354,7 @@ both can tick; phone reads pantry and uses the checklist.
 | 3 | ☐ | | |
 | 4 | ☐ | | |
 | 5 | ✅ | 2026-08-13 | New Stats tab (Shop & Track): `calc.js` `householdInflationIndex`/`categorySpend`/`savingsSignals` (period-filtered) + tests; KPI cards (inflation index, total spend, avg/receipt, savings found), inflation-contributor bars, spend-by-category bars, savings-signal rows; period selector (All/3m/6m/1y, persisted `larder_stats_period`). Electron manual pass: index -54.9%, Rs10.00 / 1 receipt, 7 savings found. |
+| 6.1 | ✅ | 2026-08-13 | `data/product-prefs.json` (foodId → pantryId) + `GET/PUT /api/product-prefs` (in `DATA_FILES` for export/import/publish); brand memory in the meal-assign picker: preferred pantry product sorted first with a "✓ last used" badge, saved on pick; 5 integration tests. Electron manual pass on Tagliatelle (Barilla/De Cecco): pick one → next defaults to it; switch → remembers the new one. |
 | 6 | ☐ | | |
 | 7 | ☐ | | |
 
