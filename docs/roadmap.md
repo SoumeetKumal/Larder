@@ -89,10 +89,17 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-12 both phones see one live checklist; mid-trip join works.
 - **Done when:** two devices on the same Wi-Fi share a live shopping list and both
   can tick it; phone can read pantry and use the list.
+- **Status:** ✅ Phase 7 complete (Aug 2026). 7.1 LAN sync core (WS hub on
+  `server.js`, `/ws` per-dataset subscribe + broadcast on every write,
+  `POST /api/shoppinglists/tick`, web-compatible `SyncClient` wired into the CMS for
+  live repaints) and 7.2 phone PWA (installable `phone/` route + manifest + service
+  worker, live shared checklist, pantry quick-use, receipt capture). Cross-device
+  e2e exercises a phone ↔ CMS pair against a live server — see `dev-plan.md` log.
 
 ## After Phase 7 (backlog, no commitment)
 - Cloud sync transport behind the `SyncClient` abstraction.
-- Native app wrapper if the PWA proves out.
+- Native app wrapper (Capacitor) if the PWA proves out — the PWA is the current
+  phone client.
 - Richer suggestions/ML for meal planning.
 - Public recipe collections / sharing.
 

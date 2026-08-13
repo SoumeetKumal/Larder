@@ -157,6 +157,7 @@ const MIME_TYPES = {
     '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon',
     '.webp': 'image/webp',
+    '.webmanifest': 'application/manifest+json',
 };
 
 function safeEqual(a, b) {
@@ -802,6 +803,20 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // Directory → serve its index.html (e.g. /phone/ → /phone/index.html)
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
+        const indexFile = path.join(filePath, 'index.html');
+        if (fs.existsSync(indexFile)) {
+            return fs.readFile(indexFile, (err, data) => {
+                if (err) { sendJson(res, 500, { error: 'Server Error' }); return; }
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(data);
+            });
+        }
+        sendJson(res, 404, { error: 'Not Found' });
+        return;
+    }
+
     // If no extension, try appending .html (e.g. /cms → /cms.html)
     let ext = path.extname(filePath).toLowerCase();
     if (!ext) {
@@ -908,6 +923,7 @@ server.listen(PORT, HOST, () => {
     console.log('  🍽️  Larder is running!');
     console.log(`  📡 Local:   http://localhost:${PORT}`);
     console.log(`  📝 CMS:     http://localhost:${PORT}/cms.html`);
+    console.log(`  📱 Phone:   http://localhost:${PORT}/phone/`);
     if (ALLOW_LAN) {
         const lanIPs = getLanAddresses();
         console.log(`  📡 LAN:     http://${lanIPs[0] || '0.0.0.0'}:${PORT}  (LAN sync ENABLED)`);
@@ -917,14 +933,4 @@ server.listen(PORT, HOST, () => {
     console.log('');
     console.log('  Press Ctrl+C to stop.');
     console.log('');
-
-    // Auto-open browser (only when NOT inside Electron)
-    if (!global.LARDER_IS_ELECTRON) {
-        const { exec } = require('child_process');
-        const url = `http://localhost:${PORT}`;
-        const platform = process.platform;
-        if (platform === 'win32') exec(`start ${url}`);
-        else if (platform === 'darwin') exec(`open ${url}`);
-        else exec(`xdg-open ${url}`);
-    }
 });

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1f26">
+<title>Larder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../images/icon.png">
+<link rel="icon" type="image/png" href="../images/icon.png">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="phone.css">
+</head>
+<body class="phone-body">
+<header id="ph-header" class="ph-header">
+    <div class="ph-title"><img src="../images/icon.png" alt="Larder" class="ph-logo"><span>Larder</span></div>
+    <div id="ph-status" class="ph-status">connecting…</div>
+</header>
+
+<main id="ph-main" class="ph-main">
+    <section id="view-list" class="ph-view active">
+        <div class="ph-view-head">
+            <h2 id="list-date"></h2>
+            <span id="list-count" class="ph-count"></span>
+        </div>
+        <div id="list-empty" class="ph-empty" hidden>No shopping list for today yet.</div>
+        <ul id="list-items" class="ph-items"></ul>
+    </section>
+
+    <section id="view-pantry" class="ph-view">
+        <div class="ph-view-head">
+            <h2>Pantry</h2>
+            <button id="pantry-refresh" class="ph-btn ph-btn-ghost">Refresh</button>
+        </div>
+        <div id="pantry-empty" class="ph-empty" hidden>No tracked pantry items.</div>
+        <ul id="pantry-items" class="ph-items"></ul>
+    </section>
+
+    <section id="view-receipt" class="ph-view">
+        <div class="ph-view-head"><h2>New receipt</h2></div>
+        <div class="ph-card">
+            <label class="ph-label">Store</label>
+            <input id="rc-store" class="ph-input" placeholder="e.g. Mega Mart" value="Other">
+            <label class="ph-label">Date</label>
+            <input id="rc-date" class="ph-input" type="date">
+            <label class="ph-label">Photo (optional)</label>
+            <div class="ph-row">
+                <input id="rc-camera" class="ph-file" type="file" accept="image/*">
+                <img id="rc-preview" class="ph-preview" alt="Receipt photo" hidden>
+            </div>
+            <p id="rc-scan-hint" class="ph-hint">Line recognition runs in the desktop app — on the phone, paste the receipt text instead.</p>
+            <label class="ph-label">Receipt text (or type the lines)</label>
+            <textarea id="rc-text" class="ph-textarea" placeholder="Rice 2kg 145&#10;Eggs 12 180&#10;TOTAL 325"></textarea>
+            <div class="ph-row">
+                <input id="rc-total" class="ph-input" type="number" step="0.01" min="0" placeholder="Total (optional)" style="flex:1; min-width:0;">
+                <button id="rc-parse" class="ph-btn">Parse lines</button>
+                <button id="rc-save" class="ph-btn ph-btn-primary">Save receipt</button>
+            </div>
+            <p id="rc-note" class="ph-note"></p>
+            <ul id="rc-items" class="ph-items ph-items-tight"></ul>
+        </div>
+    </section>
+</main>
+
+<nav id="ph-tabs" class="ph-tabs">
+    <button class="ph-tab active" data-view="list">List</button>
+    <button class="ph-tab" data-view="pantry">Pantry</button>
+    <button class="ph-tab" data-view="receipt">Receipt</button>
+</nav>
+
+<script src="../calc.js"></script>
+<script src="../sync-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

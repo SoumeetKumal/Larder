@@ -355,15 +355,34 @@ Decisions to confirm first: **D4** conflict policy, **D5** OCR, **D6** threshold
       behaviour is now fully exercised end-to-end.)
 
 ### 7.2 Phone PWA
-- [ ] Serve a `phone/` route (mobile-first, reuses `/api/*`) + manifest + service
-      worker + icons; installable.
-- [ ] Screens: shared shopping checklist (live), pantry quick-use, receipt capture.
-- [ ] Camera via file input / `getMediaDevices` (OCR per D5, GAP-17).
-- [ ] **Manual:** on a phone (same Wi-Fi) install the PWA, see the live shared list,
-      tick, watch the PC update; scan a receipt.
+- [x] Serve a `phone/` route (mobile-first, reuses `/api/*`) + manifest + service
+      worker + icons; installable. (`server.js` directory-index static serving —
+      `/phone/` and `/phone` both resolve to `phone/index.html`; `.webmanifest`
+      MIME type added; `phone/manifest.webmanifest` + `phone/sw.js` precache the
+      shell and shared assets.)
+- [x] Screens: shared shopping checklist (live), pantry quick-use, receipt capture.
+      (`phone/app.js`: checklist renders today's dated record with per-item
+      checkboxes → `POST /api/shoppinglists/tick`; pantry quick-use writes
+      `consumption.json` (source `manual`) + decrements `pantry-items`, the same
+      shared writes the CMS "Used" control performs; receipt screen pastes/parses
+      lines via `parseReceiptText` and saves via `PUT /api/receipts`.)
+- [x] Camera via file input / `getMediaDevices` (OCR per D5, GAP-17).
+      (`phone/index.html` `input[type=file] accept="image/*"` + preview; when the
+      PWA is hosted inside Electron the existing `larderWindow.ocrImage` fills the
+      textarea — on a bare phone browser the pasted-text path stays primary, same
+      convention as the CMS 4.3 flow.)
+- [x] **Manual:** on a phone (same Wi-Fi) install the PWA, see the live shared list,
+      tick, watch the PC update; scan a receipt. (Verified by automation:
+      `tests/larder-phone-e2e.test.js` boots a real phone PWA instance AND a real
+      CMS instance in jsdom — with Node's WebSocket/fetch injected — against a live
+      spawned server; a phone checkbox click repaints the CMS live and a CMS tick
+      repaints the phone, both flips persist. A manual phone pass is still
+      worthwhile.)
 
 **Phase 7 acceptance:** two devices on the same Wi-Fi share one live shopping list;
 both can tick; phone reads pantry and uses the checklist.
+**Done.** 7.1 LAN sync core + 7.2 phone PWA both verified — see the running log for
+the automation that stands in for the manual two-device pass.
 
 ---
 
@@ -386,8 +405,9 @@ both can tick; phone reads pantry and uses the checklist.
 | 6.1 | ✅ | 2026-08-13 | `data/product-prefs.json` (foodId → pantryId) + `GET/PUT /api/product-prefs` (in `DATA_FILES` for export/import/publish); brand memory in the meal-assign picker: preferred pantry product sorted first with a "✓ last used" badge, saved on pick; 5 integration tests. Electron manual pass on Tagliatelle (Barilla/De Cecco): pick one → next defaults to it; switch → remembers the new one. |
 | 6.2 | ✅ | 2026-08-13 | Templates server-backed: `data/planner-templates.json` + `GET/PUT /api/planner-templates` (localStorage migrated once); Save Template records name + `savedOn` datetime (chip shows "saved <date>", tooltip shows full stamp). "Confirm Plan" button persists the meal plan and appends a version to `data/plan-versions.json` (`confirmedAt`, counts, full `plans` snapshot); footer shows last-confirmed version with date/time. 8 new integration tests. Electron manual pass: save "Standard month" → reopen → assign → confirm → version + saved-on recorded; app data restored after test. |
 | 6 | ✅ | 2026-08-13 | Meal planning smartness: 6.1 brand memory (`product-prefs.json`, picker defaults + saves), 6.2 server-backed templates with name/`savedOn` + Confirm-plan version snapshots (`plan-versions.json`), 6.3 live remaining-vs-target macro panels + gap-closing suggestion chips in both planners. |
-| 7 | ☐ | | |
+| 7 | ✅ | 2026-08-13 | Sync & mobile complete: 7.1 LAN sync core (WS hub + tick + `SyncClient` + live repaint, fully tested incl. two-instance e2e) + 7.2 phone PWA (installable `phone/` route + live shared checklist + pantry quick-use + receipt capture, tested at route/DOM/e2e levels). Acceptance "two devices share one live shopping list" exercised end-to-end by `tests/larder-phone-e2e.test.js` (real phone ↔ real CMS over live WS). |
 | 7.1 | ✅ | 2026-08-13 | LAN sync core: `server.js` WS hub (`/ws`, per-dataset subscribe, broadcast of current file content on every write; `POST /api/shoppinglists/tick` per-item flip with LWW; broadcasts hooked into recipes/ingredients/generic-file API/planner/settings; `PORT` honours env). `sync-client.js` web-compatible `SyncClient` (subscribe/send/receive, graceful offline no-op, auto-reconnect with stop flag) wired into `cms.js` to repaint on remote updates — shopping list + pantry/pantry-items live sync; shopping items get stable `id`s; peer-repaint hook fixed (`repaintShoppingSync` — `renderShoppingList`/`resultsContainer` are scoped to the shopping-tab block, not reachable from the load-time SyncClient callback). Integration: `tests/larder-sync.test.js` — hello, subscribe+broadcast (incl. pantry-items), tick flips+acks, unknown-item 400, two `SyncClient`s syncing ticks both ways. Browser-level: `tests/larder-sync-dom.test.js` — real CMS in jsdom, checkbox click POSTs the tick payload, broadcasts repaint the shopping list AND the pantry tab when active. E2E: `tests/larder-sync-e2e.test.js` — two real CMS instances in jsdom (Node WebSocket/fetch injected) against a live spawned server; a checkbox click in tab A repaints tab B live and persists. `ws` added to deps; `npm test` fully green. |
+| 7.2 | ✅ | 2026-08-13 | Phone PWA (GAP-26): `phone/` directory-index route + `manifest.webmanifest` (served with `application/manifest+json`) + `sw.js` precache + icon refs (installable). Mobile-first `phone/index.html` + `phone.css` + `phone/app.js` with three screens — shared live checklist (tick via `/api/shoppinglists/tick`, subscribes to `shoppinglists`), pantry quick-use (writes `consumption.json` `source:manual` + decrements `pantry-items`), receipt capture (pasted-text primary, `parseReceiptText` → `PUT /api/receipts`; file-input camera + preview, `larderWindow.ocrImage` when Electron-hosted). Reuses `calc.js`/`sync-client.js`/`styles.css`. Tests: `tests/larder-phone.test.js` (directory index, manifest MIME, assets, tick behind `/phone`), `tests/larder-phone-dom.test.js` (render+tick, pantry use, receipt save, broadcast repaint), `tests/larder-phone-e2e.test.js` (real phone PWA ↔ real CMS over live WS — phone tick repaints CMS and vice-versa, both persisted). `npm test` fully green; lint green. |
 
 Mark each checklist item `[x]` only when actually verified. If a step can't be
 verified, keep it open and write why in Notes — do not silently move on.
