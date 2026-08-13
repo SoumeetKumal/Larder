@@ -5,8 +5,9 @@ const crypto = require('crypto');
 const os = require('os');
 const AdmZip = require('adm-zip');
 const { execFile } = require('child_process');
+const { WebSocketServer } = require('ws');
 
-const PORT = 8000;
+const PORT = Number(process.env.PORT) || 8000;
 const ROOT = __dirname;
 const DATA_DIR = global.LARDER_DATA_DIR || process.env.LARDER_DATA_DIR || path.join(ROOT, 'data');
 // Bind to loopback only by default. Larder is a personal, local-first app:
@@ -194,6 +195,16 @@ function sendJson(res, status, obj) {
     res.end(JSON.stringify(obj));
 }
 
+function readJsonArray(filePath) {
+    try {
+        if (!fs.existsSync(filePath)) return [];
+        const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
+}
+
 const server = http.createServer((req, res) => {
     // Query strings are stripped up-front so cache-busting URLs like
     // "/api/recipes?_=123" still match the exact-path routes below.
@@ -267,6 +278,7 @@ const server = http.createServer((req, res) => {
                     }
                     sendJson(res, 200, { success: true, count: parsed.length });
                     console.log(`  💾 Saved ${parsed.length} recipe(s) to recipes.json`);
+                    broadcast('recipes');
                 });
             } catch (e) {
                 sendJson(res, 400, { error: 'Invalid JSON or payload must be an array' });
@@ -306,6 +318,7 @@ const server = http.createServer((req, res) => {
                     }
                     sendJson(res, 200, { success: true, count: parsed.length });
                     console.log(`  💾 Saved ${parsed.length} ingredient(s) to ingredients.json`);
+                    broadcast('ingredients');
                 });
             } catch (e) {
                 sendJson(res, 400, { error: 'Invalid JSON or payload must be an array' });
@@ -349,6 +362,7 @@ const server = http.createServer((req, res) => {
                         }
                         sendJson(res, 200, { success: true, count: parsed.length });
                         console.log(`  💾 Saved ${parsed.length} record(s) to ${name}.json`);
+                        broadcast(name);
                     });
                 } catch (e) {
                     sendJson(res, 400, { error: 'Invalid JSON or payload must be an array' });
@@ -446,6 +460,36 @@ const server = http.createServer((req, res) => {
         return { ok: true };
     }
 
+    // --- API: shopping-list tick (per-item checkbox flip, broadcast to peers) ---
+    if (req.url === '/api/shoppinglists/tick' && req.method === 'POST') {
+        collectBody(req).then(body => {
+            try {
+                const msg = JSON.parse(body.toString('utf8'));
+                if (!msg || typeof msg.date !== 'string' || typeof msg.itemId !== 'string' || typeof msg.checked !== 'boolean') throw new Error('bad payload');
+                const lists = readJsonArray(SHOPPINGLISTS_PATH);
+                const rec = lists.find(r => r.date === msg.date);
+                if (!rec) throw new Error('record not found');
+                const item = (rec.items || []).find(i => i.id === msg.itemId);
+                if (!item) throw new Error('item not found');
+                item.checked = msg.checked;
+                item.updated = Date.now();
+                fs.writeFile(SHOPPINGLISTS_PATH, JSON.stringify(lists, null, 2), 'utf8', (err) => {
+                    if (err) {
+                        sendJson(res, 500, { error: 'Could not write shoppinglists.json' });
+                        return;
+                    }
+                    broadcast('shoppinglists');
+                    sendJson(res, 200, { success: true, checked: msg.checked, date: msg.date, itemId: msg.itemId });
+                });
+            } catch (e) {
+                sendJson(res, 400, { error: 'Tick failed or invalid payload' });
+            }
+        }).catch(() => {
+            sendJson(res, 413, { error: 'Request body too large' });
+        });
+        return;
+    }
+
     if (req.url === '/api/mealplans' && handleGenericFileAPI(req, res, MEALPLANS_PATH, 'mealplans')) return;
     if (req.url === '/api/pantry' && handleGenericFileAPI(req, res, PANTRY_PATH, 'pantry')) return;
     if (req.url === '/api/pantry-items' && handleGenericFileAPI(req, res, PANTRY_ITEMS_PATH, 'pantry-items')) return;
@@ -491,6 +535,7 @@ const server = http.createServer((req, res) => {
                     }
                     sendJson(res, 200, { success: true });
                     console.log(`  💾 Saved planner to planner.json`);
+                    broadcast('planner');
                 });
             } catch (e) {
                 sendJson(res, 400, { error: 'Invalid JSON or payload must be an object' });
@@ -539,6 +584,7 @@ const server = http.createServer((req, res) => {
                     }
                     sendJson(res, 200, { success: true });
                     console.log(`  💾 Saved settings to settings.json`);
+                    broadcast('settings');
                 });
             } catch (e) {
                 sendJson(res, 400, { error: 'Invalid JSON or payload must be an object' });
@@ -786,6 +832,76 @@ const server = http.createServer((req, res) => {
         res.end(data);
     });
 });
+
+// --- WebSocket hub for LAN real-time sync (subscriptions + broadcasts) ---
+const wss = new WebSocketServer({ noServer: true });
+const wsSubscriptions = new Map();
+
+server.on('upgrade', (req, socket, head) => {
+    const pathname = (req.url || '').split('?')[0];
+    if (pathname !== '/ws') {
+        socket.destroy();
+        return;
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => {
+        wsSubscriptions.set(ws, new Set());
+        ws.on('message', (buf) => {
+            try {
+                const msg = JSON.parse(buf.toString('utf8'));
+                if (!msg || msg.type !== 'subscribe' || typeof msg.dataset !== 'string') return;
+                const set = wsSubscriptions.get(ws) || new Set();
+                set.add(msg.dataset);
+                wsSubscriptions.set(ws, set);
+            } catch (e) { /* ignore malformed messages */ }
+        });
+        ws.on('close', () => wsSubscriptions.delete(ws));
+        wss.emit('connection', ws);
+    });
+});
+
+function readDatasetText(name) {
+    const p = datasetPath(name);
+    if (!p) return null;
+    try {
+        if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
+        return '[]';
+    } catch (e) {
+        return null;
+    }
+}
+
+function datasetPath(name) {
+    const map = {
+        recipes: RECIPES_PATH,
+        ingredients: INGREDIENTS_PATH,
+        mealplans: MEALPLANS_PATH,
+        pantry: PANTRY_PATH,
+        'pantry-items': PANTRY_ITEMS_PATH,
+        shoppinglists: SHOPPINGLISTS_PATH,
+        household: HOUSEHOLD_PATH,
+        receipts: RECEIPTS_PATH,
+        consumption: path.join(DATA_DIR, 'consumption.json'),
+        exercises: EXERCISES_PATH,
+        workoutTemplates: WORKOUT_TEMPLATES_PATH,
+        'product-prefs': PRODUCT_PREFS_PATH,
+        'planner-templates': PLAN_TEMPLATES_PATH,
+        'plan-versions': PLAN_VERSIONS_PATH,
+        planner: PLANNER_PATH,
+        settings: SETTINGS_PATH
+    };
+    return map[name] || null;
+}
+
+function broadcast(name) {
+    const text = readDatasetText(name);
+    if (text === null) return;
+    const payload = JSON.stringify({ type: 'update', dataset: name, body: text });
+    wsSubscriptions.forEach((datasets, ws) => {
+        if (ws.readyState === 1 && datasets.has(name)) {
+            try { ws.send(payload); } catch (e) { /* drop */ }
+        }
+    });
+}
 
 server.listen(PORT, HOST, () => {
     console.log('');

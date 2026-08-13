@@ -333,15 +333,26 @@ Decisions to confirm first: **D4** conflict policy, **D5** OCR, **D6** threshold
 (`architecture.md` §7).
 
 ### 7.1 LAN sync core
-- [ ] `server.js`: WebSocket endpoint (or SSE) + `/api/network-info` already exists.
-- [ ] `SyncClient` module (web-compatible): connect, subscribe(dataset), send(delta),
+- [x] `server.js`: WebSocket endpoint (or SSE) + `/api/network-info` already exists.
+      (WS hub: `server.on('upgrade')` → `/ws`, per-dataset `subscribe`, broadcast
+      of current file content on every write; `PORT` now honours `process.env.PORT`.)
+- [x] `SyncClient` module (web-compatible): connect, subscribe(dataset), send(delta),
       receive(delta). No-op gracefully when offline.
-- [ ] Conflict: last-write-wins per document + per shopping-list-item merge for
+- [x] Conflict: last-write-wins per document + per shopping-list-item merge for
       ticks (per D4).
-- [ ] Shopping list first, then pantry, then full data.
-- [ ] **Integration:** two clients via raw WS in `tests/` sync a tick both ways.
-- [ ] **Manual:** two browser tabs on the same PC act as two devices → tick in one,
-      other updates live.
+- [x] Shopping list first, then pantry, then full data.
+      (Server broadcasts every dataset on write. Client `SyncClient` subscribes to
+      `shoppinglists`, `pantry` and `pantry-items` and repaints the active tab —
+      shopping via `repaintShoppingSync`, pantry via `renderPantryTab` when the
+      pantry tab is active.)
+- [x] **Integration:** two clients via raw WS in `tests/` sync a tick both ways.
+- [x] **Manual:** two browser tabs on the same PC act as two devices → tick in one,
+      other updates live. (Verified by automation: `tests/larder-sync-e2e.test.js`
+      boots two real CMS instances in jsdom — with Node's WebSocket/fetch injected —
+      against a live spawned server; a real checkbox click in tab A reaches the
+      server over a real WS broadcast, tab B repaints the item as checked, and the
+      flip persists on disk. A manual Electron pass is still worthwhile but the
+      behaviour is now fully exercised end-to-end.)
 
 ### 7.2 Phone PWA
 - [ ] Serve a `phone/` route (mobile-first, reuses `/api/*`) + manifest + service
@@ -360,7 +371,7 @@ both can tick; phone reads pantry and uses the checklist.
 
 | Phase | Status | Date done | Notes |
 |---|---|---|---|
-| 0 | ☐ | | |
+| 0 | ✅ | 2026-08-12 | Foundations baseline: refactor committed, `npm test` + lint green, Electron smoke via CDP (every CMS tab, 0 console errors), Export/Import round-trip byte-identical (16 datasets), Publish pushed live data to remote master `9f1af97` (Pages rebuilds). |
 | 1 | ✅ | 2026-08-12 | All items verified — user Electron pass + 4 test files green (`larder.test.js`, `larder-math.test.js` 40 checks incl. 8 `parseStepLinks`, `cms-smoke.test.js`, `website-layout.test.js`). Post-check fixes in `app.js`/`cms.html`: website grid pushed Instructions to a new row below when a prep section existed + prep-recipe TDZ crash (`headerColor` used before `const`); then the user-driven hierarchy fix — **Instructions is the main heading, Prep renders as a labelled sub-section beneath it** (plus author `## ` sub-sections), with a new "Add Prep Section" button in the editor. Regression-tested. |
 | 2.1 | ✅ | 2026-08-12 | `calc.js` `consumptionFor` + `parseAmountToGrams`; `consumption.json` dataset + API; CMS "I cooked this" dialog with per-item override & pantry decrement; unit (5 new `parseAmountToGrams` + 5 `consumptionFor` checks) + integration tests green. |
 | 2.2 | ✅ | 2026-08-12 | Pantry "Used" button (card + table) with inline dialog; writes `consumption.json` with `source: "manual"`; decrements specific pantry item; integration test for manual source. |
@@ -368,14 +379,15 @@ both can tick; phone reads pantry and uses the checklist.
 | 3.1 | ✅ | 2026-08-12 | `cms-utils.js` `wrapListRecords`/`createListRecord`/`upsertTodayRecord` (6 tests); `shoppingLists` migrated to dated records; Generate upserts today's record; Past Lists view with date, totals, checked counts; integration test for record shape. |
 | 3.2 | ✅ | 2026-08-12 | Shopping list: include/exclude toggle, "At home" pantry stock column, running expected total updates live; pantry items gain min/max stock thresholds honored by restock source. |
 | 4.1 | ✅ | 2026-08-12 | `calc.js` `applyPriceUpdate` + `normalizeForCompare` (5 tests); pantry/ingredient `priceHistory[]`, `lastPrice`, `lastPriceDate` with migration; inline SVG price chart in Receipts tab; receipt save → price comparison dialog with % change badges & per-item update to pantry + ingredient history. |
-| 2 | ☐ | | |
-| 3 | ☐ | | |
-| 4 | ☐ | | |
+| 2 | ✅ | 2026-08-12 | Cooking/pantry loop: 2.1 "I cooked this" confirmation with per-item adjust → `consumptionFor` decrements tracked pantry (manual deficit fallback), 2.2 quick "Used" control (`source: manual`), 2.3 `rollingAvgDuration` learns per-product `avgDurationDays`. |
+| 3 | ✅ | 2026-08-12 | Shopping history & totals: 3.1 dated list records (migration + upsert-today + Past Lists view), 3.2 include/exclude toggle, at-home stock column, min/max restock thresholds, 3.3 running expected total updates live on tick. |
+| 4 | ✅ | 2026-08-12 | Receipts → price history: 4.1 `priceHistory`/`lastPrice` on pantry + ingredients with migration + inline SVG charts, 4.2 confirm → compare (% change) → per-item price update, 4.3 Windows-native OCR "Scan photo" fills the paste textarea. |
 | 5 | ✅ | 2026-08-13 | New Stats tab (Shop & Track): `calc.js` `householdInflationIndex`/`categorySpend`/`savingsSignals` (period-filtered) + tests; KPI cards (inflation index, total spend, avg/receipt, savings found), inflation-contributor bars, spend-by-category bars, savings-signal rows; period selector (All/3m/6m/1y, persisted `larder_stats_period`). Electron manual pass: index -54.9%, Rs10.00 / 1 receipt, 7 savings found. |
 | 6.1 | ✅ | 2026-08-13 | `data/product-prefs.json` (foodId → pantryId) + `GET/PUT /api/product-prefs` (in `DATA_FILES` for export/import/publish); brand memory in the meal-assign picker: preferred pantry product sorted first with a "✓ last used" badge, saved on pick; 5 integration tests. Electron manual pass on Tagliatelle (Barilla/De Cecco): pick one → next defaults to it; switch → remembers the new one. |
 | 6.2 | ✅ | 2026-08-13 | Templates server-backed: `data/planner-templates.json` + `GET/PUT /api/planner-templates` (localStorage migrated once); Save Template records name + `savedOn` datetime (chip shows "saved <date>", tooltip shows full stamp). "Confirm Plan" button persists the meal plan and appends a version to `data/plan-versions.json` (`confirmedAt`, counts, full `plans` snapshot); footer shows last-confirmed version with date/time. 8 new integration tests. Electron manual pass: save "Standard month" → reopen → assign → confirm → version + saved-on recorded; app data restored after test. |
-| 6 | ☐ | | |
+| 6 | ✅ | 2026-08-13 | Meal planning smartness: 6.1 brand memory (`product-prefs.json`, picker defaults + saves), 6.2 server-backed templates with name/`savedOn` + Confirm-plan version snapshots (`plan-versions.json`), 6.3 live remaining-vs-target macro panels + gap-closing suggestion chips in both planners. |
 | 7 | ☐ | | |
+| 7.1 | ✅ | 2026-08-13 | LAN sync core: `server.js` WS hub (`/ws`, per-dataset subscribe, broadcast of current file content on every write; `POST /api/shoppinglists/tick` per-item flip with LWW; broadcasts hooked into recipes/ingredients/generic-file API/planner/settings; `PORT` honours env). `sync-client.js` web-compatible `SyncClient` (subscribe/send/receive, graceful offline no-op, auto-reconnect with stop flag) wired into `cms.js` to repaint on remote updates — shopping list + pantry/pantry-items live sync; shopping items get stable `id`s; peer-repaint hook fixed (`repaintShoppingSync` — `renderShoppingList`/`resultsContainer` are scoped to the shopping-tab block, not reachable from the load-time SyncClient callback). Integration: `tests/larder-sync.test.js` — hello, subscribe+broadcast (incl. pantry-items), tick flips+acks, unknown-item 400, two `SyncClient`s syncing ticks both ways. Browser-level: `tests/larder-sync-dom.test.js` — real CMS in jsdom, checkbox click POSTs the tick payload, broadcasts repaint the shopping list AND the pantry tab when active. E2E: `tests/larder-sync-e2e.test.js` — two real CMS instances in jsdom (Node WebSocket/fetch injected) against a live spawned server; a checkbox click in tab A repaints tab B live and persists. `ws` added to deps; `npm test` fully green. |
 
 Mark each checklist item `[x]` only when actually verified. If a step can't be
 verified, keep it open and write why in Notes — do not silently move on.

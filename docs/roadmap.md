@@ -11,6 +11,9 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - Confirm `npm test`, `npm run lint`, and the Electron smoke test are green.
 - Verify Export/Import round-trip and Publish still work.
 - **Done when:** clean `git status`, all tests green, backup round-trip passes.
+- **Status:** ✅ Phase 0 complete (Aug 2026). Refactor committed, tests + lint green,
+  Electron smoke (CDP, all tabs, 0 console errors), backup round-trip verified,
+  Publish-to-website verified end-to-end.
 
 ## Phase 1 — Recipe authoring & website (public)
 **Goal:** authoring matches how we really write recipes; the website does them justice.
@@ -32,6 +35,8 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-09 quick "Used" control per pantry item.
 - GAP-13 (part) consumption log (feeds later learning).
 - **Done when:** cooking a recipe subtracts the confirmed amounts; manual use works.
+- **Status:** ✅ Phase 2 complete (Aug 2026). Cooked-recipe consumption with per-item
+  override, quick "Used" control, duration learning — see `dev-plan.md` log.
 
 ## Phase 3 — Shopping list history & totals
 **Goal:** every list is a saved, dated, traceable artifact with reliable totals.
@@ -40,6 +45,9 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-13 running expected total as items are ticked.
 - **Done when:** generating creates a dated record, tick/untick persists, past lists
   reopen with their state.
+- **Status:** ✅ Phase 3 complete (Aug 2026). Dated records + Past-lists view,
+  include/exclude + at-home column + min/max restock, live running total — see
+  `dev-plan.md` log.
 
 ## Phase 4 — Receipts → price history
 **Goal:** receipts become price data, and price data becomes visible.
@@ -48,6 +56,8 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-18 confirm → compare (% change) → "update price" flow; expected-vs-real total.
 - GAP-17 OCR (paste-first already works; OCR is the camera bonus — P1).
 - **Done when:** confirming a receipt updates price history; charts show a trend.
+- **Status:** ✅ Phase 4 complete (Aug 2026). Price history + SVG charts, receipt
+  compare (% change) → update price, Windows-native OCR scan — see `dev-plan.md` log.
 
 ## Phase 5 — Stats & household inflation
 **Goal:** the data we collect tells us our own story.
@@ -67,6 +77,9 @@ verifiable steps for every phase are in `dev-plan.md`; gap ids in `gaps.md`.
 - GAP-23 live remaining-vs-target macro panel + suggestions.
 - **Done when:** re-adding a recipe pre-selects the last product; a saved plan
   reloads with edits and records its saved-on date.
+- **Status:** ✅ Phase 6 complete (Aug 2026). Brand memory, server-backed named/dated
+  templates + confirm-version snapshots, live macro gap panels + suggestions — see
+  `dev-plan.md` log.
 
 ## Phase 7 — Sync & mobile (architectural)
 **Goal:** the household works from two phones.

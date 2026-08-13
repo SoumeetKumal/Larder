@@ -54,7 +54,7 @@ function makeDom() {
         return { ok: true, status: 200, json: async () => [] };
     };
 
-    for (const f of ['calc.js', 'cms-utils.js', 'cms-state.js', 'cms-receipts.js', 'cms-planner.js', 'cms.js']) {
+    for (const f of ['calc.js', 'cms-utils.js', 'cms-state.js', 'cms-receipts.js', 'cms-planner.js', 'sync-client.js', 'cms.js']) {
         window.eval(fs.readFileSync(path.join(ROOT, f), 'utf8'));
     }
     // jsdom fires DOMContentLoaded natively; wait for it (plus async loadData).

@@ -504,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let planVersions = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
+    let repaintShoppingSync = null;
     let cmsSearchQuery = '';
     let mealWeekOffset = 0;
     let cmsCategoryFilter = 'All';
@@ -920,6 +921,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             mealPlans = (mealPlans || []).map(normalizePlan);
+
+            // LAN sync: subscribe to real-time updates so a second Larder
+            // instance (or a phone) repaints the shopping list on broadcasts.
+            if (typeof SyncClient !== 'undefined') {
+                try {
+                    window.larderSync = new SyncClient({
+                        onUpdate: (dataset, body) => {
+                            try {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                if (dataset === 'shoppinglists') {
+                                    shoppingLists = wrapListRecords(Array.isArray(body) ? body : []);
+                                    const rec = shoppingLists.find(r => r.date === todayStr);
+                                    const items = rec ? rec.items : [];
+                                    if (typeof repaintShoppingSync === 'function') {
+                                        repaintShoppingSync(items);
+                                    }
+                                    return;
+                                }
+                                if (dataset === 'pantry' && Array.isArray(body)) {
+                                    pantry = body;
+                                    if (currentCMSTab === 'pantry') renderPantryTab();
+                                    return;
+                                }
+                                if (dataset === 'pantry-items' && Array.isArray(body)) {
+                                    pantryItems = body.map(p => ({
+                                        ...p,
+                                        priceHistory: Array.isArray(p.priceHistory) ? p.priceHistory : (p.price ? [{ date: todayStr, price: parseFloat(p.price) || 0 }] : []),
+                                        lastPrice: typeof p.lastPrice === 'number' ? p.lastPrice : (parseFloat(p.price) || 0),
+                                        lastPriceDate: p.lastPriceDate || (p.price ? todayStr : null)
+                                    }));
+                                    if (currentCMSTab === 'pantry') renderPantryTab();
+                                }
+                            } catch (e) { /* ignore transient payloads */ }
+                        }
+                    });
+                    if (window.larderSync) {
+                        window.larderSync.subscribe('shoppinglists');
+                        window.larderSync.subscribe('pantry');
+                        window.larderSync.subscribe('pantry-items');
+                    }
+                } catch (e) { /* ws unsupported; silently skip live sync */ }
+            }
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients · ${pantryItems.length} pantry items`;
             addBtn.classList.remove('hidden');
@@ -3537,8 +3580,13 @@ if (currentCMSTab === 'pantry') {
                 };
             }
 
+            function genItemId() {
+                return 'sl-' + Math.random().toString(36).slice(2, 10);
+            }
+
             function backfillListCosts(list) {
-                list.forEach(item => {
+                list.forEach((item, idx) => {
+                    if (!item.id) item.id = 'slx-' + idx;
                     if (item.cost == null) {
                         const foodRef = ingredients.find(f => f.foodId === item.foodId);
                         const grams = parseAmountToGrams((item.amount != null ? item.amount : 0) + ' ' + (item.unit || 'g'), foodRef);
@@ -3621,6 +3669,8 @@ const unpricedRow = cost.unpriced.length
                     resultsContainer.innerHTML = `<div class="empty-state">Nothing to buy! You either have no meals planned, or your pantry is fully stocked.</div>`;
                     return;
                 }
+
+                const shoppingDateStr = new Date().toISOString().split('T')[0];
 
                 const currency = mealPlanCurrency();
                 const listTotal = list.reduce((s, i) => s + (parseFloat(i.cost) || 0), 0);
@@ -3745,6 +3795,7 @@ const unpricedRow = cost.unpriced.length
                 resultsContainer.innerHTML = listHTML;
                 if (window.lucide) window.lucide.createIcons();
                 saveListBtn.style.display = 'inline-flex';
+                repaintShoppingSync = (items) => { renderShoppingList(backfillListCosts(items)); };
 
                 document.querySelectorAll('.vd-shop-item').forEach(row => {
                     const checkbox = row.querySelector('.vd-shop-checkbox');
@@ -3757,6 +3808,15 @@ const unpricedRow = cost.unpriced.length
                         const idx = row.dataset.idx;
                         const group = groups[cat];
                         if (group && group[idx]) group[idx].checked = isChecked;
+                        if (group && group[idx] && group[idx].id) {
+                            try {
+                                fetch('/api/shoppinglists/tick', {
+                                    method: 'POST',
+                                    headers: HEADERS,
+                                    body: JSON.stringify({ date: shoppingDateStr, itemId: group[idx].id, checked: isChecked })
+                                });
+                            } catch (e) { /* keep local state as source of truth */ }
+                        }
                         updateExpectedTotal();
                     };
                     const updateIncluded = () => {
@@ -4001,6 +4061,7 @@ const unpricedRow = cost.unpriced.length
                     const pantryItemNames = bestPantryItem ? (bestPantryItem.brand ? bestPantryItem.brand + ' ' + bestPantryItem.productName : bestPantryItem.productName) : data.name;
                     
                     shoppingList.push({
+                        id: genItemId(),
                         foodId,
                         name: pantryItemNames,
                         amount: Math.round(deficit * 10) / 10,
@@ -4021,6 +4082,7 @@ const unpricedRow = cost.unpriced.length
                     householdRunningLow().forEach(item => {
                         const price = parseFloat(item.pricePerUnit) || 0;
                         shoppingList.push({
+                            id: genItemId(),
                             foodId: null,
                             name: item.name,
                             amount: 1,
