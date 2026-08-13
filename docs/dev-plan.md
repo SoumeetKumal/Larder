@@ -56,7 +56,9 @@ prove each piece works** before moving on. Phases map to `roadmap.md`; ids to
       console errors. (Verified via CDP: every CMS tab walked, 0 console errors.)
 - [x] Backup round-trip: Export ZIP → wipe temp data dir → Import ZIP → all
       16 datasets intact. (Verified byte-identical round-trip of the live app data.)
-- [ ] Publish to Website still pushes (may be no-op if unchanged).
+- [x] Publish to Website still pushes. (Verified: POST /api/publish on the live
+      app data cloned the website repo, committed 16 data files, and pushed —
+      remote master now `9f1af97`; GitHub Pages rebuilds.)
 
 **Acceptance:** clean tree, green tests, backup+restore works.
 
