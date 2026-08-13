@@ -303,11 +303,16 @@ a household inflation number computed from our own receipts.
       saved-on date is recorded and shopping list reflects the confirmed version.
 
 ### 6.3 Macro help (GAP-23)
-- [ ] Live remaining-vs-target panel while building a plan (per day or per week).
-- [ ] Suggest ingredients to close gaps (start simple: highest-missing-macro items
-      from catalog).
+- [x] Live remaining-vs-target panel while building a plan (per day or per week).
+      Both builders show it live: the Monthly Planner's "Build the ingredient list"
+      has a month remaining-vs-target strip with a ≈/day hint; the meal-assign
+      modal shows per-eater "this meal vs daily targets" with a rest-of-today line.
+- [x] Suggest ingredients to close gaps (start simple: highest-missing-macro items
+      from catalog). calc.js adds `macroGaps()` + `macroGapSuggestions()`; the
+      Monthly Planner uses gap-closing chips (click → add to plan), the meal-assign
+      modal gets "Quick add for today's gaps" chips (click → opens the picker).
 - [ ] **Manual:** targets set → add meals → panel shows remaining; suggestion list
-      is useful and clickable.
+      is useful and clickable. (Electron pass pending.)
 
 **Phase 6 acceptance:** brand memory, named/dated templates, macro panel all work.
 

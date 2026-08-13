@@ -415,6 +415,64 @@
         return signals;
     }
 
+    // Macro plan gaps: how much of each macro is still missing (or exceeded)
+    // vs the period targets. Used by the monthly planner to guide ingredient buys.
+    // totals: { energy, protein, carbs, fat } (a computeTotals result)
+    // targets: { energy, protein, carbs, fat } (the period goal amounts)
+    // Returns { energy: { now, target, remaining }, ... } with remaining = target - now
+    // (negative when the plan is already over target).
+    function macroGaps(totals, targets) {
+        var out = {};
+        ['energy', 'protein', 'carbs', 'fat'].forEach(function (k) {
+            var now = Math.round(num(totals ? totals[k] : 0));
+            var target = Math.round(num(targets ? targets[k] : 0));
+            out[k] = { now: now, target: target, remaining: target - now };
+        });
+        return out;
+    }
+
+    // Suggest ingredients that best close the biggest macro gaps.
+    // candidates: [{ foodId, name, category, pricePer100g, macros: { energy, protein, carbs, fat } }]
+    //   where macros are what the ingredient contributes per 100 g.
+    // gaps: a macroGaps() result. max: maximum number of suggestions to return (default 8).
+    // Returns array of { foodId, name, category, macros, pricePer100g, score, bestMacro,
+    //   bestGap, addGrams } sorted by score desc then price asc. score rewards ingredients
+    //   covering the most missing macro share; addGrams is the amount (clamped 50-1000g,
+    //   rounded to 10g) that would close the biggest single gap.
+    function macroGapSuggestions(candidates, gaps, max) {
+        var keys = ['energy', 'protein', 'carbs', 'fat'];
+        var list = [];
+        (candidates || []).forEach(function (c) {
+            var macros = c.macros || {};
+            var score = 0, bestMacro = null, bestGap = 0;
+            keys.forEach(function (k) {
+                var gap = gaps && gaps[k] ? Math.max(0, gaps[k].remaining) : 0;
+                if (gap <= 0) return;
+                var contrib = num(macros[k]);
+                if (contrib <= 0) return;
+                if (!bestMacro || gap > bestGap) { bestMacro = k; bestGap = gap; }
+                score += Math.min(1, contrib / gap);
+            });
+            if (!bestMacro || score <= 0) return;
+            var per100 = num(macros[bestMacro]);
+            var grams = per100 > 0 ? (bestGap / per100) * 100 : 100;
+            grams = Math.max(50, Math.min(1000, grams));
+            list.push({
+                foodId: c.foodId,
+                name: c.name,
+                category: c.category || '',
+                macros: macros,
+                pricePer100g: Math.round(num(c.pricePer100g) * 100) / 100,
+                score: Math.round(score * 1000) / 1000,
+                bestMacro: bestMacro,
+                bestGap: bestGap,
+                addGrams: Math.round(grams / 10) * 10
+            });
+        });
+        list.sort(function (a, b) { return b.score - a.score || a.pricePer100g - b.pricePer100g; });
+        return list.slice(0, max == null ? 8 : max);
+    }
+
     return {
         gramsOf: gramsOf,
         priceBasisGrams: priceBasisGrams,
@@ -434,6 +492,8 @@
         householdInflationIndex: householdInflationIndex,
         categorySpend: categorySpend,
         savingsSignals: savingsSignals,
+        macroGaps: macroGaps,
+        macroGapSuggestions: macroGapSuggestions,
         UNIT_TO_GRAMS: UNIT_TO_GRAMS,
         COUNT_UNITS: COUNT_UNITS,
         MICRO_FIELDS: MICRO_FIELDS

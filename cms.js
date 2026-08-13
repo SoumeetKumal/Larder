@@ -2471,6 +2471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 });
                 updateMealSummary();
+                renderMacroPanel();
             }
 
             function updateMealSummary() {
@@ -2491,6 +2492,95 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `${r ? r.title : 'Recipe'} ×${srv[rid]}`;
                 }).join(', ');
                 mealSummaryEl.innerHTML = `<strong>${active.length}</strong> eater${active.length > 1 ? 's' : ''} · ${Math.round(grams)}g · ${Math.round(kcal)} kcal${srvTxt ? ' · cooks ' + srvTxt : ''}`;
+            }
+
+            // Live remaining-vs-target panel for this meal slot: per eater vs their
+            // daily targets, an aggregate "rest of today" line, and clickable
+            // ingredient suggestions that close the biggest macro gaps (added to
+            // the picker with a sensible default amount).
+            function renderMacroPanel() {
+                const panel = document.getElementById('meal-assign-macro-panel');
+                if (!panel) return;
+                const profiles = getProfiles();
+                const rows = [];
+                const aggMac = { energy: 0, protein: 0, carbs: 0, fat: 0 };
+                const aggTgt = { energy: 0, protein: 0, carbs: 0, fat: 0 };
+                profiles.forEach((p, i) => {
+                    const e = modalEaters[i];
+                    if (!e || e.eatingOut) return;
+                    const mac = eaterMacros(e);
+                    const tgt = macroTargets(p);
+                    rows.push({ name: p.name, mac, tgt });
+                    ['energy', 'protein', 'carbs', 'fat'].forEach(k => {
+                        aggMac[k] += mac[k];
+                        aggTgt[k] += tgt[k];
+                    });
+                });
+                if (rows.length === 0) { panel.style.display = 'none'; return; }
+                const MAC_LABEL = { energy: 'Energy', protein: 'Protein', carbs: 'Carbs', fat: 'Fat' };
+                const MAC_UNIT = { energy: 'kcal', protein: 'g', carbs: 'g', fat: 'g' };
+                const fmtN = n => Math.round(n).toLocaleString();
+                const computeGaps = (mac, tgt) => ['energy', 'protein', 'carbs', 'fat'].reduce((o, k) => {
+                    o[k] = { now: Math.round(mac[k]), target: Math.round(tgt[k]), remaining: Math.round(tgt[k] - mac[k]) };
+                    return o;
+                }, {});
+                const gaps = (LC && LC.macroGaps) ? LC.macroGaps(aggMac, aggTgt) : computeGaps(aggMac, aggTgt);
+
+                const rowHTML = rows.map(r => `
+                    <div class="mp-macro-row" title="${escapeHtml('This meal so far vs the daily target for ' + r.name + ' — the rest of today is still available.')}">
+                        <span class="mp-macro-name">${escapeHtml(r.name)}</span>
+                        ${['energy', 'protein', 'carbs', 'fat'].map(k => {
+                            const over = r.mac[k] > r.tgt[k];
+                            const pct = r.tgt[k] > 0 ? Math.min(100, Math.round(r.mac[k] / r.tgt[k] * 100)) : 0;
+                            return `<span class="mp-macro-cell${over ? ' over' : ''}" title="${escapeHtml(r.name + ': ' + MAC_LABEL[k])}"><i class="mp-macro-bar"><b style="width:${pct}%"></b></i>${fmtN(r.mac[k])}/${fmtN(r.tgt[k])} ${MAC_UNIT[k]}</span>`;
+                        }).join('')}
+                    </div>`).join('');
+                const restLine = ['energy', 'protein', 'carbs', 'fat'].map(k => {
+                    const over = gaps[k].remaining < 0;
+                    return `<span class="mp-macro-rest${over ? ' over' : ''}" title="${escapeHtml(MAC_LABEL[k] + ' used ' + fmtN(gaps[k].now) + ' of ' + fmtN(gaps[k].target) + ' ' + MAC_UNIT[k])}">${MAC_LABEL[k]} <b>${fmtN(Math.abs(gaps[k].remaining))} ${MAC_UNIT[k]} ${over ? 'over' : 'left'}</b></span>`;
+                }).join('<span class="mp-macro-sep">&middot;</span>');
+
+                let suggHTML = '';
+                if (LC && LC.macroGapSuggestions) {
+                    const basisGrams = ing => {
+                        let b = 100;
+                        if (LC.priceBasisGrams) { const pb = LC.priceBasisGrams(ing); if (pb > 0) b = pb; }
+                        else {
+                            const pba = parseFloat(ing.priceBasisAmount);
+                            const pbu = (ing.priceBasisUnit || '').toLowerCase();
+                            if (pba > 0) b = (pbu === 'kg' || pbu === 'l') ? pba * 1000 : pba;
+                        }
+                        return b;
+                    };
+                    const cands = ingredients.filter(f => f && f.name).map(ing => ({
+                        foodId: ing.foodId, name: ing.name,
+                        macros: { energy: macroNum(ing.calories), protein: macroNum(ing.proteinG), carbs: macroNum(ing.carbsG), fat: macroNum(ing.fatG) },
+                        pricePer100g: (macroNum(ing.averagePrice) / basisGrams(ing)) * 100
+                    }));
+                    const sugs = LC.macroGapSuggestions(cands, gaps, 4);
+                    if (sugs.length) {
+                        suggHTML = `<div class="mp-macro-suggs"><span class="mp-macro-suggs-label">Quick add for today's gaps:</span>${sugs.map(s => `<button type="button" class="mp-macro-sugg" data-food-id="${escapeHtml(s.foodId)}" data-grams="${escapeHtml(s.addGrams)}" title="${escapeHtml(MAC_LABEL[s.bestMacro] + ' still ' + fmtN(s.bestGap) + ' ' + MAC_UNIT[s.bestMacro] + ' short · click to add ' + s.addGrams + 'g')}">${escapeHtml(s.name)} +${s.addGrams}g</button>`).join('')}</div>`;
+                    }
+                }
+
+                panel.style.display = 'block';
+                panel.innerHTML = `
+                <div class="mp-macro-panel-head"><i data-lucide="gauge" style="width:14px;height:14px;"></i> This meal vs daily targets <span class="mp-macro-hint">rest of today</span></div>
+                <div class="mp-macro-rows">${rowHTML}</div>
+                <div class="mp-macro-rest-line">${restLine}</div>
+                ${suggHTML}`;
+                if (window.lucide) window.lucide.createIcons();
+
+                panel.querySelectorAll('.mp-macro-sugg').forEach(btn => {
+                    btn.onclick = () => {
+                        const ing = ingredients.find(f => f.foodId === btn.dataset.foodId);
+                        if (!ing) return;
+                        searchInput.value = ing.name;
+                        if (suggestionsBox) suggestionsBox.style.display = 'none';
+                        pickerItem = { type: 'ingredient', referenceId: ing.foodId, name: ing.name, defaultGrams: parseFloat(btn.dataset.grams) || 100 };
+                        renderPicker();
+                    };
+                });
             }
 
             function renderTemplateChips() {

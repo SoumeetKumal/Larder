@@ -211,13 +211,17 @@ Legend — status:
   (`data/plan-versions.json` with `confirmedAt`, counts, full plan). Electron
   manual pass complete (save → reopen → edit → confirm → saved-on recorded).
 
-### GAP-23 — Macro-driven suggestions while building the plan `[partial]` · M
+### GAP-23 — Macro-driven suggestions while building the plan `[done]` · M
 - **User expects:** targets from settings (energy/macros/micros); the app helps reach
   them with suggestions.
-- **Today:** macro targets + `autoBalanceMacros` exist (`cms.js:1726,3805`); the
-  planner cost/macro math exists. Suggestion UX is thin.
-- **Change:** live "remaining vs target" panel while building a plan; suggest
-  ingredients to close gaps (cheap first, then smart).
+- **Today:** macro targets + monthly goals exist; the planner cost/macro math exists.
+- **Done:** live "remaining vs target" panels while building — Monthly Planner's
+  "Build the ingredient list" shows month remaining vs targets (with a ≈/day hint)
+  and the meal-assign modal shows per-eater "this meal vs daily targets" + a
+  rest-of-today line. Suggestions close the biggest macro gaps via new pure helpers
+  `macroGaps` / `macroGapSuggestions` in calc.js: the planner's chips now rank by gap
+  fill (then price, cheap first) and clicked chips add the suggested amount to the
+  plan; the modal's "Quick add for today's gaps" chips open the picker preloaded.
 
 ---
 

@@ -444,6 +444,52 @@ check('savingsSignals: sorts by totalSavings desc', () => {
     assert.equal(signals[0].foodId, 'wheat'); // savings 40 > rice 20
 });
 
+console.log('\n-- macroGaps / macroGapSuggestions --');
+check('macroGaps: remaining = target - now', () => {
+    const gaps = c.macroGaps({ energy: 1200, protein: 60, carbs: 150, fat: 40 }, { energy: 2000, protein: 90, carbs: 250, fat: 70 });
+    assert.equal(gaps.energy.remaining, 800);
+    assert.equal(gaps.protein.remaining, 30);
+    assert.equal(gaps.carbs.remaining, 100);
+    assert.equal(gaps.fat.remaining, 30);
+    assert.equal(gaps.energy.now, 1200);
+    assert.equal(gaps.energy.target, 2000);
+});
+check('macroGaps: negative remaining when over target', () => {
+    const gaps = c.macroGaps({ energy: 2400 }, { energy: 2000 });
+    assert.equal(gaps.energy.remaining, -400);
+    assert.equal(gaps.carbs.remaining, 0 - 0);
+});
+check('macroGapSuggestions: targets biggest gap with scores', () => {
+    const gaps = { energy: { remaining: 0 }, protein: { remaining: 40 }, carbs: { remaining: 0 }, fat: { remaining: 0 } };
+    const sugs = c.macroGapSuggestions([
+        { foodId: 'tuna', name: 'Tuna', pricePer100g: 250, macros: { energy: 200, protein: 25, carbs: 0, fat: 1 } },
+        { foodId: 'rice', name: 'Rice', pricePer100g: 10, macros: { energy: 130, protein: 2.7, carbs: 28, fat: 0 } }
+    ], gaps, 8);
+    assert.equal(sugs.length, 2);
+    assert.equal(sugs[0].foodId, 'tuna'); // fills protein gap better
+    assert.equal(sugs[0].bestMacro, 'protein');
+    assert.equal(sugs[0].addGrams, 160); // 40g gap / 25g per 100g * 100
+    assert.equal(sugs[0].score, 0.625); // 25/40
+});
+check('macroGapSuggestions: skips ingredients that cannot close any gap', () => {
+    const gaps = { energy: { remaining: 100 }, protein: { remaining: 0 }, carbs: { remaining: 0 }, fat: { remaining: 0 } };
+    const sugs = c.macroGapSuggestions([
+        { foodId: 'water', name: 'Water', pricePer100g: 1, macros: { energy: 0, protein: 0, carbs: 0, fat: 0 } },
+        { foodId: 'oats', name: 'Oats', pricePer100g: 5, macros: { energy: 375, protein: 13, carbs: 60, fat: 7 } }
+    ], gaps, 8);
+    assert.equal(sugs.length, 1);
+    assert.equal(sugs[0].foodId, 'oats');
+});
+check('macroGapSuggestions: respects max and price tie-break', () => {
+    const gaps = { energy: { remaining: 500 }, protein: { remaining: 500 }, carbs: { remaining: 500 }, fat: { remaining: 500 } };
+    const sugs = c.macroGapSuggestions([
+        { foodId: 'a', name: 'A', pricePer100g: 20, macros: { energy: 100, protein: 100, carbs: 0, fat: 100 } },
+        { foodId: 'b', name: 'B', pricePer100g: 5, macros: { energy: 100, protein: 100, carbs: 0, fat: 100 } }
+    ], gaps, 1);
+    assert.equal(sugs.length, 1);
+    assert.equal(sugs[0].foodId, 'b'); // cheaper wins on equal score
+});
+
 run();
 
 function run() { console.log('\n' + passed + ' passed, ' + failed + ' failed'); process.exit(failed ? 1 : 0); }

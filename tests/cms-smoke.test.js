@@ -12,8 +12,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 
 const FAKE_INGREDIENTS = [
-    { foodId: 'tagliatelle', name: 'Tagliatelle', category: 'Pasta', servingSizeG: 100, servingUnit: 'g', calories: 0, proteinG: 0, fatG: 0, carbsG: 0 },
-    { foodId: 'salt', name: 'Salt', category: 'Spices', servingSizeG: 100, servingUnit: 'g', calories: 0, proteinG: 0, fatG: 0, carbsG: 0 }
+    { foodId: 'tagliatelle', name: 'Tagliatelle', category: 'Pasta', servingSizeG: 100, servingUnit: 'g', calories: 360, proteinG: 13, fatG: 2, carbsG: 72, averagePrice: 80, priceBasisAmount: 500, priceBasisUnit: 'g' },
+    { foodId: 'salt', name: 'Salt', category: 'Spices', servingSizeG: 100, servingUnit: 'g', calories: 0, proteinG: 0, fatG: 0, carbsG: 0, averagePrice: 30 }
 ];
 
 function makeDom() {
@@ -27,7 +27,8 @@ function makeDom() {
     window.lucide = { createIcons: () => {} };
     window.alert = () => {};
     window.confirm = () => true;
-    window.requestAnimationFrame = (cb) => cb();
+    window.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 16);
+    window.cancelAnimationFrame = (id) => clearTimeout(id);
 
     const putBodies = [];
     window.fetch = async (url, opts = {}) => {
@@ -161,4 +162,71 @@ test('recipe editor: prep section, subsections, ingredient links, save payload',
     const ingCreated = putBodies.find(p => p.url === '/api/ingredients');
     assert.ok(ingCreated, 'ingredients PUT sent after inline create');
     assert.ok(ingCreated.body.some(f => f.name === 'Brand New Ingredient'), 'created ingredient persisted');
+    dom.window.close();
+});
+
+test('monthly planner: live gap strip + gap-closing chips add to the plan', async () => {
+    const { dom, window, putBodies } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    document.querySelector('.cms-tab[data-tab="planner"]').click();
+    await sleep(30);
+
+    const container = document.getElementById('cms-recipe-list');
+    assert.ok(container.querySelector('.pl-gap-strip'), 'gap strip rendered in the builder');
+    assert.equal(container.querySelectorAll('.pl-gap-item').length, 4, 'one gap item per macro (energy/protein/carbs/fat)');
+    const stripText = container.querySelector('.pl-gap-strip').textContent;
+    assert.ok(/left|over/.test(stripText), 'strip text shows left/over state');
+
+    // Empty plan → every macro shows the full month target as remaining; with
+    // macro-rich ingredients the chips rank by gap fill and are clickable.
+    const chips = container.querySelectorAll('.pl-sugg-chip');
+    assert.ok(chips.length > 0, 'suggestion chips render when gaps exist');
+    const chipName = chips[0].textContent.split('+')[0].trim();
+    chips[0].click();
+    await sleep(30);
+
+    assert.equal(container.querySelectorAll('.pl-item').length, 1, 'clicking a chip adds one item to the plan');
+    assert.ok(container.querySelector('.pl-item').textContent.includes(chipName), 'added item matches the clicked suggestion');
+    const plannerPut = putBodies.find(p => p.url.startsWith('/api/planner'));
+    assert.ok(plannerPut, 'planner PUT sent after chip add');
+    assert.equal(plannerPut.body.items.length, 1, 'saved planner holds the suggested item');
+    dom.window.close();
+});
+
+test('meal assign modal: live macro panel + quick-add chips open the picker', async () => {
+    const { dom, window, putBodies } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    document.querySelector('.cms-tab[data-tab="mealplan"]').click();
+    await sleep(40);
+
+    const slot = document.querySelector('.mp-slot');
+    assert.ok(slot, 'meal plan slot rendered');
+    slot.click();
+    await sleep(20);
+
+    const modal = document.getElementById('meal-assign-modal');
+    assert.ok(modal.classList.contains('active'), 'assign modal opens');
+    const panel = document.getElementById('meal-assign-macro-panel');
+    assert.ok(panel, 'macro panel container exists');
+    assert.notEqual(panel.style.display, 'none', 'macro panel visible with the default profile');
+    assert.equal(panel.querySelectorAll('.mp-macro-row').length, 1, 'one row per eater');
+    assert.ok(panel.querySelector('.mp-macro-rest-line'), 'rest-of-today line rendered');
+    assert.ok(panel.querySelectorAll('.mp-macro-rest').length === 4, 'rest line covers the four macros');
+
+    const sugg = panel.querySelector('.mp-macro-sugg');
+    assert.ok(sugg, 'quick-add gap chip offered when targets are unmet');
+    const sugName = sugg.textContent.split('+')[0].trim();
+    sugg.click();
+    await sleep(10);
+
+    const picker = document.getElementById('meal-assign-picker');
+    assert.equal(picker.style.display, 'block', 'picker opens for the suggested ingredient');
+    assert.ok(picker.querySelector('.mp-picker-name').textContent.includes(sugName), 'picker preloaded with the suggested ingredient');
+    dom.window.close();
 });

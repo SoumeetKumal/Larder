@@ -5,6 +5,9 @@
     'use strict';
     const S = root.CMSState || {};
     const U = root.LarderCalcUtils || {};
+    // cms.js exposes the shell API lazily as window.CMSApp; proxy the calls so
+    // they resolve whenever a handler actually runs (never before cms.js boots).
+    const App = new Proxy({}, { get: (_t, k) => { const api = root.CMSApp || root.App || {}; return api[k]; } });
     const LC = root.LarderCalc || { gramsOf: (a, u) => (parseFloat(a) || 0) * ((u === 'kg' || u === 'l') ? 1000 : 1), perGram: () => 0, computeTotals: () => ({ energy: 0, protein: 0, carbs: 0, fat: 0, satFat: 0, satFatG: 0, fiber: 0, sodiumMg: 0, potassiumMg: 0, calciumMg: 0, magnesiumMg: 0, phosphorusMg: 0, ironMg: 0, zincMg: 0, copperMg: 0, seleniumMcg: 0, vitaminAMcg: 0, vitaminCMg: 0, vitaminDMcg: 0, vitaminEMg: 0, vitaminKMcg: 0, thiaminMg: 0, riboflavinMg: 0, niacinMg: 0, vitaminB6Mg: 0, folateMcg: 0, vitaminB12Mcg: 0, animal: 0, meat: 0, cost: 0 }) };
 
     function renderPlanner() {
@@ -251,8 +254,48 @@ const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.bud
         </aside>`;
 
 // --- Builder ---
-        const suggestionChips = S.ingredients.slice().sort((a, b) => (parseFloat(b.averagePrice) || 0) - (parseFloat(a.averagePrice) || 0)).slice(0, 8)
-            .map(s => `<button type="button" class="pl-sugg-chip" data-name="${U.escapeHtml(s.name)}" data-foodid="${U.escapeHtml(s.foodId)}">${U.escapeHtml(s.name)}</button>`).join('');
+        // Effective macro targets: an explicit goal min/max wins, else the
+        // profile-derived month target. Purely cosmetic here (the Goals card
+        // shows every tracked nutrient); used for gap suggestions + the strip.
+        function pickTarget(key) {
+            const mx = parseFloat(goals[key + 'Max']) || 0;
+            const mn = parseFloat(goals[key + 'Min']) || 0;
+            return mx > 0 ? mx : (mn > 0 ? mn : effGoal(key + 'Max'));
+        }
+        const macroTargets = {
+            energy: pickTarget('energy'), protein: pickTarget('protein'),
+            carbs: pickTarget('carbs'), fat: pickTarget('fat')
+        };
+        const MACRO_LABEL = { energy: 'Energy', protein: 'Protein', carbs: 'Carbs', fat: 'Fat' };
+        const MACRO_UNIT = { energy: 'kcal', protein: 'g', carbs: 'g', fat: 'g' };
+        const macroGaps = LC.macroGaps(t, macroTargets);
+        // Suggestions close the biggest macro shortfalls: per-100g macros via the
+        // same computeTotals the projected card uses, ranked by gap fill then price.
+        const plannedIds = new Set((S.planner.items || []).map(it => it.ingredientId));
+        const per100Macros = (foodId) => {
+            const m = LC.computeTotals([{ ingredientId: foodId, amount: 100, unit: 'g' }], S.ingredients);
+            return { energy: m.energy, protein: m.protein, carbs: m.carbs, fat: m.fat };
+        };
+        const gapCandidates = S.ingredients
+            .filter(f => f && f.name && !plannedIds.has(f.foodId))
+            .map(ing => ({
+                foodId: ing.foodId, name: ing.name, category: ing.category,
+                pricePer100g: perGramOf(ing) * 100, macros: per100Macros(ing.foodId)
+            }));
+        const gapSugs = LC.macroGapSuggestions(gapCandidates, macroGaps, 8);
+        const suggestionChips = gapSugs
+            .map(s => `<button type="button" class="pl-sugg-chip" data-name="${U.escapeHtml(s.name)}" data-food-id="${U.escapeHtml(s.foodId)}" data-addgrams="${s.addGrams}" title="${MACRO_LABEL[s.bestMacro]}: still ${s.bestGap.toLocaleString()} ${MACRO_UNIT[s.bestMacro]} short &middot; ${s.pricePer100g ? fmt(s.pricePer100g) + '/100g' : 'no price recorded'}">${U.escapeHtml(s.name)}<span class="pl-sugg-add">+${s.addGrams}g</span></button>`)
+            .join('');
+        const gapStrip = `<div class="pl-gap-strip">${['energy', 'protein', 'carbs', 'fat'].map(k => {
+            const g = macroGaps[k];
+            const over = g.remaining < 0;
+            const amt = Math.abs(g.remaining).toLocaleString();
+            const unit = MACRO_UNIT[k];
+            return `<span class="pl-gap-item ${over ? 'pl-gap-over' : ''}" title="${MACRO_LABEL[k]}: ${g.now.toLocaleString()} ${unit} of ${g.target.toLocaleString()} ${unit} planned">${MACRO_LABEL[k]} <b>${amt} ${unit} ${over ? 'over' : 'left'}</b></span>`;
+        }).join(' &middot; ')} <span class="planner-hint">vs target &middot; ≈/day ${['energy', 'protein', 'carbs', 'fat'].map(k => {
+            const g = macroGaps[k];
+            return `${Math.round(Math.abs(g.remaining) / 30).toLocaleString()} ${MACRO_UNIT[k]}`;
+        }).join(' / ')}</span></div>`;
         const rows = (S.planner.items || []).map((it, i) => {
             const ing = findIng(it.ingredientId);
             const c = perGramOf(ing) * gramsOf(it);
@@ -278,7 +321,8 @@ return `<div class="pl-item" data-idx="${i}">
                 ${unitSelect('g', { cls: 'pl-new-unit sel-unit seamless-select', id: 'pl-new-unit' })}
                 <button class="btn primary" id="pl-add-btn">Add</button>
             </div>
-            ${suggestionChips ? `<div class="pl-sugg">Suggestions: ${suggestionChips}</div>` : ''}
+            ${suggestionChips ? `<div class="pl-sugg">Suggestions to close your macro gaps: ${suggestionChips}</div>` : `<div class="pl-sugg pl-sugg-empty">${(S.planner.items || []).length ? 'All macro targets met &mdash; nothing to suggest.' : 'Add items above to see suggestions for the biggest macro shortfalls.'}</div>`}
+            ${gapStrip}
             <div class="pl-list">${rows || '<div class="empty-state">No planned items yet &mdash; add your month&apos;s groceries above.</div>'}</div>
             <div class="plorer-list-actions"><button class="btn primary" id="pl-generate-btn"><i data-lucide="shopping-basket"></i> Generate shopping list</button></div>
         </div>
@@ -380,10 +424,17 @@ useStock: false
 
         container.querySelectorAll('.pl-sugg-chip').forEach(chip => {
             chip.addEventListener('click', () => {
-                const nameEl = container.querySelector('#pl-ing-name');
-                const resultsEl = container.querySelector('#pl-ing-results');
-                if (nameEl) { nameEl.value = chip.dataset.name; nameEl.dataset.foodId = chip.dataset.foodId || ''; }
-                if (resultsEl) resultsEl.innerHTML = '';
+                const ing = chip.dataset.foodId && S.ingredients.find(f => f.foodId === chip.dataset.foodId);
+                if (!ing) return;
+                S.planner.items.push({
+                    ingredientId: ing.foodId, name: ing.name,
+                    amount: parseFloat(chip.dataset.addgrams) || 100,
+                    unit: 'g',
+                    scope: /can|tinned|jar|frozen|oil|condiment|spice|grain|legume|pasta|rice|flour|sugar|honey|bean/i.test(ing.category || '') ? 'month' : 'fresh',
+                    useStock: false
+                });
+                renderPlanner();
+                App.savePlanner();
             });
         });
 
@@ -400,7 +451,7 @@ useStock: false
             if (!resultsEl) return;
             if (!matches.length) { resultsEl.innerHTML = ''; return; }
             resultsEl.innerHTML = matches.map(f => `
-                <button type="button" class="pl-picker-item" data-foodid="${U.escapeHtml(f.foodId)}" data-name="${U.escapeHtml(f.name)}">
+                <button type="button" class="pl-picker-item" data-food-id="${U.escapeHtml(f.foodId)}" data-name="${U.escapeHtml(f.name)}">
                     <span class="pl-picker-item-name">${U.escapeHtml(f.name)}</span>
                     ${f.category ? `<span class="pl-picker-item-cat">${U.escapeHtml(f.category)}</span>` : ''}
                 </button>`).join('');
