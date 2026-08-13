@@ -1,0 +1,16 @@
+[
+  {
+    "id": "cons_manual_test",
+    "date": "2026-08-12",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Salt",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "salt",
+        "grams": 10
+      }
+    ]
+  }
+]
