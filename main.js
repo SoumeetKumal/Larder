@@ -1,6 +1,31 @@
 const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
+
+const OCR_PS1 = [
+    "param([string]$ImagePath)",
+    "$ErrorActionPreference = 'Stop'",
+    "Add-Type -AssemblyName System.Runtime.WindowsRuntime",
+    "$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]",
+    "Function Await($WinRtTask, $ResultType) {",
+    "    $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)",
+    "    $netTask = $asTask.Invoke($null, @($WinRtTask))",
+    "    $netTask.Wait(-1) | Out-Null",
+    "    $netTask.Result",
+    "}",
+    "[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime] | Out-Null",
+    "[Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,ContentType=WindowsRuntime] | Out-Null",
+    "[Windows.Media.Ocr.OcrEngine,Windows.Media.Ocr,ContentType=WindowsRuntime] | Out-Null",
+    "$file = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($ImagePath)) ([Windows.Storage.StorageFile])",
+    "$stream = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])",
+    "$decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($stream)) ([Windows.Graphics.Imaging.BitmapDecoder])",
+    "$bitmap = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])",
+    "$engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()",
+    "if (-not $engine) { Write-Error 'NO_OCR_ENGINE'; exit 2 }",
+    "$result = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])",
+    "$result.Lines | ForEach-Object { if ($_.Text) { Write-Output $_.Text } }"
+].join('\n');
 
 let mainWindow;
 
@@ -176,6 +201,47 @@ function createWindow() {
     ipcMain.handle('window:is-maximized', (event) => {
         const win = BrowserWindow.fromWebContents(event.sender);
         return win ? win.isMaximized() : false;
+    });
+
+    // Receipt photo OCR via Windows-native Windows.Media.Ocr (WinRT) from
+    // PowerShell. Offline, no extra runtime dependencies; Windows-only by design.
+    const runOCR = (imagePath) => new Promise((resolve) => {
+        const scriptPath = path.join(app.getPath('userData'), 'scripts', 'ocr.ps1');
+        try {
+            fs.mkdirSync(path.dirname(scriptPath), { recursive: true });
+            fs.writeFileSync(scriptPath, OCR_PS1, 'utf8');
+        } catch (e) {
+            return resolve({ ok: false, error: 'Could not write OCR script: ' + e.message });
+        }
+        const child = spawn('powershell.exe',
+            ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, '-ImagePath', imagePath],
+            { windowsHide: true });
+        let out = '', err = '';
+        child.stdout.on('data', (d) => { out += d; });
+        child.stderr.on('data', (d) => { err += d; });
+        child.on('error', (e) => resolve({ ok: false, error: 'PowerShell unavailable: ' + e.message }));
+        child.on('close', (code) => {
+            const lines = out.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+            if (code !== 0 || lines.length === 0) {
+                return resolve({ ok: false, error: err.trim() || 'OCR produced no text (exit ' + code + ')' });
+            }
+            resolve({ ok: true, lines });
+        });
+    });
+
+    ipcMain.handle('ocr:image', async (event, dataUrl) => {
+        const tmp = path.join(app.getPath('temp'), 'larder-ocr-' + Date.now() + '.png');
+        try {
+            if (typeof dataUrl !== 'string') return { ok: false, error: 'Expected an image data URL' };
+            const comma = dataUrl.indexOf(',');
+            if (comma < 0) return { ok: false, error: 'Invalid image data URL' };
+            fs.writeFileSync(tmp, Buffer.from(dataUrl.slice(comma + 1), 'base64'));
+            return await runOCR(tmp);
+        } catch (e) {
+            return { ok: false, error: e.message };
+        } finally {
+            try { fs.unlinkSync(tmp); } catch (e) { /* ignore */ }
+        }
     });
 
     const sendMaximized = (state) => {

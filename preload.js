@@ -10,6 +10,7 @@ const larderWindow = {
     toggleMaximize: () => ipcRenderer.send('window:toggle-maximize'),
     close: () => ipcRenderer.send('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:is-maximized'),
+    ocrImage: (dataUrl) => ipcRenderer.invoke('ocr:image', dataUrl),
     onMaximizedChange: (callback) => {
         ipcRenderer.on('window:maximized', (_event, value) => callback(value));
     }

@@ -47,15 +47,15 @@ prove each piece works** before moving on. Phases map to `roadmap.md`; ids to
 
 ## Phase 0 — Foundations
 
-- [ ] `git status` clean after committing the refactor (GAP-27):
+- [x] `git status` clean after committing the refactor (GAP-27):
   - `cms.html`, `cms.js` (extraction), `cms-planner.js`, `cms-receipts.js`,
     `cms-state.js`, `cms-utils.js`.
-- [ ] `npm test` passes.
-- [ ] `npm run lint` passes.
-- [ ] Manual smoke: `node server.js` + `npx electron .`; open each CMS tab, no
-      console errors.
-- [ ] Backup round-trip: Export ZIP → wipe temp data dir → Import ZIP → all
-      12 datasets intact.
+- [x] `npm test` passes.
+- [x] `npm run lint` passes.
+- [x] Manual smoke: `node server.js` + `npx electron .`; open each CMS tab, no
+      console errors. (Verified via CDP: every CMS tab walked, 0 console errors.)
+- [x] Backup round-trip: Export ZIP → wipe temp data dir → Import ZIP → all
+      16 datasets intact. (Verified byte-identical round-trip of the live app data.)
 - [ ] Publish to Website still pushes (may be no-op if unchanged).
 
 **Acceptance:** clean tree, green tests, backup+restore works.
@@ -251,11 +251,16 @@ totals tick correctly.
       retained.
 
 ### 4.3 OCR (GAP-17, P1)
-- [ ] (Optional this phase) camera/file image → text (Tesseract.js or Electron
-      native OCR per D5) → feed existing `parseReceiptText`.
-- [ ] Keep pasted-text path as the primary flow (already works).
-- [ ] **Manual (if done):** photograph a receipt → lines appear in the same
-      confirmation flow as paste.
+- [x] (Optional this phase) camera/file image → text (Tesseract.js or Electron
+      native OCR per D5) → feed existing `parseReceiptText`. Implemented with the
+      Windows-native OCR engine: `preload.js` exposes `larderWindow.ocrImage`,
+      `main.js` adds an `ocr:image` IPC handler that runs an embedded
+      `Windows.Media.Ocr` (WinRT) PowerShell script; offline, no new deps.
+- [x] Keep pasted-text path as the primary flow (already works). The Scan photo
+      button only fills the same `#rc-paste` textarea for review.
+- [x] **Manual (if done):** photograph a receipt → lines appear in the same
+      confirmation flow as paste. (Verified in Electron via CDP: generated
+      receipt photo → `#rc-paste` filled → Parse lines fed the confirmation rows.)
 
 **Phase 4 acceptance:** a confirmed receipt writes price history; % change and
 expected-vs-real are visible; charts render; pasted-text flow unaffected.
@@ -311,8 +316,9 @@ a household inflation number computed from our own receipts.
       from catalog). calc.js adds `macroGaps()` + `macroGapSuggestions()`; the
       Monthly Planner uses gap-closing chips (click → add to plan), the meal-assign
       modal gets "Quick add for today's gaps" chips (click → opens the picker).
-- [ ] **Manual:** targets set → add meals → panel shows remaining; suggestion list
-      is useful and clickable. (Electron pass pending.)
+- [x] **Manual:** targets set → add meals → panel shows remaining; suggestion list
+      is useful and clickable. (Electron pass done via CDP: gap chips add items and
+      save; meal-assign quick-add chips open the preloaded picker.)
 
 **Phase 6 acceptance:** brand memory, named/dated templates, macro panel all work.
 

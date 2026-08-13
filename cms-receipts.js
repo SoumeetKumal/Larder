@@ -155,7 +155,7 @@
                 <div class="rc-f"><label>Date</label><input type="date" class="seamless-input" id="rc-date" value="${new Date().toISOString().slice(0, 10)}"></div>
                 <div class="rc-f"><label>Total</label><input type="number" class="seamless-input" id="rc-total" placeholder="0.00" step="any" style="width:110px"></div>
             </div>
-            <div class="rc-f"><label>Pasted receipt text (<span class="planner-hint">one item per line, e.g. "Rice 2kg 145.00"</span>)</label><textarea class="seamless-input seamless-textarea" id="rc-paste" rows="2"></textarea><button class="btn secondary" id="rc-parse-btn" style="margin-top:.5rem;font-size:14px">Parse lines</button></div>
+            <div class="rc-f"><label>Pasted receipt text (<span class="planner-hint">one item per line, e.g. "Rice 2kg 145.00"</span>)</label><textarea class="seamless-input seamless-textarea" id="rc-paste" rows="2"></textarea><div class="rc-scan-row"><button class="btn secondary" id="rc-scan-btn" style="margin-top:.5rem;font-size:14px">Scan photo</button><span class="planner-hint" id="rc-scan-hint"></span><input type="file" id="rc-scan-file" accept="image/*" capture="environment" style="display:none"></div><button class="btn secondary" id="rc-parse-btn" style="margin-top:.5rem;font-size:14px">Parse lines</button></div>
             <div class="rc-items-head">Items</div>
             <div id="rc-items-rows"></div>
             <div class="rc-selected-line">Matched price <strong id="rc-calc-total">${fmt(0)}</strong></div>
@@ -268,6 +268,40 @@
             renderMatches();
             updateCalc();
         });
+
+        // photo scan → fills the same textarea, then the parse flow above runs
+        const scanBtn = container.querySelector('#rc-scan-btn');
+        const scanFile = container.querySelector('#rc-scan-file');
+        const scanHint = container.querySelector('#rc-scan-hint');
+        if (scanBtn && scanFile) {
+            if (!(window.larderWindow && window.larderWindow.ocrImage)) {
+                scanBtn.style.display = 'none';
+                if (scanHint) scanHint.textContent = 'Photo scanning is available in the Larder desktop app.';
+            } else {
+                scanBtn.addEventListener('click', () => scanFile.click());
+                scanFile.addEventListener('change', () => {
+                    const file = scanFile.files && scanFile.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        try {
+                            const res = await window.larderWindow.ocrImage(reader.result);
+                            if (!res || !res.ok) { alert('Scan failed: ' + ((res && res.error) || 'unknown error')); return; }
+                            const ta = container.querySelector('#rc-paste');
+                            if (!ta) return;
+                            const prev = ta.value.trim();
+                            ta.value = prev ? prev + '\n' + res.lines.join('\n') : res.lines.join('\n');
+                            if (scanHint) scanHint.textContent = res.lines.length + ' line(s) recognised — review, then click Parse lines.';
+                        } catch (e) {
+                            alert('Scan failed: ' + e.message);
+                        } finally {
+                            scanFile.value = '';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
 
         // save
         const saveBtn = container.querySelector('#rc-save-btn');
