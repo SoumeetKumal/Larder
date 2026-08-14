@@ -423,6 +423,7 @@
                     <button type="button" class="ing-tab active" data-tab="overview">Overview</button>
                     <button type="button" class="ing-tab" data-tab="culinary">Culinary</button>
                     <button type="button" class="ing-tab" data-tab="nutrition">Nutrition</button>
+                    <button type="button" class="ing-tab" data-tab="pricing">Pricing</button>
                 </div>
             </div>
 
@@ -558,6 +559,43 @@
                             <div class="form-group"><label for="profile-zincMg">Zinc (mg)</label><input type="number" step="any" id="profile-zincMg" class="seamless-input" placeholder="0"></div>
                             <div class="form-group"><label for="profile-copperMg">Copper (mg)</label><input type="number" step="any" id="profile-copperMg" class="seamless-input" placeholder="0"></div>
                             <div class="form-group"><label for="profile-seleniumMcg">Selenium (mcg)</label><input type="number" step="any" id="profile-seleniumMcg" class="seamless-input" placeholder="0"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Tab -->
+                    <div class="ing-tab-panel" data-panel="pricing">
+                        <div class="cms-section-title">Serving Size</div>
+                        <div class="form-row" style="margin-top: 0.75rem;">
+                            <div class="form-group"><label for="profile-serving-size">Serving size</label><input type="number" step="any" min="0" id="profile-serving-size" class="seamless-input" placeholder="100"></div>
+                            <div class="form-group"><label for="profile-serving-unit">Serving unit</label>
+                                <select id="profile-serving-unit" class="seamless-input">
+                                    <option value="g">g</option>
+                                    <option value="kg">kg</option>
+                                    <option value="ml">ml</option>
+                                    <option value="l">l</option>
+                                    <option value="pc">pc</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="cms-section-title" style="margin-top: 1.5rem;">Price</div>
+                        <div class="form-row" style="margin-top: 0.75rem;">
+                            <div class="form-group"><label for="profile-average-price">Average price</label><input type="number" step="any" min="0" id="profile-average-price" class="seamless-input" placeholder="0"></div>
+                            <div class="form-group"><label for="profile-price-basis-amount">Price basis amount</label><input type="number" step="any" min="0" id="profile-price-basis-amount" class="seamless-input" placeholder="100"></div>
+                            <div class="form-group"><label for="profile-price-basis-unit">Price basis unit</label>
+                                <select id="profile-price-basis-unit" class="seamless-input">
+                                    <option value="g">g</option>
+                                    <option value="kg">kg</option>
+                                    <option value="ml">ml</option>
+                                    <option value="l">l</option>
+                                    <option value="pc">pc</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="profile-price-currency">Price currency</label><input type="text" id="profile-price-currency" class="seamless-input" placeholder="MUR" style="max-width: 120px;"></div>
+                            <div class="form-group" style="justify-content: center; padding-top: 1.4rem; font-size: 0.85rem; color: var(--text-muted);">
+                                Recipe cost math uses <strong>average price &divide; basis</strong> per gram. Leave price blank to stay uncosted.
+                            </div>
                         </div>
                     </div>
 

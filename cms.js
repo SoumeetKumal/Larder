@@ -5865,6 +5865,14 @@ const unpricedRow = cost.unpriced.length
         document.getElementById('profile-sugarG').value = (ing && ing.sugarG) || '';
         document.getElementById('profile-fiberG').value = (ing && ing.fiberG) || '';
 
+        // Pricing
+        document.getElementById('profile-serving-size').value = (ing && ing.servingSizeG) || '';
+        document.getElementById('profile-serving-unit').value = (ing && ing.servingUnit) || 'g';
+        document.getElementById('profile-average-price').value = (ing && ing.averagePrice) || '';
+        document.getElementById('profile-price-basis-amount').value = (ing && ing.priceBasisAmount) || '';
+        document.getElementById('profile-price-basis-unit').value = (ing && ing.priceBasisUnit) || 'g';
+        document.getElementById('profile-price-currency').value = (ing && ing.priceCurrency) || '';
+
         // Reset tabs to Overview
         const ingTabs = document.getElementById('cmsIngTabs');
         if (ingTabs) {
@@ -5946,6 +5954,14 @@ const unpricedRow = cost.unpriced.length
             idx = ingredients.length - 1;
             document.getElementById('profile-food-id').value = newFoodId;
         }
+
+        // Pricing
+        ingredients[idx].servingSizeG = parseFloat(document.getElementById('profile-serving-size').value) || 100;
+        ingredients[idx].servingUnit = document.getElementById('profile-serving-unit').value || 'g';
+        ingredients[idx].averagePrice = parseFloat(document.getElementById('profile-average-price').value) || 0;
+        ingredients[idx].priceBasisAmount = parseFloat(document.getElementById('profile-price-basis-amount').value) || 0;
+        ingredients[idx].priceBasisUnit = document.getElementById('profile-price-basis-unit').value || 'g';
+        ingredients[idx].priceCurrency = document.getElementById('profile-price-currency').value.trim() || '';
 
         ingredients[idx].name = document.getElementById('profile-name').value.trim() || ingredients[idx].name;
         ingredients[idx].scientificName = document.getElementById('profile-scientificName').value.trim() || '';
