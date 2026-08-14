@@ -677,6 +677,18 @@
                     </div>
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
+                            <label for="household-min-stock">Min stock (reorder at)</label>
+
+                            <input type="number" id="household-min-stock" class="seamless-input" placeholder="0" min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label for="household-max-stock">Max stock (target)</label>
+
+                            <input type="number" id="household-max-stock" class="seamless-input" placeholder="10" min="0" step="any">
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div class="form-group">
                             <label for="household-price">Price per unit (Rs)</label>
 
                             <input type="number" id="household-price" class="seamless-input" placeholder="0" min="0" step="any">
@@ -687,6 +699,7 @@
                             <input type="date" id="household-last-opened" class="seamless-input">
                         </div>
                     </div>
+                    <div id="household-price-history" style="margin-bottom: 1.25rem;"></div>
                     <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; background: var(--bg-surface-hover); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
                         Estimated depletion is computed from your stock and average duration. Occasionally log "Opened a new unit" to recalibrate the average from real usage — no daily tracking needed.
                     </p>

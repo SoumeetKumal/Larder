@@ -887,6 +887,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Migrate flat shopping list to dated records
             shoppingLists = wrapListRecords(shoppingLists);
             householdItems = Array.isArray(resHousehold) ? resHousehold : [];
+            // Migrate household items: seed price history from pricePerUnit if absent
+            householdItems = householdItems.map(h => ({
+                ...h,
+                priceHistory: Array.isArray(h.priceHistory) ? h.priceHistory : (parseFloat(h.pricePerUnit) > 0 ? [{ date: new Date().toISOString().split('T')[0], price: parseFloat(h.pricePerUnit) }] : []),
+                lastPrice: typeof h.lastPrice === 'number' ? h.lastPrice : (parseFloat(h.pricePerUnit) || 0),
+                lastPriceDate: h.lastPriceDate || (parseFloat(h.pricePerUnit) > 0 ? new Date().toISOString().split('T')[0] : null),
+                averagePrice: typeof h.averagePrice === 'number' ? h.averagePrice : (parseFloat(h.pricePerUnit) || 0),
+                minStock: typeof h.minStock === 'number' ? h.minStock : 0,
+                maxStock: typeof h.maxStock === 'number' ? h.maxStock : 0
+            }));
             appSettings = (resSettings && typeof resSettings === 'object' && !Array.isArray(resSettings) && Array.isArray(resSettings.profiles))
                 ? resSettings
                 : { profiles: resSettings && Array.isArray(resSettings.profiles) ? resSettings.profiles : [] };
@@ -1756,6 +1766,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             return (householdItems || []).filter(item => {
                 const stock = parseFloat(item.currentStock) || 0;
+                const minStock = parseFloat(item.minStock);
+                // Explicit min-stock threshold wins when set
+                if (minStock > 0) return stock <= minStock;
                 const avg = parseFloat(item.avgDurationDays) || 0;
                 if (stock <= 0) return true;
                 if (avg <= 0) return false;
@@ -3193,12 +3206,14 @@ if (currentCMSTab === 'pantry') {
             function hhStatusInfo(item) {
                 const stock = parseFloat(item.currentStock) || 0;
                 const avg = parseFloat(item.avgDurationDays) || 0;
+                const minStock = parseFloat(item.minStock);
                 const depletion = estimateDepletionDate(item);
                 const today = new Date().toISOString().split('T')[0];
                 let cls, label;
                 if (stock <= 0) { cls = 'out-of-stock'; label = 'Out of Stock'; }
+                else if (minStock > 0 && stock <= minStock) { cls = 'low-stock'; label = 'Running Low'; }
                 else if (depletion && daysBetween(today, depletion) <= 7) { cls = 'low-stock'; label = 'Running Low'; }
-                else if (avg > 0) { cls = 'in-stock'; label = 'Stocked'; }
+                else if (avg > 0 || minStock > 0) { cls = 'in-stock'; label = 'Stocked'; }
                 else { cls = 'not-tracked'; label = 'No Estimate'; }
                 return { cls, label, stock, depletion, daysLeft: depletion ? daysBetween(today, depletion) : null };
             }
@@ -3300,7 +3315,7 @@ if (currentCMSTab === 'pantry') {
             setAddBtnLabel('Add Item');
             householdOpenFn = openHouseholdEditor;
 
-            const runningLow = householdItems.filter(it => { const s = (parseFloat(it.currentStock) || 0); return s <= 0 || (parseFloat(it.avgDurationDays) || 0) > 0 && ((hhStatusInfo(it).daysLeft ?? 99) <= 7); }).length;
+            const runningLow = householdRunningLow().length;
             const cardsHTML = `
                 <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
                     Non-food consumables (toiletries, cleaning, paper goods). Depletion dates are estimated from stock × average duration. Log "Opened new unit" occasionally to recalibrate.
@@ -3343,6 +3358,16 @@ if (currentCMSTab === 'pantry') {
                 document.getElementById('household-duration').value = (item && item.avgDurationDays) || '';
                 document.getElementById('household-price').value = (item && item.pricePerUnit) || '';
                 document.getElementById('household-last-opened').value = (item && item.lastOpenedDate) || '';
+                document.getElementById('household-min-stock').value = (item && item.minStock != null) ? item.minStock : '';
+                document.getElementById('household-max-stock').value = (item && item.maxStock != null) ? item.maxStock : '';
+                // Render household price history (mini list of dated observations)
+                const hhHist = document.getElementById('household-price-history');
+                if (hhHist) {
+                    const hist = (item && Array.isArray(item.priceHistory) && item.priceHistory.length) ? item.priceHistory : null;
+                    hhHist.innerHTML = hist
+                        ? `<div class="cms-section-title">Price History</div><div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.35rem;">${hist.slice().sort((a, b) => a.date.localeCompare(b.date)).map(h => `<span style="font-size:.75rem;background:var(--bg-surface-hover);border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem;">${escapeHtml(h.date)} · ${escapeHtml(h.price)}${escapeHtml(item.currency || '')}</span>`).join('')}</div>`
+                        : '';
+                }
                 const delBtn = document.getElementById('household-delete-btn');
                 delBtn.style.display = item ? '' : 'none';
                 document.getElementById('cms-household-modal').classList.add('active');
@@ -6379,11 +6404,25 @@ const unpricedRow = cost.unpriced.length
             currentStock: parseFloat(document.getElementById('household-stock').value) || 0,
             avgDurationDays: parseFloat(document.getElementById('household-duration').value) || 0,
             pricePerUnit: parseFloat(document.getElementById('household-price').value) || 0,
-            lastOpenedDate: document.getElementById('household-last-opened').value || ''
+            lastOpenedDate: document.getElementById('household-last-opened').value || '',
+            minStock: parseFloat(document.getElementById('household-min-stock').value) || 0,
+            maxStock: parseFloat(document.getElementById('household-max-stock').value) || 0
         };
         const idx = householdItems.findIndex(x => x.id === id);
         const existing = householdItems[idx] || {};
         record.durationHistory = existing.durationHistory || [];
+        record.priceHistory = Array.isArray(existing.priceHistory) ? existing.priceHistory : [];
+        record.lastPrice = existing.lastPrice != null ? existing.lastPrice : null;
+        record.lastPriceDate = existing.lastPriceDate || null;
+        record.averagePrice = existing.averagePrice != null ? existing.averagePrice : 0;
+        // Record a price observation when the price per unit changes
+        const prevPrice = parseFloat(existing.pricePerUnit) || 0;
+        if (record.pricePerUnit > 0 && prevPrice !== record.pricePerUnit) {
+            const upd = window.LarderCalc && window.LarderCalc.applyPriceUpdate
+                ? window.LarderCalc.applyPriceUpdate(record, { price: record.pricePerUnit, date: new Date().toISOString().slice(0, 10) })
+                : null;
+            if (upd) { record.priceHistory = upd.history; record.averagePrice = upd.averagePrice; record.lastPrice = upd.lastPrice; record.lastPriceDate = upd.lastPriceDate; }
+        }
         if (idx >= 0) householdItems[idx] = record;
         else householdItems.push(record);
         closeHouseholdModal();
