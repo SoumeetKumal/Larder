@@ -23,6 +23,18 @@
             <h2 id="list-date"></h2>
             <span id="list-count" class="ph-count"></span>
             <span id="list-total" class="ph-count" style="color:var(--accent-veg);font-weight:600;"></span>
+            <button id="list-share" class="ph-btn ph-btn-ghost" type="button" title="Share this list">Share</button>
+        </div>
+        <div id="share-modal" class="ph-overlay" hidden>
+            <div class="ph-card" style="max-width: 340px; margin: 10vh auto 0;">
+                <div class="ph-view-head"><h2>Share list</h2><button id="share-close" class="ph-btn ph-btn-ghost" type="button">Close</button></div>
+                <p class="ph-hint">Scan to open this list on another phone, or copy the link.</p>
+                <div id="share-qr" style="text-align:center;padding:.5rem 0;"></div>
+                <input id="share-link" class="ph-input" readonly>
+                <div class="ph-row" style="margin-top:.5rem;">
+                    <button id="share-copy" class="ph-btn" type="button" style="flex:1;">Copy link</button>
+                </div>
+            </div>
         </div>
         <div id="list-empty" class="ph-empty" hidden>No shopping list for today yet.</div>
         <ul id="list-items" class="ph-items"></ul>

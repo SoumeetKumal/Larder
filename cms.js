@@ -3445,6 +3445,7 @@ if (currentCMSTab === 'pantry') {
                         <button id="generate-list-btn" class="btn primary"><i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i><span>Generate Shopping List</span></button>
                         <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i><span>Save List</span></button>
                         <button id="print-list-btn" class="btn secondary"><i data-lucide="printer" style="width: 16px; height: 16px;"></i> Print / Save PDF</button>
+                        <button id="share-list-btn" class="btn secondary"><i data-lucide="share-2" style="width: 16px; height: 16px;"></i> Share</button>
                         <span class="shop-gen-hint">Tracked pantry stock is subtracted from every included source automatically.</span>
                     </div>
                 </div>
@@ -3924,6 +3925,49 @@ const unpricedRow = cost.unpriced.length
                 document.body.classList.add('printing-shopping');
                 window.print();
                 document.body.classList.remove('printing-shopping');
+            };
+
+            // Share list: LAN deep link + QR
+            document.getElementById('share-list-btn').onclick = async () => {
+                const today = new Date().toISOString().split('T')[0];
+                let base = location.origin || ('http://localhost:' + (location.port || 8000));
+                try {
+                    const ni = await (await fetch('/api/network-info', { headers: HEADERS })).json();
+                    if (ni && ni.allowLan && ni.lanAddresses && ni.lanAddresses[0]) {
+                        base = 'http://' + ni.lanAddresses[0] + ':' + (ni.port || 8000);
+                    }
+                } catch (e) { /* fall back to location origin */ }
+                const url = base + '/phone/?listDate=' + today;
+                let qrSvg = '';
+                try {
+                    const qrRes = await fetch('/api/qr?text=' + encodeURIComponent(url), { headers: HEADERS });
+                    if (qrRes.ok) qrSvg = await qrRes.text();
+                } catch (e) { /* no QR if server offline */ }
+
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:9999;';
+                overlay.innerHTML = `
+                    <div class="modal-content" style="max-width:380px;width:92%;">
+                        <div class="modal-header"><h3>Share shopping list</h3><button type="button" class="modal-close" aria-label="Close"><i data-lucide="x"></i></button></div>
+                        <div class="modal-body" style="padding:1.5rem 2rem;text-align:center;">
+                            <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem;">Scan with the phone, or copy the link below. It opens today's list.</p>
+                            <div id="cms-share-qr" style="display:flex;justify-content:center;margin-bottom:1rem;">${qrSvg || '<span style="color:var(--text-muted);font-size:.8rem;">QR unavailable (server offline)</span>'}</div>
+                            <input id="cms-share-link" class="seamless-input" value="${escapeHtml(url)}" readonly style="width:100%;text-align:center;font-size:.8rem;margin-bottom:.75rem;">
+                            <button type="button" id="cms-share-copy" class="btn primary" style="width:100%;"><i data-lucide="copy" style="width:16px;height:16px;"></i> Copy link</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                if (window.lucide) window.lucide.createIcons({ root: overlay });
+                const closeShare = () => overlay.remove();
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) closeShare(); });
+                overlay.querySelector('.modal-close').addEventListener('click', closeShare);
+                overlay.querySelector('#cms-share-copy').addEventListener('click', () => {
+                    const linkEl = overlay.querySelector('#cms-share-link');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(linkEl.value);
+                    } else { linkEl.select(); document.execCommand && document.execCommand('copy'); }
+                });
             };
 
             document.getElementById('save-list-btn').onclick = () => persistShoppingList();

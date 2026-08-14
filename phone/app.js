@@ -536,6 +536,7 @@
             state.receipts = receipts;
             state.ingredients = ingredients;
             state.settings = settings;
+            state.network = network;
             const sortByDate = (a, b) => String(b.date).localeCompare(String(a.date));
             const rec = (lists || []).slice().sort(sortByDate)[0];
             if (rec && rec.date) state.listDate = rec.date;
@@ -545,6 +546,56 @@
         }
         const active = document.querySelector('.ph-tab.active');
         if (active) switchView(active.dataset.view);
+    }
+
+    // --- Share shopping list (deep link + QR) ---
+    function shareListUrl() {
+        const base = (state.network && state.network.lanAddresses && state.network.lanAddresses[0])
+            ? 'http://' + state.network.lanAddresses[0] + ':' + (state.network.port || 8000) + '/phone/'
+            : (location.origin || location.protocol + '//' + location.host) + '/phone/';
+        const q = state.listDate ? '?listDate=' + encodeURIComponent(state.listDate) : '';
+        return base + q;
+    }
+    async function shareList() {
+        const modal = $('share-modal');
+        const qr = $('share-qr');
+        const link = $('share-link');
+        if (!modal || !qr || !link) return;
+        const url = shareListUrl();
+        link.value = url;
+        modal.hidden = false;
+        qr.innerHTML = 'Loading QR…';
+        try {
+            const res = await fetch('/api/qr?text=' + encodeURIComponent(url), { headers: HEADERS });
+            if (!res.ok) throw new Error('QR failed');
+            const svg = await res.text();
+            qr.innerHTML = svg;
+        } catch (e) {
+            qr.innerHTML = '<p class="ph-hint">Could not load QR (server offline). Use the link below.</p>';
+        }
+    }
+    function wireShare() {
+        const shareBtn = $('list-share');
+        const modal = $('share-modal');
+        if (shareBtn) shareBtn.addEventListener('click', shareList);
+        if (modal) {
+            modal.querySelector('#share-close') && modal.querySelector('#share-close').addEventListener('click', () => { modal.hidden = true; });
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+            const copy = modal.querySelector('#share-copy');
+            if (copy) copy.addEventListener('click', () => {
+                const link = modal.querySelector('#share-link');
+                if (!link) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link.value).then(() => { copy.textContent = 'Copied!'; setTimeout(() => { copy.textContent = 'Copy link'; }, 1500); });
+                } else {
+                    link.select(); document.execCommand && document.execCommand('copy');
+                }
+            });
+        }
+        // Native share (PWA share_target) / deep link: open straight to the given date's list
+        const params = new URLSearchParams(location.search);
+        const deep = params.get('listDate') || (params.get('url') && new URL(params.get('url'), location.href).searchParams.get('listDate'));
+        if (deep) state.listDate = deep;
     }
 
     function boot() {
@@ -607,6 +658,7 @@
             try { navigator.serviceWorker.register('sw.js'); } catch (e) { /* not supported */ }
         }
 
+        wireShare();
         loadAll();
         setTimeout(connectSync, 0);
     }

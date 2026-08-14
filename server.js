@@ -209,6 +209,8 @@ function readJsonArray(filePath) {
 const server = http.createServer((req, res) => {
     // Query strings are stripped up-front so cache-busting URLs like
     // "/api/recipes?_=123" still match the exact-path routes below.
+    // Keep the raw query available for routes that need it (e.g. /api/qr?text=…).
+    req.rawQuery = req.url.includes('?') ? req.url.slice(req.url.indexOf('?') + 1) : '';
     req.url = req.url.split('?')[0];
 
     // --- Security headers on every response ---
@@ -550,6 +552,25 @@ const server = http.createServer((req, res) => {
     // --- API: network info (LAN addresses for companion-app sync) ---
     if (req.url === '/api/network-info' && req.method === 'GET') {
         sendJson(res, 200, { port: PORT, allowLan: ALLOW_LAN, lanAddresses: getLanAddresses() });
+        return;
+    }
+
+    // --- API: QR code as inline SVG (for sharing shopping lists / deep links) ---
+    if (req.url.startsWith('/api/qr') && req.method === 'GET') {
+        const text = (req.rawQuery || '').split('&').map(p => {
+            const i = p.indexOf('=');
+            return i > 0 ? [decodeURIComponent(p.slice(0, i)), decodeURIComponent(p.slice(i + 1).replace(/\+/g, ' '))] : null;
+        }).reduce((acc, kv) => { if (kv) acc[kv[0]] = kv[1]; return acc; }, {}).text || '';
+        if (!text || text.length > 2000) { sendJson(res, 400, { error: 'Missing or too-long text param' }); return; }
+        try {
+            const QRCode = require('qrcode');
+            QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }).then(svg => {
+                res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' });
+                res.end(svg);
+            }).catch(err => sendJson(res, 500, { error: 'QR generation failed: ' + err.message }));
+        } catch (e) {
+            sendJson(res, 500, { error: 'qrcode dependency missing: ' + e.message });
+        }
         return;
     }
 

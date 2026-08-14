@@ -71,6 +71,26 @@ test('service worker + phone assets are fetchable', async () => {
     }
 });
 
+test('manifest declares a share_target for native sharing', async () => {
+    const r = await req('/phone/manifest.webmanifest');
+    const m = JSON.parse(r.body);
+    assert.ok(m.share_target, 'share_target declared');
+    assert.equal(m.share_target.method, 'GET', 'GET-based share target');
+    assert.ok(m.share_target.params && m.share_target.params.url, 'shares the URL');
+});
+
+test('GET /api/qr returns an SVG QR code', async () => {
+    const r = await req('/api/qr?text=' + encodeURIComponent('http://127.0.0.1:8000/phone/?listDate=2026-08-14'));
+    assert.equal(r.status, 200, 'QR endpoint responds');
+    assert.ok((r.headers['content-type'] || '').includes('image/svg+xml'), 'served as SVG');
+    assert.ok(r.body.includes('<svg'), 'body is an SVG document');
+});
+
+test('GET /api/qr rejects a missing text param', async () => {
+    const r = await req('/api/qr');
+    assert.equal(r.status, 400, 'missing text rejected');
+});
+
 test('API behind /phone still works (shopping list + tick)', async () => {
     const today = new Date().toISOString().slice(0, 10);
     const seed = JSON.stringify([{ date: today, items: [{ id: 'p1', name: 'Flour', amount: 500, unit: 'g', checked: false }] }]);
