@@ -224,6 +224,13 @@ let html = '';
                 <span class="pl-budget-c">${currency}</span>
             </label>
             <div class="pl-toolbar-spacer"></div>
+            <select class="pl-template-select" id="pl-template-select" aria-label="Monthly planner templates">
+                <option value="">Use a saved month…</option>
+                ${(S.plannerMonthTemplates || []).map(t => `<option value="${U.escapeHtml(t.name)}">${U.escapeHtml(t.name)}</option>`).join('')}
+            </select>
+            <button class="btn secondary" id="pl-template-use" style="font-size:14px;" disabled><i data-lucide="folder-open" style="width:15px;height:15px;"></i> Use</button>
+            <button class="btn secondary" id="pl-template-save" style="font-size:14px;"><i data-lucide="bookmark" style="width:15px;height:15px;"></i> Save Template</button>
+            <button class="btn secondary" id="pl-template-delete" style="font-size:14px;" disabled><i data-lucide="trash-2" style="width:15px;height:15px;"></i> Delete</button>
             <button class="btn secondary" id="planner-open-goals" style="font-size:14px;"><i data-lucide="target" style="width:15px;height:15px;"></i> Monthly Nutrition Goals</button>
         </div>
         <div class="planner-grid">
@@ -493,6 +500,56 @@ container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
             const i = parseInt(btn.dataset.idx);
             if (S.planner.items[i]) { S.planner.items.splice(i, 1); renderPlanner(); App.savePlanner(); }
         }));
+
+        // --- Monthly planner templates: save / use / delete ---
+        const tplSelect = container.querySelector('#pl-template-select');
+        const tplUseBtn = container.querySelector('#pl-template-use');
+        const tplSaveBtn = container.querySelector('#pl-template-save');
+        const tplDeleteBtn = container.querySelector('#pl-template-delete');
+
+        function refreshPlTplButtons() {
+            const has = tplSelect && !!tplSelect.value;
+            if (tplUseBtn) tplUseBtn.disabled = !has;
+            if (tplDeleteBtn) tplDeleteBtn.disabled = !has;
+        }
+        if (tplSelect) tplSelect.addEventListener('change', refreshPlTplButtons);
+        refreshPlTplButtons();
+
+        if (tplSaveBtn) tplSaveBtn.addEventListener('click', async () => {
+            saveGoalsFromDOM();
+            const name = (prompt('Name this monthly planner template:') || '').trim();
+            if (!name) return;
+            const existing = (S.plannerMonthTemplates || []).find(t => t.name === name);
+            const tpl = {
+                id: (existing && existing.id) || 'mt_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+                name,
+                goals: JSON.parse(JSON.stringify(S.planner.goals || {})),
+                items: JSON.parse(JSON.stringify(S.planner.items || [])),
+                savedOn: new Date().toISOString()
+            };
+            S.plannerMonthTemplates = existing
+                ? S.plannerMonthTemplates.map(t => t.name === name ? tpl : t)
+                : (S.plannerMonthTemplates || []).concat([tpl]);
+            await App.savePlannerMonthTemplates();
+            renderPlanner();
+        });
+
+        if (tplUseBtn) tplUseBtn.addEventListener('click', () => {
+            const tpl = (S.plannerMonthTemplates || []).find(t => t.name === tplSelect.value);
+            if (!tpl) return;
+            S.planner.items = JSON.parse(JSON.stringify(tpl.items || []));
+            S.planner.goals = Object.assign({}, S.planner.goals || {}, JSON.parse(JSON.stringify(tpl.goals || {})));
+            renderPlanner();
+            App.savePlanner();
+        });
+
+        if (tplDeleteBtn) tplDeleteBtn.addEventListener('click', async () => {
+            const name = tplSelect.value;
+            if (!name || !confirm(`Delete monthly planner template "${name}"?`)) return;
+            S.plannerMonthTemplates = (S.plannerMonthTemplates || []).filter(t => t.name !== name);
+            await App.savePlannerMonthTemplates();
+            renderPlanner();
+        });
 
         const genBtn = container.querySelector('#pl-generate-btn');
         if (genBtn) genBtn.addEventListener('click', () => {

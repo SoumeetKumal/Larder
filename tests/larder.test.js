@@ -254,6 +254,43 @@ const r = await req('/api/settings');
         ok(bad.status === 400, 'PUT /api/plan-versions rejects record without id');
     }
 
+    // --- Shopping-list & monthly planner templates API ---
+    console.log('[shopping & planner month templates]');
+    {
+        const get = await req('/api/shopping-templates');
+        ok(get.status === 200 && Array.isArray(get.body), 'GET /api/shopping-templates returns array');
+    }
+    {
+        const put = await req('/api/shopping-templates', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'st_test', name: 'Monthly big shop', sources: ['meals', 'restock'], items: [{ id: 'i1', name: 'Rice', amount: 2, unit: 'kg', checked: false }], savedOn: '2026-08-14T09:00:00.000Z' }])
+        });
+        ok(put.status === 200, 'PUT /api/shopping-templates accepts an array');
+        const get = await req('/api/shopping-templates');
+        ok(get.body.some(t => t.id === 'st_test'), 'shopping template persisted');
+    }
+    {
+        const bad = await req('/api/shopping-templates', { method: 'PUT', body: JSON.stringify([{ items: [] }]) });
+        ok(bad.status === 400, 'PUT /api/shopping-templates rejects record without name');
+    }
+    {
+        const get = await req('/api/planner-month-templates');
+        ok(get.status === 200 && Array.isArray(get.body), 'GET /api/planner-month-templates returns array');
+    }
+    {
+        const put = await req('/api/planner-month-templates', {
+            method: 'PUT',
+            body: JSON.stringify([{ id: 'mt_test', name: 'Standard month', goals: { budget: 9000 }, items: [{ ingredientId: 'ing1', amount: 1, unit: 'kg' }], savedOn: '2026-08-14T09:10:00.000Z' }])
+        });
+        ok(put.status === 200, 'PUT /api/planner-month-templates accepts an array');
+        const get = await req('/api/planner-month-templates');
+        ok(get.body.some(t => t.id === 'mt_test'), 'monthly planner template persisted');
+    }
+    {
+        const bad = await req('/api/planner-month-templates', { method: 'PUT', body: JSON.stringify([{ id: 'x' }]) });
+        ok(bad.status === 400, 'PUT /api/planner-month-templates rejects record without name');
+    }
+
     child.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
 

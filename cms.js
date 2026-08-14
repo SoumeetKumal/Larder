@@ -502,6 +502,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let productPrefs = [];
     let planTemplates = [];
     let planVersions = [];
+    let shoppingTemplates = [];
+    let plannerMonthTemplates = [];
     let appSettings = { profiles: [] };
     let currentCMSTab = 'recipe';
     let repaintShoppingSync = null;
@@ -541,6 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
     defineState('planner', () => planner, v => { planner = v; });
     defineState('receipts', () => receipts, v => { receipts = v; });
     defineState('consumption', () => consumption, v => { consumption = v; });
+    defineState('shoppingTemplates', () => shoppingTemplates, v => { shoppingTemplates = v; });
+    defineState('plannerMonthTemplates', () => plannerMonthTemplates, v => { plannerMonthTemplates = v; });
     defineState('appSettings', () => appSettings, v => { appSettings = v; });
     defineState('currentCMSTab', () => currentCMSTab, v => { currentCMSTab = v; });
     defineState('cmsSearchQuery', () => cmsSearchQuery, v => { cmsSearchQuery = v; });
@@ -567,6 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
         savePantry,
         savePantryItems,
         savePlanner,
+        saveShoppingTemplates,
+        savePlannerMonthTemplates,
         activateTab: (tab) => activateTab(tab)
     };
 
@@ -856,7 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs, resPlanTemplates, resPlanVersions] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs, resPlanTemplates, resPlanVersions, resShoppingTemplates, resMonthTemplates] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
@@ -869,7 +875,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('/api/pantry-items', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/product-prefs', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/planner-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/plan-versions', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/plan-versions', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/shopping-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/planner-month-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
@@ -907,6 +915,8 @@ document.addEventListener('DOMContentLoaded', () => {
             productPrefs = Array.isArray(resProductPrefs) ? resProductPrefs : [];
             planTemplates = Array.isArray(resPlanTemplates) ? resPlanTemplates : [];
             planVersions = Array.isArray(resPlanVersions) ? resPlanVersions : [];
+            shoppingTemplates = Array.isArray(resShoppingTemplates) ? resShoppingTemplates : [];
+            plannerMonthTemplates = Array.isArray(resMonthTemplates) ? resMonthTemplates : [];
 
             // Migrate legacy localStorage templates to the server-backed store once
             if (planTemplates.length === 0) {
@@ -1102,6 +1112,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Save failed');
         } catch(e) {
             console.warn('Plan version save failed', e);
+        }
+    }
+
+    async function saveShoppingTemplates() {
+        try {
+            const res = await fetch('/api/shopping-templates', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(shoppingTemplates)
+            });
+            if (!res.ok) throw new Error('Save failed');
+        } catch(e) {
+            console.warn('Shopping template save failed', e);
+        }
+    }
+
+    async function savePlannerMonthTemplates() {
+        try {
+            const res = await fetch('/api/planner-month-templates', {
+                method: 'PUT',
+                headers: HEADERS,
+                body: JSON.stringify(plannerMonthTemplates)
+            });
+            if (!res.ok) throw new Error('Save failed');
+        } catch(e) {
+            console.warn('Monthly planner template save failed', e);
         }
     }
 
@@ -3448,6 +3484,15 @@ if (currentCMSTab === 'pantry') {
                         <button id="share-list-btn" class="btn secondary"><i data-lucide="share-2" style="width: 16px; height: 16px;"></i> Share</button>
                         <span class="shop-gen-hint">Tracked pantry stock is subtracted from every included source automatically.</span>
                     </div>
+                    <div class="shop-template-bar">
+                        <select id="shop-template-select" aria-label="Shopping list templates">
+                            <option value="">Use a saved template…</option>
+                            ${shoppingTemplates.map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`).join('')}
+                        </select>
+                        <button id="shop-template-use" class="btn secondary" disabled><i data-lucide="folder-open" style="width: 15px; height: 15px;"></i> Use</button>
+                        <button id="shop-template-save" class="btn secondary"><i data-lucide="bookmark" style="width: 15px; height: 15px;"></i> Save list as template</button>
+                        <button id="shop-template-delete" class="btn secondary" disabled><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Delete</button>
+                    </div>
                 </div>
                 <div class="shop-view-toggle" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
                     <button type="button" id="shop-view-current" class="btn view-btn active" style="flex: 1;"><i data-lucide="shopping-basket" style="width: 14px; height: 14px;"></i> Current List</button>
@@ -4194,6 +4239,88 @@ const unpricedRow = cost.unpriced.length
                 renderShoppingList(todayRecord ? todayRecord.items : []);
                 renderBudget();
                 persistShoppingList();
+            };
+
+            // --- Shopping-list templates: save / use / delete ---
+            const tplSelect = document.getElementById('shop-template-select');
+            const tplUseBtn = document.getElementById('shop-template-use');
+            const tplSaveBtn = document.getElementById('shop-template-save');
+            const tplDeleteBtn = document.getElementById('shop-template-delete');
+
+            function refreshTplButtons() {
+                const has = !!tplSelect.value;
+                tplUseBtn.disabled = !has;
+                tplDeleteBtn.disabled = !has;
+            }
+            tplSelect.addEventListener('change', refreshTplButtons);
+            refreshTplButtons();
+
+            tplSaveBtn.onclick = async () => {
+                const name = (prompt('Name this shopping list template:') || '').trim();
+                if (!name) return;
+                const today = new Date().toISOString().split('T')[0];
+                const todayRecord = shoppingLists.find(r => r.date === today);
+                const items = todayRecord ? todayRecord.items : [];
+                if (!items.length) { alert('Generate a list first, then save it as a template.'); return; }
+                const sources = Array.from(document.querySelectorAll('.shop-src input[data-source]:checked')).map(b => b.dataset.source);
+                const existing = shoppingTemplates.find(t => t.name === name);
+                const tpl = {
+                    id: (existing && existing.id) || 'st_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+                    name,
+                    sources,
+                    items: items.map(it => ({
+                        id: genItemId(), foodId: it.foodId || null, name: it.name,
+                        amount: it.amount, unit: it.unit, category: it.category || 'Other',
+                        recipes: [], checked: false, grams: it.grams, cost: it.cost,
+                        currency: it.currency, sources: it.sources || [], pantryIds: it.pantryIds || []
+                    })),
+                    savedOn: new Date().toISOString()
+                };
+                if (existing) {
+                    shoppingTemplates = shoppingTemplates.map(t => t.name === name ? tpl : t);
+                } else {
+                    shoppingTemplates.push(tpl);
+                }
+                await saveShoppingTemplates();
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                if (existing) {
+                    const oldOpt = Array.from(tplSelect.options).find(o => o.value === name);
+                    if (oldOpt) oldOpt.replaceWith(opt);
+                } else {
+                    tplSelect.appendChild(opt);
+                }
+                tplSelect.value = name;
+                refreshTplButtons();
+            };
+
+            tplUseBtn.onclick = () => {
+                const tpl = shoppingTemplates.find(t => t.name === tplSelect.value);
+                if (!tpl) return;
+                document.querySelectorAll('.shop-src input[data-source]').forEach(box => {
+                    box.checked = Array.isArray(tpl.sources) && tpl.sources.includes(box.dataset.source);
+                });
+                const items = (tpl.items || []).map(it => ({
+                    ...it, id: genItemId(), checked: false
+                }));
+                shoppingLists = upsertTodayRecord(shoppingLists, items);
+                renderShoppingList(items);
+                renderBudget();
+                persistShoppingList();
+            };
+
+            tplDeleteBtn.onclick = async () => {
+                const name = tplSelect.value;
+                if (!name) return;
+                if (!confirm(`Delete shopping-list template "${name}"?`)) return;
+                shoppingTemplates = shoppingTemplates.filter(t => t.name !== name);
+                await saveShoppingTemplates();
+                tplSelect.querySelectorAll('option').forEach(o => {
+                    if (o.value === name) o.remove();
+                });
+                tplSelect.value = '';
+                refreshTplButtons();
             };
 
             // If the Monthly Planner asked to generate a list, pre-tick its

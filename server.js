@@ -81,7 +81,8 @@ const DATA_FILES = [
     'pantry.json', 'pantry-items.json', 'shoppinglists.json', 'household.json',
     'receipts.json', 'consumption.json', 'planner.json', 'settings.json',
     'exercises.json', 'workoutTemplates.json', 'product-prefs.json',
-    'planner-templates.json', 'plan-versions.json'
+    'planner-templates.json', 'plan-versions.json', 'shopping-templates.json',
+    'planner-month-templates.json'
 ];
 const KNOWN_DATA_FILES = new Set(DATA_FILES);
 
@@ -135,7 +136,9 @@ const defaultFiles = {
     'workoutTemplates.json': '[]',
     'product-prefs.json': '[]',
     'planner-templates.json': '[]',
-    'plan-versions.json': '[]'
+    'plan-versions.json': '[]',
+    'shopping-templates.json': '[]',
+    'planner-month-templates.json': '[]'
 };
 Object.entries(defaultFiles).forEach(([file, content]) => {
     const p = path.join(DATA_DIR, file);
@@ -454,6 +457,12 @@ const server = http.createServer((req, res) => {
                 if (typeof r.name !== 'string' || !r.name) return err('planner-templates records need a non-empty name');
             }
         }
+        if (name === 'shopping-templates' || name === 'planner-month-templates') {
+            for (const r of records) {
+                if (typeof r.name !== 'string' || !r.name) return err(`${name} records need a non-empty name`);
+                if (r.items !== undefined && !Array.isArray(r.items)) return err(`${name}.items must be an array`);
+            }
+        }
         if (name === 'plan-versions') {
             for (const r of records) {
                 if (typeof r.id !== 'string' || !r.id) return err('plan-versions records need a non-empty id');
@@ -505,6 +514,8 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/product-prefs' && handleGenericFileAPI(req, res, PRODUCT_PREFS_PATH, 'product-prefs')) return;
     if (req.url === '/api/planner-templates' && handleGenericFileAPI(req, res, PLAN_TEMPLATES_PATH, 'planner-templates')) return;
     if (req.url === '/api/plan-versions' && handleGenericFileAPI(req, res, PLAN_VERSIONS_PATH, 'plan-versions')) return;
+    if (req.url === '/api/shopping-templates' && handleGenericFileAPI(req, res, path.join(DATA_DIR, 'shopping-templates.json'), 'shopping-templates')) return;
+    if (req.url === '/api/planner-month-templates' && handleGenericFileAPI(req, res, path.join(DATA_DIR, 'planner-month-templates.json'), 'planner-month-templates')) return;
 
     // --- API: planner (object payload: { goals, items }) ---
     if (req.url === '/api/planner' && req.method === 'GET') {
@@ -922,6 +933,8 @@ function datasetPath(name) {
         'product-prefs': PRODUCT_PREFS_PATH,
         'planner-templates': PLAN_TEMPLATES_PATH,
         'plan-versions': PLAN_VERSIONS_PATH,
+        'shopping-templates': path.join(DATA_DIR, 'shopping-templates.json'),
+        'planner-month-templates': path.join(DATA_DIR, 'planner-month-templates.json'),
         planner: PLANNER_PATH,
         settings: SETTINGS_PATH
     };

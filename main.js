@@ -69,7 +69,9 @@ const DATA_FILES = [
     'receipts.json',
     'settings.json',
     'exercises.json',
-    'workoutTemplates.json'
+    'workoutTemplates.json',
+    'shopping-templates.json',
+    'planner-month-templates.json'
 ];
 
 function initializeDataDirectory() {
