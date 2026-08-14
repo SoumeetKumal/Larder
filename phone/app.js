@@ -30,6 +30,37 @@
         }[c]));
     }
 
+    // Price helpers (mirrors CMS cms.js perGramPrice / backfillListCosts logic)
+    function getPriceBasisGrams(ing) {
+        if (!ing) return 100;
+        const basisAmount = parseFloat(ing.priceBasisAmount);
+        const basisUnit = (ing.priceBasisUnit || '').toLowerCase();
+        if (basisAmount > 0 && basisUnit) {
+            const mult = { g: 1, gram: 1, kg: 1000, kgs: 1000, ml: 1, l: 1000, litre: 1000, pc: 1, each: 1, bottle: 1, bag: 1, pack: 1, packet: 1, can: 1, tin: 1 }[basisUnit];
+            if (mult) return basisAmount * mult;
+        }
+        return parseFloat(ing.servingSizeG) || 100;
+    }
+    function perGramPrice(foodId) {
+        const ing = state.ingredients.find(i => i.foodId === foodId);
+        if (!ing || !parseFloat(ing.averagePrice)) return 0;
+        const basis = getPriceBasisGrams(ing);
+        return parseFloat(ing.averagePrice) / basis;
+    }
+    function itemCost(it) {
+        if (!it.foodId) return 0;
+        const pg = perGramPrice(it.foodId);
+        if (!pg) return 0;
+        const grams = (parseFloat(it.grams) || 0) || (parseFloat(it.amount) || 0) * 100;
+        return pg * grams;
+    }
+    function updateExpectedTotal() {
+        const rec = (state.shoppinglists || []).find(r => r.date === state.listDate);
+        if (!rec) return 0;
+        const items = rec.items || [];
+        return items.filter(i => i.included !== false && !i.checked).reduce((s, it) => s + itemCost(it), 0);
+    }
+
     async function api(pathname, method = 'GET', body = null) {
         const opts = { method, headers: HEADERS };
         if (body != null) opts.body = JSON.stringify(body);
@@ -65,6 +96,7 @@
         const emptyEl = $('list-empty');
         const dateEl = $('list-date');
         const countEl = $('list-count');
+        const totalEl = $('list-total'); // may not exist in HTML, that's fine
         const rec = (state.shoppinglists || []).find(r => r.date === state.listDate);
         const items = rec ? (rec.items || []) : [];
         if (!rec || !items.length) {
@@ -72,12 +104,15 @@
             emptyEl.hidden = false;
             dateEl.textContent = 'Shopping list';
             countEl.textContent = state.listDate;
+            if (totalEl) totalEl.textContent = '';
             return;
         }
         emptyEl.hidden = true;
         dateEl.textContent = state.listDate;
         const done = items.filter(i => i.checked).length;
         countEl.textContent = done + ' / ' + items.length + ' done';
+        const estTotal = updateExpectedTotal();
+        if (totalEl) totalEl.textContent = estTotal > 0 ? 'Est. ' + estTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'No prices';
         itemsEl.innerHTML = items.map((it, idx) => {
             const amount = it.amount != null ? esc(String(it.amount)) + ' ' + esc(it.unit || '') : '';
             return `<li class="ph-item${it.checked ? ' checked' : ''}" data-idx="${idx}">
