@@ -6050,15 +6050,24 @@ const unpricedRow = cost.unpriced.length
                 items.push({ foodId: ing.foodId, name: ing.item, grams: Math.round(grams * 10) / 10, originalGrams: Math.round(grams * 10) / 10 });
             });
 
-            container.innerHTML = items.map(item => `
+            container.innerHTML = items.map(item => {
+                // Tracked pantry products matching this foodId (brand picker)
+                const matches = pantryItems.filter(p => p.ingredientFoodId === item.foodId && p.isTracked);
+                const productSel = matches.length > 1
+                    ? `<select class="seamless-input cooked-product" data-food-id="${escapeHtml(item.foodId)}" style="width: 150px; font-size: 0.8rem;" aria-label="Product for ${escapeHtml(item.name)}">
+                        ${matches.map(p => `<option value="${escapeHtml(p.pantryId)}">${escapeHtml((p.brand ? p.brand + ' ' : '') + (p.productName || ''))}</option>`).join('')}
+                       </select>`
+                    : '';
+                return `
                 <div class="cooked-item" data-food-id="${escapeHtml(item.foodId)}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--border);">
                     <span style="flex: 1; font-size: 0.9rem;">${escapeHtml(item.name)}</span>
+                    ${productSel}
                     <label style="display: flex; align-items: center; gap: 0.25rem; white-space: nowrap;">
                         <span style="font-size: 0.8rem; color: var(--text-muted);">g</span>
                         <input type="number" step="0.1" min="0" class="seamless-input cooked-grams" value="${item.grams}" style="width: 70px; text-align: right;" aria-label="Grams for ${escapeHtml(item.name)}">
                     </label>
-                </div>
-            `).join('') || '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No ingredients with foodId found.</p>';
+                </div>`;
+            }).join('') || '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No ingredients with foodId found.</p>';
         };
 
         updateItems();
@@ -6135,10 +6144,16 @@ const unpricedRow = cost.unpriced.length
                 body: JSON.stringify(consumption)
             });
 
-            // Decrement pantry items
+            // Decrement pantry items (use the per-row product selection when multiple brands are stocked)
             for (const item of consumptionItems) {
-                // Find matching pantry item (tracked, same foodId)
-                const pantryItem = pantryItems.find(p => p.ingredientFoodId === item.foodId && p.isTracked);
+                const productEl = container.querySelector(`.cooked-product[data-food-id="${CSS.escape(item.foodId)}"]`);
+                const chosenId = productEl ? productEl.value : null;
+                let pantryItem = chosenId
+                    ? pantryItems.find(p => p.pantryId === chosenId && p.isTracked)
+                    : null;
+                if (!pantryItem) {
+                    pantryItem = pantryItems.find(p => p.ingredientFoodId === item.foodId && p.isTracked);
+                }
                 if (pantryItem) {
                     const packSize = parseFloat(pantryItem.packSize) || 100;
                     const packsNeeded = item.grams / packSize;
