@@ -224,7 +224,8 @@
             price: l.price || 0,
             foodId: l.foodId || null,
             grams: l.grams || null,
-            matchedName: l.matchedName || null
+            matchedName: l.matchedName || null,
+            category: l.category || null
         }));
         renderItemRows();
         const totalInput = $('rc-total') || null;
@@ -291,7 +292,8 @@
             price: r.price,
             foodId: r.foodId,
             grams: r.grams,
-            matchedName: r.matchedName
+            matchedName: r.matchedName,
+            category: r.category
         }));
         const store = ($('rc-store') || {}).value || 'Other';
         const date = ($('rc-date') || {}).value || todayUTC();
@@ -319,7 +321,7 @@
 
         // Price comparison
         const currency = receipt.currency;
-        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '��', BDT: '��' };
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
         const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         const comparisons = [];

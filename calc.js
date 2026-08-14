@@ -194,7 +194,7 @@
                 }
             }
             var ing = matchIngredient(r.name, ingredients);
-            out.push({ name: r.name, qty: r.qty, unit: r.unit, price: r.price, grams: r.grams, lineTotal: r.lineTotal, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null });
+            out.push({ name: r.name, qty: r.qty, unit: r.unit, price: r.price, grams: r.grams, lineTotal: r.lineTotal, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null, category: ing ? (ing.category || null) : null });
         });
         return out;
     }

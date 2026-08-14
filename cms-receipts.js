@@ -348,7 +348,7 @@
             const total = parseFloat(container.querySelector('#rc-total').value) || 0;
             const items = itemRows.map(it => {
                 const ing = matchIngredient(it.name);
-                return { name: it.name, qty: it.qty, unit: it.unit || 'g', price: it.price || 0, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null };
+                return { name: it.name, qty: it.qty, unit: it.unit || 'g', price: it.price || 0, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null, category: ing ? (ing.category || null) : null };
             });
             const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
             
