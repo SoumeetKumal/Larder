@@ -182,11 +182,23 @@
     async function usePantry(p, grams) {
         try {
             const today = todayUTC();
+            const packSize = parseFloat(p.packSize) || 100;
+            const availableGrams = Math.round(((parseFloat(p.quantity) || 0) * packSize) * 10) / 10;
+            // Cap to available stock
+            grams = Math.min(grams, availableGrams);
+            if (grams <= 0) {
+                setStatus('off', 'no stock available');
+                return;
+            }
+            // Confirm before decrementing
+            const name = (p.brand ? p.brand + ' ' : '') + p.productName;
+            if (!confirm(`Use ${grams} g of ${name}?\nAvailable: ${availableGrams} g`)) return;
+
             const record = {
                 id: 'cons_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
                 date: today,
                 recipeId: null,
-                recipeTitle: 'Manual use: ' + ((p.brand ? p.brand + ' ' : '') + p.productName),
+                recipeTitle: 'Manual use: ' + name,
                 servingsCooked: null,
                 source: 'manual',
                 items: [{ foodId: p.ingredientFoodId, grams: Math.round(grams * 10) / 10 }]
@@ -196,14 +208,44 @@
             state.consumption = consumption;
             await api('/api/consumption', 'PUT', consumption);
 
-            const packSize = parseFloat(p.packSize) || 100;
             p.quantity = Math.max(0, Math.round(((parseFloat(p.quantity) || 0) - grams / packSize) * 100) / 100);
             p.lastOpenedDate = today;
             await api('/api/pantry-items', 'PUT', state.pantryItems);
             renderPantry();
             setStatus('live', 'used ' + grams + ' g');
+            learnDurationFromConsumption(p.ingredientFoodId);
         } catch (e) {
             setStatus('off', 'use failed');
+        }
+    }
+
+    // Port of cms.js learnDurationFromConsumption: recompute avgDurationDays from
+    // consumption events (3+ events required) and persist the update.
+    async function learnDurationFromConsumption(foodId) {
+        try {
+            const consumption = Array.isArray(state.consumption) ? state.consumption : [];
+            const events = consumption
+                .filter(c => c.items && c.items.some(i => i.foodId === foodId))
+                .map(c => ({ date: c.date }))
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (events.length >= 3) {
+                const avgDays = (window.LarderCalc && window.LarderCalc.rollingAvgDuration) ? window.LarderCalc.rollingAvgDuration(events) : null;
+                if (avgDays && avgDays > 0) {
+                    let changed = false;
+                    state.pantryItems.forEach(p2 => {
+                        if (p2.ingredientFoodId === foodId && p2.avgDurationDays !== avgDays) {
+                            p2.avgDurationDays = avgDays;
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        await api('/api/pantry-items', 'PUT', state.pantryItems);
+                        renderPantry();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[Duration learning] failed:', e);
         }
     }
 

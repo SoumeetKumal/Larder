@@ -102,6 +102,7 @@ test("phone checklist renders today's list and a click posts the tick", async ()
 test('pantry quick-use writes consumption + decrements pantry-items', async () => {
     const { window, calls } = await bootDom();
     try {
+        window.confirm = () => true;
         window.PhoneApp.switchView('pantry');
         await sleep(20);
         assert.ok(window.document.querySelector('#pantry-items .pantry-use'), 'Use button rendered');
@@ -117,6 +118,42 @@ test('pantry quick-use writes consumption + decrements pantry-items', async () =
         assert.equal(calls.pantryPut.length, 1, 'pantry-items written');
         const pi = calls.pantryPut[0].find(p => p.pantryId === 'pa');
         assert.equal(pi.quantity, 2, 'one 1000 g pack decremented from 3 packs');
+    } finally {
+        window.close();
+    }
+});
+
+test('pantry quick-use caps grams to available stock and asks for confirmation', async () => {
+    const { window, calls } = await bootDom();
+    try {
+        let confirmed = 0;
+        window.confirm = () => { confirmed++; return true; };
+        window.PhoneApp.switchView('pantry');
+        await sleep(20);
+        const grams = window.document.querySelector('#pantry-items .pantry-grams');
+        grams.value = '5000'; // more than the 3 x 1000 g available
+        window.document.querySelector('#pantry-items .pantry-use').click();
+        await sleep(40);
+        assert.ok(confirmed >= 1, 'confirmation asked before decrementing');
+        const rec = calls.consumptionPut[0][0];
+        assert.equal(rec.items[0].grams, 3000, 'grams capped to available stock');
+        const pi = calls.pantryPut[0].find(p => p.pantryId === 'pa');
+        assert.equal(pi.quantity, 0, 'stock floors at 0');
+    } finally {
+        window.close();
+    }
+});
+
+test('pantry quick-use is cancelled when confirmation is declined', async () => {
+    const { window, calls } = await bootDom();
+    try {
+        window.confirm = () => false;
+        window.PhoneApp.switchView('pantry');
+        await sleep(20);
+        window.document.querySelector('#pantry-items .pantry-use').click();
+        await sleep(40);
+        assert.equal(calls.consumptionPut.length, 0, 'no consumption written when declined');
+        assert.equal(calls.pantryPut.length, 0, 'no pantry write when declined');
     } finally {
         window.close();
     }
