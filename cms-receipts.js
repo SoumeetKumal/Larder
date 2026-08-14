@@ -314,6 +314,16 @@
                 return { name: it.name, qty: it.qty, unit: it.unit || 'g', price: it.price || 0, foodId: ing ? ing.foodId : null, matchedName: ing ? ing.name : null };
             });
             const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+            
+            // Expected vs actual total comparison
+            if (total > 0 && Math.abs(total - computed) > 0.01) {
+                const diff = total - computed;
+                const pct = computed > 0 ? Math.round((diff / computed) * 100) : 0;
+                if (!confirm(`Entered total (${total.toFixed(2)}) differs from item sum (${computed.toFixed(2)}) by ${diff >= 0 ? '+' : ''}${diff.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct}%). Save anyway?`)) {
+                    return;
+                }
+            }
+            
             const newReceipt = {
                 id: 'rc_' + Date.now(),
                 store, date, total: total || Math.round(computed * 100) / 100,

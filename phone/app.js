@@ -262,6 +262,16 @@
         const date = ($('rc-date') || {}).value || todayUTC();
         const enteredTotal = parseFloat(($('rc-total') || {}).value) || 0;
         const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+        
+        // Expected vs actual total comparison
+        if (enteredTotal > 0 && Math.abs(enteredTotal - computed) > 0.01) {
+            const diff = enteredTotal - computed;
+            const pct = computed > 0 ? Math.round((diff / computed) * 100) : 0;
+            if (!confirm(`Entered total (${enteredTotal.toFixed(2)}) differs from item sum (${computed.toFixed(2)}) by ${diff >= 0 ? '+' : ''}${diff.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct}%). Save anyway?`)) {
+                return;
+            }
+        }
+        
         const receipt = {
             id: 'rc_' + Date.now(),
             store,
