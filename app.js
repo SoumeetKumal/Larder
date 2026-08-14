@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let recipesData = [];
     let recipeIndex = [];
+    let ingredientIndex = [];
     let currentCategory = 'All';
     let searchQuery = '';
     let currentRecipe = null;
@@ -164,6 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                         .then(data => { recipeIndex = data; })
                         .catch(() => { recipeIndex = []; });
+                });
+        } else {
+            fetch('/api/ingredients?_=' + Date.now(), { headers, cache: 'no-store' })
+                .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                .then(data => { ingredientIndex = data; })
+                .catch(() => {
+                    fetch('data/ingredients.json')
+                        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                        .then(data => { ingredientIndex = data; })
+                        .catch(() => { ingredientIndex = []; });
                 });
         }
     }
@@ -720,14 +731,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resolveIngredientProfile(ing) {
+        const source = isIngredientsPage ? recipesData : ingredientIndex;
         // Exact foodId first (the recipe already stores it), then a name fallback
         // for legacy data authored before links existed.
         if (ing.foodId) {
-            const byId = recipesData.find(r => r.entryType === 'ingredient'
-                && String(r.foodId || r.id).toLowerCase() === String(ing.foodId).toLowerCase());
+            const byId = source.find(r => r.foodId
+                && String(r.foodId).toLowerCase() === String(ing.foodId).toLowerCase());
             if (byId) return byId;
         }
-        return recipesData.find(r => r.entryType === 'ingredient'
+        return source.find(r => r.foodId
             && (ing.item || '').toLowerCase().includes((r.title || r.name || '').toLowerCase()));
     }
 
@@ -1073,8 +1085,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Tokens that don't resolve to a known ingredient stay as plain text.
         function renderStepHtml(step) {
             return escapeHtml(step).replace(/(?<!\[)\[\[([\w\-_.]+)(?:\|([^\]]+))?\]\]/g, (match, foodId, label) => {
-                const resolved = recipesData.find(r => r.entryType === 'ingredient'
-                    && String(r.foodId || r.id).toLowerCase() === String(foodId).toLowerCase());
+                const source = isIngredientsPage ? recipesData : ingredientIndex;
+                const resolved = source.find(r => r.foodId
+                    && String(r.foodId).toLowerCase() === String(foodId).toLowerCase());
                 if (!resolved) return label ? escapeHtml(label) : match;
                 const linkLabel = escapeHtml((label || resolved.title || resolved.name || foodId).trim());
                 return `<a class="ingredient-link" href="ingredients.html?foodId=${encodeURIComponent(foodId)}" target="_blank" rel="noopener" title="View ${linkLabel}">${linkLabel}</a>`;

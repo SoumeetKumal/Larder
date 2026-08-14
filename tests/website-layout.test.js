@@ -47,10 +47,10 @@ function makeDom() {
     window.fetch = async (url) => {
         const u = String(url);
         if (u.includes('/api/recipes') || u.startsWith('data/recipes.json')) {
-            return { ok: true, status: 200, json: async () => RECIPES };
+            return { ok: true, status: 200, json: async () => RECIPES.filter(r => r.entryType === 'recipe') };
         }
         if (u.includes('/api/ingredients') || u.startsWith('data/ingredients.json')) {
-            return { ok: true, status: 200, json: async () => [] };
+            return { ok: true, status: 200, json: async () => RECIPES.filter(r => r.entryType === 'ingredient') };
         }
         return { ok: true, status: 200, json: async () => [] };
     };
