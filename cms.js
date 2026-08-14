@@ -1601,7 +1601,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (pantryId) {
             const idx = pantryItems.findIndex(i => i.pantryId === pantryId);
-            if (idx >= 0) pantryItems[idx] = itemData;
+            if (idx >= 0) {
+                const prev = pantryItems[idx];
+                const prevPrice = parseFloat(prev.price) || 0;
+                // Preserve price history on edit
+                itemData.priceHistory = Array.isArray(prev.priceHistory) ? prev.priceHistory : [];
+                itemData.lastPrice = prev.lastPrice != null ? prev.lastPrice : (prevPrice || null);
+                itemData.lastPriceDate = prev.lastPriceDate || null;
+                itemData.averagePrice = prev.averagePrice != null ? prev.averagePrice : 0;
+                // Record a new price observation when the price changes
+                if (itemData.price > 0 && prevPrice !== itemData.price) {
+                    const upd = window.LarderCalc && window.LarderCalc.applyPriceUpdate
+                        ? window.LarderCalc.applyPriceUpdate(itemData, { price: itemData.price, date: new Date().toISOString().slice(0, 10) })
+                        : null;
+                    if (upd) { itemData.priceHistory = upd.history; itemData.averagePrice = upd.averagePrice; itemData.lastPrice = upd.lastPrice; itemData.lastPriceDate = upd.lastPriceDate; }
+                }
+                pantryItems[idx] = itemData;
+            }
         } else {
             pantryItems.push(itemData);
         }
