@@ -418,23 +418,28 @@
                     const c = comparisons[idx];
                     if (!c) continue;
                     const newPrice = c.receiptPrice;
-                    // Update pantry item
+                    const obs = { date: receipt.date, price: newPrice };
+                    const apply = window.LarderCalc && window.LarderCalc.applyPriceUpdate;
+                    // Update pantry item via applyPriceUpdate (single writer)
                     if (c.pantryItem) {
-                        c.pantryItem.priceHistory = c.pantryItem.priceHistory || [];
-                        c.pantryItem.priceHistory.push({ date: receipt.date, price: newPrice });
-                        c.pantryItem.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        c.pantryItem.lastPrice = newPrice;
-                        c.pantryItem.lastPriceDate = receipt.date;
-                        // Recompute average
-                        const sum = c.pantryItem.priceHistory.reduce((s, h) => s + h.price, 0);
-                        c.pantryItem.averagePrice = c.pantryItem.priceHistory.length ? sum / c.pantryItem.priceHistory.length : 0;
+                        const upd = apply ? apply(c.pantryItem, obs)
+                            : { history: c.pantryItem.priceHistory || [], averagePrice: c.pantryItem.averagePrice || 0, lastPrice: newPrice, lastPriceDate: receipt.date };
+                        c.pantryItem.priceHistory = upd.history;
+                        c.pantryItem.averagePrice = upd.averagePrice;
+                        c.pantryItem.lastPrice = upd.lastPrice;
+                        c.pantryItem.lastPriceDate = upd.lastPriceDate;
+                        if (c.pantryItem.priceHistory && !c.pantryItem.priceHistory.some(x => x.brand)) {
+                            c.pantryItem.priceHistory.forEach(h => { if (!h.brand && c.pantryItem.brand) h.brand = c.pantryItem.brand; });
+                        }
                     }
-                    // Update ingredient
+                    // Update ingredient via applyPriceUpdate (single writer)
                     if (c.ingredient) {
-                        c.ingredient.priceHistory = c.ingredient.priceHistory || [];
-                        c.ingredient.priceHistory.push({ date: receipt.date, price: newPrice });
-                        c.ingredient.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        c.ingredient.averagePrice = c.ingredient.priceHistory.length ? c.ingredient.priceHistory.reduce((s, h) => s + h.price, 0) / c.ingredient.priceHistory.length : 0;
+                        const upd = apply ? apply(c.ingredient, obs)
+                            : { history: c.ingredient.priceHistory || [], averagePrice: c.ingredient.averagePrice || 0, lastPrice: newPrice, lastPriceDate: receipt.date };
+                        c.ingredient.priceHistory = upd.history;
+                        c.ingredient.averagePrice = upd.averagePrice;
+                        c.ingredient.lastPrice = upd.lastPrice;
+                        c.ingredient.lastPriceDate = upd.lastPriceDate;
                     }
                 }
                 // Persist

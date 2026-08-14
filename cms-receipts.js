@@ -7,6 +7,9 @@
     const U = root.LarderCalcUtils || {};
     const LC = root.LarderCalc || { matchIngredient: () => null, parseLine: () => null, parseReceiptText: () => [] };
 
+    // Brand-comparison filter: restricts the price-history chart to a single foodId.
+    let activePriceFood = '';
+
     function renderReceipts() {
         const App = root.CMSApp;
         const container = document.getElementById('cms-recipe-list');
@@ -83,55 +86,82 @@
             </div>
         </div>`;
 
-        // ---- Price History Chart ----
+        // ---- Price History Chart (brand-aware: each pantry product = its own series) ----
         const priceHistoryHTML = (() => {
-            // Collect price history from pantry items and ingredients
-            const histories = {};
+            // Series: one per tracked pantry product (brand), plus one per ingredient without a linked product.
+            // key -> { foodId, label, points: [{date, price}] }
+            const series = {};
+            const byFood = {};
             S.pantryItems.forEach(p => {
-                if (p.priceHistory && p.priceHistory.length > 1) {
-                    histories[p.ingredientFoodId] = histories[p.ingredientFoodId] || { name: p.productName, points: [] };
-                    p.priceHistory.forEach(h => histories[p.ingredientFoodId].points.push({ date: h.date, price: h.price }));
-                }
+                const id = p.pantryId || (p.ingredientFoodId + ':' + (p.brand || ''));
+                if (!p.priceHistory || p.priceHistory.length === 0) return;
+                series[id] = series[id] || {
+                    foodId: p.ingredientFoodId,
+                    label: (p.brand ? p.brand + ' ' : '') + (p.productName || p.ingredientFoodId || ''),
+                    points: []
+                };
+                p.priceHistory.forEach(h => {
+                    if (h && h.date && h.price != null) series[id].points.push({ date: h.date, price: parseFloat(h.price) });
+                });
+                byFood[p.ingredientFoodId] = true;
             });
             S.ingredients.forEach(i => {
-                if (i.priceHistory && i.priceHistory.length > 1) {
-                    histories[i.foodId] = histories[i.foodId] || { name: i.name, points: [] };
-                    i.priceHistory.forEach(h => histories[i.foodId].points.push({ date: h.date, price: h.price }));
-                }
+                if (!i.priceHistory || i.priceHistory.length === 0) return;
+                // Only add ingredient series for foodIds with no pantry series (so we don't double-plot the same item)
+                if (byFood[i.foodId]) return;
+                const id = 'ing:' + i.foodId;
+                series[id] = series[id] || { foodId: i.foodId, label: i.name || i.foodId, points: [] };
+                i.priceHistory.forEach(h => {
+                    if (h && h.date && h.price != null) series[id].points.push({ date: h.date, price: parseFloat(h.price) });
+                });
             });
-            const items = Object.entries(histories);
-            if (items.length === 0) return '';
-            // Build chart data
-            const allDates = new Set();
-            items.forEach(([_, data]) => data.points.forEach(p => allDates.add(p.date)));
-            const sortedDates = Array.from(allDates).sort();
-            const minPrice = Math.min(...items.flatMap(([_, d]) => d.points.map(p => p.price)));
-            const maxPrice = Math.max(...items.flatMap(([_, d]) => d.points.map(p => p.price)));
+
+            const seriesList = Object.values(series).filter(s => s.points.length > 1
+                && (!activePriceFood || s.foodId === activePriceFood));
+            if (seriesList.length === 0) return '';
+
+            // Distinct foodIds across all series (for the filter dropdown)
+            const foodIds = Array.from(new Set(seriesList.map(s => s.foodId))).filter(Boolean);
+            // Per-series x positions are normalized by their own date range; shared grid uses global min/max prices.
+            const allPrices = seriesList.flatMap(s => s.points.map(p => p.price));
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
             const priceRange = maxPrice - minPrice || 1;
             const chartHeight = 120;
-            const chartWidth = Math.max(400, sortedDates.length * 40);
-            
+            const chartWidth = 520;
+
+            const colors = ['#5c90c6', '#d1777d', '#7ebc59', '#e8b84d', '#c47fd5', '#5cc8c8', '#f39c12', '#e74c3c', '#8e44ad', '#16a085'];
+
             let svgPaths = '';
             let legendHTML = '';
-            const colors = ['#5c90c6', '#d1777d', '#7ebc59', '#e8b84d', '#c47fd5', '#5cc8c8', '#f39c12', '#e74c3c'];
-            items.forEach(([foodId, data], idx) => {
-                const pts = data.points.sort((a, b) => a.date.localeCompare(b.date));
+            seriesList.forEach((s, idx) => {
+                const pts = s.points.slice().sort((a, b) => a.date.localeCompare(b.date));
                 if (pts.length < 2) return;
+                const color = colors[idx % colors.length];
                 const path = pts.map((p, i) => {
-                    const x = (i / (pts.length - 1)) * chartWidth;
-                    const y = chartHeight - ((p.price - minPrice) / priceRange) * (chartHeight - 20) - 10;
+                    const x = (i / (pts.length - 1)) * (chartWidth - 60) + 30;
+                    const y = 10 + (chartHeight - 20) - ((p.price - minPrice) / priceRange) * (chartHeight - 20);
                     return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
                 }).join(' ');
-                svgPaths += `<path d="${path}" stroke="${colors[idx % colors.length]}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
-                legendHTML += `<span style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.75rem;font-size:.75rem;color:var(--text-secondary);"><span style="width:12px;height:2px;background:${colors[idx % colors.length]};border-radius:1px;"></span> ${U.escapeHtml(data.name)}</span>`;
+                svgPaths += `<path d="${path}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+                // Small end dot
+                const last = pts[pts.length - 1];
+                const lx = (pts.length - 1) / (pts.length - 1) * (chartWidth - 60) + 30;
+                const ly = 10 + (chartHeight - 20) - ((last.price - minPrice) / priceRange) * (chartHeight - 20);
+                svgPaths += `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="3" fill="${color}" />`;
+                legendHTML += `<span style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.75rem;font-size:.75rem;color:var(--text-secondary);"><span style="width:12px;height:2px;background:${color};border-radius:1px;"></span> ${U.escapeHtml(s.label)}</span>`;
             });
-            
+
+            // Food selector (for brand comparison within one ingredient)
+            const foodSelect = foodIds.length > 1
+                ? `<select id="rc-price-food-filter" style="margin-left:auto;"><option value="">All ingredients</option>${foodIds.map(f => `<option value="${U.escapeHtml(f)}" ${f === activePriceFood ? 'selected' : ''}>${U.escapeHtml((S.ingredients.find(i => i.foodId === f) || {}).name || f)}</option>`).join('')}</select>`
+                : '';
+
             return `
-            <div class="planner-card rc-price-history">
-                <div class="planner-card-head"><i data-lucide="chart-line" style="width:18px;height:18px;"></i> Price History <span class="planner-hint">from receipts & pantry items</span></div>
-                <div class="rc-price-chart" style="position:relative;height:140px;margin-bottom:.75rem;background:var(--bg-surface);border-radius:8px;overflow:hidden;">
+            <div class="planner-card rc-price-history" id="rc-price-history-card">
+                <div class="planner-card-head"><i data-lucide="chart-line" style="width:18px;height:18px;"></i> Price History <span class="planner-hint">per brand, from receipts & pantry</span>${foodSelect}</div>
+                <div class="rc-price-chart" style="position:relative;height:150px;margin-bottom:.75rem;background:var(--bg-surface);border-radius:8px;overflow:hidden;">
                     <svg width="${chartWidth + 20}" height="${chartHeight + 20}" viewBox="0 0 ${chartWidth + 20} ${chartHeight + 20}" style="display:block;margin:10px auto;">
-                        <!-- Grid lines -->
                         ${[0, 0.25, 0.5, 0.75, 1].map(f => {
                             const y = 10 + f * (chartHeight - 20);
                             const val = maxPrice - f * priceRange;
@@ -200,6 +230,13 @@
         }
         container.innerHTML = `<div class="planner-wrap rc-page"><div class="rc-top">${anHTML}${priceHistoryHTML}${addForm}</div>${listHTML}</div>`;
         if (root.lucide) root.lucide.createIcons();
+
+        // Brand-comparison filter: re-render the receipts tab when the food filter changes
+        const foodFilter = container.querySelector('#rc-price-food-filter');
+        if (foodFilter) foodFilter.addEventListener('change', (e) => {
+            activePriceFood = e.target.value;
+            renderReceipts();
+        });
 
         // Build item rows (for manual entry)
         let itemRows = [];
@@ -459,23 +496,27 @@
                     const c = comparisons[idx];
                     if (!c) continue;
                     const newPrice = c.receiptPrice;
-                    // Update pantry item
+                    const obs = { date: receipt.date, price: newPrice };
+                    // Update pantry item via applyPriceUpdate (single writer)
                     if (c.pantryItem) {
-                        c.pantryItem.priceHistory = c.pantryItem.priceHistory || [];
-                        c.pantryItem.priceHistory.push({ date: receipt.date, price: newPrice });
-                        c.pantryItem.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        c.pantryItem.lastPrice = newPrice;
-                        c.pantryItem.lastPriceDate = receipt.date;
-                        // Recompute average
-                        const sum = c.pantryItem.priceHistory.reduce((s, h) => s + h.price, 0);
-                        c.pantryItem.averagePrice = c.pantryItem.priceHistory.length ? sum / c.pantryItem.priceHistory.length : 0;
+                        const upd = LC.applyPriceUpdate ? LC.applyPriceUpdate(c.pantryItem, obs)
+                            : { history: c.pantryItem.priceHistory || [], averagePrice: c.pantryItem.averagePrice || 0, lastPrice: newPrice, lastPriceDate: receipt.date };
+                        c.pantryItem.priceHistory = upd.history;
+                        c.pantryItem.averagePrice = upd.averagePrice;
+                        c.pantryItem.lastPrice = upd.lastPrice;
+                        c.pantryItem.lastPriceDate = upd.lastPriceDate;
+                        if (c.pantryItem.priceHistory && !c.pantryItem.priceHistory.some(x => x.brand)) {
+                            c.pantryItem.priceHistory.forEach(h => { if (!h.brand) h.brand = c.pantryItem.brand || ''; });
+                        }
                     }
-                    // Update ingredient
+                    // Update ingredient via applyPriceUpdate (single writer)
                     if (c.ingredient) {
-                        c.ingredient.priceHistory = c.ingredient.priceHistory || [];
-                        c.ingredient.priceHistory.push({ date: receipt.date, price: newPrice });
-                        c.ingredient.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        c.ingredient.averagePrice = c.ingredient.priceHistory.length ? c.ingredient.priceHistory.reduce((s, h) => s + h.price, 0) / c.ingredient.priceHistory.length : 0;
+                        const upd = LC.applyPriceUpdate ? LC.applyPriceUpdate(c.ingredient, obs)
+                            : { history: c.ingredient.priceHistory || [], averagePrice: c.ingredient.averagePrice || 0, lastPrice: newPrice, lastPriceDate: receipt.date };
+                        c.ingredient.priceHistory = upd.history;
+                        c.ingredient.averagePrice = upd.averagePrice;
+                        c.ingredient.lastPrice = upd.lastPrice;
+                        c.ingredient.lastPriceDate = upd.lastPriceDate;
                     }
                 }
                 // Persist
