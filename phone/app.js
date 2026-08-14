@@ -173,6 +173,8 @@
     }
 
     // --- Receipt capture: paste text primary, native OCR when desktop-hosted ---
+    let parsedRows = []; // editable rows after parse
+
     function renderParsed(parsed) {
         const itemsEl = $('rc-items');
         if (!parsed.length) {
@@ -180,18 +182,58 @@
             note('Could not parse any lines.', false);
             return;
         }
-        itemsEl.innerHTML = parsed.map(l => `<li class="ph-item">
-            <div class="ph-item-body">
-                <div class="ph-item-name">${esc(l.name)}</div>
-                <div class="ph-item-sub">${l.qty} \u00d7 ${esc(l.unit || 'g')} \u2014 ${l.price}</div>
-            </div>
-        </li>`).join('');
+        parsedRows = parsed.map(l => ({
+            name: l.name,
+            qty: l.qty || 1,
+            unit: l.unit || 'g',
+            price: l.price || 0,
+            foodId: l.foodId || null,
+            grams: l.grams || null,
+            matchedName: l.matchedName || null
+        }));
+        renderItemRows();
         const totalInput = $('rc-total') || null;
         if (totalInput && !(parseFloat(totalInput.value) > 0)) {
-            const sum = parsed.reduce((s, l) => s + (l.price || 0) * (l.qty || 1), 0);
+            const sum = parsedRows.reduce((s, r) => s + (r.price || 0) * (r.qty || 1), 0);
             totalInput.value = Math.round(sum * 100) / 100;
         }
-        note(parsed.length + ' line(s) parsed.', true);
+        note(parsedRows.length + ' line(s) parsed — review, then Save receipt.', true);
+    }
+
+    function renderItemRows() {
+        const itemsEl = $('rc-items');
+        itemsEl.innerHTML = parsedRows.map((r, idx) => `
+            <li class="ph-item rc-man-item" data-idx="${idx}">
+                <input class="ph-input rc-man-name" type="text" data-idx="${idx}" value="${esc(r.name)}" placeholder="Item name">
+                <input class="ph-input rc-man-qty" type="number" step="any" data-idx="${idx}" value="${esc(r.qty)}" style="width:60px;">
+                <input class="ph-input rc-man-unit" type="text" data-idx="${idx}" value="${esc(r.unit)}" style="width:46px;">
+                <input class="ph-input rc-man-price" type="number" step="0.01" data-idx="${idx}" value="${esc(r.price)}" style="width:90px;">
+                <button class="ph-tap rc-rm" data-idx="${idx}" type="button" title="Remove">&times;</button>
+            </li>`).join('');
+        itemsEl.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('input', () => {
+                const i2 = parseInt(inp.dataset.idx, 10);
+                if (!parsedRows[i2]) return;
+                if (inp.classList.contains('rc-man-name')) parsedRows[i2].name = inp.value;
+                else if (inp.classList.contains('rc-man-qty')) parsedRows[i2].qty = parseFloat(inp.value) || 0;
+                else if (inp.classList.contains('rc-man-unit')) parsedRows[i2].unit = inp.value;
+                else if (inp.classList.contains('rc-man-price')) parsedRows[i2].price = parseFloat(inp.value) || 0;
+                updateCalcTotal();
+            });
+        });
+        itemsEl.querySelectorAll('.rc-rm').forEach(btn => {
+            btn.addEventListener('click', () => {
+                parsedRows.splice(parseInt(btn.dataset.idx, 10), 1);
+                renderItemRows();
+                updateCalcTotal();
+            });
+        });
+    }
+
+    function updateCalcTotal() {
+        const sum = parsedRows.reduce((s, r) => s + (r.price || 0) * (r.qty || 1), 0);
+        const totalInput = $('rc-total');
+        if (totalInput) totalInput.value = Math.round(sum * 100) / 100;
     }
 
     function saveReceipt() {
@@ -200,27 +242,164 @@
             if (!text.trim()) { note('Paste receipt text first.', false); return; }
             const parsed = (window.LarderCalc && window.LarderCalc.parseReceiptText) ? window.LarderCalc.parseReceiptText(text, state.ingredients) : [];
             if (!parsed.length) { note('Could not parse any lines.', false); return; }
-            const store = ($('rc-store') || {}).value || 'Other';
-            const date = ($('rc-date') || {}).value || todayUTC();
-            const enteredTotal = parseFloat(($('rc-total') || {}).value) || 0;
-            const items = parsed.map(l => ({ name: l.name, qty: l.qty, unit: l.unit || 'g', price: l.price || 0, foodId: l.foodId || null, matchedName: l.matchedName || null }));
-            const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-            const receipt = {
-                id: 'rc_' + Date.now(),
-                store,
-                date,
-                total: enteredTotal || Math.round(computed * 100) / 100,
-                currency: (state.settings.shopping && state.settings.shopping.currency) || 'MUR',
-                items,
-                enteredTotal
-            };
-            const receipts = Array.isArray(state.receipts) ? state.receipts.slice() : [];
-            receipts.unshift(receipt);
-            state.receipts = receipts;
-            await api('/api/receipts', 'PUT', receipts);
-            note('Receipt saved (' + items.length + ' item(s)).', true);
             renderParsed(parsed);
+            await showPriceComparisonAndSave(parsed);
         })().catch((e) => note('Save failed: ' + e.message, false));
+    }
+
+    async function showPriceComparisonAndSave(parsed) {
+        // Build final items from edited rows
+        const items = parsedRows.map(r => ({
+            name: r.name,
+            qty: r.qty,
+            unit: r.unit,
+            price: r.price,
+            foodId: r.foodId,
+            grams: r.grams,
+            matchedName: r.matchedName
+        }));
+        const store = ($('rc-store') || {}).value || 'Other';
+        const date = ($('rc-date') || {}).value || todayUTC();
+        const enteredTotal = parseFloat(($('rc-total') || {}).value) || 0;
+        const computed = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
+        const receipt = {
+            id: 'rc_' + Date.now(),
+            store,
+            date,
+            total: enteredTotal || Math.round(computed * 100) / 100,
+            currency: (state.settings.shopping && state.settings.shopping.currency) || 'MUR',
+            items,
+            enteredTotal
+        };
+
+        // Price comparison
+        const currency = receipt.currency;
+        const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '��', BDT: '��' };
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const comparisons = [];
+        items.forEach(it => {
+            if (!it.foodId) return;
+            const pantryItem = state.pantryItems.find(p => p.ingredientFoodId === it.foodId && p.isTracked);
+            const ingredient = state.ingredients.find(i => i.foodId === it.foodId);
+
+            const receiptPrice = it.price && it.grams ? (it.price / it.grams) : 0;
+            const pantryPrice = pantryItem && pantryItem.price && pantryItem.packSize ? (pantryItem.price / pantryItem.packSize) : 0;
+            const ingredientPrice = ingredient && ingredient.averagePrice ? (ingredient.averagePrice / (ingredient.priceBasisGrams || ingredient.servingSizeG || 100)) : 0;
+
+            const lastPrice = pantryItem ? (pantryItem.lastPrice || pantryPrice) : (ingredientPrice || 0);
+
+            if (receiptPrice > 0 && lastPrice > 0) {
+                const pct = lastPrice > 0 ? Math.round(((receiptPrice - lastPrice) / lastPrice) * 100) : 0;
+                comparisons.push({
+                    foodId: it.foodId,
+                    name: it.name,
+                    receiptPrice: Math.round(receiptPrice * 10000) / 10000,
+                    lastPrice: Math.round(lastPrice * 10000) / 10000,
+                    pct,
+                    pantryItem,
+                    ingredient,
+                    item: it
+                });
+            }
+        });
+
+        if (comparisons.length > 0) {
+            await showPriceComparisonDialog(comparisons, receipt, fmt);
+        }
+
+        // Save receipt
+        const receipts = Array.isArray(state.receipts) ? state.receipts.slice() : [];
+        receipts.unshift(receipt);
+        state.receipts = receipts;
+        await api('/api/receipts', 'PUT', receipts);
+        note('Receipt saved (' + items.length + ' item(s)).', true);
+        renderParsed(parsed); // reset to read-only parsed view
+    }
+
+    function showPriceComparisonDialog(comparisons, receipt, fmt) {
+        return new Promise(resolve => {
+            const dialog = document.createElement('div');
+            dialog.className = 'modal-overlay';
+            dialog.innerHTML = `
+                <div class="modal-content" style="max-width: 90vw; margin: 1rem;" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 style="margin:0;color:var(--text-main);"><i data-lucide="tag" style="width:20px;height:20px;vertical-align:-3px;"></i> Price Changes Detected</h3>
+                        <button class="modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+                    </div>
+                    <div style="padding:1.5rem;max-height:70vh;overflow-y:auto;">
+                        <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem;">The following items from your receipt have price differences vs. your recorded prices. Review and choose which to update.</p>
+                        <div style="display:flex;gap:.5rem;margin-bottom:1rem;padding:.5rem;background:var(--bg-raised);border-radius:6px;font-size:.8rem;">
+                            <span style="flex:1;font-weight:600;">Item</span>
+                            <span style="width:100px;text-align:right;font-weight:600;">Last Price</span>
+                            <span style="width:100px;text-align:right;font-weight:600;">Receipt Price</span>
+                            <span style="width:80px;text-align:center;font-weight:600;">Change</span>
+                            <span style="width:120px;text-align:center;font-weight:600;">Action</span>
+                        </div>
+                        ${comparisons.map((c, i) => `
+                            <div style="display:flex;gap:.5rem;padding:.5rem;border-bottom:1px solid var(--border);align-items:center;">
+                                <span style="flex:1;font-size:.85rem;">${esc(c.name)}</span>
+                                <span style="width:100px;text-align:right;font-size:.85rem;">${fmt(c.lastPrice)}</span>
+                                <span style="width:100px;text-align:right;font-size:.85rem;">${fmt(c.receiptPrice)}</span>
+                                <span style="width:80px;text-align:center;font-size:.85rem;color:${c.pct > 0 ? 'var(--accent-meat)' : c.pct < 0 ? 'var(--accent-veg)' : 'var(--text-muted)'};">
+                                    ${c.pct >= 0 ? '+' : ''}${c.pct}%
+                                </span>
+                                <span style="width:120px;text-align:center;">
+                                    <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                                        <input type="checkbox" data-idx="${i}" ${c.pct !== 0 ? 'checked' : ''}>
+                                        <span style="font-size:.75rem;">Update</span>
+                                    </label>
+                                </span>
+                            </div>
+                        `).join('')}
+                        <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;gap:.5rem;">
+                            <button class="btn secondary" id="price-cmp-cancel">Cancel</button>
+                            <button class="btn primary" id="price-cmp-ok">Update Selected Prices</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+            if (window.lucide) window.lucide.createIcons();
+
+            const close = () => { dialog.remove(); resolve(); };
+            dialog.querySelector('.modal-close').onclick = close;
+            dialog.onclick = (e) => { if (e.target === dialog) close(); };
+            dialog.querySelector('#price-cmp-cancel').onclick = close;
+            dialog.querySelector('#price-cmp-ok').onclick = async () => {
+                const checks = dialog.querySelectorAll('input[type="checkbox"]:checked');
+                for (const cb of checks) {
+                    const idx = parseInt(cb.dataset.idx);
+                    const c = comparisons[idx];
+                    if (!c) continue;
+                    const newPrice = c.receiptPrice;
+                    // Update pantry item
+                    if (c.pantryItem) {
+                        c.pantryItem.priceHistory = c.pantryItem.priceHistory || [];
+                        c.pantryItem.priceHistory.push({ date: receipt.date, price: newPrice });
+                        c.pantryItem.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        c.pantryItem.lastPrice = newPrice;
+                        c.pantryItem.lastPriceDate = receipt.date;
+                        // Recompute average
+                        const sum = c.pantryItem.priceHistory.reduce((s, h) => s + h.price, 0);
+                        c.pantryItem.averagePrice = c.pantryItem.priceHistory.length ? sum / c.pantryItem.priceHistory.length : 0;
+                    }
+                    // Update ingredient
+                    if (c.ingredient) {
+                        c.ingredient.priceHistory = c.ingredient.priceHistory || [];
+                        c.ingredient.priceHistory.push({ date: receipt.date, price: newPrice });
+                        c.ingredient.priceHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        c.ingredient.averagePrice = c.ingredient.priceHistory.length ? c.ingredient.priceHistory.reduce((s, h) => s + h.price, 0) / c.ingredient.priceHistory.length : 0;
+                    }
+                }
+                // Persist
+                await Promise.all([
+                    api('/api/pantry-items', 'PUT', state.pantryItems),
+                    api('/api/ingredients', 'PUT', state.ingredients)
+                ]);
+                close();
+            };
+        });
     }
 
     // --- Live sync over the shared /ws hub (shopping lists + pantry, so a tick on
