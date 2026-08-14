@@ -3396,13 +3396,49 @@ if (currentCMSTab === 'pantry') {
                 document.getElementById('household-last-opened').value = (item && item.lastOpenedDate) || '';
                 document.getElementById('household-min-stock').value = (item && item.minStock != null) ? item.minStock : '';
                 document.getElementById('household-max-stock').value = (item && item.maxStock != null) ? item.maxStock : '';
-                // Render household price history (mini list of dated observations)
+                // Render household price history (mini list of dated observations or sparkline)
                 const hhHist = document.getElementById('household-price-history');
                 if (hhHist) {
-                    const hist = (item && Array.isArray(item.priceHistory) && item.priceHistory.length) ? item.priceHistory : null;
-                    hhHist.innerHTML = hist
-                        ? `<div class="cms-section-title">Price History</div><div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.35rem;">${hist.slice().sort((a, b) => a.date.localeCompare(b.date)).map(h => `<span style="font-size:.75rem;background:var(--bg-surface-hover);border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem;">${escapeHtml(h.date)} · ${escapeHtml(h.price)}${escapeHtml(item.currency || '')}</span>`).join('')}</div>`
-                        : '';
+                    const hist = (item && Array.isArray(item.priceHistory) && item.priceHistory.length > 1) ? item.priceHistory.slice().sort((a, b) => a.date.localeCompare(b.date)) : null;
+                    if (hist) {
+                        const chartWidth = 320;
+                        const chartHeight = 80;
+                        const minPrice = Math.min(...hist.map(h => h.price));
+                        const maxPrice = Math.max(...hist.map(h => h.price));
+                        const priceRange = maxPrice - minPrice || 1;
+                        const color = '#5c90c6';
+                        
+                        const path = hist.map((p, i) => {
+                            const x = (i / (hist.length - 1)) * (chartWidth - 60) + 30;
+                            const y = 10 + (chartHeight - 20) - ((p.price - minPrice) / priceRange) * (chartHeight - 20);
+                            return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                        }).join(' ');
+                        
+                        let svgPaths = `<path d="${path}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+                        const last = hist[hist.length - 1];
+                        const lx = (hist.length - 1) / (hist.length - 1) * (chartWidth - 60) + 30;
+                        const ly = 10 + (chartHeight - 20) - ((last.price - minPrice) / priceRange) * (chartHeight - 20);
+                        svgPaths += `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="3" fill="${color}" />`;
+                        
+                        hhHist.innerHTML = `
+                            <div class="cms-section-title">Price History</div>
+                            <div style="position:relative;height:${chartHeight+20}px;margin-top:.5rem;background:var(--bg-surface-hover);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                                <svg width="100%" height="${chartHeight + 20}" viewBox="0 0 ${chartWidth + 20} ${chartHeight + 20}" style="display:block;margin:0 auto;" preserveAspectRatio="xMidYMid meet">
+                                    ${[0, 0.5, 1].map(f => {
+                                        const y = 10 + f * (chartHeight - 20);
+                                        const val = maxPrice - f * priceRange;
+                                        return \`<line x1="10" y1="${y.toFixed(1)}" x2="${chartWidth + 10}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.5" /><text x="5" y="${(y + 3).toFixed(1)}" font-size="8" fill="var(--text-muted)" text-anchor="end">${val.toFixed(0)}</text>\`;
+                                    }).join('')}
+                                    ${svgPaths}
+                                </svg>
+                            </div>
+                        `;
+                    } else {
+                        const simpleHist = (item && Array.isArray(item.priceHistory) && item.priceHistory.length) ? item.priceHistory : null;
+                        hhHist.innerHTML = simpleHist
+                            ? `<div class="cms-section-title">Price History</div><div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.35rem;">${simpleHist.slice().sort((a, b) => a.date.localeCompare(b.date)).map(h => `<span style="font-size:.75rem;background:var(--bg-surface-hover);border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem;">${escapeHtml(h.date)} · ${escapeHtml(h.price)}${escapeHtml(item.currency || '')}</span>`).join('')}</div>`
+                            : '';
+                    }
                 }
                 const delBtn = document.getElementById('household-delete-btn');
                 delBtn.style.display = item ? '' : 'none';

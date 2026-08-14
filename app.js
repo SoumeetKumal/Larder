@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderGrid() {
-        let filtered = recipesData;
+        let filtered = recipesData.filter(r => r.status !== 'draft');
         
         if (!isIngredientsPage) {
             if (!searchQuery) {
