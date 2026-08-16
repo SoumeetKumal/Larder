@@ -173,8 +173,8 @@
     function formatMoney(amount, currency) {
         const symbols = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
         const sym = symbols[currency] || (currency ? currency + ' ' : '');
-        const n = (amount || 0).toFixed(2);
-        return sym + n.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const n = (Number(amount) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        return sym + n;
     }
 
     // --- Shared household helpers (used by Household tab and Shopping list) ---

@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Reveal app-only UI (e.g. the "Manage"/CMS nav button) when running inside
     // the packaged Electron app; these elements stay hidden on the public site.
-    if (window.larderWindow && window.larderWindow.isElectron) {
+    const isElectronApp = !!(window.larderWindow && window.larderWindow.isElectron);
+    if (isElectronApp) {
         document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
     }
 
@@ -1036,10 +1037,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, ${accent} 15%, transparent), color-mix(in srgb, ${accent} 6%, transparent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <i data-lucide="${ingIcon.icon}" style="width: 26px; height: 26px; stroke-width: 1.8; color: ${accent};"></i>
                     </div>
-                    <div>
+                    <div style="flex: 1; min-width: 0;">
                         <h2 class="recipe-full-title" style="margin-bottom: 0.1rem; color: ${accent};">${escapeHtml(title.toUpperCase())}</h2>
                         <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(category)}</p>
                     </div>
+                    ${isElectronApp ? `<a class="btn btn-ghost app-only ingredient-edit-btn" style="padding: .4rem .7rem; font-size: .78rem; display: none; flex-shrink: 0;" href="cms.html#food/${encodeURIComponent(recipe.foodId || recipe.id)}" title="Edit this ingredient in the CMS">
+                        <i data-lucide="pencil" style="width: 14px; height: 14px;"></i> Edit in CMS
+                    </a>` : ''}
                 </div>
                 <div class="ing-tabs" id="ingTabs">
                     ${tabs.join('')}
@@ -1051,6 +1055,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         if (window.lucide) window.lucide.createIcons();
+        if (isElectronApp) {
+            document.querySelectorAll('.app-only').forEach(el => { el.style.display = ''; });
+        }
         attachModalListeners();
     }
 

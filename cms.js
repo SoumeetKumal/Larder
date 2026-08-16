@@ -63,6 +63,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const weights = {};
         Object.keys(historyByProduct).forEach(id => { weights[id] = purchaseCount[id] || 1; });
 
+        // Top purchased items (by line count within the period) and most cooked
+        // recipes (from the consumption log) for the favorites/patterns view.
+        const inStatsPeriod = (d) => !periodObj || !periodObj.from || d >= periodObj.from;
+        const purchased = {};
+        receipts.forEach(r => {
+            if (!inStatsPeriod(r.date)) return;
+            (r.items || []).forEach(it => {
+                if (!it || !it.name) return;
+                const key = it.foodId || it.name;
+                if (!purchased[key]) purchased[key] = { name: it.name, count: 0, total: 0 };
+                purchased[key].count += Math.max(1, parseFloat(it.qty) || 1);
+                purchased[key].total += parseFloat(it.price) || 0;
+            });
+        });
+        const topPurchased = Object.values(purchased)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+        const maxPurchased = topPurchased.length ? topPurchased[0].count : 0;
+
+        const cooked = {};
+        consumption.forEach(c => {
+            if (!c || !inStatsPeriod(c.date)) return;
+            const key = c.recipeId || c.recipeTitle || 'Unknown';
+            if (!cooked[key]) cooked[key] = { name: c.recipeTitle || key, count: 0 };
+            cooked[key].count++;
+        });
+        const topCooked = Object.values(cooked)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+        const maxCooked = topCooked.length ? topCooked[0].count : 0;
+
         // Run stats calculations
         const historyPoints = Object.fromEntries(Object.entries(historyByProduct).map(([k, v]) => [k, v.points || []]));
         const infl = LC.householdInflationIndex ? LC.householdInflationIndex(historyPoints, weights, periodObj)
@@ -106,6 +137,31 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
         }).join('') || '<div class="empty-state" style="padding:.4rem">No brand-switch savings found yet.</div>';
 
+        // Top purchased rows
+        const purchasedRows = topPurchased.map(p => `<div class="rc-store-row">
+            <span class="rc-store-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+            <div class="pl-total-bar" style="flex:1"><div class="pl-total-fill blue" style="width:${maxPurchased ? Math.min(100, p.count / maxPurchased * 100) : 0}%"></div></div>
+            <span class="rc-store-amt">${p.count}× \u00b7 ${formatMoney(p.total, currency)}</span>
+        </div>`).join('') || '<div class="empty-state" style="padding:.4rem">No purchases in this period.</div>';
+
+        // Most cooked rows
+        const cookedRows = topCooked.map(c => `<div class="rc-store-row">
+            <span class="rc-store-name" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
+            <div class="pl-total-bar" style="flex:1"><div class="pl-total-fill ${'red'}" style="width:${maxCooked ? Math.min(100, c.count / maxCooked * 100) : 0}%"></div></div>
+            <span class="rc-store-amt">${c.count}×</span>
+        </div>`).join('') || '<div class="empty-state" style="padding:.4rem">Log "I Cooked This" to see rankings.</div>';
+
+        // National CPI overlay: user-entered national inflation % stored in settings.
+        const cpiInputVal = (appSettings.stats && appSettings.stats.cpi != null) ? appSettings.stats.cpi : '';
+        const cpiNum = parseFloat(cpiInputVal);
+        const cpiCompare = (cpiNum && !isNaN(cpiNum))
+            ? `<div class="rc-store-row" style="margin-top:.6rem;background:var(--bg-surface);border-radius:8px;padding:.5rem .7rem;">
+                <span class="rc-store-name">Household vs national CPI</span>
+                <span class="planner-hint" style="flex:1">yours ${inflArrow}${infl.index.toFixed(1)}% \u00b7 national ${cpiNum.toFixed(1)}%</span>
+                <span class="rc-store-amt ${infl.index - cpiNum > 0 ? 'red' : 'blue'}">${infl.index - cpiNum >= 0 ? '+' : ''}${(infl.index - cpiNum).toFixed(1)} pts</span>
+            </div>`
+            : '';
+
         const periodOpts = periodPresets.map(p =>
             `<option value="${p.key}"${p.key === savedPeriod ? ' selected' : ''}>${p.label}</option>`).join('');
 
@@ -113,7 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="planner-wrap">
             <div class="planner-card rc-analytics">
                 <div class="planner-card-head"><i data-lucide="chart-bar" style="width:18px;height:18px;"></i> Stats <span class="planner-hint">household prices & spending</span>
-                    <select id="stats-period" style="margin-left:auto;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:.25rem .5rem;font-size:.8rem;">${periodOpts}</select>
+                    <div style="margin-left:auto;display:flex;align-items:center;gap:.4rem;">
+                        <label for="stats-cpi" class="planner-hint" style="white-space:nowrap;">National CPI %</label>
+                        <input id="stats-cpi" type="number" step="0.1" min="0" value="${escapeHtml(String(cpiInputVal))}" placeholder="e.g. 5.2" style="width:80px;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:.25rem .5rem;font-size:.8rem;">
+                        <select id="stats-period" style="background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:.25rem .5rem;font-size:.8rem;">${periodOpts}</select>
+                    </div>
                 </div>
                 <div class="rc-kpis">
                     <div class="rc-kpi"><div class="rc-kpi-label">Inflation index</div><div class="rc-kpi-val ${inflCls}">${inflArrow}${infl.index.toFixed(1)}%</div><div class="rc-kpi-sub">weighted price change</div></div>
@@ -125,7 +185,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="rc-stores"><div class="rc-subhead">Inflation contributors \u00b7 price change</div>${inflRows || '<div class="empty-state" style="padding:.4rem">Need 2+ price points per product.</div>'}</div>
                     <div class="rc-stores"><div class="rc-subhead">Spend by category</div>${catRows}</div>
                 </div>
-                <div class="rc-stores" style="margin-top:1.2rem;"><div class="rc-subhead">Savings signals \u00b7 brand switching</div>${signalRows}</div>
+                <div class="rc-split" style="margin-top:1.2rem;">
+                    <div class="rc-stores"><div class="rc-subhead">Top purchased \u00b7 ${period.label.toLowerCase()}</div>${purchasedRows}</div>
+                    <div class="rc-stores"><div class="rc-subhead">Most cooked recipes \u00b7 ${period.label.toLowerCase()}</div>${cookedRows}</div>
+                </div>
+                <div class="rc-stores" style="margin-top:1.2rem;"><div class="rc-subhead">Savings signals \u00b7 brand switching</div>${signalRows}${cpiCompare}</div>
             </div>
         </div>`;
         if (window.lucide) window.lucide.createIcons();
@@ -134,6 +198,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (periodSel) periodSel.addEventListener('change', () => {
             localStorage.setItem('larder_stats_period', periodSel.value);
             renderStatsTab();
+        });
+        const cpiInput = container.querySelector('#stats-cpi');
+        if (cpiInput) cpiInput.addEventListener('change', async () => {
+            const v = cpiInput.value.trim();
+            if (!appSettings.stats) appSettings.stats = {};
+            if (v === '') {
+                delete appSettings.stats.cpi;
+            } else {
+                const n = parseFloat(v);
+                appSettings.stats.cpi = (isNaN(n) || n < 0) ? 0 : n;
+            }
+            try {
+                const res = await fetch('/api/settings', { method: 'PUT', headers: HEADERS, body: JSON.stringify(appSettings) });
+                if (!res.ok) throw new Error('Save failed');
+                renderStatsTab();
+            } catch (e) {
+                alert('Failed to save CPI. Is the server running?');
+            }
         });
     }
 
@@ -543,6 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
     defineState('planner', () => planner, v => { planner = v; });
     defineState('receipts', () => receipts, v => { receipts = v; });
     defineState('consumption', () => consumption, v => { consumption = v; });
+    defineState('productPrefs', () => productPrefs, v => { productPrefs = v; });
     defineState('shoppingTemplates', () => shoppingTemplates, v => { shoppingTemplates = v; });
     defineState('plannerMonthTemplates', () => plannerMonthTemplates, v => { plannerMonthTemplates = v; });
     defineState('appSettings', () => appSettings, v => { appSettings = v; });
@@ -573,6 +656,8 @@ document.addEventListener('DOMContentLoaded', () => {
         savePlanner,
         saveShoppingTemplates,
         savePlannerMonthTemplates,
+        rememberProduct,
+        saveProductPrefs,
         activateTab: (tab) => activateTab(tab)
     };
 
@@ -774,11 +859,20 @@ document.addEventListener('DOMContentLoaded', () => {
             activateTab(tab);
         });
     });
-    // Support deep links like cms.html#food (used by the Workouts page sidebar).
-    const hashTab = location.hash && location.hash.replace('#', '');
-    if (hashTab) {
+    // Support deep links like cms.html#food (used by the Workouts page sidebar),
+    // and cms.html#food/<foodId> (ingredient detail page "Edit in CMS" button):
+    // activate the tab, then open the profile editor for that ingredient once
+    // the ingredient data has loaded.
+    const hashTabRaw = location.hash && location.hash.replace('#', '');
+    let pendingDeepLinkFoodId = null;
+    if (hashTabRaw) {
+        const hashParts = hashTabRaw.split('/').filter(Boolean);
+        const hashTab = hashParts[0];
         const target = document.querySelector(`.cms-sidebar .cms-tab[data-tab="${hashTab}"]`);
-        if (target) activateTab(target);
+        if (target) {
+            activateTab(target);
+            if (hashParts.length > 1) pendingDeepLinkFoodId = decodeURIComponent(hashParts[1]);
+        }
     }
     // Keyboard column navigation: Arrow Up/Down moves across sidebar tabs.
     //
@@ -862,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadData(retryCount = 0) {
         try {
-            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs, resPlanTemplates, resPlanVersions, resShoppingTemplates, resMonthTemplates] = await Promise.all([
+            const [resRecipes, resIngredients, resMealPlans, resPantry, resShoppingLists, resHousehold, resSettings, resPlanner, resReceipts, resPantryItems, resProductPrefs, resPlanTemplates, resPlanVersions, resShoppingTemplates, resMonthTemplates, resConsumption] = await Promise.all([
                 fetch('/api/recipes', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/ingredients', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/mealplans', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
@@ -877,12 +971,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('/api/planner-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/plan-versions', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
                 fetch('/api/shopping-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
-                fetch('/api/planner-month-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
+                fetch('/api/planner-month-templates', { headers: HEADERS }).then(r => r.ok ? r.json() : []),
+                fetch('/api/consumption', { headers: HEADERS }).then(r => r.ok ? r.json() : [])
             ]);
             recipes = resRecipes;
             ingredients = resIngredients;
             mealPlans = resMealPlans;
             pantry = resPantry; // legacy tracking data
+            consumption = Array.isArray(resConsumption) ? resConsumption : [];
             pantryItems = Array.isArray(resPantryItems) ? resPantryItems : [];
             // Migrate pantry items: add price history fields if missing
             pantryItems = pantryItems.map(p => ({
@@ -988,6 +1084,11 @@ document.addEventListener('DOMContentLoaded', () => {
             addBtn.classList.remove('hidden');
             if (cmsTabs) cmsTabs.classList.remove('hidden');
             renderCMSList();
+            if (pendingDeepLinkFoodId) {
+                const foodId = pendingDeepLinkFoodId;
+                pendingDeepLinkFoodId = null;
+                openProfileEditor(foodId);
+            }
         } catch(e) {
             if (retryCount < 5) {
                 setTimeout(() => loadData(retryCount + 1), 1000);
@@ -1230,8 +1331,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ingredient = ingredients.find(i => i.foodId === item.ingredientFoodId);
                 const ingredientName = ingredient ? ingredient.name : '';
                 const searchLower = cmsSearchQuery.toLowerCase();
-                return item.productName.toLowerCase().includes(searchLower) ||
-                       item.brand.toLowerCase().includes(searchLower) ||
+                return (item.productName || '').toLowerCase().includes(searchLower) ||
+                       (item.brand || '').toLowerCase().includes(searchLower) ||
                        ingredientName.toLowerCase().includes(searchLower) ||
                        (item.notes || '').toLowerCase().includes(searchLower);
             });
@@ -3427,7 +3528,7 @@ if (currentCMSTab === 'pantry') {
                                     ${[0, 0.5, 1].map(f => {
                                         const y = 10 + f * (chartHeight - 20);
                                         const val = maxPrice - f * priceRange;
-                                        return \`<line x1="10" y1="${y.toFixed(1)}" x2="${chartWidth + 10}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.5" /><text x="5" y="${(y + 3).toFixed(1)}" font-size="8" fill="var(--text-muted)" text-anchor="end">${val.toFixed(0)}</text>\`;
+                                        return `<line x1="10" y1="${y.toFixed(1)}" x2="${chartWidth + 10}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="0.5" /><text x="5" y="${(y + 3).toFixed(1)}" font-size="8" fill="var(--text-muted)" text-anchor="end">${val.toFixed(0)}</text>`;
                                     }).join('')}
                                     ${svgPaths}
                                 </svg>
@@ -3515,24 +3616,33 @@ if (currentCMSTab === 'pantry') {
                     </div>
                     <div class="shop-gen-actions">
                         <button id="generate-list-btn" class="btn primary"><i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i><span>Generate Shopping List</span></button>
-                        <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i><span>Save List</span></button>
-                        <button id="print-list-btn" class="btn secondary"><i data-lucide="printer" style="width: 16px; height: 16px;"></i> Print / Save PDF</button>
-                        <button id="share-list-btn" class="btn secondary"><i data-lucide="share-2" style="width: 16px; height: 16px;"></i> Share</button>
-                        <span class="shop-gen-hint">Tracked pantry stock is subtracted from every included source automatically.</span>
+                        <div class="shop-gen-secondary">
+                            <button id="save-list-btn" class="btn secondary" style="display: none;"><i data-lucide="save" style="width: 15px; height: 15px;"></i><span>Save List</span></button>
+                            <button id="print-list-btn" class="btn secondary"><i data-lucide="printer" style="width: 15px; height: 15px;"></i> Print / Save PDF</button>
+                            <button id="share-list-btn" class="btn secondary"><i data-lucide="share-2" style="width: 15px; height: 15px;"></i> Share</button>
+                            <span class="shop-gen-hint">Tracked pantry stock is subtracted from every included source automatically.</span>
+                        </div>
                     </div>
                     <div class="shop-template-bar">
-                        <select id="shop-template-select" aria-label="Shopping list templates">
-                            <option value="">Use a saved template…</option>
-                            ${shoppingTemplates.map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`).join('')}
-                        </select>
-                        <button id="shop-template-use" class="btn secondary" disabled><i data-lucide="folder-open" style="width: 15px; height: 15px;"></i> Use</button>
-                        <button id="shop-template-save" class="btn secondary"><i data-lucide="bookmark" style="width: 15px; height: 15px;"></i> Save list as template</button>
-                        <button id="shop-template-delete" class="btn secondary" disabled><i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Delete</button>
+                        <div class="pl-tpl-dd" id="shop-tpl-dd">
+                            <button type="button" class="btn secondary pl-tpl-dd-btn" id="shop-tpl-dd-toggle"><i data-lucide="bookmark" style="width: 15px; height: 15px;"></i> Templates <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i></button>
+                            <div class="pl-tpl-dd-menu">
+                                <select id="shop-template-select" aria-label="Shopping list templates">
+                                    <option value="">Use a saved template…</option>
+                                    ${shoppingTemplates.map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`).join('')}
+                                </select>
+                                <div class="pl-tpl-dd-actions">
+                                    <button id="shop-template-use" class="btn secondary" disabled><i data-lucide="folder-open" style="width: 14px; height: 14px;"></i> Use</button>
+                                    <button id="shop-template-save" class="btn secondary"><i data-lucide="save" style="width: 14px; height: 14px;"></i> Save list as template</button>
+                                    <button id="shop-template-delete" class="btn secondary" disabled><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Delete</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="shop-view-toggle" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-                    <button type="button" id="shop-view-current" class="btn view-btn active" style="flex: 1;"><i data-lucide="shopping-basket" style="width: 14px; height: 14px;"></i> Current List</button>
-                    <button type="button" id="shop-view-past" class="btn view-btn" style="flex: 1;"><i data-lucide="history" style="width: 14px; height: 14px;"></i> Past Lists</button>
+                <div class="shop-view-toggle">
+                    <button type="button" id="shop-view-current" class="btn view-btn active"><i data-lucide="shopping-basket" style="width: 14px; height: 14px;"></i> Current List</button>
+                    <button type="button" id="shop-view-past" class="btn view-btn"><i data-lucide="history" style="width: 14px; height: 14px;"></i> Past Lists</button>
                 </div>
                 <div id="shopping-budget-card" style="margin-bottom: 1.5rem;"></div>
                 <div id="shopping-list-results" style="display: grid; gap: 1rem;">
@@ -4151,16 +4261,25 @@ const unpricedRow = cost.unpriced.length
                     });
                 }
 
-                // 3. Monthly planner (stock-aware rows only buy the shortfall)
+                // 3. Monthly planner (stock-aware rows only buy the shortfall).
+                // Rows that pinned a specific pantry product (brand) buy that product's
+                // shortfall and carry its pantryId so pricing/stock use the exact product.
                 if (usePlanner && Array.isArray(planner.items)) {
                     planner.items.forEach(it => {
                         const foodRef = ingredients.find(f => f.foodId === it.ingredientId);
                         if (!foodRef) return;
                         const grams = LC.gramsOf(it.amount, it.unit, foodRef);
                         if (!(grams > 0)) return;
-                        const stockG = it.useStock ? pantryStockGrams(pantry.find(p => p.foodId === it.ingredientId)) : 0;
-                        const buy = Math.max(0, grams - stockG);
-                        addNeed(it.ingredientId, foodRef.name, buy, '', foodRef.category || 'Other', 'planner');
+                        const pin = it.pantryId ? pantryItems.find(p => p.pantryId === it.pantryId && p.isTracked) : null;
+                        if (pin) {
+                            // Pinned product: the row is for that exact brand. Step 5
+                            // deducts the pinned product's stock once and prices it.
+                            addNeed(it.ingredientId, foodRef.name, grams, '', foodRef.category || 'Other', 'planner', pin.pantryId);
+                        } else {
+                            const stockG = it.useStock ? pantryStockGrams(pantry.find(p => p.foodId === it.ingredientId)) : 0;
+                            const buy = Math.max(0, grams - stockG);
+                            addNeed(it.ingredientId, foodRef.name, buy, '', foodRef.category || 'Other', 'planner');
+                        }
                     });
                 }
 
@@ -4282,6 +4401,18 @@ const unpricedRow = cost.unpriced.length
             const tplUseBtn = document.getElementById('shop-template-use');
             const tplSaveBtn = document.getElementById('shop-template-save');
             const tplDeleteBtn = document.getElementById('shop-template-delete');
+
+            const tplDDToggle = document.getElementById('shop-tpl-dd-toggle');
+            const tplDD = document.getElementById('shop-tpl-dd');
+            if (tplDDToggle && tplDD) {
+                tplDDToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tplDD.classList.toggle('open');
+                });
+                document.addEventListener('click', (e) => {
+                    if (!tplDD.contains(e.target)) tplDD.classList.remove('open');
+                });
+            }
 
             function refreshTplButtons() {
                 const has = !!tplSelect.value;
@@ -4786,7 +4917,7 @@ const unpricedRow = cost.unpriced.length
                             <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; max-width: 460px;">
                                 <div class="form-group" style="flex: 1 1 180px;">
                                     <label>Weekly Budget</label>
-                                    <input type="number" id="shopping-budget-amount" min="0" step="any" class="seamless-input" placeholder="0" value="${budget.amount != null ? budget.amount : ''}">
+                                    <input type="text" id="shopping-budget-amount" inputmode="decimal" class="seamless-input" placeholder="0" value="${budget.amount != null ? Number(budget.amount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}">
                                 </div>
                                 <div class="form-group" style="flex: 0 1 140px;">
                                     <label>Currency Code</label>
@@ -4802,7 +4933,7 @@ const unpricedRow = cost.unpriced.length
                     if (window.lucide) window.lucide.createIcons();
 
                     document.getElementById('save-shopping-btn').onclick = async () => {
-                        const amount = parseFloat(document.getElementById('shopping-budget-amount').value) || 0;
+                        const amount = parseFloat((document.getElementById('shopping-budget-amount').value || '').replace(/,/g, '')) || 0;
                         const currency = (document.getElementById('shopping-budget-currency').value || 'MUR').trim().toUpperCase();
                         appSettings.shopping = { amount, currency };
                         try {

@@ -1,0 +1,844 @@
+4057:                 // 1. Determine which sources the user ticked
+4058:                 const selected = new Set();
+4059:                 document.querySelectorAll('.shop-src input[data-source]').forEach(box => {
+4060:                     if (box.checked) selected.add(box.dataset.source);
+4061:                 });
+4062:                 const useMeals = selected.has('meals');
+4063:                 const usePlanner = selected.has('planner');
+4064:                 const useRestock = selected.has('restock');
+4065:                 const useHousehold = selected.has('household');
+4066: 
+4067:                 const need = new Map(); // foodId -> { name, grams, unit, recipes:Set, category, sources:Set, pantryIds:Set }
+4068:                 const addNeed = (foodId, name, grams, recipeTitle, category, source, pantryId = null) => {
+4069:                     if (!foodId || !(grams > 0)) return;
+4070:                     const ex = need.get(foodId);
+4071:                     if (ex) {
+4072:                         ex.grams += grams;
+4073:                         if (recipeTitle) ex.recipes.add(recipeTitle);
+4074:                         if (source) ex.sources.add(source);
+4075:                         if (pantryId) ex.pantryIds.add(pantryId);
+4076:                     } else {
+4077:                         need.set(foodId, {
+4078:                             name, grams,
+4079:                             unit: 'g',
+4080:                             recipes: recipeTitle ? new Set([recipeTitle]) : new Set(),
+4081:                             category: category || 'Other',
+4082:                             sources: source ? new Set([source]) : new Set(),
+4083:                             pantryIds: pantryId ? new Set([pantryId]) : new Set()
+4084:                         });
+4085:                     }
+4086:                 };
+4087:                 
+4088:                 // Get pantry stock for new pantry items (in grams)
+4089:                 const pantryItemStockGrams = (pantryId) => {
+4090:                     const pItem = pantryItems.find(p => p.pantryId === pantryId);
+4091:                     if (!pItem || !pItem.isTracked) return 0;
+4092:                     const qty = parseFloat(pItem.quantity) || 0;
+4093:                     const packSize = parseFloat(pItem.packSize) || 0;
+4094:                     return qty * packSize;
+4095:                 };
+4096:                 
+4097:                 // Get pantry stock for legacy pantry (for backwards compatibility)
+4098:                 const pantryStockGrams = (p) => {
+4099:                     if (!p || !p.isTracked) return 0;
+4100:                     const q = parseFloat(p.quantity) || 0;
+4101:                     const ing = ingredients.find(f => f.foodId === p.foodId);
+4102:                     const u = String(ing && ing.servingUnit || 'g').toLowerCase();
+4103:                     if (u === 'g' || u === 'ml') return q;
+4104:                     if (u === 'kg' || u === 'l') return q * 1000;
+4105:                     return q * (parseFloat(ing && ing.servingSizeG) || 100);
+4106:                 };
+4107: 
+4108:                 // 2. Planned meals (this week)
+4109:                 if (useMeals) {
+4110:                     const plans = currentWeekPlans();
+4111:                     plans.forEach(plan => {
+4112:                         const recipeMult = {}; // recipeId -> servings to cook
+4113:                         const ingGrams = {}; // foodId -> total grams
+4114:                         (plan.eaters || []).forEach(eater => {
+4115:                             if (eater.eatingOut) return;
+4116:                             (eater.items || []).forEach(item => {
+4117:                                 const grams = parseFloat(item.grams) || 0;
+4118:                                 if (!(grams > 0)) return;
+4119:                                 if (item.type === 'recipe') {
+4120:                                     recipeMult[item.referenceId] = recipeServingsToCook(plan, item.referenceId);
+4121:                                 } else if ((item.type === 'ingredient' || item.type === 'pantry') && item.referenceId) {
+4122:                                     // For pantry items, referenceId is pantryId
+4123:                                     if (item.type === 'pantry') {
+4124:                                         ingGrams[item.ingredientFoodId] = (ingGrams[item.ingredientFoodId] || 0) + grams;
+4125:                                     } else {
+4126:                                         ingGrams[item.referenceId] = (ingGrams[item.referenceId] || 0) + grams;
+4127:                                     }
+4128:                                 }
+4129:                             });
+4130:                         });
+4131:                         Object.keys(recipeMult).forEach(rid => {
+4132:                             const recipe = recipes.find(r => r.id === rid);
+4133:                             if (!recipe || !recipe.ingredients) return;
+4134:                             const mult = recipeMult[rid];
+4135:                             const yieldNum = recipeYield(recipe);
+4136:                             recipe.ingredients.forEach(ing => {
+4137:                                 if (!ing.foodId) return;
+4138:                                 const foodRef = ingredients.find(f => f.foodId === ing.foodId);
+4139:                                 const name = foodRef ? foodRef.name : (ing.item || ing.name || 'Unknown');
+4140:                                 const batchGrams = parseAmountToGrams(ing.metric || ing.imperial || ing.amount, foodRef);
+4141:                                 if (batchGrams === null || batchGrams <= 0) return;
+4142:                                 const perServingGrams = batchGrams / yieldNum;
+4143:                                 addNeed(ing.foodId, name, perServingGrams * mult, recipe.title, (foodRef && foodRef.category) || 'Other', 'meals');
+4144:                             });
+4145:                         });
+4146:                         Object.keys(ingGrams).forEach(foodId => {
+4147:                             const foodRef = ingredients.find(f => f.foodId === foodId);
+4148:                             if (!(ingGrams[foodId] > 0)) return;
+4149:                             addNeed(foodId, foodRef ? foodRef.name : 'Ingredient', ingGrams[foodId], '', (foodRef && foodRef.category) || 'Other', 'meals');
+4150:                         });
+4151:                     });
+4152:                 }
+4153: 
+4154:                 // 3. Monthly planner (stock-aware rows only buy the shortfall)
+4155:                 if (usePlanner && Array.isArray(planner.items)) {
+4156:                     planner.items.forEach(it => {
+4157:                         const foodRef = ingredients.find(f => f.foodId === it.ingredientId);
+4158:                         if (!foodRef) return;
+4159:                         const grams = LC.gramsOf(it.amount, it.unit, foodRef);
+4160:                         if (!(grams > 0)) return;
+4161:                         const stockG = it.useStock ? pantryStockGrams(pantry.find(p => p.foodId === it.ingredientId)) : 0;
+4162:                         const buy = Math.max(0, grams - stockG);
+4163:                         addNeed(it.ingredientId, foodRef.name, buy, '', foodRef.category || 'Other', 'planner');
+4164:                     });
+4165:                 }
+4166: 
+4167:                 // 4. Pantry restock: tracked items low or out of stock (target from maxStock or default 10 packs)
+4168:                 if (useRestock) {
+4169:                     pantryItems.forEach(pItem => {
+4170:                         if (!pItem.isTracked) return;
+4171:                         const q = parseFloat(pItem.quantity) || 0;
+4172:                         // Use minStock/maxStock if set, otherwise default: reorder when <= 0 or qty < max (default 10)
+4173:                         const minStock = parseFloat(pItem.minStock) || 0;
+4174:                         const maxStock = parseFloat(pItem.maxStock) || 10;
+4175:                         const targetPacks = maxStock;
+4176:                         if (q > minStock && q >= targetPacks) return; // above threshold, no restock needed
+4177:                         const reorderPacks = Math.max(1, targetPacks - q);
+4178:                         const reorderGrams = reorderPacks * (parseFloat(pItem.packSize) || 100);
+4179:                         addNeed(pItem.ingredientFoodId, pItem.productName, reorderGrams, '', 
+4180:                             (ingredients.find(i => i.foodId === pItem.ingredientFoodId) || {}).category || 'Other', 'restock', pItem.pantryId);
+4181:                     });
+4182:                 }
+4183: 
+4184:                 // 5. Subtract tracked pantry stock once for all aggregated food needs
+4185:                 const shoppingList = [];
+4186:                 need.forEach((data, foodId) => {
+4187:                     // Calculate total pantry stock for this ingredient (legacy + new pantry items)
+4188:                     let totalPantryStockGrams = 0;
+4189:                     
+4190:                     // Legacy pantry stock
+4191:                     const legacyPantryItem = pantry.find(p => p.foodId === foodId);
+4192:                     totalPantryStockGrams += pantryStockGrams(legacyPantryItem);
+4193:                     
+4194:                     // New pantry items stock
+4195:                     data.pantryIds.forEach(pantryId => {
+4196:                         totalPantryStockGrams += pantryItemStockGrams(pantryId);
+4197:                     });
+4198:                     
+4199:                     let deficit = data.grams - totalPantryStockGrams;
+4200:                     if (deficit <= 0) return;
+4201:                     
+4202:                     const foodRef = ingredients.find(f => f.foodId === foodId);
+4203:                     
+4204:                     // Find best pricing from pantry items
+4205:                     let unitPrice = 0;
+4206:                     let priceCurrency = 'MUR';
+4207:                     let bestPantryItem = null;
+4208:                     
+4209:                     data.pantryIds.forEach(pantryId => {
+4210:                         const pItem = pantryItems.find(p => p.pantryId === pantryId);
+4211:                         if (pItem && pItem.price > 0 && pItem.packSize > 0) {
+4212:                             const pricePerGram = pItem.price / pItem.packSize;
+4213:                             if (!unitPrice || pricePerGram < unitPrice) {
+4214:                                 unitPrice = pricePerGram;
+4215:                                 priceCurrency = pItem.currency || 'MUR';
+4216:                                 bestPantryItem = pItem;
+4217:                             }
+4218:                         }
+4219:                     });
+4220:                     
+4221:                     // Fallback to ingredient pricing
+4222:                     if (!unitPrice) {
+4223:                         unitPrice = perGramPrice(foodRef);
+4224:                         if (foodRef && foodRef.priceCurrency) priceCurrency = foodRef.priceCurrency;
+4225:                     }
+4226:                     
+4227:                     const pantryItemNames = bestPantryItem ? (bestPantryItem.brand ? bestPantryItem.brand + ' ' + bestPantryItem.productName : bestPantryItem.productName) : data.name;
+4228:                     
+4229:                     shoppingList.push({
+4230:                         id: genItemId(),
+4231:                         foodId,
+4232:                         name: pantryItemNames,
+4233:                         amount: Math.round(deficit * 10) / 10,
+4234:                         unit: 'g',
+4235:                         category: data.category,
+4236:                         recipes: Array.from(data.recipes || []),
+4237:                         checked: false,
+4238:                         grams: Math.round(deficit * 10) / 10,
+4239:                         cost: (unitPrice > 0) ? Math.round(deficit * unitPrice * 100) / 100 : null,
+4240:                         currency: priceCurrency,
+4241:                         sources: Array.from(data.sources || []),
+4242:                         pantryIds: Array.from(data.pantryIds || [])
+4243:                     });
+4244:                 });
+4245: 
+4246:                 // 6. Household supplies running low (one unit each to re-buy)
+4247:                 if (useHousehold) {
+4248:                     householdRunningLow().forEach(item => {
+4249:                         const price = parseFloat(item.pricePerUnit) || 0;
+4250:                         shoppingList.push({
+4251:                             id: genItemId(),
+4252:                             foodId: null,
+4253:                             name: item.name,
+4254:                             amount: 1,
+4255:                             unit: item.unitSize || 'unit',
+4256:                             category: 'Household',
+4257:                             recipes: [],
+4258:                             checked: false,
+4259:                             grams: null,
+4260:                             cost: price > 0 ? price : null,
+4261:                             sources: ['household']
+4262:                         });
+4263:                     });
+4264:                 }
+4265: 
+4266:                 return shoppingList.sort((a, b) => a.name.localeCompare(b.name));
+4267:             }
+4268: 
+4269:             document.getElementById('generate-list-btn').onclick = () => {
+4270:                 const list = generateList();
+4271:                 shoppingLists = upsertTodayRecord(shoppingLists, list);
+4272:                 // Render today's record
+4273:                 const today = new Date().toISOString().split('T')[0];
+4274:                 const todayRecord = shoppingLists.find(r => r.date === today) || shoppingLists[0];
+4275:                 renderShoppingList(todayRecord ? todayRecord.items : []);
+4276:                 renderBudget();
+4277:                 persistShoppingList();
+4278:             };
+4279: 
+4280:             // --- Shopping-list templates: save / use / delete ---
+4281:             const tplSelect = document.getElementById('shop-template-select');
+4282:             const tplUseBtn = document.getElementById('shop-template-use');
+4283:             const tplSaveBtn = document.getElementById('shop-template-save');
+4284:             const tplDeleteBtn = document.getElementById('shop-template-delete');
+4285: 
+4286:             function refreshTplButtons() {
+4287:                 const has = !!tplSelect.value;
+4288:                 tplUseBtn.disabled = !has;
+4289:                 tplDeleteBtn.disabled = !has;
+4290:             }
+4291:             tplSelect.addEventListener('change', refreshTplButtons);
+4292:             refreshTplButtons();
+4293: 
+4294:             tplSaveBtn.onclick = async () => {
+4295:                 const name = (prompt('Name this shopping list template:') || '').trim();
+4296:                 if (!name) return;
+4297:                 const today = new Date().toISOString().split('T')[0];
+4298:                 const todayRecord = shoppingLists.find(r => r.date === today);
+4299:                 const items = todayRecord ? todayRecord.items : [];
+4300:                 if (!items.length) { alert('Generate a list first, then save it as a template.'); return; }
+4301:                 const sources = Array.from(document.querySelectorAll('.shop-src input[data-source]:checked')).map(b => b.dataset.source);
+4302:                 const existing = shoppingTemplates.find(t => t.name === name);
+4303:                 const tpl = {
+4304:                     id: (existing && existing.id) || 'st_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+4305:                     name,
+4306:                     sources,
+4307:                     items: items.map(it => ({
+4308:                         id: genItemId(), foodId: it.foodId || null, name: it.name,
+4309:                         amount: it.amount, unit: it.unit, category: it.category || 'Other',
+4310:                         recipes: [], checked: false, grams: it.grams, cost: it.cost,
+4311:                         currency: it.currency, sources: it.sources || [], pantryIds: it.pantryIds || []
+4312:                     })),
+4313:                     savedOn: new Date().toISOString()
+4314:                 };
+4315:                 if (existing) {
+4316:                     shoppingTemplates = shoppingTemplates.map(t => t.name === name ? tpl : t);
+4317:                 } else {
+4318:                     shoppingTemplates.push(tpl);
+4319:                 }
+4320:                 await saveShoppingTemplates();
+4321:                 const opt = document.createElement('option');
+4322:                 opt.value = name;
+4323:                 opt.textContent = name;
+4324:                 if (existing) {
+4325:                     const oldOpt = Array.from(tplSelect.options).find(o => o.value === name);
+4326:                     if (oldOpt) oldOpt.replaceWith(opt);
+4327:                 } else {
+4328:                     tplSelect.appendChild(opt);
+4329:                 }
+4330:                 tplSelect.value = name;
+4331:                 refreshTplButtons();
+4332:             };
+4333: 
+4334:             tplUseBtn.onclick = () => {
+4335:                 const tpl = shoppingTemplates.find(t => t.name === tplSelect.value);
+4336:                 if (!tpl) return;
+4337:                 document.querySelectorAll('.shop-src input[data-source]').forEach(box => {
+4338:                     box.checked = Array.isArray(tpl.sources) && tpl.sources.includes(box.dataset.source);
+4339:                 });
+4340:                 const items = (tpl.items || []).map(it => ({
+4341:                     ...it, id: genItemId(), checked: false
+4342:                 }));
+4343:                 shoppingLists = upsertTodayRecord(shoppingLists, items);
+4344:                 renderShoppingList(items);
+4345:                 renderBudget();
+4346:                 persistShoppingList();
+4347:             };
+4348: 
+4349:             tplDeleteBtn.onclick = async () => {
+4350:                 const name = tplSelect.value;
+4351:                 if (!name) return;
+4352:                 if (!confirm(`Delete shopping-list template "${name}"?`)) return;
+4353:                 shoppingTemplates = shoppingTemplates.filter(t => t.name !== name);
+4354:                 await saveShoppingTemplates();
+4355:                 tplSelect.querySelectorAll('option').forEach(o => {
+4356:                     if (o.value === name) o.remove();
+4357:                 });
+4358:                 tplSelect.value = '';
+4359:                 refreshTplButtons();
+4360:             };
+4361: 
+4362:             // If the Monthly Planner asked to generate a list, pre-tick its
+4363:             // source box(es) and generate immediately.
+4364:             if (pendingShoppingSources && Array.isArray(pendingShoppingSources)) {
+4365:                 pendingShoppingSources.forEach(src => {
+4366:                     const box = document.querySelector(`.shop-src input[data-source="${src}"]`);
+4367:                     if (box) box.checked = true;
+4368:                 });
+4369:             }
+4370:             if (pendingShoppingSources && document.querySelector('.shop-src input:checked')) {
+4371:                 pendingShoppingSources = null;
+4372:                 document.getElementById('generate-list-btn').click();
+4373:             }
+4374:             pendingShoppingSources = null;
+4375:             
+4376:             return;
+4377:         }
+4378: 
+4379:         if (currentCMSTab === 'food') {
+4380:             addBtn.style.display = 'flex';
+4381:             setAddBtnLabel('Add Ingredient');
+4382: 
+4383:             let filteredIngredients = ingredients.filter(ing =>
+4384:                 ing.name.toLowerCase().includes(cmsSearchQuery) ||
+4385:                 (ing.category && ing.category.toLowerCase().includes(cmsSearchQuery))
+4386:             );
+4387:             if (cmsCategoryFilter !== 'All') {
+4388:                 filteredIngredients = filteredIngredients.filter(ing => (ing.category || 'Uncategorized') === cmsCategoryFilter);
+4389:             }
+4390: 
+4391:             if (['cal', 'carbs', 'protein', 'fat'].some(k => cmsMacroFilters[k].min !== null || cmsMacroFilters[k].max !== null)) {
+4392:                 filteredIngredients = filteredIngredients.filter(ing => cmsItemPassesFilters(ing, { isRecipe: false }));
+4393:             }
+4394: 
+4395:             if (filteredIngredients.length === 0) {
+4396:                 listContainer.innerHTML = `<div class="empty-state">No ingredients found. Click "Add Ingredient" to create one!</div>`;
+4397:                 return;
+4398:             }
+4399: 
+4400:             // Food sort accessor
+4401:             const foodSortVal = (ing, key) => {
+4402:                 switch (key) {
+4403:                     case 'name': return (ing.name || '').toLowerCase();
+4404:                     case 'category': return (ing.category || '').toLowerCase();
+4405:                     case 'serving': return `${ing.servingSizeG || ''}${ing.servingUnit || 'g'}`.toLowerCase();
+4406:                     case 'status': return 'published';
+4407:                 }
+4408:                 return null;
+4409:             };
+4410:             const foodSort = cmsTableSort.food;
+4411:             if (foodSort && foodSort.key) filteredIngredients = sortRows(filteredIngredients, foodSort.key, foodSort.dir, foodSortVal);
+4412: 
+4413:             // Price-aware matching: per-100g unit price + cheapest-in-category badge
+4414:             const priceCur = mealPlanCurrency();
+4415:             const cheapestByCat = {};
+4416:             ingredients.forEach(ing => {
+4417:                 const ppg = perGramPrice(ing);
+4418:                 if (!(ppg > 0)) return;
+4419:                 const cat = ing.category || 'Other';
+4420:                 if (!cheapestByCat[cat] || ppg < cheapestByCat[cat].ppg) cheapestByCat[cat] = { ppg, foodId: ing.foodId };
+4421:             });
+4422:             const isCheapest = (ing) => {
+4423:                 const c = cheapestByCat[ing.category || 'Other'];
+4424:                 return !!(c && c.foodId === ing.foodId);
+4425:             };
+4426:             // Inline-created ingredients start empty; flag them until fleshed out.
+4427:             const isIncomplete = (ing) => {
+4428:                 const hasMacros = (parseFloat(ing.calories) || 0)
+4429:                     + (parseFloat(ing.proteinG) || 0)
+4430:                     + (parseFloat(ing.fatG) || 0)
+4431:                     + (parseFloat(ing.carbsG) || 0) > 0;
+4432:                 return !(ing.category || '').trim() || !hasMacros;
+4433:             };
+4434: 
+4435:             if (cmsListView === 'grid') {
+4436:                 listContainer.innerHTML = `
+4437:                     <div class="cms-grid-wrapper">
+4438:                         ${filteredIngredients.map(ing => {
+4439:                             const vis = getCategoryIcon(ing.category);
+4440:                             const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+4441:                             const cheapest = isCheapest(ing);
+4442:                             return `
+4443:                             <div class="cms-card" data-id="${escapeHtml(ing.foodId)}" role="button" tabindex="0" title="Edit ingredient">
+4444:                                 <div class="cms-card-img-wrap">
+4445:                                     <svg viewBox="${vis.vb}" style="width:${vis.w * 2}px;height:${vis.h * 2}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+4446:                                 </div>
+4447:                                 <div class="cms-card-body">
+4448:                                     <div class="cms-card-title-row">
+4449:                                         <div class="cms-card-title">${escapeHtml(ing.name || 'Unnamed ingredient')}${isIncomplete(ing) ? `<span class="cms-incomplete-badge">Incomplete</span>` : ''}</div>
+4450:                                         <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+4451:                                     </div>
+4452:                                     <div class="cms-card-sub">${escapeHtml(ing.category || 'Uncategorized')}${cheapest ? `<span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i> Cheapest</span>` : ''}</div>
+4453:                                     <div class="cms-card-meta"><span>${escapeHtml(serving)}</span></div>
+4454:                                 </div>
+4455:                             </div>`;
+4456:                         }).join('')}
+4457:                     </div>
+4458:                 `;
+4459:             } else {
+4460:                 listContainer.innerHTML = `
+4461:                     <div class="cms-table-wrapper">
+4462:                         <table class="cms-table">
+4463:                             <thead>
+4464:                                 <tr>
+4465:                                     ${sortTh('name', 'Ingredient')}
+4466:                                     ${sortTh('category', 'Category', 'width: 240px;')}
+4467:                                     ${sortTh('status', 'Status', 'width: 130px;')}
+4468:                                     <th style="width: 110px; text-align: right;">Actions</th>
+4469:                                 </tr>
+4470:                             </thead>
+4471:                             <tbody>
+4472:                                 ${filteredIngredients.map(ing => {
+4473:                                     const vis = getCategoryIcon(ing.category);
+4474:                                     const serving = `${ing.servingSizeG ? ing.servingSizeG : ''}${ing.servingUnit || 'g'} serving`;
+4475:                                     return `
+4476:                                     <tr data-id="${escapeHtml(ing.foodId)}" style="cursor: pointer;">
+4477:                                         <td>
+4478:                                             <div class="cms-td-title">
+4479:                                                 <div class="cms-td-icon">
+4480:                                                     <svg viewBox="${vis.vb}" style="width:${vis.w}px;height:${vis.h}px;fill:${vis.accent};"><use href="${vis.href}"></use></svg>
+4481:                                                 </div>
+4482:                                                 <div>
+4483:                                                     <div>${escapeHtml(ing.name || 'Unnamed ingredient')}${isCheapest(ing) ? ` <span class="cms-cheapest"><i data-lucide="star" style="width: 12px; height: 12px;"></i></span>` : ''}</div>
+4484:                                                     <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${escapeHtml(serving)}</div>
+4485:                                                 </div>
+4486:                                             </div>
+4487:                                         </td>
+4488:                                         <td>${escapeHtml(ing.category || '—')}</td>
+4489:                                         <td>${isIncomplete(ing) ? '<span class="cms-badge draft">Incomplete</span>' : '<span class="cms-badge published">Complete</span>'}</td>
+4490:                                         <td class="cms-actions-cell">
+4491:                                             <button class="cms-btn-icon delete food-delete-btn" data-id="${escapeHtml(ing.foodId)}" title="Delete" aria-label="Delete"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+4492:                                         </td>
+4493:                                     </tr>`;
+4494:                                 }).join('')}
+4495:                             </tbody>
+4496:                         </table>
+4497:                     </div>
+4498:                 `;
+4499:             }
+4500:             if (window.lucide) window.lucide.createIcons();
+4501: 
+4502:             bindSortHandlers(listContainer);
+4503: 
+4504:             document.querySelectorAll('.cms-card[data-id], tr[data-id]').forEach(card => {
+4505:                 card.addEventListener('click', (e) => {
+4506:                     if (e.target.closest('button')) return;
+4507:                     openProfileEditor(card.dataset.id);
+4508:                 });
+4509:                 card.addEventListener('keydown', (e) => {
+4510:                     if (e.key === 'Enter' || e.key === ' ') {
+4511:                         e.preventDefault();
+4512:                         openProfileEditor(card.dataset.id);
+4513:                     }
+4514:                 });
+4515:             });
+4516: 
+4517:             document.querySelectorAll('.food-delete-btn').forEach(btn => {
+4518:                 btn.addEventListener('click', async (e) => {
+4519:                     e.stopPropagation();
+4520:                     const foodId = btn.dataset.id;
+4521:                     const ing = ingredients.find(f => f.foodId === foodId);
+4522:                     const name = ing ? ing.name : 'this ingredient';
+4523:                     const confirmed = await showConfirmDialog(
+4524:                         'Delete Ingredient',
+4525:                         `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+4526:                         'Delete'
+4527:                     );
+4528:                     if (confirmed) {
+4529:                         ingredients = ingredients.filter(f => f.foodId !== foodId);
+4530:                         renderCMSList();
+4531:                         await saveIngredients();
+4532:                         statusText.innerHTML = `<span class="status-dot"></span> Ingredient deleted`;
+4533:                     }
+4534:                 });
+4535:             });
+4536:             return;
+4537:         }
+4538: 
+4539:         if (currentCMSTab === 'settings') {
+4540:             addBtn.style.display = 'none';
+4541:             if (searchInput) searchInput.style.display = 'none';
+4542: 
+4543:             const profiles = (appSettings.profiles && Array.isArray(appSettings.profiles)) ? appSettings.profiles : [];
+4544:             const prefs = appSettings.preferences || {};
+4545:             const automation = appSettings.automation || {};
+4546:             const dietaryChips = [
+4547:                 { id: 'vegetarian', label: 'Vegetarian' },
+4548:                 { id: 'vegan', label: 'Vegan' },
+4549:                 { id: 'pescatarian', label: 'Pescatarian' },
+4550:                 { id: 'glutenFree', label: 'Gluten-Free' },
+4551:                 { id: 'keto', label: 'Keto' },
+4552:                 { id: 'paleo', label: 'Paleo' }
+4553:             ];
+4554: 
+4555:             listContainer.innerHTML = `
+4556:                 <div class="vd-settings-layout">
+4557:                     <div class="vd-settings-nav">
+4558:                         <div class="vd-settings-nav-item active" data-settings-view="eaters"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Eaters</div>
+4559:                         <div class="vd-settings-nav-item" data-settings-view="preferences"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Preferences</div>
+4560:                         <div class="vd-settings-nav-item" data-settings-view="shopping"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Shopping</div>
+4561:                         <div class="vd-settings-nav-item" data-settings-view="data"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Data</div>
+4562:                         <div class="vd-settings-nav-item" data-settings-view="network"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> Network</div>
+4563:                     </div>
+4564:                     <div class="vd-settings-panel" id="settings-panel"></div>
+4565:                 </div>
+4566:             `;
+4567: 
+4568:             const settingsPanel = document.getElementById('settings-panel');
+4569: 
+4570:             function renderSettingsPanel(view) {
+4571:                 document.querySelectorAll('.vd-settings-nav-item').forEach(n => n.classList.toggle('active', n.dataset.settingsView === view));
+4572: 
+4573:                 if (view === 'eaters') {
+4574:                     settingsPanel.innerHTML = `
+4575:                         <div class="vd-settings-section">
+4576:                             <h3 class="vd-settings-title">Eater Profiles</h3>
+4577:                             <p class="vd-settings-desc">Configure daily calorie and macro targets for meal planning. Percentages auto-calculate grams.</p>
+4578:                             <div id="profiles-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
+4579:                                 ${profiles.length === 0 ? '<p style="color: var(--text-muted); font-size: 0.9rem;">No eaters yet. Add one to get started.</p>' : ''}
+4580:                                 ${profiles.map((p, i) => {
+4581:                                     const calories = p.calories ?? 2000;
+4582:                                     const carbsPct = p.carbs ?? 40;
+4583:                                     const proteinPct = p.protein ?? 30;
+4584:                                     const fatPct = p.fat ?? 30;
+4585:                                     const carbG = Math.round(calories * (carbsPct / 100) / 4);
+4586:                                     const proteinG = Math.round(calories * (proteinPct / 100) / 4);
+4587:                                     const fatG = Math.round(calories * (fatPct / 100) / 9);
+4588:                                     const totalPct = carbsPct + proteinPct + fatPct;
+4589:                                     const totalPctBadge = totalPct === 100
+4590:                                         ? '<span style="color: var(--accent-veg); font-weight: 700; font-size: 0.8rem;">✓ 100%</span>'
+4591:                                         : `<span style="color: var(--accent-meat); font-weight: 700; font-size: 0.8rem;">Total ${totalPct}% — adjust to 100%</span>`;
+4592:                                     return `
+4593:                                     <div class="profile-card" style="background: var(--bg-base); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border);">
+4594:                                         <div class="profile-card-header" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+4595:                                             <div class="profile-avatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; flex-shrink: 0;">${escapeHtml((p.name || 'U').trim().charAt(0).toUpperCase())}</div>
+4596:                                             <div class="form-group" style="flex-grow: 1;"><label>Name</label><input type="text" value="${escapeHtml(p.name)}" class="profile-input profile-name-input" data-index="${i}" data-field="name"></div>
+4597:                                             <div class="form-group"><label>Calories / day</label><input type="number" min="0" step="50" value="${calories}" class="profile-input profile-calories" data-index="${i}" data-field="calories" style="width: 110px;"></div>
+4598:                                             <button class="btn delete-profile-btn" data-index="${i}" title="Remove eater" aria-label="Remove eater" style="margin-left: auto; padding: 0.5rem; background: var(--bg-hover); color: var(--text-muted);"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+4599:                                         </div>
+4600:                                         <div class="profile-macro-list">
+4601:                                             ${[['carbs', 'Carbs', carbsPct, carbG, 'var(--accent-stock)'], ['protein', 'Protein', proteinPct, proteinG, 'var(--accent-meat)'], ['fat', 'Fat', fatPct, fatG, '#D4B04A']].map(([field, label, pct, grams, color]) => `
+4602:                                                 <div class="profile-macro-row" style="display: grid; grid-template-columns: 90px 1fr 90px 70px; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+4603:                                                     <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.35rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; display: inline-block;"></span> ${label}</span>
+4604:                                                     <input type="range" min="0" max="100" step="1" value="${pct}" class="profile-slider profile-input" data-index="${i}" data-field="${field}" aria-label="${label} %" style="width: 100%; accent-color: ${color}; cursor: pointer;">
+4605:                                                     <input type="number" min="0" max="100" step="1" value="${pct}" class="profile-input profile-pct" data-index="${i}" data-field="${field}" style="width: 70px; text-align: center;">
+4606:                                                     <span class="profile-grams" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-align: right;">${grams} g</span>
+4607:                                                 </div>`).join('')}
+4608:                                         </div>
+4609:                                         <div style="display: flex; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border);">${totalPctBadge}</div>
+4610:                                     </div>`;
+4611:                                 }).join('')}
+4612:                             </div>
+4613:                             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+4614:                                 <button class="btn secondary" id="add-profile-btn"><i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Eater</button>
+4615:                                 <button class="btn primary" id="save-settings-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Eaters</button>
+4616:                             </div>
+4617:                         </div>
+4618:                     `;
+4619:                     if (window.lucide) window.lucide.createIcons();
+4620: 
+4621:                     document.getElementById('add-profile-btn').onclick = () => {
+4622:                         appSettings.profiles.push({ name: "New Eater", calories: 2000, carbs: 40, protein: 30, fat: 30 });
+4623:                         renderSettingsPanel('eaters');
+4624:                     };
+4625: 
+4626:                     document.querySelectorAll('.delete-profile-btn').forEach(btn => {
+4627:                         btn.onclick = () => {
+4628:                             appSettings.profiles.splice(btn.dataset.index, 1);
+4629:                             renderSettingsPanel('eaters');
+4630:                         };
+4631:                     });
+4632: 
+4633:                     document.querySelectorAll('.profile-input').forEach(input => {
+4634:                         const update = (e) => {
+4635:                             const idx = e.target.dataset.index;
+4636:                             const field = e.target.dataset.field;
+4637:                             let val = e.target.value;
+4638:                             if (field !== 'name') val = parseFloat(val) || 0;
+4639:                             if (field === 'carbs' || field === 'protein' || field === 'fat') val = Math.max(0, Math.min(100, val));
+4640:                             appSettings.profiles[idx][field] = val;
+4641:                             const card = input.closest('.profile-card');
+4642:                             if (card) {
+4643:                                 // Auto-balance the macro percentages so the three always total 100%.
+4644:                                 if (field === 'carbs' || field === 'protein' || field === 'fat') {
+4645:                                     autoBalanceMacros(idx, field);
+4646:                                     ['carbs', 'protein', 'fat'].forEach(f => {
+4647:                                         card.querySelectorAll(`.profile-input[data-field="${f}"]`).forEach(other => {
+4648:                                             other.value = appSettings.profiles[idx][f];
+4649:                                         });
+4650:                                     });
+4651:                                 }
+4652:                                 // Update the avatar initial when the name changes.
+4653:                                 if (field === 'name') {
+4654:                                     const avatar = card.querySelector('.profile-avatar');
+4655:                                     if (avatar) avatar.textContent = (val || 'U').trim().charAt(0).toUpperCase();
+4656:                                 }
+4657:                                 // Grams depend on calories + macro %; recalc on either changing.
+4658:                                 refreshProfileGrams(card, idx);
+4659:                             }
+4660:                         };
+4661:                         input.oninput = update;
+4662:                         input.onchange = update;
+4663:                     });
+4664: 
+4665:                     // When one macro slider moves, rebalance the other two proportionally
+4666:                     // so carbs + protein + fat always add up to 100%.
+4667:                     function autoBalanceMacros(idx, changedField) {
+4668:                         const p = appSettings.profiles[idx];
+4669:                         if (!p) return;
+4670:                         const fields = ['carbs', 'protein', 'fat'];
+4671:                         const changedVal = Math.max(0, Math.min(100, parseFloat(p[changedField]) || 0));
+4672:                         const others = fields.filter(f => f !== changedField);
+4673:                         const otherTotal = others.reduce((s, f) => s + (parseFloat(p[f]) || 0), 0);
+4674:                         const remaining = 100 - changedVal;
+4675:                         if (remaining < 0) {
+4676:                             p[changedField] = 100;
+4677:                             others.forEach(f => p[f] = 0);
+4678:                             return;
+4679:                         }
+4680:                         // Distribute the remaining % across the other two, keeping their ratio.
+4681:                         let assigned = 0;
+4682:                         others.forEach((f, k) => {
+4683:                             if (k === others.length - 1) {
+4684:                                 p[f] = Math.max(0, Math.round(remaining - assigned));
+4685:                             } else {
+4686:                                 const share = otherTotal > 0
+4687:                                     ? Math.round((parseFloat(p[f]) || 0) / otherTotal * remaining)
+4688:                                     : Math.round(remaining / others.length);
+4689:                                 p[f] = Math.max(0, share);
+4690:                                 assigned += p[f];
+4691:                             }
+4692:                         });
+4693:                     }
+4694: 
+4695:                     function refreshProfileGrams(card, idx) {
+4696:                         const p = appSettings.profiles[idx];
+4697:                         if (!p) return;
+4698:                         const calories = parseFloat(p.calories) || 0;
+4699:                         const macroFields = ['carbs', 'protein', 'fat'];
+4700:                         const rows = card.querySelectorAll('.profile-macro-row');
+4701:                         rows.forEach(row => {
+4702:                             const field = row.querySelector('.profile-input.profile-slider').dataset.field;
+4703:                             if (!macroFields.includes(field)) return;
+4704:                             const pct = parseFloat(p[field]) || 0;
+4705:                             const grams = Math.round(calories * (pct / 100) / (field === 'fat' ? 9 : 4));
+4706:                             const gramsEl = row.querySelector('.profile-grams');
+4707:                             if (gramsEl) gramsEl.textContent = grams + ' g';
+4708:                         });
+4709:                         const totalPct = (parseFloat(p.carbs) || 0) + (parseFloat(p.protein) || 0) + (parseFloat(p.fat) || 0);
+4710:                         const badge = card.querySelector('.profile-card > div:last-child');
+4711:                         if (badge) {
+4712:                             badge.innerHTML = totalPct === 100
+4713:                                 ? '<span style="color: var(--accent-veg); font-weight: 700; font-size: 0.8rem;">✓ 100%</span>'
+4714:                                 : `<span style="color: var(--accent-meat); font-weight: 700; font-size: 0.8rem;">Total ${totalPct}% — adjust to 100%</span>`;
+4715:                         }
+4716:                     }
+4717: 
+4718:                     document.getElementById('save-settings-btn').onclick = saveSettings;
+4719:                     return;
+4720:                 }
+4721: 
+4722:                 if (view === 'preferences') {
+4723:                     settingsPanel.innerHTML = `
+4724:                         <div class="vd-settings-section">
+4725:                             <h3 class="vd-settings-title">Dietary Preferences</h3>
+4726:                             <p class="vd-settings-desc">Select your dietary requirements to personalize recipe recommendations.</p>
+4727:                             <div class="vd-settings-chips">
+4728:                                 ${dietaryChips.map(c => `
+4729:                                     <div class="vd-settings-chip ${(prefs.dietary || []).includes(c.id) ? 'selected' : ''}" data-pref="${c.id}">
+4730:                                         ${(prefs.dietary || []).includes(c.id) ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+4731:                                         ${c.label}
+4732:                                     </div>`).join('')}
+4733:                             </div>
+4734:                         </div>
+4735:                         <div class="vd-settings-section">
+4736:                             <h3 class="vd-settings-title">Automation</h3>
+4737:                             <p class="vd-settings-desc">Manage how the app assists you with planning and shopping.</p>
+4738:                             <div class="vd-settings-toggle-row">
+4739:                                 <div class="vd-settings-toggle-info">
+4740:                                     <h5>Auto-generate Shopping List</h5>
+4741:                                     <p>Automatically add missing ingredients to your list when planning a recipe.</p>
+4742:                                 </div>
+4743:                                 <div class="vd-settings-switch ${automation.autoShoppingList ? 'active' : ''}" data-toggle="autoShoppingList"></div>
+4744:                             </div>
+4745:                             <div class="vd-settings-toggle-row">
+4746:                                 <div class="vd-settings-toggle-info">
+4747:                                     <h5>Meal Plan Reminders</h5>
+4748:                                     <p>Show a reminder when meals are due for the day.</p>
+4749:                                 </div>
+4750:                                 <div class="vd-settings-switch ${automation.reminders ? 'active' : ''}" data-toggle="reminders"></div>
+4751:                             </div>
+4752:                         </div>
+4753:                         <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+4754:                             <button class="btn primary" id="save-prefs-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Preferences</button>
+4755:                         </div>
+4756:                     `;
+4757:                     if (window.lucide) window.lucide.createIcons();
+4758: 
+4759:                     document.querySelectorAll('.vd-settings-chip').forEach(chip => {
+4760:                         chip.onclick = () => {
+4761:                             const prefId = chip.dataset.pref;
+4762:                             const arr = prefs.dietary || (prefs.dietary = []);
+4763:                             const idx = arr.indexOf(prefId);
+4764:                             if (idx >= 0) arr.splice(idx, 1);
+4765:                             else arr.push(prefId);
+4766:                             renderSettingsPanel('preferences');
+4767:                         };
+4768:                     });
+4769: 
+4770:                     document.querySelectorAll('.vd-settings-switch').forEach(sw => {
+4771:                         sw.onclick = () => {
+4772:                             sw.classList.toggle('active');
+4773:                         };
+4774:                     });
+4775: 
+4776:                     document.getElementById('save-prefs-btn').onclick = saveSettings;
+4777:                     return;
+4778:                 }
+4779: 
+4780:                 if (view === 'shopping') {
+4781:                     const budget = appSettings.shopping || {};
+4782:                     settingsPanel.innerHTML = `
+4783:                         <div class="vd-settings-section">
+4784:                             <h3 class="vd-settings-title">Shopping Budget</h3>
+4785:                             <p class="vd-settings-desc">Set a weekly budget to compare against your meal plan's estimated ingredient cost. Costs are estimated from each ingredient's Average Price ÷ serving size.</p>
+4786:                             <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; max-width: 460px;">
+4787:                                 <div class="form-group" style="flex: 1 1 180px;">
+4788:                                     <label>Weekly Budget</label>
+4789:                                     <input type="number" id="shopping-budget-amount" min="0" step="any" class="seamless-input" placeholder="0" value="${budget.amount != null ? budget.amount : ''}">
+4790:                                 </div>
+4791:                                 <div class="form-group" style="flex: 0 1 140px;">
+4792:                                     <label>Currency Code</label>
+4793:                                     <input type="text" id="shopping-budget-currency" class="seamless-input" placeholder="MUR" value="${escapeHtml(budget.currency || 'MUR')}">
+4794:                                 </div>
+4795:                             </div>
+4796:                             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;">Add an Average Price and serving size to each ingredient profile for accurate meal-plan costing.</p>
+4797:                         </div>
+4798:                         <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+4799:                             <button class="btn primary" id="save-shopping-btn"><i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Shopping Budget</button>
+4800:                         </div>
+4801:                     `;
+4802:                     if (window.lucide) window.lucide.createIcons();
+4803: 
+4804:                     document.getElementById('save-shopping-btn').onclick = async () => {
+4805:                         const amount = parseFloat(document.getElementById('shopping-budget-amount').value) || 0;
+4806:                         const currency = (document.getElementById('shopping-budget-currency').value || 'MUR').trim().toUpperCase();
+4807:                         appSettings.shopping = { amount, currency };
+4808:                         try {
+4809:                             const res = await fetch('/api/settings', { method: 'PUT', headers: HEADERS, body: JSON.stringify(appSettings) });
+4810:                             if (!res.ok) throw new Error('Save failed');
+4811:                             statusText.innerHTML = `<span class="status-dot"></span> Shopping budget saved.`;
+4812:                         } catch (e) {
+4813:                             alert('Failed to save. Is the server running?');
+4814:                         }
+4815:                     };
+4816:                     return;
+4817:                 }
+4818: 
+4819:                 if (view === 'data') {
+4820:                     const repoPath = (appSettings.website && appSettings.website.repoPath) || '';
+4821:                     const repoUrl = (appSettings.website && appSettings.website.repoUrl) || 'https://github.com/SoumeetKumal/Larder.git';
+4822:                     const token = (appSettings.website && appSettings.website.token) || '';
+4823:                     settingsPanel.innerHTML = `
+4824:                         <div class="vd-settings-section">
+4825:                             <h3 class="vd-settings-title">Data Management</h3>
+4826:                             <p class="vd-settings-desc">Export your recipes, ingredients, meal plans, pantry, household, shopping lists, receipts, planner, and settings into one file. On another PC, install Larder and use <strong>Import</strong> to restore everything.</p>
+4827:                             <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+4828:                                 <button class="btn secondary" id="export-data-btn"><i data-lucide="download" style="width: 16px; height: 16px;"></i> Export (ZIP)</button>
+4829:                                 <label class="btn secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+4830:                                     <i data-lucide="upload" style="width: 16px; height: 16px;"></i> Import (ZIP)
+4831:                                     <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
+4832:                                 </label>
+4833:                             </div>
+4834:                             <p id="import-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
+4835:                         </div>
+4836:                         <div class="vd-settings-section" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+4837:                             <h3 class="vd-settings-title">Publish to Website</h3>
+4838:                             <p class="vd-settings-desc">The live site is GitHub Pages, which only shows data committed to your website repo's <code>data/</code> folder. The app keeps its own clone of the website repo in the app's data folder — leave the path blank for the automatic location. Publish copies your current data in, commits, and pushes. GitHub Pages rebuilds within a minute.</p>
+4839:                             <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+4840:                                 <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Website repo URL</label>
+4841:                                 <input type="text" id="website-repo-url" value="${escapeHtml(repoUrl)}" placeholder="https://github.com/you/Larder.git" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+4842:                                 <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Local clone path <span style="font-weight: 400;">(optional — defaults inside the app's data folder)</span></label>
+4843:                                 <input type="text" id="website-repo-path" value="${escapeHtml(repoPath)}" placeholder="<app data folder>\\website-repo" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+4844:                                 <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Personal access token</label>
+4845:                                 <input type="password" id="website-token" value="${escapeHtml(token)}" autocomplete="off" placeholder="ghp_...  (optional — only for private repos)" style="padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface-hover); color: var(--text); font-size: 0.9rem;">
+4846:                             </div>
+4847:                             <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
+4848:                                 <button class="btn secondary" id="publish-data-btn"><i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i> Publish</button>
+4849:                                 <span style="font-size: 0.75rem; color: var(--text-muted);">First publish on a new PC clones the repo automatically.</span>
+4850:                             </div>
+4851:                             <p id="publish-status" style="margin-top: 0.75rem; font-size: 0.8rem;"></p>
+4852:                         </div>
+4853:                     `;
+4854:                     if (window.lucide) window.lucide.createIcons();
+4855: 
+4856:                     document.getElementById('export-data-btn').onclick = async () => {
+4857:                         try {
+4858:                             const res = await fetch('/api/export', { headers: { 'Authorization': `Bearer ${API_KEY}` } });
+4859:                             if (!res.ok) throw new Error();
+4860:                             const blob = await res.blob();
+4861:                             const url = URL.createObjectURL(blob);
+4862:                             const a = document.createElement('a');
+4863:                             a.href = url;
+4864:                             a.download = `larder-data-${new Date().toISOString().slice(0, 10)}.zip`;
+4865:                             document.body.appendChild(a);
+4866:                             a.click();
+4867:                             a.remove();
+4868:                             URL.revokeObjectURL(url);
+4869:                             statusText.innerHTML = `<span class="status-dot"></span> Backup downloaded. Import it on another PC to restore everything.`;
+4870:                         } catch (e) {
+4871:                             alert('Export failed.');
+4872:                         }
+4873:                     };
+4874: 
+4875:                     const importInput = document.getElementById('import-zip-input');
+4876:                     const importStatus = document.getElementById('import-status');
+4877:                     importInput.onchange = async (e) => {
+4878:                         const file = e.target.files[0];
+4879:                         if (!file) return;
+4880:                         importStatus.textContent = "Importing... please wait.";
+4881:                         try {
+4882:                             const res = await fetch('/api/import', {
+4883:                                 method: 'POST',
+4884:                                 headers: { 'Authorization': `Bearer ${API_KEY}` },
+4885:                                 body: file
+4886:                             });
+4887:                             if (res.ok) {
+4888:                                 importStatus.textContent = "Import successful! Reloading data...";
+4889:                                 importStatus.style.color = "var(--success-color, #4ade80)";
+4890:                                 setTimeout(() => window.location.reload(), 1500);
+4891:                             } else {
+4892:                                 throw new Error("Server rejected import.");
+4893:                             }
+4894:                         } catch (err) {
+4895:                             importStatus.textContent = "Import failed. Please check the file.";
+4896:                             importStatus.style.color = "var(--danger-color, #f87171)";
+4897:                         }
+4898:                     };
+4899: 
+4900:                     const repoPathInput = document.getElementById('website-repo-path');

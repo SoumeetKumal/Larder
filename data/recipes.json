@@ -339,5 +339,80 @@
         "fat": 49.3
       }
     }
+  },
+  {
+    "id": "recipe_spaghetti_bolognese",
+    "entryType": "recipe",
+    "title": "Spaghetti Bolognese",
+    "category": "Meat",
+    "time": "45 mins",
+    "description": "Classic Italian pasta dish.",
+    "imageUrl": "",
+    "status": "published",
+    "macros": {},
+    "ingredients": [
+      {
+        "item": "Spaghetti",
+        "foodId": "spaghetti",
+        "metric": "200g",
+        "imperial": "2 cups"
+      }
+    ],
+    "steps": [],
+    "tags": [
+      "ITALIAN"
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "recipe_chicken_stir_fry",
+    "entryType": "recipe",
+    "title": "Chicken Stir-Fry",
+    "category": "Poultry",
+    "time": "20 mins",
+    "description": "Quick and easy stir-fry.",
+    "imageUrl": "",
+    "status": "published",
+    "macros": {},
+    "ingredients": [
+      {
+        "item": "Chicken Breast",
+        "foodId": "chicken_breast",
+        "metric": "300g",
+        "imperial": "0.6 lb"
+      }
+    ],
+    "steps": [],
+    "tags": [
+      "ASIAN"
+    ],
+    "note": "",
+    "variations": ""
+  },
+  {
+    "id": "recipe_greek_salad",
+    "entryType": "recipe",
+    "title": "Greek Salad",
+    "category": "Vegetables",
+    "time": "15 mins",
+    "description": "Fresh and healthy salad.",
+    "imageUrl": "",
+    "status": "published",
+    "macros": {},
+    "ingredients": [
+      {
+        "item": "Feta Cheese",
+        "foodId": "feta_cheese",
+        "metric": "100g",
+        "imperial": "1/2 cup"
+      }
+    ],
+    "steps": [],
+    "tags": [
+      "SALAD"
+    ],
+    "note": "",
+    "variations": ""
   }
 ]

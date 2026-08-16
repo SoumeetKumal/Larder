@@ -10,6 +10,398 @@
         "unit": "g",
         "checked": false
       }
-    ]
+    ],
+    "grams": 0,
+    "cost": null
+  },
+  {
+    "id": "sl_msvu5sp65so2a7",
+    "date": "2026-08-16",
+    "items": [
+      {
+        "id": "sl-ormt9z4j",
+        "foodId": "chicken_breast",
+        "name": "Chicken Breast",
+        "amount": 300,
+        "unit": "g",
+        "category": "Other",
+        "recipes": [
+          "Chicken Stir-Fry"
+        ],
+        "checked": false,
+        "grams": 300,
+        "cost": 540,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-81ey5ga2",
+        "foodId": "chilli_flakes",
+        "name": "Chilli Flakes",
+        "amount": 0.3,
+        "unit": "g",
+        "category": "Spices",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 0.3,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-v4xo8va4",
+        "foodId": "feta_cheese",
+        "name": "Feta cheese",
+        "amount": 100,
+        "unit": "g",
+        "category": "Dairy",
+        "recipes": [
+          "Greek Salad"
+        ],
+        "checked": false,
+        "grams": 100,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-hs11t1kp",
+        "foodId": "garlic",
+        "name": "Garlic",
+        "amount": 6.7,
+        "unit": "g",
+        "category": "Vegetables",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 6.7,
+        "cost": 2.22,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-0vniyetf",
+        "foodId": "lemon_juice",
+        "name": "Lemon Juice",
+        "amount": 20,
+        "unit": "g",
+        "category": "Beverages",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 20,
+        "cost": 5.33,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-3gsx9ei7",
+        "foodId": "olive_oil",
+        "name": "Olive Oil",
+        "amount": 15,
+        "unit": "g",
+        "category": "Fats/Oils",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 15,
+        "cost": 9,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-k5u2jugt",
+        "foodId": "onion",
+        "name": "Onion",
+        "amount": 50,
+        "unit": "g",
+        "category": "Vegetables",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 50,
+        "cost": 7.5,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-7w8zw11h",
+        "foodId": "parmigiano_reggiano",
+        "name": "Parmigiano Reggiano",
+        "amount": 80,
+        "unit": "g",
+        "category": "Dairy",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 80,
+        "cost": 192,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-uoxsox4n",
+        "foodId": "parsley",
+        "name": "Parsley",
+        "amount": 10,
+        "unit": "g",
+        "category": "Vegetables",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 10,
+        "cost": 4,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-3jmrrrns",
+        "foodId": "pepper",
+        "name": "Pepper",
+        "amount": 5,
+        "unit": "g",
+        "category": "Spices",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 5,
+        "cost": 5,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-wxt3jczc",
+        "foodId": "rosemary",
+        "name": "Rosemary",
+        "amount": 0.7,
+        "unit": "g",
+        "category": "Herbs",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 0.7,
+        "cost": 2,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-j4nkzv50",
+        "foodId": "salt",
+        "name": "Salt",
+        "amount": 12,
+        "unit": "g",
+        "category": "Other",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 12,
+        "cost": 2.4,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-xxpcg87i",
+        "foodId": "spaghetti",
+        "name": "Spaghetti",
+        "amount": 200,
+        "unit": "g",
+        "category": "Carbs",
+        "recipes": [
+          "Spaghetti Bolognese"
+        ],
+        "checked": false,
+        "grams": 200,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-emg7c8tv",
+        "foodId": "sugar",
+        "name": "Sugar",
+        "amount": 4,
+        "unit": "g",
+        "category": "Other",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 4,
+        "cost": 0.67,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-fsywj9q9",
+        "foodId": "tagliatelle",
+        "name": "Tagliatelle",
+        "amount": 105,
+        "unit": "g",
+        "category": "Grains",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 105,
+        "cost": 12.6,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-zpkhoelv",
+        "foodId": "tarragon",
+        "name": "Tarragon",
+        "amount": 1.7,
+        "unit": "g",
+        "category": "Herbs",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 1.7,
+        "cost": 5,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-9tz5yruk",
+        "foodId": "thyme",
+        "name": "Thyme",
+        "amount": 1.3,
+        "unit": "g",
+        "category": "Herbs",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 1.3,
+        "cost": 4,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-94a487z3",
+        "foodId": "tomato_puree",
+        "name": "Tomato Purée",
+        "amount": 125,
+        "unit": "g",
+        "category": "Vegetables",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 125,
+        "cost": 31.25,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-mtcz3m42",
+        "foodId": "tuna_flakes",
+        "name": "Tuna Flakes",
+        "amount": 56.7,
+        "unit": "g",
+        "category": "Meat",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 56.7,
+        "cost": 53.83,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-52npwts0",
+        "foodId": "white_wine",
+        "name": "White Wine",
+        "amount": 41.7,
+        "unit": "g",
+        "category": "Beverages",
+        "recipes": [
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 41.7,
+        "cost": 7.5,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      }
+    ],
+    "grams": 0,
+    "cost": null,
+    "createdAt": "2026-08-16T13:23:45.930Z",
+    "updatedAt": "2026-08-16T13:23:45.930Z"
   }
 ]

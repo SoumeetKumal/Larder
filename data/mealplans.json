@@ -11,7 +11,23 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 3,
     "isConsumed": false
@@ -28,7 +44,23 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 2,
     "isConsumed": false
@@ -45,7 +77,23 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 3,
     "isConsumed": false
@@ -62,7 +110,23 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 4,
     "isConsumed": false
@@ -81,7 +145,22 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "ingredient",
+            "referenceId": "onion",
+            "grams": 100
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 1,
     "isConsumed": false
@@ -98,7 +177,23 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 3,
     "isConsumed": false
@@ -110,7 +205,16 @@
     "isEatingOut": true,
     "items": [],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": true,
+        "items": []
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 1,
     "isConsumed": false
@@ -129,7 +233,24 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 1,
     "isConsumed": false
@@ -148,9 +269,160 @@
       }
     ],
     "eaters": [
-      0
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
     ],
     "servings": 1,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_1",
+    "date": "2026-08-16",
+    "slot": "dinner",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "recipe_spaghetti_bolognese"
+      }
+    ],
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_spaghetti_bolognese",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
+    ],
+    "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_2",
+    "date": "2026-08-16",
+    "slot": "lunch",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "recipe_chicken_stir_fry"
+      }
+    ],
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_stir_fry",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
+    ],
+    "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_3",
+    "date": "2026-08-16",
+    "slot": "breakfast",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "recipe_greek_salad"
+      }
+    ],
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_greek_salad",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": true,
+        "items": []
+      }
+    ],
+    "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_msvu4mxy9lkbe1n0vphu2xaw8f2s",
+    "date": "2026-08-11",
+    "slot": "breakfast",
+    "isEatingOut": false,
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "name": "TUNA PASTA",
+            "servingSizeG": 535,
+            "grams": 200
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1",
+            "name": "TUNA PASTA",
+            "servingSizeG": 535,
+            "grams": 200
+          }
+        ]
+      }
+    ],
     "isConsumed": false
   }
 ]

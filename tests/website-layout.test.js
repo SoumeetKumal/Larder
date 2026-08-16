@@ -33,9 +33,13 @@ const RECIPES = [
 ];
 
 function makeDom() {
-    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    return makeDomWith(RECIPES);
+}
+
+function makeDomWith(recipes, electron, pageFile) {
+    const html = fs.readFileSync(path.join(ROOT, pageFile || 'index.html'), 'utf8');
     const dom = new JSDOM(html, {
-        url: 'http://localhost:8000/',
+        url: 'http://localhost:8000/' + (pageFile || ''),
         runScripts: 'outside-only',
         pretendToBeVisual: true
     });
@@ -44,13 +48,14 @@ function makeDom() {
     window.alert = () => {};
     window.confirm = () => true;
     window.requestAnimationFrame = (cb) => cb();
+    if (electron) window.larderWindow = { isElectron: true };
     window.fetch = async (url) => {
         const u = String(url);
         if (u.includes('/api/recipes') || u.startsWith('data/recipes.json')) {
-            return { ok: true, status: 200, json: async () => RECIPES.filter(r => r.entryType === 'recipe') };
+            return { ok: true, status: 200, json: async () => recipes.filter(r => r.entryType === 'recipe') };
         }
         if (u.includes('/api/ingredients') || u.startsWith('data/ingredients.json')) {
-            return { ok: true, status: 200, json: async () => RECIPES.filter(r => r.entryType === 'ingredient') };
+            return { ok: true, status: 200, json: async () => recipes.filter(r => r.entryType === 'ingredient') };
         }
         return { ok: true, status: 200, json: async () => [] };
     };
@@ -131,4 +136,44 @@ test('website recipe modal: prep above method in one column, token links, ## sub
     const links = instructionsCol.querySelectorAll('a.ingredient-link[target="_blank"]');
     assert.ok(links.length >= 1, 'ingredient token renders as a new-tab link');
     assert.equal(links[0].getAttribute('href'), 'ingredients.html?foodId=tagliatelle', 'token link resolves to foodId deep link');
+});
+
+test('website grid hides draft recipes', async () => {
+    const recipes = [
+        { id: 'pub1', entryType: 'recipe', title: 'Published One', category: 'Test', time: '10 mins', description: 'Public recipe' },
+        { id: 'draft1', entryType: 'recipe', title: 'Secret Draft', category: 'Test', time: '5 mins', description: 'Draft recipe', status: 'draft' }
+    ];
+    const { dom, window } = makeDomWith(recipes);
+    const document = window.document;
+    await waitReady(window);
+    await sleep(30);
+
+    const cards = document.querySelectorAll('.recipe-card');
+    assert.equal(cards.length, 1, 'only published recipes render cards');
+    assert.equal(cards[0].getAttribute('data-id'), 'pub1', 'the published recipe is the one shown');
+    assert.ok(!Array.from(document.querySelectorAll('.recipe-card')).some(c => c.getAttribute('data-id') === 'draft1'), 'draft recipe never rendered');
+});
+
+test('website ingredient modal: "Edit in CMS" button shows only in Electron and deep-links to the CMS editor', async () => {
+    const ING = [{ id: 'tagliatelle', entryType: 'ingredient', foodId: 'tagliatelle', title: 'Tagliatelle', category: 'Pasta' }];
+    // Public site (no Electron): the edit button must not render at all.
+    const pub = makeDomWith(ING, false, 'ingredients.html');
+    await waitReady(pub.window);
+    await sleep(30);
+    pub.window.document.querySelector('.ingredient-card[data-id="tagliatelle"]').click();
+    await sleep(10);
+    assert.ok(!pub.window.document.querySelector('.ingredient-edit-btn'), 'no edit button on the public site');
+    pub.dom.window.close();
+
+    // Inside Electron: the button renders and points at the CMS profile editor.
+    const app = makeDomWith(ING, true, 'ingredients.html');
+    await waitReady(app.window);
+    await sleep(30);
+    app.window.document.querySelector('.ingredient-card[data-id="tagliatelle"]').click();
+    await sleep(10);
+    const btn = app.window.document.querySelector('.ingredient-edit-btn');
+    assert.ok(btn, 'edit button renders inside Electron');
+    assert.equal(btn.getAttribute('href'), 'cms.html#food/tagliatelle', 'edit link deep-links to the CMS ingredient editor');
+    assert.equal(btn.style.display, '', 'edit button revealed (not hidden by app-only)');
+    app.dom.window.close();
 });

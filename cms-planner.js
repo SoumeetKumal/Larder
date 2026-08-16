@@ -34,11 +34,49 @@ const goals = Object.assign({
             || (S.ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
             || 'MUR';
         const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
-        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
         function findIng(id) { return S.ingredients.find(f => f.foodId === id); }
         function gramsOf(item) { return LC.gramsOf(item && item.amount, item && item.unit, findIng(item.ingredientId)); }
         function perGramOf(ing) { return LC.perGram(ing); }
+
+        // Product picker: pin a specific tracked pantry brand (Granoro, Barilla…)
+        // to a row. Defaults to the remembered product (product-prefs) when the row
+        // has no explicit pick; an explicit "" means "use the generic ingredient price".
+        function pinnedProduct(it) {
+            let pid = it.pantryId;
+            if (typeof pid === 'undefined' || pid === null) {
+                const pref = (S.productPrefs || []).find(x => x.foodId === it.ingredientId);
+                pid = pref ? pref.pantryId : '';
+            }
+            if (!pid) return null;
+            return S.pantryItems.find(p => p.pantryId === pid && p.isTracked) || null;
+        }
+        function perGramPinned(it) {
+            const pin = pinnedProduct(it);
+            if (pin && parseFloat(pin.price) > 0 && parseFloat(pin.packSize) > 0) {
+                return parseFloat(pin.price) / parseFloat(pin.packSize);
+            }
+            return perGramOf(findIng(it.ingredientId));
+        }
+        function productSelect(it, i) {
+            const products = S.pantryItems.filter(p => p.ingredientFoodId === it.ingredientId && p.isTracked);
+            if (!products.length) return '';
+            const pin = pinnedProduct(it);
+            const cur = pin ? pin.pantryId : '';
+            const opts = ['<option value="">ingredient price</option>'].concat(products.map(p => {
+                const label = (p.brand ? p.brand + ' ' : '') + p.productName;
+                const price = parseFloat(p.price) > 0 ? ' · ' + fmt(p.price) : '';
+                return `<option value="${U.escapeHtml(p.pantryId)}" ${p.pantryId === cur ? 'selected' : ''}>${U.escapeHtml(label)}${price}</option>`;
+            }));
+            return `<select class="pl-product-select" data-idx="${i}" title="Pin the product (brand) this row buys — cost and shopping list use its price">${opts.join('')}</select>`;
+        }
+        // Product-aware projected month cost: rows with a pinned brand use that
+        // product's per-gram price; generic rows use the ingredient average.
+        const projectedCost = (S.planner.items || []).reduce((sum, it) => {
+            if (it.useStock) return sum;
+            return sum + perGramPinned(it) * gramsOf(it);
+        }, 0);
 
         // Energy & Macros goals come from the eater profiles by default: sum every
         // eater's daily targets and scale to a 30-day month. Prefills the goal
@@ -220,17 +258,25 @@ let html = '';
             <label class="pl-budget-editor" title="Monthly budget — edit in place, saved on leave">
                 <i data-lucide="wallet" style="width:15px;height:15px;color:var(--accent-sea);"></i>
                 <span class="pl-budget-label">Budget</span>
-                <input type="number" class="pl-budget-input" value="${goals.budget || 0}" min="0" step="any">
+                <input type="text" class="pl-budget-input" value="${Number(goals.budget || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}" inputmode="decimal" placeholder="0">
                 <span class="pl-budget-c">${currency}</span>
             </label>
             <div class="pl-toolbar-spacer"></div>
-            <select class="pl-template-select" id="pl-template-select" aria-label="Monthly planner templates">
-                <option value="">Use a saved month…</option>
-                ${(S.plannerMonthTemplates || []).map(t => `<option value="${U.escapeHtml(t.name)}">${U.escapeHtml(t.name)}</option>`).join('')}
-            </select>
-            <button class="btn secondary" id="pl-template-use" style="font-size:14px;" disabled><i data-lucide="folder-open" style="width:15px;height:15px;"></i> Use</button>
-            <button class="btn secondary" id="pl-template-save" style="font-size:14px;"><i data-lucide="bookmark" style="width:15px;height:15px;"></i> Save Template</button>
-            <button class="btn secondary" id="pl-template-delete" style="font-size:14px;" disabled><i data-lucide="trash-2" style="width:15px;height:15px;"></i> Delete</button>
+            <button class="btn primary" id="pl-generate-btn" style="font-size:14px;"><i data-lucide="shopping-basket" style="width:15px;height:15px;"></i> Generate shopping list</button>
+            <div class="pl-tpl-dd" id="pl-tpl-dd">
+                <button type="button" class="btn secondary pl-tpl-dd-btn" id="pl-tpl-dd-toggle" style="font-size:14px;"><i data-lucide="bookmark" style="width:15px;height:15px;"></i> Templates <i data-lucide="chevron-down" style="width:14px;height:14px;"></i></button>
+                <div class="pl-tpl-dd-menu" id="pl-tpl-dd-menu">
+                    <select class="pl-template-select" id="pl-template-select" aria-label="Monthly planner templates">
+                        <option value="">Use a saved month…</option>
+                        ${(S.plannerMonthTemplates || []).map(t => `<option value="${U.escapeHtml(t.name)}">${U.escapeHtml(t.name)}</option>`).join('')}
+                    </select>
+                    <div class="pl-tpl-dd-actions">
+                        <button class="btn secondary" id="pl-template-use" style="font-size:13px;" disabled><i data-lucide="folder-open" style="width:14px;height:14px;"></i> Use</button>
+                        <button class="btn secondary" id="pl-template-save" style="font-size:13px;"><i data-lucide="save" style="width:14px;height:14px;"></i> Save</button>
+                        <button class="btn secondary" id="pl-template-delete" style="font-size:13px;" disabled><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
             <button class="btn secondary" id="planner-open-goals" style="font-size:14px;"><i data-lucide="target" style="width:15px;height:15px;"></i> Monthly Nutrition Goals</button>
         </div>
         <div class="planner-grid">
@@ -249,14 +295,14 @@ ${g.cells.map(([key, label, unit]) => {
                     return totalRow(label, value, (key === 'sodium' ? 'mg' : unit), key + 'Min', key + 'Max');
                 }).join('')}
             </div>`).join('');
-const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.budget);
+const overBudget = parseFloat(goals.budget) > 0 && projectedCost > parseFloat(goals.budget);
         const projectedCard = `
         <aside class="planner-side">
         <div class="planner-card">
             <div class="planner-card-head"><i data-lucide="gauge" style="width:18px;height:18px;"></i> Projected month totals <span class="planner-hint">live vs your goals</span></div>
             <div class="pl-totals">${totGroupRows}\n                <div class="pl-total-row"><div class="pl-total-label">Animal protein %</div><div class="pl-total-bar"><div class="pl-total-fill ${aCls}" style="width:${Math.min(100, animalPct)}%"></div></div><div class="pl-total-val ${aCls}">${animalPct}% / ${aGoal}%</div><div class="pl-total-flag ${aCls}">&nbsp;</div></div>
             </div>
-            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(t.cost)}</strong> <span class="pln-note">/ ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
+            <div class="pl-cost-line">Estimated monthly cost: <strong class="${overBudget ? 'red' : ''}">${fmt(projectedCost)}</strong> <span class="pln-note">/ ${fmt(goals.budget || 0)} ${overBudget ? '&mdash; over!' : ''}</span></div>
         </div>
         </aside>`;
 
@@ -305,10 +351,10 @@ const overBudget = parseFloat(goals.budget) > 0 && t.cost > parseFloat(goals.bud
         }).join(' / ')}</span></div>`;
         const rows = (S.planner.items || []).map((it, i) => {
             const ing = findIng(it.ingredientId);
-            const c = perGramOf(ing) * gramsOf(it);
+            const c = perGramPinned(it) * gramsOf(it);
             const scopeOn = it.scope === 'month';
 return `<div class="pl-item" data-idx="${i}">
-                <div class="pl-item-name" title="${U.escapeHtml(ing ? ing.name : (it.name || '?'))}">${U.escapeHtml(ing ? ing.name : (it.name || '?'))}</div>
+                <div class="pl-item-name" title="${U.escapeHtml(ing ? ing.name : (it.name || '?'))}"><span class="pl-item-name-title">${U.escapeHtml(ing ? ing.name : (it.name || '?'))}</span>${productSelect(it, i) ? `<span class="pl-item-product">${productSelect(it, i)}</span>` : ''}</div>
                 <div class="pl-item-amount"><label class="pl-amount-label"><input type="number" class="pl-amount seamless-input" data-idx="${i}" value="${it.amount || ''}" step="any" min="0" style="width:64px;"></label>${unitSelect(it.unit, { cls: 'pl-unit sel-unit seamless-select', data: `data-idx="${i}"` })}</div>
                 <div class="pl-item-cost">${fmt(c)}</div>
                 <label class="pln-check" title="Apply existing pantry/household stock so this stays off the shopping list"><input type="checkbox" class="pl-usesock" data-idx="${i}" ${it.useStock ? 'checked' : ''}><span>use stock</span></label>
@@ -318,7 +364,7 @@ return `<div class="pl-item" data-idx="${i}">
         }).join('');
         html += `
         <div class="planner-card">
-            <div class="planner-card-head"><i data-lucide="plus-square" style="width:18px;height:18px;"></i> Build the ingredient list <span class="planner-hint"><span class="red-note">red</span> over target &middot; <span class="blue-note">blue</span> near target</span></div>
+            <div class="planner-card-head"><i data-lucide="plus-square" style="width:18px;height:18px;"></i> Build the ingredient list</div>
 <div class="pl-add-row">
 <div class="pl-picker">
                     <input class="seamless-input pl-ing-picker" id="pl-ing-name" placeholder="Search ingredient&hellip;" autocomplete="off">
@@ -328,10 +374,12 @@ return `<div class="pl-item" data-idx="${i}">
                 ${unitSelect('g', { cls: 'pl-new-unit sel-unit seamless-select', id: 'pl-new-unit' })}
                 <button class="btn primary" id="pl-add-btn">Add</button>
             </div>
-            ${suggestionChips ? `<div class="pl-sugg">Suggestions to close your macro gaps: ${suggestionChips}</div>` : `<div class="pl-sugg pl-sugg-empty">${(S.planner.items || []).length ? 'All macro targets met &mdash; nothing to suggest.' : 'Add items above to see suggestions for the biggest macro shortfalls.'}</div>`}
+            ${suggestionChips ? `<div class="pl-sugg">
+                <button type="button" class="pl-sugg-toggle" id="pl-sugg-toggle" aria-expanded="true"><i data-lucide="info" style="width:14px;height:14px;"></i> Suggestions to close your macro gaps <i data-lucide="chevron-down" class="pl-sugg-chev" style="width:14px;height:14px;"></i></button>
+                <div class="pl-sugg-panel" id="pl-sugg-panel">${suggestionChips}</div>
+            </div>` : `<div class="pl-sugg pl-sugg-empty">${(S.planner.items || []).length ? 'All macro targets met &mdash; nothing to suggest.' : 'Add items above to see suggestions for the biggest macro shortfalls.'}</div>`}
             ${gapStrip}
             <div class="pl-list">${rows || '<div class="empty-state">No planned items yet &mdash; add your month&apos;s groceries above.</div>'}</div>
-            <div class="plorer-list-actions"><button class="btn primary" id="pl-generate-btn"><i data-lucide="shopping-basket"></i> Generate shopping list</button></div>
         </div>
         <div id="pl-generated" class="planner-card"></div>
         </div>
@@ -397,7 +445,7 @@ const saveGoalsFromDOM = () => {
         const budgetInput = container.querySelector('.pl-budget-input');
         if (budgetInput) {
             const persistBudget = async () => {
-                const val = parseFloat(budgetInput.value);
+                const val = parseFloat(String(budgetInput.value).replace(/,/g, ''));
                 S.planner.goals.budget = (val && val > 0) ? val : 0;
                 await App.savePlanner();
                 renderPlanner();
@@ -418,12 +466,15 @@ const saveGoalsFromDOM = () => {
             const ing = (pickedId && S.ingredients.find(f => f.foodId === pickedId))
                 || S.ingredients.find(f => f.name.toLowerCase() === name.toLowerCase());
             if (!ing) { alert('Choose an ingredient from the list.'); return; }
+            const pref = (S.productPrefs || []).find(x => x.foodId === ing.foodId);
+            const defPin = pref && S.pantryItems.some(p => p.pantryId === pref.pantryId && p.isTracked) ? pref.pantryId : '';
             S.planner.items.push({
                 ingredientId: ing.foodId, name: ing.name,
                 amount: parseFloat(amtEl && amtEl.value) || 0,
                 unit: (unitEl && unitEl.value.trim()) || 'g',
                 scope: /can|tinned|jar|frozen|oil|condiment|spice|grain|legume|pasta|rice|flour|sugar|honey|bean/i.test(ing.category || '') ? 'month' : 'fresh',
-useStock: false
+useStock: false,
+                pantryId: defPin
             });
             renderPlanner();
             App.savePlanner();
@@ -433,17 +484,43 @@ useStock: false
             chip.addEventListener('click', () => {
                 const ing = chip.dataset.foodId && S.ingredients.find(f => f.foodId === chip.dataset.foodId);
                 if (!ing) return;
+                const pref = (S.productPrefs || []).find(x => x.foodId === ing.foodId);
+                const defPin = pref && S.pantryItems.some(p => p.pantryId === pref.pantryId && p.isTracked) ? pref.pantryId : '';
                 S.planner.items.push({
                     ingredientId: ing.foodId, name: ing.name,
                     amount: parseFloat(chip.dataset.addgrams) || 100,
                     unit: 'g',
                     scope: /can|tinned|jar|frozen|oil|condiment|spice|grain|legume|pasta|rice|flour|sugar|honey|bean/i.test(ing.category || '') ? 'month' : 'fresh',
-                    useStock: false
+                    useStock: false,
+                    pantryId: defPin
                 });
                 renderPlanner();
                 App.savePlanner();
             });
         });
+
+        // Collapse / expand the macro-gap suggestion panel.
+        const suggToggle = container.querySelector('#pl-sugg-toggle');
+        const suggPanel = container.querySelector('#pl-sugg-panel');
+        if (suggToggle && suggPanel) {
+            suggToggle.addEventListener('click', () => {
+                const open = suggPanel.classList.toggle('open');
+                suggToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        }
+
+        // Templates dropdown menu in the toolbar.
+        const tplDDToggle = container.querySelector('#pl-tpl-dd-toggle');
+        const tplDD = container.querySelector('#pl-tpl-dd');
+        if (tplDDToggle && tplDD) {
+            tplDDToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tplDD.classList.toggle('open');
+            });
+            document.addEventListener('click', (e) => {
+                if (!tplDD.contains(e.target)) tplDD.classList.remove('open');
+            });
+        }
 
         // --- Ingredient picker: live search over the catalogue ---
         const nameEl = container.querySelector('#pl-ing-name');
@@ -491,6 +568,23 @@ container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
         container.querySelectorAll('.pl-scope').forEach(el => el.addEventListener('change', () => {
             const i = parseInt(el.dataset.idx);
             if (S.planner.items[i]) { S.planner.items[i].scope = el.checked ? 'month' : 'fresh'; renderPlanner(); App.savePlanner(); }
+        }));
+
+        // Pin a product (brand) to a row: store it on the item, remember it as the
+        // last-used product for that ingredient (feeds the weekly picker default too).
+        container.querySelectorAll('.pl-product-select').forEach(sel => sel.addEventListener('change', () => {
+            const i = parseInt(sel.dataset.idx);
+            const it = S.planner.items[i];
+            if (!it) return;
+            it.pantryId = sel.value || '';
+            const pin = it.pantryId && S.pantryItems.find(p => p.pantryId === it.pantryId);
+            if (pin) {
+                if (App.rememberProduct) App.rememberProduct(pin);
+            } else {
+                if (App.saveProductPrefs) App.saveProductPrefs();
+            }
+            renderPlanner();
+            App.savePlanner();
         }));
         container.querySelectorAll('.pl-usesock').forEach(el => el.addEventListener('change', () => {
             const i = parseInt(el.dataset.idx);
@@ -550,6 +644,34 @@ container.querySelectorAll('.pl-amount, .pl-unit').forEach(el => {
             await App.savePlannerMonthTemplates();
             renderPlanner();
         });
+
+        // --- Auto-suggest: open with an empty plan, offer to load the last saved month ---
+        // When the planner has no items and there's a saved month template, surface a
+        // one-line prompt to reuse it as a starting point (reduces re-planning friction).
+        const lastTpl = (S.plannerMonthTemplates || []).slice().sort((a, b) =>
+            (b.savedOn || '').localeCompare(a.savedOn || ''))[0];
+        if ((S.planner.items || []).length === 0 && lastTpl && !S._plannerSuggestedLastMonth) {
+            S._plannerSuggestedLastMonth = true;
+            const banner = document.createElement('div');
+            banner.className = 'pl-suggest-banner';
+            banner.style.cssText = 'display:flex;align-items:center;gap:.75rem;background:var(--bg-surface-hover,#f4f5f7);border:1px solid var(--border,#e2e4e8);border-radius:10px;padding:.6rem .8rem;margin:0 0 .9rem;font-size:.85rem;color:var(--text-secondary,#555);';
+            banner.innerHTML = `<span><i data-lucide="folder-open" style="width:14px;height:14px;vertical-align:-2px;"></i> Your last saved month "<b>${U.escapeHtml(lastTpl.name)}</b>" is empty here — reuse it as a starting point?</span>
+                <span style="margin-left:auto;display:flex;gap:.5rem;">
+                    <button type="button" class="btn secondary pl-suggest-load" style="font-size:12px;padding:.25rem .6rem;">Load last month</button>
+                    <button type="button" class="btn secondary pl-suggest-dismiss" style="font-size:12px;padding:.25rem .6rem;">No thanks</button>
+                </span>`;
+            const loadBtn = banner.querySelector('.pl-suggest-load');
+            const dismissBtn = banner.querySelector('.pl-suggest-dismiss');
+            loadBtn.addEventListener('click', () => {
+                S.planner.items = JSON.parse(JSON.stringify(lastTpl.items || []));
+                S.planner.goals = Object.assign({}, S.planner.goals || {}, JSON.parse(JSON.stringify(lastTpl.goals || {})));
+                renderPlanner();
+                App.savePlanner();
+            });
+            dismissBtn.addEventListener('click', () => banner.remove());
+            const builder = container.querySelector('.planner-card');
+            if (builder && builder.parentNode) builder.parentNode.insertBefore(banner, builder);
+        }
 
         const genBtn = container.querySelector('#pl-generate-btn');
         if (genBtn) genBtn.addEventListener('click', () => {

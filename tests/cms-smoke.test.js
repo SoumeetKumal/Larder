@@ -230,3 +230,183 @@ test('meal assign modal: live macro panel + quick-add chips open the picker', as
     assert.ok(picker.querySelector('.mp-picker-name').textContent.includes(sugName), 'picker preloaded with the suggested ingredient');
     dom.window.close();
 });
+
+test('household modal renders price-history sparkline from multiple dated observations', async () => {
+    const { dom, window } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    const item = {
+        id: 'hh_soap',
+        name: 'Soap',
+        category: 'Toiletries',
+        unitSize: 'bottle',
+        currentStock: 2,
+        avgDurationDays: 30,
+        pricePerUnit: 135,
+        currency: 'Rs',
+        priceHistory: [
+            { date: '2026-05-01', price: 120 },
+            { date: '2026-06-01', price: 125 },
+            { date: '2026-07-01', price: 135 }
+        ]
+    };
+    window.CMSState.householdItems = [item];
+
+    document.querySelector('.cms-tab[data-tab="household"]').click();
+    await sleep(40);
+
+    const card = document.querySelector('.vd-pantry-card[data-hhid="hh_soap"]');
+    assert.ok(card, 'household card rendered for the seeded item');
+    card.click();
+    await sleep(20);
+
+    const modal = document.getElementById('cms-household-modal');
+    assert.ok(modal.classList.contains('active'), 'household editor modal opens');
+    const hhHist = document.getElementById('household-price-history');
+    assert.ok(hhHist, 'price-history container present');
+    assert.ok(hhHist.querySelector('svg'), 'sparkline SVG rendered when >1 price observations exist');
+    assert.ok(hhHist.querySelector('svg path'), 'sparkline path drawn');
+    dom.window.close();
+});
+
+test('monthly planner: auto-suggest banner offers to load the last saved month', async () => {
+    const { dom, window } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    window.CMSState.planner = { goals: {}, items: [] };
+    window.CMSState.plannerMonthTemplates = [
+        { id: 'mt_1', name: 'March 2026', savedOn: '2026-03-25T10:00:00.000Z', goals: { budget: 5000 }, items: [{ ingredientId: 'tagliatelle', name: 'Tagliatelle', amount: 1000, unit: 'g', scope: 'month', useStock: false }] },
+        { id: 'mt_0', name: 'February 2026', savedOn: '2026-02-20T10:00:00.000Z', goals: {}, items: [] }
+    ];
+
+    document.querySelector('.cms-tab[data-tab="planner"]').click();
+    await sleep(40);
+
+    const container = document.getElementById('cms-recipe-list');
+    const banner = container.querySelector('.pl-suggest-banner');
+    assert.ok(banner, 'auto-suggest banner rendered for an empty plan');
+    assert.ok(banner.textContent.includes('March 2026'), 'banner names the most recently saved month');
+
+    banner.querySelector('.pl-suggest-load').click();
+    await sleep(30);
+
+    assert.equal(container.querySelectorAll('.pl-item').length, 1, 'clicking load fills the plan from the saved month');
+    assert.ok(container.querySelector('.pl-item').textContent.includes('Tagliatelle'), 'loaded item matches the saved month');
+
+    // Re-render must not re-prompt once dismissed/loaded.
+    document.querySelector('.cms-tab[data-tab="recipe"]').click();
+    await sleep(10);
+    document.querySelector('.cms-tab[data-tab="planner"]').click();
+    await sleep(30);
+    assert.ok(!container.querySelector('.pl-suggest-banner'), 'banner does not reappear after being handled');
+    dom.window.close();
+});
+
+test('monthly planner: product picker pins a brand, prices the row and remembers the choice', async () => {
+    const { dom, window, putBodies } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    window.CMSState.pantryItems = [
+        { pantryId: 'p_barilla', ingredientFoodId: 'tagliatelle', brand: 'Barilla', productName: 'Tagliatelle', packSize: 500, packUnit: 'g', price: 90, currency: 'MUR', quantity: 2, isTracked: true },
+        { pantryId: 'p_granoro', ingredientFoodId: 'tagliatelle', brand: 'Granoro', productName: 'Tagliatelle', packSize: 500, packUnit: 'g', price: 60, currency: 'MUR', quantity: 1, isTracked: true }
+    ];
+    window.CMSState.productPrefs = [{ foodId: 'tagliatelle', pantryId: 'p_barilla', updatedAt: '2026-08-01T00:00:00.000Z' }];
+    window.CMSState.planner = { goals: {}, items: [{ ingredientId: 'tagliatelle', name: 'Tagliatelle', amount: 1000, unit: 'g', scope: 'month', useStock: false }] };
+
+    document.querySelector('.cms-tab[data-tab="planner"]').click();
+    await sleep(40);
+
+    const container = document.getElementById('cms-recipe-list');
+    const row = container.querySelector('.pl-item');
+    assert.ok(row, 'planner row rendered');
+    const picker = row.querySelector('.pl-product-select');
+    assert.ok(picker, 'product picker appears when the ingredient has tracked pantry items');
+    assert.equal(picker.querySelectorAll('option').length, 3, 'option list = ingredient price + 2 brands');
+
+    // Remembered product is preselected, so the row prices with Barilla.
+    assert.equal(picker.value, 'p_barilla', 'remembered product preselected by default');
+    assert.ok(row.querySelector('.pl-item-cost').textContent.includes('Rs180'), 'row cost uses Barilla 90/500g for 1000g (Rs180)');
+
+    // Switch to Granoro → row reprices, item records the pick, prefs update.
+    picker.value = 'p_granoro';
+    picker.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await sleep(30);
+
+    const updatedRow = container.querySelector('.pl-item');
+    assert.ok(updatedRow.querySelector('.pl-item-cost').textContent.includes('Rs120'), 'row cost reprices to Granoro 60/500g (Rs120)');
+    const plannerPut = putBodies.filter(p => p.url.startsWith('/api/planner'));
+    const lastPlanner = plannerPut[plannerPut.length - 1];
+    assert.equal(lastPlanner.body.items[0].pantryId, 'p_granoro', 'pinned pantryId persisted on the planner item');
+    const prefPut = putBodies.find(p => p.url.startsWith('/api/product-prefs'));
+    assert.ok(prefPut, 'product preference PUT sent after picking');
+    assert.equal(prefPut.body.find(x => x.foodId === 'tagliatelle').pantryId, 'p_granoro', 'last-used product remembered in prefs');
+
+    // Projected month cost line reflects the pinned brand too.
+    const costLine = container.querySelector('.pl-cost-line');
+    assert.ok(costLine.textContent.includes('Rs120'), 'projected month cost uses the pinned product price');
+    dom.window.close();
+});
+
+test('stats tab: top purchased, most cooked recipes, and CPI overlay render', async () => {
+    const { dom, window } = makeDom();
+    const document = window.document;
+    await waitReady(window);
+    await sleep(20);
+
+    window.CMSState.receipts = [
+        { id: 'r1', date: '2026-08-01', total: 500, currency: 'MUR', items: [
+            { name: 'Tagliatelle', foodId: 'tagliatelle', price: 120, qty: 2 },
+            { name: 'Salt', foodId: 'salt', price: 30, qty: 1 }
+        ] },
+        { id: 'r2', date: '2026-08-05', total: 240, currency: 'MUR', items: [
+            { name: 'Tagliatelle', foodId: 'tagliatelle', price: 120, qty: 2 }
+        ] }
+    ];
+    window.CMSState.consumption = [
+        { id: 'c1', date: '2026-08-02', recipeId: '1', recipeTitle: 'Tuna Tagliatelle', items: [] },
+        { id: 'c2', date: '2026-08-04', recipeId: '1', recipeTitle: 'Tuna Tagliatelle', items: [] },
+        { id: 'c3', date: '2026-08-06', recipeId: '2', recipeTitle: 'Salt Pasta', items: [] }
+    ];
+    window.CMSState.appSettings = { profiles: [], shopping: { currency: 'MUR' }, stats: { cpi: 5 } };
+
+    document.querySelector('.cms-tab[data-tab="stats"]').click();
+    await sleep(30);
+
+    const container = document.getElementById('cms-recipe-list');
+    const subheads = Array.from(container.querySelectorAll('.rc-subhead')).map(h => h.textContent);
+    assert.ok(subheads.some(s => s.includes('Top purchased')), 'top purchased section present');
+    assert.ok(subheads.some(s => s.includes('Most cooked')), 'most cooked section present');
+
+    // Top purchased: Tagliatelle bought 4×, Salt 1×.
+    const purchasedNames = Array.from(container.querySelectorAll('.rc-stores')).find(s => s.textContent.includes('Top purchased'))
+        .querySelectorAll('.rc-store-name');
+    assert.equal(purchasedNames[0].textContent, 'Tagliatelle', 'most-purchased item ranks first');
+    assert.ok(purchasedNames[0].parentElement.textContent.includes('4\u00d7'), 'purchase count shown (4x)');
+
+    // Most cooked: Tuna Tagliatelle cooked twice.
+    const cookedBlock = Array.from(container.querySelectorAll('.rc-stores')).find(s => s.textContent.includes('Most cooked'));
+    const cookedNames = cookedBlock.querySelectorAll('.rc-store-name');
+    assert.equal(cookedNames[0].textContent, 'Tuna Tagliatelle', 'most-cooked recipe ranks first');
+    assert.ok(cookedNames[0].parentElement.textContent.includes('2\u00d7'), 'cook count shown (2x)');
+
+    // CPI overlay: input prefilled with 5 and comparison row rendered.
+    const cpiInput = container.querySelector('#stats-cpi');
+    assert.ok(cpiInput, 'national CPI input present');
+    assert.equal(cpiInput.value, '5', 'CPI input prefilled from settings');
+    const compareRow = Array.from(container.querySelectorAll('.rc-store-row')).find(r => r.textContent.includes('Household vs national CPI'));
+    assert.ok(compareRow, 'household-vs-national CPI comparison row rendered');
+    assert.ok(compareRow.textContent.includes('national 5.0%'), 'comparison shows the national CPI value');
+
+    // Entering a new CPI persists to settings and re-renders.
+    cpiInput.value = '7.5';
+    cpiInput.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await sleep(30);
+    assert.ok(container.querySelector('#stats-cpi'), 'stats re-rendered after saving CPI');
+    dom.window.close();
+});

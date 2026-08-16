@@ -1,0 +1,9 @@
+﻿938: // Migrate legacy pantry tracking data to new pantry items if needed
+1275: <div class="planner-card-head"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--accent-danger,#c0392b);"></i> Restock needed <span class="planner-hint">${restockItems.length} tracked item(s) low or out of stock</span></div>
+3540: <div class="empty-state">Tick what to include and click "Generate" to calculate your shopping needs.</div>
+4067: const need = new Map(); // foodId -> { name, grams, unit, recipes:Set, category, sources:Set, pantryIds:Set }
+4070: const ex = need.get(foodId);
+4077: need.set(foodId, {
+4176: if (q > minStock && q >= targetPacks) return; // above threshold, no restock needed
+4184: // 5. Subtract tracked pantry stock once for all aggregated food needs
+4186: need.forEach((data, foodId) => {

@@ -19,7 +19,7 @@
             || (S.ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
             || 'MUR';
         const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
-        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
         const budget = parseFloat(S.appSettings.shopping && S.appSettings.shopping.amount) || 0;
 
         const norm = s => String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -409,7 +409,7 @@
             || (S.ingredients.find(i => parseFloat(i.averagePrice) > 0) || {}).priceCurrency
             || 'MUR';
         const SYM = { MUR: 'Rs', LKR: 'Rs', NPR: 'Rs', PKR: 'Rs', USD: '$', CAD: '$', AUD: '$', SGD: '$', EUR: '€', GBP: '£', INR: '₹', BDT: '৳' };
-        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmt = n => (SYM[currency] || '') + (n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
         const comparisons = [];
         (receipt.items || []).forEach(it => {

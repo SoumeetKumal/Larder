@@ -20,5 +20,38 @@
     "pricePerUnit": 1000,
     "lastOpenedDate": "2026-07-12",
     "durationHistory": []
+  },
+  {
+    "id": "hh_dish_soap",
+    "name": "Dish Soap",
+    "category": "Cleaning",
+    "unitSize": "500ml",
+    "currentStock": 2,
+    "avgDurationDays": 30,
+    "pricePerUnit": 60,
+    "lastOpenedDate": "2026-08-01",
+    "durationHistory": []
+  },
+  {
+    "id": "hh_laundry_detergent",
+    "name": "Laundry Detergent",
+    "category": "Cleaning",
+    "unitSize": "2L",
+    "currentStock": 1,
+    "avgDurationDays": 60,
+    "pricePerUnit": 200,
+    "lastOpenedDate": "2026-07-15",
+    "durationHistory": []
+  },
+  {
+    "id": "hh_paper_towels",
+    "name": "Paper Towels",
+    "category": "Paper Goods",
+    "unitSize": "6 rolls",
+    "currentStock": 1,
+    "avgDurationDays": 45,
+    "pricePerUnit": 150,
+    "lastOpenedDate": "2026-08-01",
+    "durationHistory": []
   }
 ]

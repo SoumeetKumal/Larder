@@ -1,0 +1,9 @@
+938:// Migrate legacy pantry tracking data to new pantry items i
+1275:<div class="planner-card-head"><i data-lucide="alert-triangl
+3540:<div class="empty-state">Tick what to include and click "Gen
+4067:const need = new Map(); // foodId -> { name, grams, unit, re
+4070:const ex = need.get(foodId);
+4077:need.set(foodId, {
+4176:if (q > minStock && q >= targetPacks) return; // above thres
+4184:// 5. Subtract tracked pantry stock once for all aggregated 
+4186:need.forEach((data, foodId) => {
