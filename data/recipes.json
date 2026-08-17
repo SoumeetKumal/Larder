@@ -341,78 +341,643 @@
     }
   },
   {
-    "id": "recipe_spaghetti_bolognese",
+    "id": "recipe_creamy_chicken_tagliatelle",
     "entryType": "recipe",
-    "title": "Spaghetti Bolognese",
-    "category": "Meat",
-    "time": "45 mins",
-    "description": "Classic Italian pasta dish.",
-    "imageUrl": "",
+    "title": "Creamy Chicken Tagliatelle",
+    "category": "Poultry",
+    "time": "30 mins",
+    "iconTag": "",
+    "description": "Creamy garlic chicken tagliatelle, finished with parmigiano.",
+    "imageUrl": "https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&fit=crop&w=800&q=80",
     "status": "published",
-    "macros": {},
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "650 kCal",
+      "carbohydrate": "55 g",
+      "protein": "40 g",
+      "fat": "28 g"
+    },
     "ingredients": [
       {
-        "item": "Spaghetti",
-        "foodId": "spaghetti",
-        "metric": "200g",
-        "imperial": "2 cups"
+        "item": "Tagliatelle",
+        "foodId": "tagliatelle",
+        "metric": "250g",
+        "imperial": "2.5 cups"
+      },
+      {
+        "item": "Chicken breast, skinless",
+        "foodId": "chicken_breast_skinless",
+        "metric": "300g",
+        "imperial": "1.25 cups"
+      },
+      {
+        "item": "Garlic",
+        "foodId": "garlic",
+        "metric": "12g",
+        "imperial": "3 cloves"
+      },
+      {
+        "item": "Onion",
+        "foodId": "onion",
+        "metric": "80g",
+        "imperial": "0.5 medium"
+      },
+      {
+        "item": "Heavy cream",
+        "foodId": "heavy_cream",
+        "metric": "150g",
+        "imperial": "0.6 cup"
+      },
+      {
+        "item": "Parmigiano Reggiano",
+        "foodId": "parmigiano_reggiano",
+        "metric": "40g",
+        "imperial": "0.4 cup"
+      },
+      {
+        "item": "Olive Oil",
+        "foodId": "olive_oil",
+        "metric": "15g",
+        "imperial": "1 tbsp"
+      },
+      {
+        "item": "Salt",
+        "foodId": "salt",
+        "metric": "6g",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Pepper",
+        "foodId": "pepper",
+        "metric": "3g",
+        "imperial": "0.5 tsp"
       }
     ],
-    "steps": [],
-    "tags": [
-      "ITALIAN"
+    "steps": [
+      "## Prep",
+      "Slice the chicken into bite-size strips and season with half the salt and pepper.",
+      "Mince the garlic and dice the onion.",
+      "## Cook the chicken",
+      "Heat the olive oil in a large pan over medium-high heat and cook the [[chicken_breast_skinless|chicken]] until golden, about 5 minutes. Remove and set aside.",
+      "In the same pan, soften the onion and garlic for 2 minutes.",
+      "## Make the sauce",
+      "Add the heavy cream and parmigiano reggiano, then stir until the cheese melts into a smooth sauce.",
+      "Return the [[chicken_breast_skinless|chicken]] to the pan and simmer for 3 minutes.",
+      "Meanwhile, cook the [[tagliatelle|Tagliatelle]] in salted boiling water until al dente, then toss with the sauce.",
+      "Season to taste with the remaining salt and pepper and serve immediately."
     ],
-    "note": "",
-    "variations": ""
+    "prepSteps": [
+      "Slice chicken into strips",
+      "Mince garlic",
+      "Dice onion"
+    ],
+    "prepTime": "10 mins",
+    "tags": [
+      "ITALIAN",
+      "POULTRY"
+    ],
+    "note": "The sauce can be made ahead and reheated gently.",
+    "variations": "Swap chicken for shrimp or add mushrooms.",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 650,
+        "carbs": 55,
+        "protein": 40,
+        "fat": 28
+      }
+    }
   },
   {
-    "id": "recipe_chicken_stir_fry",
+    "id": "recipe_chicken_basil_rice",
     "entryType": "recipe",
-    "title": "Chicken Stir-Fry",
+    "title": "Basil Chicken Rice",
     "category": "Poultry",
-    "time": "20 mins",
-    "description": "Quick and easy stir-fry.",
-    "imageUrl": "",
+    "time": "25 mins",
+    "iconTag": "",
+    "description": "One-pan chicken thighs with fragrant basil rice.",
+    "imageUrl": "https://images.unsplash.com/photo-1598866594230-a7c12756260f?auto=format&fit=crop&w=800&q=80",
     "status": "published",
-    "macros": {},
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "520 kCal",
+      "carbohydrate": "52 g",
+      "protein": "35 g",
+      "fat": "18 g"
+    },
     "ingredients": [
       {
-        "item": "Chicken Breast",
-        "foodId": "chicken_breast",
-        "metric": "300g",
-        "imperial": "0.6 lb"
+        "item": "Chicken thighs",
+        "foodId": "chicken_thigh_raw",
+        "metric": "400g",
+        "imperial": "1.7 cups"
+      },
+      {
+        "item": "Rice",
+        "foodId": "rice_white_medium_grain",
+        "metric": "250g",
+        "imperial": "1.25 cups"
+      },
+      {
+        "item": "Fresh basil",
+        "foodId": "basil_fresh",
+        "metric": "15g",
+        "imperial": "0.3 cup"
+      },
+      {
+        "item": "Garlic",
+        "foodId": "garlic",
+        "metric": "8g",
+        "imperial": "2 cloves"
+      },
+      {
+        "item": "Olive Oil",
+        "foodId": "olive_oil",
+        "metric": "20g",
+        "imperial": "1.5 tbsp"
+      },
+      {
+        "item": "Salt",
+        "foodId": "salt",
+        "metric": "5g",
+        "imperial": "0.8 tsp"
+      },
+      {
+        "item": "Pepper",
+        "foodId": "pepper",
+        "metric": "2g",
+        "imperial": "0.4 tsp"
       }
     ],
-    "steps": [],
+    "steps": [
+      "## Prep",
+      "Season the [[chicken_thigh_raw|chicken thighs]] with salt and pepper. Chiffonade the basil.",
+      "## Cook the chicken",
+      "Heat olive oil in a deep pan and brown the chicken thighs on both sides, about 6 minutes.",
+      "Add the garlic and stir for 30 seconds.",
+      "## Rice",
+      "Add the [[rice_white_medium_grain|rice]] and 500ml of water, cover and simmer for 15 minutes until the rice is tender.",
+      "Fold in the fresh basil, rest for 5 minutes and serve."
+    ],
+    "prepSteps": [
+      "Season chicken thighs",
+      "Chiffonade basil"
+    ],
+    "prepTime": "8 mins",
     "tags": [
       "ASIAN"
     ],
     "note": "",
-    "variations": ""
+    "variations": "Add a squeeze of lime before serving.",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 520,
+        "carbs": 52,
+        "protein": 35,
+        "fat": 18
+      }
+    }
   },
   {
-    "id": "recipe_greek_salad",
+    "id": "1786995431647",
     "entryType": "recipe",
-    "title": "Greek Salad",
-    "category": "Vegetables",
-    "time": "15 mins",
-    "description": "Fresh and healthy salad.",
+    "title": "E2E Debug Risotto msxmxw1u",
+    "category": "",
+    "time": "30 mins",
+    "prepTime": "",
+    "prepSteps": [],
+    "iconTag": "",
+    "description": "Debug recipe",
     "imageUrl": "",
     "status": "published",
-    "macros": {},
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "114 kCal",
+      "carbohydrate": "13.5 g",
+      "protein": "6.1 g",
+      "fat": "3.7 g",
+      "fiberG": 0.2,
+      "sugarG": 0.2,
+      "saturatedFatG": 1.9,
+      "monounsaturatedFatG": 1,
+      "polyunsaturatedFatG": 0.2,
+      "cholesterolMg": 8.5,
+      "sodiumMg": 200.3,
+      "potassiumMg": 24.9,
+      "calciumMg": 149.4,
+      "ironMg": 0.2,
+      "magnesiumMg": 11.5,
+      "phosphorusMg": 103.9,
+      "zincMg": 0.5,
+      "seleniumMcg": 6.5,
+      "vitaminAMcg": 25.9,
+      "vitaminDMcg": 0.1,
+      "vitaminEMg": 0.1,
+      "vitaminKMcg": 0.2,
+      "riboflavinMg": 0.1,
+      "niacinMg": 0.2,
+      "pantothenicMg": 0.5,
+      "folateMcg": 1.8,
+      "vitaminB12Mcg": 0.2
+    },
     "ingredients": [
       {
-        "item": "Feta Cheese",
-        "foodId": "feta_cheese",
-        "metric": "100g",
-        "imperial": "1/2 cup"
+        "item": "Basmati rice, white",
+        "foodId": "basmati_rice_white",
+        "metric": "185g",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Maitake Shiitake Blend",
+        "foodId": "maitake_shiitake_blend",
+        "metric": "1g",
+        "imperial": "0 whole"
+      },
+      {
+        "item": "Parmesan cheese",
+        "foodId": "parmesan_cheese",
+        "metric": "50g",
+        "imperial": "½ cups"
       }
     ],
     "steps": [],
+    "tags": [],
+    "note": "",
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 114,
+        "carbs": 13.5,
+        "protein": 6.1,
+        "fat": 3.7
+      }
+    }
+  },
+  {
+    "id": "1786996061737",
+    "entryType": "recipe",
+    "title": "E2E Mushroom Risotto msxnbe8c",
+    "category": "",
+    "time": "35 mins",
+    "prepTime": "10 mins",
+    "prepSteps": [
+      "## Mise en place",
+      "Dice onion and slice mushrooms.",
+      "Grate parmesan."
+    ],
+    "iconTag": "",
+    "description": "A creamy mushroom risotto made for the workflow test.",
+    "imageUrl": "https://example.com/risotto.jpg",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "114 kCal",
+      "carbohydrate": "13.5 g",
+      "protein": "6.1 g",
+      "fat": "3.7 g",
+      "fiberG": 0.2,
+      "sugarG": 0.2,
+      "saturatedFatG": 1.9,
+      "monounsaturatedFatG": 1,
+      "polyunsaturatedFatG": 0.2,
+      "cholesterolMg": 8.5,
+      "sodiumMg": 200.3,
+      "potassiumMg": 24.9,
+      "calciumMg": 149.4,
+      "ironMg": 0.2,
+      "magnesiumMg": 11.5,
+      "phosphorusMg": 103.9,
+      "zincMg": 0.5,
+      "seleniumMcg": 6.5,
+      "vitaminAMcg": 25.9,
+      "vitaminDMcg": 0.1,
+      "vitaminEMg": 0.1,
+      "vitaminKMcg": 0.2,
+      "riboflavinMg": 0.1,
+      "niacinMg": 0.2,
+      "pantothenicMg": 0.5,
+      "folateMcg": 1.8,
+      "vitaminB12Mcg": 0.2
+    },
+    "ingredients": [
+      {
+        "item": "Basmati rice, white",
+        "foodId": "basmati_rice_white",
+        "metric": "185g",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Maitake Shiitake Blend bfky",
+        "foodId": "maitake_shiitake_blend_bfky",
+        "metric": "1g",
+        "imperial": "0 whole"
+      },
+      {
+        "item": "Parmesan cheese",
+        "foodId": "parmesan_cheese",
+        "metric": "50g",
+        "imperial": "½ cups"
+      }
+    ],
+    "steps": [
+      "## For the rice",
+      "Toast the rice in butter until translucent.[[basmati_rice_white|Basmati rice, white]]",
+      "Add stock gradually and stir."
+    ],
     "tags": [
-      "SALAD"
+      "weeknight"
     ],
     "note": "",
-    "variations": ""
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 114,
+        "carbs": 13.5,
+        "protein": 6.1,
+        "fat": 3.7
+      }
+    }
+  },
+  {
+    "id": "1786996301251",
+    "entryType": "recipe",
+    "title": "E2E Mushroom Risotto msxngj1k",
+    "category": "",
+    "time": "35 mins",
+    "prepTime": "10 mins",
+    "prepSteps": [
+      "## Mise en place",
+      "Dice onion and slice mushrooms.",
+      "Grate parmesan."
+    ],
+    "iconTag": "",
+    "description": "A creamy mushroom risotto made for the workflow test.",
+    "imageUrl": "https://example.com/risotto.jpg",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "114 kCal",
+      "carbohydrate": "13.5 g",
+      "protein": "6.1 g",
+      "fat": "3.7 g",
+      "fiberG": 0.2,
+      "sugarG": 0.2,
+      "saturatedFatG": 1.9,
+      "monounsaturatedFatG": 1,
+      "polyunsaturatedFatG": 0.2,
+      "cholesterolMg": 8.5,
+      "sodiumMg": 200.3,
+      "potassiumMg": 24.9,
+      "calciumMg": 149.4,
+      "ironMg": 0.2,
+      "magnesiumMg": 11.5,
+      "phosphorusMg": 103.9,
+      "zincMg": 0.5,
+      "seleniumMcg": 6.5,
+      "vitaminAMcg": 25.9,
+      "vitaminDMcg": 0.1,
+      "vitaminEMg": 0.1,
+      "vitaminKMcg": 0.2,
+      "riboflavinMg": 0.1,
+      "niacinMg": 0.2,
+      "pantothenicMg": 0.5,
+      "folateMcg": 1.8,
+      "vitaminB12Mcg": 0.2
+    },
+    "ingredients": [
+      {
+        "item": "Basmati rice, white",
+        "foodId": "basmati_rice_white",
+        "metric": "185g",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Maitake Shiitake Blend gkdb",
+        "foodId": "maitake_shiitake_blend_gkdb",
+        "metric": "1g",
+        "imperial": "0 whole"
+      },
+      {
+        "item": "Parmesan cheese",
+        "foodId": "parmesan_cheese",
+        "metric": "50g",
+        "imperial": "½ cups"
+      }
+    ],
+    "steps": [
+      "## For the rice",
+      "Toast the rice in butter until translucent.[[basmati_rice_white|Basmati rice, white]]",
+      "Add stock gradually and stir."
+    ],
+    "tags": [
+      "weeknight"
+    ],
+    "note": "",
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 114,
+        "carbs": 13.5,
+        "protein": 6.1,
+        "fat": 3.7
+      }
+    }
+  },
+  {
+    "id": "1786996346177",
+    "entryType": "recipe",
+    "title": "E2E Mushroom Risotto msxnhhpg",
+    "category": "",
+    "time": "35 mins",
+    "prepTime": "10 mins",
+    "prepSteps": [
+      "## Mise en place",
+      "Dice onion and slice mushrooms.",
+      "Grate parmesan."
+    ],
+    "iconTag": "",
+    "description": "A creamy mushroom risotto made for the workflow test.",
+    "imageUrl": "https://example.com/risotto.jpg",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "114 kCal",
+      "carbohydrate": "13.5 g",
+      "protein": "6.1 g",
+      "fat": "3.7 g",
+      "fiberG": 0.2,
+      "sugarG": 0.2,
+      "saturatedFatG": 1.9,
+      "monounsaturatedFatG": 1,
+      "polyunsaturatedFatG": 0.2,
+      "cholesterolMg": 8.5,
+      "sodiumMg": 200.3,
+      "potassiumMg": 24.9,
+      "calciumMg": 149.4,
+      "ironMg": 0.2,
+      "magnesiumMg": 11.5,
+      "phosphorusMg": 103.9,
+      "zincMg": 0.5,
+      "seleniumMcg": 6.5,
+      "vitaminAMcg": 25.9,
+      "vitaminDMcg": 0.1,
+      "vitaminEMg": 0.1,
+      "vitaminKMcg": 0.2,
+      "riboflavinMg": 0.1,
+      "niacinMg": 0.2,
+      "pantothenicMg": 0.5,
+      "folateMcg": 1.8,
+      "vitaminB12Mcg": 0.2
+    },
+    "ingredients": [
+      {
+        "item": "Basmati rice, white",
+        "foodId": "basmati_rice_white",
+        "metric": "185g",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Maitake Shiitake Blend hj1i",
+        "foodId": "maitake_shiitake_blend_hj1i",
+        "metric": "1g",
+        "imperial": "0 whole"
+      },
+      {
+        "item": "Parmesan cheese",
+        "foodId": "parmesan_cheese",
+        "metric": "50g",
+        "imperial": "½ cups"
+      }
+    ],
+    "steps": [
+      "## For the rice",
+      "Toast the rice in butter until translucent.[[basmati_rice_white|Basmati rice, white]]",
+      "Add stock gradually and stir."
+    ],
+    "tags": [
+      "weeknight"
+    ],
+    "note": "",
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 114,
+        "carbs": 13.5,
+        "protein": 6.1,
+        "fat": 3.7
+      }
+    }
+  },
+  {
+    "id": "1786996672349",
+    "entryType": "recipe",
+    "title": "E2E Mushroom Risotto msxnohdt",
+    "category": "",
+    "time": "35 mins",
+    "prepTime": "10 mins",
+    "prepSteps": [
+      "## Mise en place",
+      "Dice onion and slice mushrooms.",
+      "Grate parmesan."
+    ],
+    "iconTag": "",
+    "description": "A creamy mushroom risotto made for the workflow test.",
+    "imageUrl": "https://example.com/risotto.jpg",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "114 kCal",
+      "carbohydrate": "13.5 g",
+      "protein": "6.1 g",
+      "fat": "3.7 g",
+      "fiberG": 0.2,
+      "sugarG": 0.2,
+      "saturatedFatG": 1.9,
+      "monounsaturatedFatG": 1,
+      "polyunsaturatedFatG": 0.2,
+      "cholesterolMg": 8.5,
+      "sodiumMg": 200.3,
+      "potassiumMg": 24.9,
+      "calciumMg": 149.4,
+      "ironMg": 0.2,
+      "magnesiumMg": 11.5,
+      "phosphorusMg": 103.9,
+      "zincMg": 0.5,
+      "seleniumMcg": 6.5,
+      "vitaminAMcg": 25.9,
+      "vitaminDMcg": 0.1,
+      "vitaminEMg": 0.1,
+      "vitaminKMcg": 0.2,
+      "riboflavinMg": 0.1,
+      "niacinMg": 0.2,
+      "pantothenicMg": 0.5,
+      "folateMcg": 1.8,
+      "vitaminB12Mcg": 0.2
+    },
+    "ingredients": [
+      {
+        "item": "Basmati rice, white",
+        "foodId": "basmati_rice_white",
+        "metric": "185g",
+        "imperial": "1 cups"
+      },
+      {
+        "item": "Maitake Shiitake Blend oiq5",
+        "foodId": "maitake_shiitake_blend_oiq5",
+        "metric": "1g",
+        "imperial": "0 whole"
+      },
+      {
+        "item": "Parmesan cheese",
+        "foodId": "parmesan_cheese",
+        "metric": "50g",
+        "imperial": "½ cups"
+      }
+    ],
+    "steps": [
+      "## For the rice",
+      "Toast the rice in butter until translucent.[[basmati_rice_white|Basmati rice, white]]",
+      "Add stock gradually and stir."
+    ],
+    "tags": [
+      "weeknight"
+    ],
+    "note": "",
+    "variations": "",
+    "_cmsStdMacros": {
+      "normalized": {
+        "energy": 114,
+        "carbs": 13.5,
+        "protein": 6.1,
+        "fat": 3.7
+      }
+    }
   }
 ]

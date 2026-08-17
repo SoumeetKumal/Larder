@@ -292,14 +292,14 @@
     "isConsumed": false
   },
   {
-    "id": "mp_1",
+    "id": "mp_seed_20260817_dinner",
     "date": "2026-08-16",
     "slot": "dinner",
     "isEatingOut": false,
     "items": [
       {
         "type": "recipe",
-        "referenceId": "recipe_spaghetti_bolognese"
+        "referenceId": "recipe_creamy_chicken_tagliatelle"
       }
     ],
     "eaters": [
@@ -309,7 +309,50 @@
         "items": [
           {
             "type": "recipe",
-            "referenceId": "recipe_spaghetti_bolognese",
+            "referenceId": "recipe_creamy_chicken_tagliatelle",
+            "name": "Creamy Chicken Tagliatelle",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      },
+      {
+        "idx": 1,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle",
+            "name": "Creamy Chicken Tagliatelle",
+            "servingSizeG": 250,
+            "grams": 250
+          }
+        ]
+      }
+    ],
+    "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_seed_20260818_dinner",
+    "date": "2026-08-17",
+    "slot": "dinner",
+    "isEatingOut": false,
+    "items": [
+      {
+        "type": "recipe",
+        "referenceId": "recipe_chicken_basil_rice"
+      }
+    ],
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice",
+            "name": "Basil Chicken Rice",
             "servingSizeG": 250,
             "grams": 250
           }
@@ -325,14 +368,14 @@
     "isConsumed": false
   },
   {
-    "id": "mp_2",
-    "date": "2026-08-16",
+    "id": "mp_seed_20260819_lunch",
+    "date": "2026-08-18",
     "slot": "lunch",
     "isEatingOut": false,
     "items": [
       {
         "type": "recipe",
-        "referenceId": "recipe_chicken_stir_fry"
+        "referenceId": "1"
       }
     ],
     "eaters": [
@@ -342,7 +385,8 @@
         "items": [
           {
             "type": "recipe",
-            "referenceId": "recipe_chicken_stir_fry",
+            "referenceId": "1",
+            "name": "TUNA PASTA",
             "servingSizeG": 250,
             "grams": 250
           }
@@ -358,69 +402,20 @@
     "isConsumed": false
   },
   {
-    "id": "mp_3",
-    "date": "2026-08-16",
+    "id": "mp_msxnpehf4q1o3i01ycbkogy2ckk1w",
+    "date": "2026-08-17",
     "slot": "breakfast",
     "isEatingOut": false,
-    "items": [
-      {
-        "type": "recipe",
-        "referenceId": "recipe_greek_salad"
-      }
-    ],
     "eaters": [
       {
         "idx": 0,
         "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "recipe_greek_salad",
-            "servingSizeG": 250,
-            "grams": 250
-          }
-        ]
-      },
-      {
-        "idx": 1,
-        "eatingOut": true,
         "items": []
-      }
-    ],
-    "servings": 2,
-    "isConsumed": false
-  },
-  {
-    "id": "mp_msvu4mxy9lkbe1n0vphu2xaw8f2s",
-    "date": "2026-08-11",
-    "slot": "breakfast",
-    "isEatingOut": false,
-    "eaters": [
-      {
-        "idx": 0,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "1",
-            "name": "TUNA PASTA",
-            "servingSizeG": 535,
-            "grams": 200
-          }
-        ]
       },
       {
         "idx": 1,
         "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "1",
-            "name": "TUNA PASTA",
-            "servingSizeG": 535,
-            "grams": 200
-          }
-        ]
+        "items": []
       }
     ],
     "isConsumed": false

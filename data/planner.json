@@ -4,5 +4,33 @@
     "budget": 6000,
     "currency": "MUR"
   },
-  "items": []
+  "items": [
+    {
+      "ingredientId": "tagliatelle",
+      "name": "Tagliatelle",
+      "amount": 1,
+      "unit": "kg",
+      "scope": "month",
+      "useStock": true,
+      "pantryId": "pantry_1_barilla_tagliatelle"
+    },
+    {
+      "ingredientId": "chicken_thigh_raw",
+      "name": "Chicken thighs",
+      "amount": 1,
+      "unit": "kg",
+      "scope": "fresh",
+      "useStock": false,
+      "pantryId": ""
+    },
+    {
+      "ingredientId": "rice_white_medium_grain",
+      "name": "Rice",
+      "amount": 2,
+      "unit": "kg",
+      "scope": "month",
+      "useStock": true,
+      "pantryId": "pantry_10_basmati_rice"
+    }
+  ]
 }

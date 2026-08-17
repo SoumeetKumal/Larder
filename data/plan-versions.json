@@ -1,1 +1,1419 @@
-[]
+[
+  {
+    "id": "pv_msxnpfwo3x26vy5p73p",
+    "confirmedAt": "2026-08-17T19:58:37.511Z",
+    "slotCount": 13,
+    "plannedMealCount": 11,
+    "itemCount": 12,
+    "plans": [
+      {
+        "id": "mp_test_20260803_dinner",
+        "date": "2026-08-03",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260804_lunch",
+        "date": "2026-08-04",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260805_dinner",
+        "date": "2026-08-05",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260806_dinner",
+        "date": "2026-08-06",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 4,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260807_snack",
+        "date": "2026-08-07",
+        "slot": "snack",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "ingredient",
+            "referenceId": "onion",
+            "amount": 1,
+            "unit": "count"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "ingredient",
+                "referenceId": "onion",
+                "grams": 100
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260808_lunch",
+        "date": "2026-08-08",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260809_lunch_eatout",
+        "date": "2026-08-09",
+        "slot": "lunch",
+        "isEatingOut": true,
+        "items": [],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": true,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yf8ozh7huhbttsx85wf13y9",
+        "date": "2026-07-28",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yh1bo3es83z5g01fudw24p5",
+        "date": "2026-07-27",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260817_dinner",
+        "date": "2026-08-16",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260818_dinner",
+        "date": "2026-08-17",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_chicken_basil_rice",
+                "name": "Basil Chicken Rice",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260819_lunch",
+        "date": "2026-08-18",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "name": "TUNA PASTA",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msxnpehf4q1o3i01ycbkogy2ckk1w",
+        "date": "2026-08-17",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": []
+          }
+        ],
+        "isConsumed": false
+      }
+    ]
+  },
+  {
+    "id": "pv_msxnigamjyk57j8w9kr",
+    "confirmedAt": "2026-08-17T19:53:11.420Z",
+    "slotCount": 13,
+    "plannedMealCount": 11,
+    "itemCount": 12,
+    "plans": [
+      {
+        "id": "mp_test_20260803_dinner",
+        "date": "2026-08-03",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260804_lunch",
+        "date": "2026-08-04",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260805_dinner",
+        "date": "2026-08-05",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260806_dinner",
+        "date": "2026-08-06",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 4,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260807_snack",
+        "date": "2026-08-07",
+        "slot": "snack",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "ingredient",
+            "referenceId": "onion",
+            "amount": 1,
+            "unit": "count"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "ingredient",
+                "referenceId": "onion",
+                "grams": 100
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260808_lunch",
+        "date": "2026-08-08",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260809_lunch_eatout",
+        "date": "2026-08-09",
+        "slot": "lunch",
+        "isEatingOut": true,
+        "items": [],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": true,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yf8ozh7huhbttsx85wf13y9",
+        "date": "2026-07-28",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yh1bo3es83z5g01fudw24p5",
+        "date": "2026-07-27",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260817_dinner",
+        "date": "2026-08-16",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260818_dinner",
+        "date": "2026-08-17",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_chicken_basil_rice",
+                "name": "Basil Chicken Rice",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260819_lunch",
+        "date": "2026-08-18",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "name": "TUNA PASTA",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msxnievdd52bm2hooejfn4f0fb5doh",
+        "date": "2026-08-17",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": []
+          }
+        ],
+        "isConsumed": false
+      }
+    ]
+  },
+  {
+    "id": "pv_msxmzkgezst9ss6gbj",
+    "confirmedAt": "2026-08-17T19:38:30.347Z",
+    "slotCount": 13,
+    "plannedMealCount": 11,
+    "itemCount": 12,
+    "plans": [
+      {
+        "id": "mp_test_20260803_dinner",
+        "date": "2026-08-03",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260804_lunch",
+        "date": "2026-08-04",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260805_dinner",
+        "date": "2026-08-05",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260806_dinner",
+        "date": "2026-08-06",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 4,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260807_snack",
+        "date": "2026-08-07",
+        "slot": "snack",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "ingredient",
+            "referenceId": "onion",
+            "amount": 1,
+            "unit": "count"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "ingredient",
+                "referenceId": "onion",
+                "grams": 100
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260808_lunch",
+        "date": "2026-08-08",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 3,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_test_20260809_lunch_eatout",
+        "date": "2026-08-09",
+        "slot": "lunch",
+        "isEatingOut": true,
+        "items": [],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": true,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yf8ozh7huhbttsx85wf13y9",
+        "date": "2026-07-28",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msm4wj5yh1bo3es83z5g01fudw24p5",
+        "date": "2026-07-27",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1786280091596",
+            "name": "BUTTER CHICKEN",
+            "unit": null
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1786280091596",
+                "name": "BUTTER CHICKEN",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 1,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260817_dinner",
+        "date": "2026-08-16",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260818_dinner",
+        "date": "2026-08-17",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_chicken_basil_rice",
+                "name": "Basil Chicken Rice",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260819_lunch",
+        "date": "2026-08-18",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "name": "TUNA PASTA",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_msxmzj0mcu41gtz43dfhwwrv0jsz8",
+        "date": "2026-08-17",
+        "slot": "breakfast",
+        "isEatingOut": false,
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": []
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": []
+          }
+        ],
+        "isConsumed": false
+      }
+    ]
+  },
+  {
+    "id": "pv_test",
+    "confirmedAt": "2026-08-13T09:05:00.000Z",
+    "itemCount": 7,
+    "plannedMealCount": 3,
+    "slotCount": 28,
+    "plans": []
+  },
+  {
+    "id": "pv_seed_20260817",
+    "confirmedAt": "2026-08-17T18:51:35.463Z",
+    "itemCount": 4,
+    "plannedMealCount": 2,
+    "slotCount": 3,
+    "plans": [
+      {
+        "id": "mp_seed_20260817_dinner",
+        "date": "2026-08-16",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260818_dinner",
+        "date": "2026-08-17",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_chicken_basil_rice",
+                "name": "Basil Chicken Rice",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260819_lunch",
+        "date": "2026-08-18",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "name": "TUNA PASTA",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      }
+    ]
+  }
+]

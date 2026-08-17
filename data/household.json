@@ -8,7 +8,18 @@
     "avgDurationDays": 90,
     "pricePerUnit": 135,
     "lastOpenedDate": "2026-07-27",
-    "durationHistory": []
+    "durationHistory": [],
+    "priceHistory": [
+      {
+        "date": "2026-08-17",
+        "price": 135
+      }
+    ],
+    "lastPrice": 135,
+    "lastPriceDate": "2026-08-17",
+    "averagePrice": 135,
+    "minStock": 0,
+    "maxStock": 0
   },
   {
     "id": "hh_msm5at4f3dwrz0",
@@ -19,39 +30,65 @@
     "avgDurationDays": 125,
     "pricePerUnit": 1000,
     "lastOpenedDate": "2026-07-12",
-    "durationHistory": []
+    "durationHistory": [],
+    "priceHistory": [
+      {
+        "date": "2026-08-17",
+        "price": 1000
+      }
+    ],
+    "lastPrice": 1000,
+    "lastPriceDate": "2026-08-17",
+    "averagePrice": 1000,
+    "minStock": 0,
+    "maxStock": 0
   },
   {
-    "id": "hh_dish_soap",
-    "name": "Dish Soap",
-    "category": "Cleaning",
-    "unitSize": "500ml",
-    "currentStock": 2,
-    "avgDurationDays": 30,
-    "pricePerUnit": 60,
-    "lastOpenedDate": "2026-08-01",
-    "durationHistory": []
+    "id": "hh_seed_hand_soap",
+    "name": "Hand Soap",
+    "category": "Toiletries",
+    "unitSize": "bottle",
+    "currentStock": 0,
+    "minStock": 2,
+    "avgDurationDays": 6,
+    "pricePerUnit": 120,
+    "lastOpenedDate": "2026-08-17",
+    "durationHistory": [
+      6
+    ],
+    "priceHistory": [
+      {
+        "date": "2026-08-17",
+        "price": 120
+      }
+    ],
+    "lastPrice": 120,
+    "lastPriceDate": "2026-08-17",
+    "averagePrice": 120,
+    "maxStock": 0
   },
   {
-    "id": "hh_laundry_detergent",
-    "name": "Laundry Detergent",
-    "category": "Cleaning",
-    "unitSize": "2L",
-    "currentStock": 1,
-    "avgDurationDays": 60,
-    "pricePerUnit": 200,
-    "lastOpenedDate": "2026-07-15",
-    "durationHistory": []
-  },
-  {
-    "id": "hh_paper_towels",
-    "name": "Paper Towels",
+    "id": "hh_seed_toilet_paper",
+    "name": "Toilet Paper",
     "category": "Paper Goods",
-    "unitSize": "6 rolls",
+    "unitSize": "roll",
     "currentStock": 1,
-    "avgDurationDays": 45,
-    "pricePerUnit": 150,
-    "lastOpenedDate": "2026-08-01",
-    "durationHistory": []
+    "minStock": 5,
+    "avgDurationDays": 7,
+    "pricePerUnit": 30,
+    "lastOpenedDate": "2026-08-17",
+    "durationHistory": [
+      7
+    ],
+    "priceHistory": [
+      {
+        "date": "2026-08-17",
+        "price": 30
+      }
+    ],
+    "lastPrice": 30,
+    "lastPriceDate": "2026-08-17",
+    "averagePrice": 30,
+    "maxStock": 0
   }
 ]

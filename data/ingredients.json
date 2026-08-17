@@ -1583,7 +1583,7 @@
     "carbsG": 28,
     "fiberG": 0.4,
     "sugarG": 0.1,
-    "category": "Grains",
+    "category": "Pantry Staples",
     "vitaminAMcg": 0,
     "vitaminCMg": 0,
     "vitaminDMcg": 0,
@@ -1612,8 +1612,21 @@
     "monounsaturatedFatG": 0.21,
     "polyunsaturatedFatG": 0.18,
     "cholesterolMg": 0,
-    "averagePrice": 8,
-    "priceCurrency": "MUR"
+    "averagePrice": 320,
+    "priceCurrency": "MUR",
+    "priceBasisAmount": 0,
+    "priceBasisUnit": "g",
+    "scientificName": "",
+    "description": "",
+    "imageUrl": "",
+    "proteinSource": "",
+    "ingredientDetails": {
+      "storage": "",
+      "flavour": "",
+      "pairings": "",
+      "varieties": "",
+      "preparations": ""
+    }
   },
   {
     "foodId": "basmati_rice_brown",
@@ -33814,187 +33827,147 @@
     "proteinSource": ""
   },
   {
-    "foodId": "spaghetti",
-    "name": "Spaghetti",
-    "averagePrice": 50,
-    "priceHistory": [
-      {
-        "date": "2026-05-01",
-        "price": 45
-      },
-      {
-        "date": "2026-06-01",
-        "price": 48
-      },
-      {
-        "date": "2026-07-01",
-        "price": 50
-      },
-      {
-        "date": "2026-08-01",
-        "price": 52
-      }
-    ]
-  },
-  {
-    "foodId": "chicken_breast",
-    "name": "Chicken Breast",
-    "averagePrice": 180,
-    "priceHistory": [
-      {
-        "date": "2026-05-01",
-        "price": 170
-      },
-      {
-        "date": "2026-06-01",
-        "price": 175
-      },
-      {
-        "date": "2026-07-01",
-        "price": 180
-      },
-      {
-        "date": "2026-08-01",
-        "price": 185
-      }
-    ]
-  },
-  {
-    "foodId": "feta_cheese",
-    "name": "Feta Cheese",
-    "averagePrice": 120,
-    "priceHistory": [
-      {
-        "date": "2026-05-01",
-        "price": 110
-      },
-      {
-        "date": "2026-06-01",
-        "price": 115
-      },
-      {
-        "date": "2026-07-01",
-        "price": 120
-      },
-      {
-        "date": "2026-08-01",
-        "price": 125
-      }
-    ]
-  },
-  {
-    "foodId": "milk",
-    "name": "Milk",
-    "averagePrice": 60,
-    "priceHistory": [
-      {
-        "date": "2026-05-01",
-        "price": 55
-      },
-      {
-        "date": "2026-06-01",
-        "price": 58
-      },
-      {
-        "date": "2026-07-01",
-        "price": 60
-      },
-      {
-        "date": "2026-08-01",
-        "price": 62
-      }
-    ]
-  },
-  {
-    "foodId": "apples",
-    "name": "Apples",
+    "foodId": "paneer",
+    "name": "Paneer",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "calories": 265,
+    "proteinG": 18,
+    "fatG": 21,
+    "carbsG": 1.2,
+    "fiberG": 0,
+    "sugarG": 0,
+    "category": "Dairy",
+    "fdcId": "",
+    "fdcDesc": "",
     "averagePrice": 150,
+    "priceCurrency": "MUR",
     "priceHistory": [
       {
-        "date": "2026-05-01",
-        "price": 140
-      },
-      {
-        "date": "2026-06-01",
-        "price": 145
-      },
-      {
-        "date": "2026-07-01",
+        "date": "2026-08-14",
         "price": 150
-      },
-      {
-        "date": "2026-08-01",
-        "price": 155
       }
     ]
   },
   {
-    "foodId": "butter",
-    "name": "Butter",
-    "averagePrice": 90,
+    "foodId": "chicken_wings",
+    "name": "Chicken Wings",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "calories": 203,
+    "proteinG": 30,
+    "fatG": 8,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "category": "Meat",
+    "fdcId": "",
+    "fdcDesc": "",
+    "averagePrice": 160,
+    "priceCurrency": "MUR",
     "priceHistory": [
       {
-        "date": "2026-05-01",
-        "price": 85
-      },
-      {
-        "date": "2026-06-01",
-        "price": 88
-      },
-      {
-        "date": "2026-07-01",
-        "price": 90
-      },
-      {
-        "date": "2026-08-01",
-        "price": 95
+        "date": "2026-08-14",
+        "price": 160
       }
     ]
   },
   {
-    "foodId": "eggs",
-    "name": "Eggs",
-    "averagePrice": 100,
+    "foodId": "coconut_water",
+    "name": "Coconut Water",
+    "servingSizeG": 240,
+    "servingUnit": "ml",
+    "calories": 46,
+    "proteinG": 1.7,
+    "fatG": 0.5,
+    "carbsG": 9,
+    "fiberG": 1.2,
+    "sugarG": 6,
+    "category": "Beverages",
+    "fdcId": "",
+    "fdcDesc": "",
+    "averagePrice": 25,
+    "priceCurrency": "MUR",
     "priceHistory": [
       {
-        "date": "2026-05-01",
-        "price": 90
-      },
-      {
-        "date": "2026-06-01",
-        "price": 95
-      },
-      {
-        "date": "2026-07-01",
-        "price": 100
-      },
-      {
-        "date": "2026-08-01",
-        "price": 105
+        "date": "2026-08-14",
+        "price": 25
       }
     ]
   },
   {
-    "foodId": "bread",
-    "name": "Bread",
-    "averagePrice": 50,
-    "priceHistory": [
-      {
-        "date": "2026-05-01",
-        "price": 45
-      },
-      {
-        "date": "2026-06-01",
-        "price": 48
-      },
-      {
-        "date": "2026-07-01",
-        "price": 50
-      },
-      {
-        "date": "2026-08-01",
-        "price": 52
-      }
-    ]
+    "foodId": "maitake_shiitake_blend",
+    "name": "Maitake Shiitake Blend",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
+  },
+  {
+    "foodId": "maitake_shiitake_blend_bfky",
+    "name": "Maitake Shiitake Blend bfky",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
+  },
+  {
+    "foodId": "maitake_shiitake_blend_gkdb",
+    "name": "Maitake Shiitake Blend gkdb",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
+  },
+  {
+    "foodId": "maitake_shiitake_blend_hj1i",
+    "name": "Maitake Shiitake Blend hj1i",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
+  },
+  {
+    "foodId": "maitake_shiitake_blend_oiq5",
+    "name": "Maitake Shiitake Blend oiq5",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "category": "",
+    "calories": 0,
+    "proteinG": 0,
+    "fatG": 0,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "saturatedFatG": 0,
+    "proteinSource": ""
   }
 ]
