@@ -403,5 +403,74 @@
     "cost": null,
     "createdAt": "2026-08-16T13:23:45.930Z",
     "updatedAt": "2026-08-16T13:23:45.930Z"
+  },
+  {
+    "id": "sl_seed_20260816",
+    "date": "2026-08-16",
+    "items": [
+      {
+        "id": "slx1",
+        "foodId": "tagliatelle",
+        "name": "Granoro Tagliatelle",
+        "amount": 500,
+        "unit": "g",
+        "category": "Grains",
+        "recipes": [
+          "Creamy Chicken Tagliatelle"
+        ],
+        "checked": false,
+        "grams": 500,
+        "cost": 55,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": [
+          "p_granoro"
+        ]
+      },
+      {
+        "id": "slx2",
+        "foodId": "chicken_breast_skinless",
+        "name": "Chicken Breast",
+        "amount": 300,
+        "unit": "g",
+        "category": "Meat",
+        "recipes": [
+          "Creamy Chicken Tagliatelle"
+        ],
+        "checked": false,
+        "grams": 300,
+        "cost": 108,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "slx3",
+        "foodId": "basil_fresh",
+        "name": "Fresh Basil",
+        "amount": 15,
+        "unit": "g",
+        "category": "Herbs",
+        "recipes": [
+          "Basil Chicken Rice"
+        ],
+        "checked": false,
+        "grams": 15,
+        "cost": 10,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      }
+    ],
+    "grams": 815,
+    "cost": 173,
+    "createdAt": "2026-08-17T18:51:35.463Z",
+    "updatedAt": "2026-08-17T18:51:35.463Z"
   }
 ]

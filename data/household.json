@@ -53,5 +53,29 @@
     "pricePerUnit": 150,
     "lastOpenedDate": "2026-08-01",
     "durationHistory": []
+  },
+  {
+    "id": "hh_seed_hand_soap",
+    "name": "Hand Soap",
+    "category": "Toiletries",
+    "unitSize": "bottle",
+    "currentStock": 1,
+    "minStock": 2,
+    "avgDurationDays": 40,
+    "pricePerUnit": 120,
+    "lastOpenedDate": "2026-08-11",
+    "durationHistory": []
+  },
+  {
+    "id": "hh_seed_toilet_paper",
+    "name": "Toilet Paper",
+    "category": "Paper Goods",
+    "unitSize": "roll",
+    "currentStock": 3,
+    "minStock": 5,
+    "avgDurationDays": 21,
+    "pricePerUnit": 30,
+    "lastOpenedDate": "2026-08-10",
+    "durationHistory": []
   }
 ]

@@ -1,5 +1,64 @@
 [
   {
     "id": "test1"
+  },
+  {
+    "id": "rc_seed_20260815",
+    "store": "Winners",
+    "date": "2026-08-15",
+    "total": 610,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Tagliatelle",
+        "price": 55
+      },
+      {
+        "name": "Chicken Breast",
+        "price": 220
+      },
+      {
+        "name": "Tomato Purée",
+        "price": 85
+      },
+      {
+        "name": "Garlic",
+        "price": 25
+      }
+    ]
+  },
+  {
+    "id": "rc_seed_20260808",
+    "store": "Dream Price",
+    "date": "2026-08-08",
+    "total": 240,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Rice",
+        "price": 65
+      },
+      {
+        "name": "Olive Oil",
+        "price": 175
+      }
+    ]
+  },
+  {
+    "id": "rc_seed_prevmonth",
+    "store": "Winners",
+    "date": "2026-07-14",
+    "total": 780,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Chicken Breast",
+        "price": 240
+      },
+      {
+        "name": "Tagliatelle",
+        "price": 52
+      }
+    ]
   }
 ]

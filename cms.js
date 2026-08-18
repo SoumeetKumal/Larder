@@ -1081,6 +1081,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             statusText.innerHTML = `<span class="status-dot"></span> Connected · ${recipes.length} recipes · ${ingredients.length} ingredients · ${pantryItems.length} pantry items`;
+            const loadingScreen = document.getElementById('app-loading-screen');
+            if (loadingScreen) loadingScreen.classList.add('loaded');
             addBtn.classList.remove('hidden');
             if (cmsTabs) cmsTabs.classList.remove('hidden');
             renderCMSList();
@@ -4931,6 +4933,17 @@ const unpricedRow = cost.unpriced.length
                         </div>
                     `;
                     if (window.lucide) window.lucide.createIcons();
+
+                    const budgetInput = document.getElementById('shopping-budget-amount');
+                    budgetInput.addEventListener('focus', function(e) {
+                        e.target.value = e.target.value.replace(/,/g, '');
+                    });
+                    budgetInput.addEventListener('blur', function(e) {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            e.target.value = val.toLocaleString('en-US', { maximumFractionDigits: 2 });
+                        }
+                    });
 
                     document.getElementById('save-shopping-btn').onclick = async () => {
                         const amount = parseFloat((document.getElementById('shopping-budget-amount').value || '').replace(/,/g, '')) || 0;

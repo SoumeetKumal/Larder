@@ -1,5 +1,40 @@
 [
   {
     "id": "test1"
+  },
+  {
+    "id": "cons_seed_cooked",
+    "date": "2026-08-15",
+    "recipeId": "1",
+    "recipeTitle": "TUNA PASTA",
+    "servingsCooked": 3,
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 315
+      },
+      {
+        "foodId": "tomato_puree",
+        "grams": 125
+      },
+      {
+        "foodId": "garlic",
+        "grams": 20
+      }
+    ]
+  },
+  {
+    "id": "cons_seed_manual",
+    "date": "2026-08-16",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Olive Oil",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "olive_oil",
+        "grams": 15
+      }
+    ]
   }
 ]

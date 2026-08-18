@@ -1,1 +1,121 @@
-[]
+[
+  {
+    "id": "pv_seed_20260817",
+    "confirmedAt": "2026-08-17T18:51:35.463Z",
+    "itemCount": 4,
+    "plannedMealCount": 2,
+    "slotCount": 3,
+    "plans": [
+      {
+        "id": "mp_seed_20260817_dinner",
+        "date": "2026-08-16",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_creamy_chicken_tagliatelle"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_creamy_chicken_tagliatelle",
+                "name": "Creamy Chicken Tagliatelle",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260818_dinner",
+        "date": "2026-08-17",
+        "slot": "dinner",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "recipe_chicken_basil_rice"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "recipe_chicken_basil_rice",
+                "name": "Basil Chicken Rice",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      },
+      {
+        "id": "mp_seed_20260819_lunch",
+        "date": "2026-08-18",
+        "slot": "lunch",
+        "isEatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "1"
+          }
+        ],
+        "eaters": [
+          {
+            "idx": 0,
+            "eatingOut": false,
+            "items": [
+              {
+                "type": "recipe",
+                "referenceId": "1",
+                "name": "TUNA PASTA",
+                "servingSizeG": 250,
+                "grams": 250
+              }
+            ]
+          },
+          {
+            "idx": 1,
+            "eatingOut": true,
+            "items": []
+          }
+        ],
+        "servings": 2,
+        "isConsumed": false
+      }
+    ]
+  }
+]

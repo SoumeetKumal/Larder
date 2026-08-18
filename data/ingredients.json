@@ -33996,5 +33996,74 @@
         "price": 52
       }
     ]
+  },
+  {
+    "foodId": "paneer",
+    "name": "Paneer",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "calories": 265,
+    "proteinG": 18,
+    "fatG": 21,
+    "carbsG": 1.2,
+    "fiberG": 0,
+    "sugarG": 0,
+    "category": "Dairy",
+    "fdcId": "",
+    "fdcDesc": "",
+    "averagePrice": 150,
+    "priceCurrency": "MUR",
+    "priceHistory": [
+      {
+        "date": "2026-08-14",
+        "price": 150
+      }
+    ]
+  },
+  {
+    "foodId": "chicken_wings",
+    "name": "Chicken Wings",
+    "servingSizeG": 100,
+    "servingUnit": "g",
+    "calories": 203,
+    "proteinG": 30,
+    "fatG": 8,
+    "carbsG": 0,
+    "fiberG": 0,
+    "sugarG": 0,
+    "category": "Meat",
+    "fdcId": "",
+    "fdcDesc": "",
+    "averagePrice": 160,
+    "priceCurrency": "MUR",
+    "priceHistory": [
+      {
+        "date": "2026-08-14",
+        "price": 160
+      }
+    ]
+  },
+  {
+    "foodId": "coconut_water",
+    "name": "Coconut Water",
+    "servingSizeG": 240,
+    "servingUnit": "ml",
+    "calories": 46,
+    "proteinG": 1.7,
+    "fatG": 0.5,
+    "carbsG": 9,
+    "fiberG": 1.2,
+    "sugarG": 6,
+    "category": "Beverages",
+    "fdcId": "",
+    "fdcDesc": "",
+    "averagePrice": 25,
+    "priceCurrency": "MUR",
+    "priceHistory": [
+      {
+        "date": "2026-08-14",
+        "price": 25
+      }
+    ]
   }
 ]

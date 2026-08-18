@@ -2,5 +2,74 @@
   {
     "pantryId": "test1",
     "ingredientFoodId": "test_food"
+  },
+  {
+    "pantryId": "p_granoro",
+    "ingredientFoodId": "tagliatelle",
+    "productName": "Tagliatelle",
+    "brand": "Granoro",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 55,
+    "currency": "MUR",
+    "quantity": 2,
+    "isTracked": true,
+    "avgDurationDays": 14,
+    "lastOpenedDate": "2026-08-13",
+    "notes": "Family favourite, cooks in 8 min",
+    "priceHistory": [
+      {
+        "date": "2026-08-15",
+        "price": 55
+      }
+    ],
+    "lastPrice": 55,
+    "lastPriceDate": "2026-08-15"
+  },
+  {
+    "pantryId": "pantry_10_basmati_rice",
+    "ingredientFoodId": "rice_white_medium_grain",
+    "productName": "Basmati Rice",
+    "brand": "Local Market",
+    "packSize": 1000,
+    "packUnit": "g",
+    "price": 65,
+    "currency": "MUR",
+    "quantity": 1,
+    "isTracked": true,
+    "avgDurationDays": 60,
+    "lastOpenedDate": "2026-08-06",
+    "notes": "1kg bag, fluffy grains",
+    "priceHistory": [
+      {
+        "date": "2026-08-15",
+        "price": 65
+      }
+    ],
+    "lastPrice": 65,
+    "lastPriceDate": "2026-08-15"
+  },
+  {
+    "pantryId": "pantry_11_chicken_thighs",
+    "ingredientFoodId": "chicken_thigh_raw",
+    "productName": "Chicken Thighs",
+    "brand": "Farm Fresh",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 170,
+    "currency": "MUR",
+    "quantity": 1,
+    "isTracked": true,
+    "avgDurationDays": 4,
+    "lastOpenedDate": "2026-08-14",
+    "notes": "Bone-in, skin-on",
+    "priceHistory": [
+      {
+        "date": "2026-08-15",
+        "price": 170
+      }
+    ],
+    "lastPrice": 170,
+    "lastPriceDate": "2026-08-15"
   }
 ]

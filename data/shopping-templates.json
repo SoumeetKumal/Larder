@@ -1,1 +1,48 @@
-[]
+[
+  {
+    "id": "st_seed_weekly",
+    "name": "Seed weekly shop",
+    "sources": [
+      "meals",
+      "restock",
+      "household"
+    ],
+    "items": [
+      {
+        "id": "stx1",
+        "foodId": "tagliatelle",
+        "name": "Granoro Tagliatelle",
+        "amount": 500,
+        "unit": "g",
+        "category": "Grains",
+        "recipes": [],
+        "checked": false,
+        "grams": 500,
+        "cost": 55,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": [
+          "p_granoro"
+        ]
+      },
+      {
+        "id": "stx2",
+        "foodId": null,
+        "name": "Hand Soap",
+        "amount": 1,
+        "unit": "bottle",
+        "category": "Household",
+        "recipes": [],
+        "checked": false,
+        "grams": null,
+        "cost": 120,
+        "sources": [
+          "household"
+        ]
+      }
+    ],
+    "savedOn": "2026-08-17T18:51:35.463Z"
+  }
+]

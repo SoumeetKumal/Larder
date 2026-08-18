@@ -323,6 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFilters();
         renderTagChips();
         renderGrid();
+        const loadingScreen = document.getElementById('app-loading-screen');
+        if (loadingScreen) loadingScreen.classList.add('loaded');
 
         // Deep links: ingredients.html?foodId=... (or ?name=...) opens the
         // ingredient profile immediately, so recipe ingredient links can send

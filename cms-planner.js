@@ -374,10 +374,13 @@ return `<div class="pl-item" data-idx="${i}">
                 ${unitSelect('g', { cls: 'pl-new-unit sel-unit seamless-select', id: 'pl-new-unit' })}
                 <button class="btn primary" id="pl-add-btn">Add</button>
             </div>
-            ${suggestionChips ? `<div class="pl-sugg">
-                <button type="button" class="pl-sugg-toggle" id="pl-sugg-toggle" aria-expanded="true"><i data-lucide="info" style="width:14px;height:14px;"></i> Suggestions to close your macro gaps <i data-lucide="chevron-down" class="pl-sugg-chev" style="width:14px;height:14px;"></i></button>
-                <div class="pl-sugg-panel" id="pl-sugg-panel">${suggestionChips}</div>
-            </div>` : `<div class="pl-sugg pl-sugg-empty">${(S.planner.items || []).length ? 'All macro targets met &mdash; nothing to suggest.' : 'Add items above to see suggestions for the biggest macro shortfalls.'}</div>`}
+            ${suggestionChips ? `<div class="pl-sugg" style="display:inline-block; margin-left: 1rem;">
+                <button type="button" class="btn ghost" id="pl-sugg-toggle" title="Suggestions to close macro gaps" style="padding: 0.4rem; border-radius: 50%;"><i data-lucide="info" style="width:18px;height:18px;"></i></button>
+                <div class="pl-sugg-panel" id="pl-sugg-panel" style="display:none; position:absolute; z-index:100; background:var(--bg-surface); padding:1rem; border:1px solid var(--border); box-shadow:var(--shadow-lg); border-radius:8px; max-width:400px; margin-top:0.5rem;">
+                    <div style="font-weight:600; margin-bottom:0.75rem;">Suggestions to close gaps</div>
+                    ${suggestionChips}
+                </div>
+            </div>` : `<div class="pl-sugg pl-sugg-empty" style="display:inline-block; margin-left:1rem; opacity:0.5;"><i data-lucide="check-circle" style="width:16px;height:16px;"></i></div>`}
             ${gapStrip}
             <div class="pl-list">${rows || '<div class="empty-state">No planned items yet &mdash; add your month&apos;s groceries above.</div>'}</div>
         </div>
@@ -450,6 +453,9 @@ const saveGoalsFromDOM = () => {
                 await App.savePlanner();
                 renderPlanner();
             };
+            budgetInput.addEventListener('focus', function(e) {
+                e.target.value = e.target.value.replace(/,/g, '');
+            });
             budgetInput.addEventListener('change', persistBudget);
             budgetInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); budgetInput.blur(); }
@@ -504,8 +510,9 @@ useStock: false,
         const suggPanel = container.querySelector('#pl-sugg-panel');
         if (suggToggle && suggPanel) {
             suggToggle.addEventListener('click', () => {
-                const open = suggPanel.classList.toggle('open');
-                suggToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                const isHidden = suggPanel.style.display === 'none';
+                suggPanel.style.display = isHidden ? 'block' : 'none';
+                suggToggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
             });
         }
 

@@ -414,5 +414,194 @@
     ],
     "note": "",
     "variations": ""
+  },
+  {
+    "id": "recipe_creamy_chicken_tagliatelle",
+    "entryType": "recipe",
+    "title": "Creamy Chicken Tagliatelle",
+    "category": "Poultry",
+    "time": "30 mins",
+    "iconTag": "",
+    "description": "Creamy garlic chicken tagliatelle, finished with parmigiano.",
+    "imageUrl": "https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&fit=crop&w=800&q=80",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "650 kCal",
+      "carbohydrate": "55 g",
+      "protein": "40 g",
+      "fat": "28 g"
+    },
+    "ingredients": [
+      {
+        "item": "Tagliatelle",
+        "foodId": "tagliatelle",
+        "metric": "250g",
+        "imperial": "2.5 cups"
+      },
+      {
+        "item": "Chicken breast, skinless",
+        "foodId": "chicken_breast_skinless",
+        "metric": "300g",
+        "imperial": "1.25 cups"
+      },
+      {
+        "item": "Garlic",
+        "foodId": "garlic",
+        "metric": "12g",
+        "imperial": "3 cloves"
+      },
+      {
+        "item": "Onion",
+        "foodId": "onion",
+        "metric": "80g",
+        "imperial": "0.5 medium"
+      },
+      {
+        "item": "Heavy cream",
+        "foodId": "heavy_cream",
+        "metric": "150g",
+        "imperial": "0.6 cup"
+      },
+      {
+        "item": "Parmigiano Reggiano",
+        "foodId": "parmigiano_reggiano",
+        "metric": "40g",
+        "imperial": "0.4 cup"
+      },
+      {
+        "item": "Olive Oil",
+        "foodId": "olive_oil",
+        "metric": "15g",
+        "imperial": "1 tbsp"
+      },
+      {
+        "item": "Salt",
+        "foodId": "salt",
+        "metric": "6g",
+        "imperial": "1 tsp"
+      },
+      {
+        "item": "Pepper",
+        "foodId": "pepper",
+        "metric": "3g",
+        "imperial": "0.5 tsp"
+      }
+    ],
+    "steps": [
+      "## Prep",
+      "Slice the chicken into bite-size strips and season with half the salt and pepper.",
+      "Mince the garlic and dice the onion.",
+      "## Cook the chicken",
+      "Heat the olive oil in a large pan over medium-high heat and cook the [[chicken_breast_skinless|chicken]] until golden, about 5 minutes. Remove and set aside.",
+      "In the same pan, soften the onion and garlic for 2 minutes.",
+      "## Make the sauce",
+      "Add the heavy cream and parmigiano reggiano, then stir until the cheese melts into a smooth sauce.",
+      "Return the [[chicken_breast_skinless|chicken]] to the pan and simmer for 3 minutes.",
+      "Meanwhile, cook the [[tagliatelle|Tagliatelle]] in salted boiling water until al dente, then toss with the sauce.",
+      "Season to taste with the remaining salt and pepper and serve immediately."
+    ],
+    "prepSteps": [
+      "Slice chicken into strips",
+      "Mince garlic",
+      "Dice onion"
+    ],
+    "prepTime": "10 mins",
+    "tags": [
+      "ITALIAN",
+      "POULTRY"
+    ],
+    "note": "The sauce can be made ahead and reheated gently.",
+    "variations": "Swap chicken for shrimp or add mushrooms."
+  },
+  {
+    "id": "recipe_chicken_basil_rice",
+    "entryType": "recipe",
+    "title": "Basil Chicken Rice",
+    "category": "Poultry",
+    "time": "25 mins",
+    "iconTag": "",
+    "description": "One-pan chicken thighs with fragrant basil rice.",
+    "imageUrl": "https://images.unsplash.com/photo-1598866594230-a7c12756260f?auto=format&fit=crop&w=800&q=80",
+    "status": "published",
+    "macros": {
+      "macroReference": {
+        "type": "per_serving",
+        "referenceAmount": ""
+      },
+      "yield": "4",
+      "energy": "520 kCal",
+      "carbohydrate": "52 g",
+      "protein": "35 g",
+      "fat": "18 g"
+    },
+    "ingredients": [
+      {
+        "item": "Chicken thighs",
+        "foodId": "chicken_thigh_raw",
+        "metric": "400g",
+        "imperial": "1.7 cups"
+      },
+      {
+        "item": "Rice",
+        "foodId": "rice_white_medium_grain",
+        "metric": "250g",
+        "imperial": "1.25 cups"
+      },
+      {
+        "item": "Fresh basil",
+        "foodId": "basil_fresh",
+        "metric": "15g",
+        "imperial": "0.3 cup"
+      },
+      {
+        "item": "Garlic",
+        "foodId": "garlic",
+        "metric": "8g",
+        "imperial": "2 cloves"
+      },
+      {
+        "item": "Olive Oil",
+        "foodId": "olive_oil",
+        "metric": "20g",
+        "imperial": "1.5 tbsp"
+      },
+      {
+        "item": "Salt",
+        "foodId": "salt",
+        "metric": "5g",
+        "imperial": "0.8 tsp"
+      },
+      {
+        "item": "Pepper",
+        "foodId": "pepper",
+        "metric": "2g",
+        "imperial": "0.4 tsp"
+      }
+    ],
+    "steps": [
+      "## Prep",
+      "Season the [[chicken_thigh_raw|chicken thighs]] with salt and pepper. Chiffonade the basil.",
+      "## Cook the chicken",
+      "Heat olive oil in a deep pan and brown the chicken thighs on both sides, about 6 minutes.",
+      "Add the garlic and stir for 30 seconds.",
+      "## Rice",
+      "Add the [[rice_white_medium_grain|rice]] and 500ml of water, cover and simmer for 15 minutes until the rice is tender.",
+      "Fold in the fresh basil, rest for 5 minutes and serve."
+    ],
+    "prepSteps": [
+      "Season chicken thighs",
+      "Chiffonade basil"
+    ],
+    "prepTime": "8 mins",
+    "tags": [
+      "ASIAN"
+    ],
+    "note": "",
+    "variations": "Add a squeeze of lime before serving."
   }
 ]

@@ -28,5 +28,8 @@
     "repoPath": "C:\\Users\\soume\\AppData\\Roaming\\larder\\website-repo",
     "repoUrl": "https://github.com/SoumeetKumal/Larder.git",
     "token": ""
+  },
+  "stats": {
+    "cpi": 5
   }
 }

@@ -1,0 +1,407 @@
+{
+  "generatedAt": "2026-08-17T19:58:47.264Z",
+  "results": {
+    "total": 66,
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0
+  },
+  "report": [
+    {
+      "workflow": "A",
+      "step": "A1 open editor",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "A",
+      "step": "A1 ingredient suggestion sets foodId",
+      "status": "pass",
+      "detail": "rice foodId=basmati_rice_white"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 create ingredient inline",
+      "status": "pass",
+      "detail": "blend foodId=maitake_shiitake_blend_oiq5"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 link ingredient in step",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe saved via UI",
+      "status": "pass",
+      "detail": "id=1786996672349"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe ingredients persisted",
+      "status": "pass",
+      "detail": "3 ingredients"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has foodIds",
+      "status": "pass",
+      "detail": "all foodIds set"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has prepSteps",
+      "status": "pass",
+      "detail": "3 prep steps"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has subsections",
+      "status": "pass",
+      "detail": "section present"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has linked ingredient in step",
+      "status": "pass",
+      "detail": "[[link]] present"
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has tags",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "A",
+      "step": "A1 recipe has image",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "A",
+      "step": "A2 website lists the recipe",
+      "status": "pass",
+      "detail": "E2E Mushroom Risotto msxnohdt"
+    },
+    {
+      "workflow": "A",
+      "step": "A2 ingredient names are links",
+      "status": "pass",
+      "detail": "4 .ingredient-link anchors"
+    },
+    {
+      "workflow": "A",
+      "step": "A2 links open in new tab (target=_blank)",
+      "status": "pass",
+      "detail": "[{\"href\":\"ingredients.html?foodId=basmati_rice_white\",\"target\":\"_blank\"},{\"href\":\"ingredients.html?foodId=maitake_shiitake_blend_oiq5\",\"target\":\"_blank\"},{\"href\":\"ingredients.html?foodId=parmesan_cheese\",\"target\":\"_blank\"}]"
+    },
+    {
+      "workflow": "A",
+      "step": "A3 open ingredient profile",
+      "status": "pass",
+      "detail": "basmati_rice_white"
+    },
+    {
+      "workflow": "A",
+      "step": "A3 ingredient edit persisted",
+      "status": "pass",
+      "detail": "category=Pantry Staples price=320"
+    },
+    {
+      "workflow": "B",
+      "step": "B1 pantry has tracked items",
+      "status": "pass",
+      "detail": "p_granoro qty=1.35"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 open recipe to log cooked",
+      "status": "pass",
+      "detail": "recipe_creamy_chicken_tagliatelle"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 cooked dialog opens",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "B",
+      "step": "B2 cooked dialog lists ingredients",
+      "status": "pass",
+      "detail": "9 items"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 consumption record created",
+      "status": "pass",
+      "detail": "id=cons_msxnov39akj9hg servings=2"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 consumption has foodId items",
+      "status": "pass",
+      "detail": "9 items"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 pantry decremented by cooked",
+      "status": "pass",
+      "detail": "qty 1.35 -> 1.1"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 used dialog opens",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "B",
+      "step": "B2 manual use consumption recorded",
+      "status": "pass",
+      "detail": "Manual use: Tagliatelle"
+    },
+    {
+      "workflow": "B",
+      "step": "B2 manual use decremented pantry",
+      "status": "pass",
+      "detail": "qty 1.1 -> 0.9"
+    },
+    {
+      "workflow": "C",
+      "step": "C1 shopping list generated",
+      "status": "pass",
+      "detail": "20 items"
+    },
+    {
+      "workflow": "C",
+      "step": "C1 estimated total shown",
+      "status": "pass",
+      "detail": "Rs418.83"
+    },
+    {
+      "workflow": "C",
+      "step": "C1 can include/exclude items",
+      "status": "pass",
+      "detail": "was true"
+    },
+    {
+      "workflow": "C",
+      "step": "C1 saved list persisted for today",
+      "status": "pass",
+      "detail": "date=2026-08-17"
+    },
+    {
+      "workflow": "C",
+      "step": "C1 list items have expected cost",
+      "status": "pass",
+      "detail": "has priced items"
+    },
+    {
+      "workflow": "C",
+      "step": "C3 past lists shown & dated",
+      "status": "pass",
+      "detail": "\n                        \n                            \n                         "
+    },
+    {
+      "workflow": "C",
+      "step": "C3 phone renders shared checklist",
+      "status": "pass",
+      "detail": "20 items on phone"
+    },
+    {
+      "workflow": "C",
+      "step": "C3 phone tick persists to shared list",
+      "status": "pass",
+      "detail": "checkbox state saved"
+    },
+    {
+      "workflow": "C",
+      "step": "C4 receipt lines parsed",
+      "status": "pass",
+      "detail": "3 lines"
+    },
+    {
+      "workflow": "C",
+      "step": "C4 receipt saved",
+      "status": "pass",
+      "detail": "id=rc_1786995499837 total=140"
+    },
+    {
+      "workflow": "C",
+      "step": "C4 receipt items matched to ingredients",
+      "status": "pass",
+      "detail": "has foodId matches"
+    },
+    {
+      "workflow": "D",
+      "step": "D stats KPIs render",
+      "status": "pass",
+      "detail": "[\"-54.9%\",\"Rs2,060\",\"Rs294.29\",\"10\"]"
+    },
+    {
+      "workflow": "D",
+      "step": "D total spend shown",
+      "status": "pass",
+      "detail": "-54.9%, Rs2,060, Rs294.29, 10"
+    },
+    {
+      "workflow": "D",
+      "step": "D inflation/savings signals present",
+      "status": "pass",
+      "detail": "weighted price change"
+    },
+    {
+      "workflow": "D",
+      "step": "D period switch re-renders",
+      "status": "pass",
+      "detail": "[\"-54.9%\",\"Rs2,060\",\"Rs294.29\",\"10\"]"
+    },
+    {
+      "workflow": "E",
+      "step": "E1 planner rows have product selects",
+      "status": "pass",
+      "detail": "3 rows"
+    },
+    {
+      "workflow": "E",
+      "step": "E1 change product on planner row",
+      "status": "pass",
+      "detail": "{\"before\":\"pantry_2_de_cecco_tagliatelle\",\"after\":\"pantry_1_barilla_tagliatelle\"}"
+    },
+    {
+      "workflow": "E",
+      "step": "E1 product choice remembered (productPrefs)",
+      "status": "pass",
+      "detail": "tagliatelle -> pantry_1_barilla_tagliatelle"
+    },
+    {
+      "workflow": "E",
+      "step": "E1 next-time remembers choice",
+      "status": "pass",
+      "detail": "preselected=pantry_1_barilla_tagliatelle"
+    },
+    {
+      "workflow": "E",
+      "step": "E2 household items render",
+      "status": "pass",
+      "detail": "4 items"
+    },
+    {
+      "workflow": "E",
+      "step": "E2 household shows duration/days-left",
+      "status": "pass",
+      "detail": " Running Low Toilet Paper Paper Goods 2 roll ~7d each Runs out 31 Aug 2026 in 14d Rs 30/unit Opened "
+    },
+    {
+      "workflow": "E",
+      "step": "E2 opened-new-unit logs",
+      "status": "pass",
+      "detail": "4 items"
+    },
+    {
+      "workflow": "F",
+      "step": "F meal assign modal opens",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "F",
+      "step": "F pick a recipe in assign modal",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "F",
+      "step": "F meal plan persisted",
+      "status": "pass",
+      "detail": "13 plans"
+    },
+    {
+      "workflow": "F",
+      "step": "F save plan persists",
+      "status": "pass",
+      "detail": "13 plans"
+    },
+    {
+      "workflow": "F",
+      "step": "F plan version recorded with date",
+      "status": "pass",
+      "detail": "id=pv_msxnpfwo3x26vy5p73p at=2026-08-17T19:58:37.511Z"
+    },
+    {
+      "workflow": "F",
+      "step": "F week saved as template",
+      "status": "pass",
+      "detail": "2 templates"
+    },
+    {
+      "workflow": "F",
+      "step": "F generate end-of-month shop",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "F",
+      "step": "F EOM shop created from planner",
+      "status": "pass",
+      "detail": "3 lists"
+    },
+    {
+      "workflow": "G",
+      "step": "G1 offline-first local origin",
+      "status": "pass",
+      "detail": "origin=true"
+    },
+    {
+      "workflow": "G",
+      "step": "G2 export returns zip",
+      "status": "pass",
+      "detail": "status=200"
+    },
+    {
+      "workflow": "G",
+      "step": "G2 import round-trip",
+      "status": "pass",
+      "detail": "status=200"
+    },
+    {
+      "workflow": "G",
+      "step": "G2 all datasets intact after restore",
+      "status": "pass",
+      "detail": "recipes=9 ingredients=867"
+    },
+    {
+      "workflow": "G",
+      "step": "G3 records dated & traceable",
+      "status": "pass",
+      "detail": "9 consumption, 3 lists"
+    },
+    {
+      "workflow": "G",
+      "step": "G4 edit persists",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "workflow": "G",
+      "step": "G4 quantity updated",
+      "status": "pass",
+      "detail": "pantry_1_barilla_tagliatelle -> 4.75"
+    },
+    {
+      "workflow": "G",
+      "step": "G5 publish to website succeeds",
+      "status": "pass",
+      "detail": "copied=18 Published 18 data file(s). GitHub Pages will rebuild in a minute."
+    },
+    {
+      "workflow": "G",
+      "step": "G5 published data reachable via API",
+      "status": "pass",
+      "detail": "9 recipes"
+    }
+  ]
+}
