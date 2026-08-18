@@ -1,6 +1,194 @@
 [
   {
-    "id": "test1"
+    "id": "cons_msxnowtqbljaw3",
+    "date": "2026-08-17",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Tagliatelle",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 100
+      }
+    ]
+  },
+  {
+    "id": "cons_msxnov39akj9hg",
+    "date": "2026-08-17",
+    "recipeId": "recipe_creamy_chicken_tagliatelle",
+    "recipeTitle": "Creamy Chicken Tagliatelle",
+    "servingsCooked": 2,
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 125
+      },
+      {
+        "foodId": "chicken_breast_skinless",
+        "grams": 150
+      },
+      {
+        "foodId": "garlic",
+        "grams": 6
+      },
+      {
+        "foodId": "onion",
+        "grams": 40
+      },
+      {
+        "foodId": "heavy_cream",
+        "grams": 75
+      },
+      {
+        "foodId": "parmigiano_reggiano",
+        "grams": 20
+      },
+      {
+        "foodId": "olive_oil",
+        "grams": 7.5
+      },
+      {
+        "foodId": "salt",
+        "grams": 3
+      },
+      {
+        "foodId": "pepper",
+        "grams": 1.5
+      }
+    ]
+  },
+  {
+    "id": "cons_msxnhx7f8wcxdv",
+    "date": "2026-08-17",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Tagliatelle",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 100
+      }
+    ]
+  },
+  {
+    "id": "cons_msxnhvgai1s619",
+    "date": "2026-08-17",
+    "recipeId": "recipe_creamy_chicken_tagliatelle",
+    "recipeTitle": "Creamy Chicken Tagliatelle",
+    "servingsCooked": 2,
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 125
+      },
+      {
+        "foodId": "chicken_breast_skinless",
+        "grams": 150
+      },
+      {
+        "foodId": "garlic",
+        "grams": 6
+      },
+      {
+        "foodId": "onion",
+        "grams": 40
+      },
+      {
+        "foodId": "heavy_cream",
+        "grams": 75
+      },
+      {
+        "foodId": "parmigiano_reggiano",
+        "grams": 20
+      },
+      {
+        "foodId": "olive_oil",
+        "grams": 7.5
+      },
+      {
+        "foodId": "salt",
+        "grams": 3
+      },
+      {
+        "foodId": "pepper",
+        "grams": 1.5
+      }
+    ]
+  },
+  {
+    "id": "cons_msxmyrggkeuy72",
+    "date": "2026-08-17",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Tagliatelle",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 100
+      }
+    ]
+  },
+  {
+    "id": "cons_msxmypq6mybdc5",
+    "date": "2026-08-17",
+    "recipeId": "recipe_creamy_chicken_tagliatelle",
+    "recipeTitle": "Creamy Chicken Tagliatelle",
+    "servingsCooked": 2,
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "grams": 125
+      },
+      {
+        "foodId": "chicken_breast_skinless",
+        "grams": 150
+      },
+      {
+        "foodId": "garlic",
+        "grams": 6
+      },
+      {
+        "foodId": "onion",
+        "grams": 40
+      },
+      {
+        "foodId": "heavy_cream",
+        "grams": 75
+      },
+      {
+        "foodId": "parmigiano_reggiano",
+        "grams": 20
+      },
+      {
+        "foodId": "olive_oil",
+        "grams": 7.5
+      },
+      {
+        "foodId": "salt",
+        "grams": 3
+      },
+      {
+        "foodId": "pepper",
+        "grams": 1.5
+      }
+    ]
+  },
+  {
+    "id": "cons_manual_test",
+    "date": "2026-08-12",
+    "recipeId": null,
+    "recipeTitle": "Manual use: Salt",
+    "servingsCooked": null,
+    "source": "manual",
+    "items": [
+      {
+        "foodId": "salt",
+        "grams": 10
+      }
+    ]
   },
   {
     "id": "cons_seed_cooked",

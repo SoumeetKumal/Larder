@@ -12,7 +12,7 @@
       "unit": "kg",
       "scope": "month",
       "useStock": true,
-      "pantryId": "p_granoro"
+      "pantryId": "pantry_1_barilla_tagliatelle"
     },
     {
       "ingredientId": "chicken_thigh_raw",

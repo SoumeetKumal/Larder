@@ -1,5 +1,23 @@
 [
   {
+    "id": "st_test",
+    "name": "Monthly big shop",
+    "sources": [
+      "meals",
+      "restock"
+    ],
+    "items": [
+      {
+        "id": "i1",
+        "name": "Rice",
+        "amount": 2,
+        "unit": "kg",
+        "checked": false
+      }
+    ],
+    "savedOn": "2026-08-14T09:00:00.000Z"
+  },
+  {
     "id": "st_seed_weekly",
     "name": "Seed weekly shop",
     "sources": [

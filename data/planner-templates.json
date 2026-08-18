@@ -1,5 +1,24 @@
 [
   {
+    "id": "tpl_test",
+    "name": "August week template",
+    "savedOn": "2026-08-13T09:00:00.000Z",
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": [
+          {
+            "type": "recipe",
+            "referenceId": "r1",
+            "name": "Tuna pasta",
+            "grams": 250
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "tpl_seed_week",
     "name": "Seed week template",
     "savedOn": "2026-08-17T18:51:35.463Z",

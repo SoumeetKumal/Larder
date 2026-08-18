@@ -1,7 +1,187 @@
 [
   {
-    "pantryId": "test1",
-    "ingredientFoodId": "test_food"
+    "pantryId": "pantry_1_barilla_tagliatelle",
+    "ingredientFoodId": "tagliatelle",
+    "productName": "Tagliatelle",
+    "brand": "Barilla",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 45,
+    "currency": "MUR",
+    "quantity": 4.75,
+    "isTracked": true,
+    "avgDurationDays": 2,
+    "lastOpenedDate": "2026-08-17",
+    "notes": "Premium Italian pasta, cooks in 7 min",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 45
+      }
+    ],
+    "lastPrice": 45,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_2_de_cecco_tagliatelle",
+    "ingredientFoodId": "tagliatelle",
+    "productName": "Tagliatelle N. 103",
+    "brand": "De Cecco",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 65,
+    "currency": "MUR",
+    "quantity": 2,
+    "isTracked": true,
+    "avgDurationDays": 2,
+    "lastOpenedDate": "2026-07-28",
+    "notes": "Rough texture, bronze die cut",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 65
+      }
+    ],
+    "lastPrice": 65,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_3_mutti_tomato_puree",
+    "ingredientFoodId": "tomato_puree",
+    "productName": "Double Concentrate Tomato Purée",
+    "brand": "Mutti",
+    "packSize": 400,
+    "packUnit": "g",
+    "price": 85,
+    "currency": "MUR",
+    "quantity": 4,
+    "isTracked": true,
+    "avgDurationDays": 30,
+    "lastOpenedDate": "2026-07-15",
+    "notes": "Italian tomatoes, rich flavor",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 85
+      }
+    ],
+    "lastPrice": 85,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_4_centro_tomato_puree",
+    "ingredientFoodId": "tomato_puree",
+    "productName": "Tomato Purée",
+    "brand": "Centro",
+    "packSize": 800,
+    "packUnit": "g",
+    "price": 95,
+    "currency": "MUR",
+    "quantity": 2,
+    "isTracked": true,
+    "avgDurationDays": 30,
+    "lastOpenedDate": "2026-07-20",
+    "notes": "Local brand, good value",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 95
+      }
+    ],
+    "lastPrice": 95,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_5_fresh_garlic",
+    "ingredientFoodId": "garlic",
+    "productName": "Fresh Garlic Bulb",
+    "brand": "Local Market",
+    "packSize": 100,
+    "packUnit": "g",
+    "price": 25,
+    "currency": "MUR",
+    "quantity": 4.82,
+    "isTracked": true,
+    "avgDurationDays": 2,
+    "lastOpenedDate": "2026-08-17",
+    "notes": "Whole bulbs, stores well",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 25
+      }
+    ],
+    "lastPrice": 25,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_6_fresh_onion",
+    "ingredientFoodId": "onion",
+    "productName": "Yellow Onions",
+    "brand": "Local Farm",
+    "packSize": 1000,
+    "packUnit": "g",
+    "price": 40,
+    "currency": "MUR",
+    "quantity": 2.88,
+    "isTracked": true,
+    "avgDurationDays": 30,
+    "lastOpenedDate": "2026-08-17",
+    "notes": "1kg bag, cooking onions",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 40
+      }
+    ],
+    "lastPrice": 40,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_7_chicken_breast",
+    "ingredientFoodId": "chicken_breast_skinless",
+    "productName": "Chicken Breast Fillets",
+    "brand": "Farm Fresh",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 180,
+    "currency": "MUR",
+    "quantity": 2,
+    "isTracked": false,
+    "avgDurationDays": 5,
+    "lastOpenedDate": "2026-08-08",
+    "notes": "Skinless, boneless, freezer",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 180
+      }
+    ],
+    "lastPrice": 180,
+    "lastPriceDate": "2026-08-16"
+  },
+  {
+    "pantryId": "pantry_8_ground_beef",
+    "ingredientFoodId": "beef_ground_8515",
+    "productName": "Ground Beef 85/15",
+    "brand": "Butcher's Choice",
+    "packSize": 500,
+    "packUnit": "g",
+    "price": 220,
+    "currency": "MUR",
+    "quantity": 1,
+    "isTracked": true,
+    "avgDurationDays": 4,
+    "lastOpenedDate": "2026-08-09",
+    "notes": "Fresh ground, use within 2 days",
+    "priceHistory": [
+      {
+        "date": "2026-08-16",
+        "price": 220
+      }
+    ],
+    "lastPrice": 220,
+    "lastPriceDate": "2026-08-16"
   },
   {
     "pantryId": "p_granoro",
@@ -12,10 +192,10 @@
     "packUnit": "g",
     "price": 55,
     "currency": "MUR",
-    "quantity": 2,
+    "quantity": 0.9,
     "isTracked": true,
-    "avgDurationDays": 14,
-    "lastOpenedDate": "2026-08-13",
+    "avgDurationDays": 2,
+    "lastOpenedDate": "2026-08-17",
     "notes": "Family favourite, cooks in 8 min",
     "priceHistory": [
       {

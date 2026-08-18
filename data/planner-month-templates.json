@@ -1,5 +1,20 @@
 [
   {
+    "id": "mt_test",
+    "name": "Standard month",
+    "goals": {
+      "budget": 9000
+    },
+    "items": [
+      {
+        "ingredientId": "ing1",
+        "amount": 1,
+        "unit": "kg"
+      }
+    ],
+    "savedOn": "2026-08-14T09:10:00.000Z"
+  },
+  {
     "id": "mt_seed_month",
     "name": "Seed month template",
     "goals": {

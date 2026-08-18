@@ -1,36 +1,21 @@
 [
   {
-    "id": "sl_test",
-    "date": "2026-08-12",
+    "id": "sl_msxnrtnuqzn2c1",
+    "date": "2026-08-17",
     "items": [
       {
-        "foodId": "tagliatelle",
-        "name": "Tagliatelle",
-        "amount": 500,
+        "id": "sl-tbzi862d",
+        "foodId": "basil_fresh",
+        "name": "Basil, fresh",
+        "amount": 3.8,
         "unit": "g",
-        "checked": false
-      }
-    ],
-    "grams": 0,
-    "cost": null
-  },
-  {
-    "id": "sl_msvu5sp65so2a7",
-    "date": "2026-08-16",
-    "items": [
-      {
-        "id": "sl-ormt9z4j",
-        "foodId": "chicken_breast",
-        "name": "Chicken Breast",
-        "amount": 300,
-        "unit": "g",
-        "category": "Other",
+        "category": "Herbs",
         "recipes": [
-          "Chicken Stir-Fry"
+          "Basil Chicken Rice"
         ],
         "checked": false,
-        "grams": 300,
-        "cost": 540,
+        "grams": 3.8,
+        "cost": null,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -38,7 +23,45 @@
         "pantryIds": []
       },
       {
-        "id": "sl-81ey5ga2",
+        "id": "sl-mivej222",
+        "foodId": "chicken_breast_skinless",
+        "name": "Chicken breast, skinless",
+        "amount": 150,
+        "unit": "g",
+        "category": "Protein",
+        "recipes": [
+          "Creamy Chicken Tagliatelle"
+        ],
+        "checked": false,
+        "grams": 150,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-d6d3w61m",
+        "foodId": "chicken_thigh_raw",
+        "name": "Chicken thigh, raw",
+        "amount": 100,
+        "unit": "g",
+        "category": "Protein",
+        "recipes": [
+          "Basil Chicken Rice"
+        ],
+        "checked": false,
+        "grams": 100,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-eebxneku",
         "foodId": "chilli_flakes",
         "name": "Chilli Flakes",
         "amount": 0.3,
@@ -57,17 +80,38 @@
         "pantryIds": []
       },
       {
-        "id": "sl-v4xo8va4",
-        "foodId": "feta_cheese",
-        "name": "Feta cheese",
-        "amount": 100,
+        "id": "sl-uu8u1z23",
+        "foodId": "garlic",
+        "name": "Garlic",
+        "amount": 14.7,
+        "unit": "g",
+        "category": "Vegetables",
+        "recipes": [
+          "Creamy Chicken Tagliatelle",
+          "Basil Chicken Rice",
+          "TUNA PASTA"
+        ],
+        "checked": false,
+        "grams": 14.7,
+        "cost": 4.89,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-rcb2iai5",
+        "foodId": "heavy_cream",
+        "name": "Heavy cream",
+        "amount": 75,
         "unit": "g",
         "category": "Dairy",
         "recipes": [
-          "Greek Salad"
+          "Creamy Chicken Tagliatelle"
         ],
         "checked": false,
-        "grams": 100,
+        "grams": 75,
         "cost": null,
         "currency": "MUR",
         "sources": [
@@ -76,26 +120,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-hs11t1kp",
-        "foodId": "garlic",
-        "name": "Garlic",
-        "amount": 6.7,
-        "unit": "g",
-        "category": "Vegetables",
-        "recipes": [
-          "TUNA PASTA"
-        ],
-        "checked": false,
-        "grams": 6.7,
-        "cost": 2.22,
-        "currency": "MUR",
-        "sources": [
-          "meals"
-        ],
-        "pantryIds": []
-      },
-      {
-        "id": "sl-0vniyetf",
+        "id": "sl-564nv4nb",
         "foodId": "lemon_juice",
         "name": "Lemon Juice",
         "amount": 20,
@@ -114,18 +139,20 @@
         "pantryIds": []
       },
       {
-        "id": "sl-3gsx9ei7",
+        "id": "sl-q6tjbkg4",
         "foodId": "olive_oil",
         "name": "Olive Oil",
-        "amount": 15,
+        "amount": 27.5,
         "unit": "g",
         "category": "Fats/Oils",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
+          "Basil Chicken Rice",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 15,
-        "cost": 9,
+        "grams": 27.5,
+        "cost": 16.5,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -133,18 +160,19 @@
         "pantryIds": []
       },
       {
-        "id": "sl-k5u2jugt",
+        "id": "sl-i3ew9dbu",
         "foodId": "onion",
         "name": "Onion",
-        "amount": 50,
+        "amount": 90,
         "unit": "g",
         "category": "Vegetables",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 50,
-        "cost": 7.5,
+        "grams": 90,
+        "cost": 13.5,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -152,18 +180,19 @@
         "pantryIds": []
       },
       {
-        "id": "sl-7w8zw11h",
+        "id": "sl-w0ot19j5",
         "foodId": "parmigiano_reggiano",
         "name": "Parmigiano Reggiano",
-        "amount": 80,
+        "amount": 100,
         "unit": "g",
         "category": "Dairy",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 80,
-        "cost": 192,
+        "grams": 100,
+        "cost": 240,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -171,7 +200,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-uoxsox4n",
+        "id": "sl-3pysaygb",
         "foodId": "parsley",
         "name": "Parsley",
         "amount": 10,
@@ -190,18 +219,20 @@
         "pantryIds": []
       },
       {
-        "id": "sl-3jmrrrns",
+        "id": "sl-3u2kxt8l",
         "foodId": "pepper",
         "name": "Pepper",
-        "amount": 5,
+        "amount": 7,
         "unit": "g",
         "category": "Spices",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
+          "Basil Chicken Rice",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 5,
-        "cost": 5,
+        "grams": 7,
+        "cost": 7,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -209,7 +240,26 @@
         "pantryIds": []
       },
       {
-        "id": "sl-wxt3jczc",
+        "id": "sl-om9i22ma",
+        "foodId": "rice_white_medium_grain",
+        "name": "Rice, white medium grain",
+        "amount": 62.5,
+        "unit": "g",
+        "category": "Carbs",
+        "recipes": [
+          "Basil Chicken Rice"
+        ],
+        "checked": false,
+        "grams": 62.5,
+        "cost": null,
+        "currency": "MUR",
+        "sources": [
+          "meals"
+        ],
+        "pantryIds": []
+      },
+      {
+        "id": "sl-hg3b4vl5",
         "foodId": "rosemary",
         "name": "Rosemary",
         "amount": 0.7,
@@ -228,18 +278,20 @@
         "pantryIds": []
       },
       {
-        "id": "sl-j4nkzv50",
+        "id": "sl-qfvis734",
         "foodId": "salt",
         "name": "Salt",
-        "amount": 12,
+        "amount": 16.3,
         "unit": "g",
         "category": "Other",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
+          "Basil Chicken Rice",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 12,
-        "cost": 2.4,
+        "grams": 16.3,
+        "cost": 3.25,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -247,26 +299,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-xxpcg87i",
-        "foodId": "spaghetti",
-        "name": "Spaghetti",
-        "amount": 200,
-        "unit": "g",
-        "category": "Carbs",
-        "recipes": [
-          "Spaghetti Bolognese"
-        ],
-        "checked": false,
-        "grams": 200,
-        "cost": null,
-        "currency": "MUR",
-        "sources": [
-          "meals"
-        ],
-        "pantryIds": []
-      },
-      {
-        "id": "sl-emg7c8tv",
+        "id": "sl-w55vbj92",
         "foodId": "sugar",
         "name": "Sugar",
         "amount": 4,
@@ -285,18 +318,19 @@
         "pantryIds": []
       },
       {
-        "id": "sl-fsywj9q9",
+        "id": "sl-r715a5uo",
         "foodId": "tagliatelle",
         "name": "Tagliatelle",
-        "amount": 105,
+        "amount": 230,
         "unit": "g",
         "category": "Grains",
         "recipes": [
+          "Creamy Chicken Tagliatelle",
           "TUNA PASTA"
         ],
         "checked": false,
-        "grams": 105,
-        "cost": 12.6,
+        "grams": 230,
+        "cost": 27.6,
         "currency": "MUR",
         "sources": [
           "meals"
@@ -304,7 +338,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-zpkhoelv",
+        "id": "sl-j7ui6mya",
         "foodId": "tarragon",
         "name": "Tarragon",
         "amount": 1.7,
@@ -323,7 +357,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-9tz5yruk",
+        "id": "sl-810by830",
         "foodId": "thyme",
         "name": "Thyme",
         "amount": 1.3,
@@ -342,7 +376,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-94a487z3",
+        "id": "sl-03q62o11",
         "foodId": "tomato_puree",
         "name": "Tomato Purée",
         "amount": 125,
@@ -361,7 +395,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-mtcz3m42",
+        "id": "sl-l7vy26dh",
         "foodId": "tuna_flakes",
         "name": "Tuna Flakes",
         "amount": 56.7,
@@ -380,7 +414,7 @@
         "pantryIds": []
       },
       {
-        "id": "sl-52npwts0",
+        "id": "sl-w9f2pxmo",
         "foodId": "white_wine",
         "name": "White Wine",
         "amount": 41.7,
@@ -399,10 +433,29 @@
         "pantryIds": []
       }
     ],
+    "createdAt": "2026-08-17T20:00:28.650Z",
+    "updatedAt": "2026-08-17T20:00:28.650Z",
     "grams": 0,
-    "cost": null,
-    "createdAt": "2026-08-16T13:23:45.930Z",
-    "updatedAt": "2026-08-16T13:23:45.930Z"
+    "cost": null
+  },
+  {
+    "id": "sl_test",
+    "date": "2026-08-14",
+    "items": [
+      {
+        "foodId": "tagliatelle",
+        "name": "Tagliatelle",
+        "amount": 500,
+        "unit": "g",
+        "checked": false,
+        "id": "slx-0",
+        "grams": 500,
+        "cost": 60,
+        "included": false
+      }
+    ],
+    "grams": 0,
+    "cost": null
   },
   {
     "id": "sl_seed_20260816",

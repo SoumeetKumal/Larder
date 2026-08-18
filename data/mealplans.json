@@ -292,140 +292,6 @@
     "isConsumed": false
   },
   {
-    "id": "mp_1",
-    "date": "2026-08-16",
-    "slot": "dinner",
-    "isEatingOut": false,
-    "items": [
-      {
-        "type": "recipe",
-        "referenceId": "recipe_spaghetti_bolognese"
-      }
-    ],
-    "eaters": [
-      {
-        "idx": 0,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "recipe_spaghetti_bolognese",
-            "servingSizeG": 250,
-            "grams": 250
-          }
-        ]
-      },
-      {
-        "idx": 1,
-        "eatingOut": true,
-        "items": []
-      }
-    ],
-    "servings": 2,
-    "isConsumed": false
-  },
-  {
-    "id": "mp_2",
-    "date": "2026-08-16",
-    "slot": "lunch",
-    "isEatingOut": false,
-    "items": [
-      {
-        "type": "recipe",
-        "referenceId": "recipe_chicken_stir_fry"
-      }
-    ],
-    "eaters": [
-      {
-        "idx": 0,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "recipe_chicken_stir_fry",
-            "servingSizeG": 250,
-            "grams": 250
-          }
-        ]
-      },
-      {
-        "idx": 1,
-        "eatingOut": true,
-        "items": []
-      }
-    ],
-    "servings": 2,
-    "isConsumed": false
-  },
-  {
-    "id": "mp_3",
-    "date": "2026-08-16",
-    "slot": "breakfast",
-    "isEatingOut": false,
-    "items": [
-      {
-        "type": "recipe",
-        "referenceId": "recipe_greek_salad"
-      }
-    ],
-    "eaters": [
-      {
-        "idx": 0,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "recipe_greek_salad",
-            "servingSizeG": 250,
-            "grams": 250
-          }
-        ]
-      },
-      {
-        "idx": 1,
-        "eatingOut": true,
-        "items": []
-      }
-    ],
-    "servings": 2,
-    "isConsumed": false
-  },
-  {
-    "id": "mp_msvu4mxy9lkbe1n0vphu2xaw8f2s",
-    "date": "2026-08-11",
-    "slot": "breakfast",
-    "isEatingOut": false,
-    "eaters": [
-      {
-        "idx": 0,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "1",
-            "name": "TUNA PASTA",
-            "servingSizeG": 535,
-            "grams": 200
-          }
-        ]
-      },
-      {
-        "idx": 1,
-        "eatingOut": false,
-        "items": [
-          {
-            "type": "recipe",
-            "referenceId": "1",
-            "name": "TUNA PASTA",
-            "servingSizeG": 535,
-            "grams": 200
-          }
-        ]
-      }
-    ],
-    "isConsumed": false
-  },
-  {
     "id": "mp_seed_20260817_dinner",
     "date": "2026-08-16",
     "slot": "dinner",
@@ -533,6 +399,25 @@
       }
     ],
     "servings": 2,
+    "isConsumed": false
+  },
+  {
+    "id": "mp_msxnpehf4q1o3i01ycbkogy2ckk1w",
+    "date": "2026-08-17",
+    "slot": "breakfast",
+    "isEatingOut": false,
+    "eaters": [
+      {
+        "idx": 0,
+        "eatingOut": false,
+        "items": []
+      },
+      {
+        "idx": 1,
+        "eatingOut": false,
+        "items": []
+      }
+    ],
     "isConsumed": false
   }
 ]

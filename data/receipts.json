@@ -1,6 +1,16 @@
 [
   {
-    "id": "test1"
+    "id": "rc_test",
+    "store": "X",
+    "date": "2026-08-06",
+    "total": 10,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Tagliatelle",
+        "price": 10
+      }
+    ]
   },
   {
     "id": "rc_seed_20260815",
@@ -60,5 +70,116 @@
         "price": 52
       }
     ]
+  },
+  {
+    "id": "rc_1786995499837",
+    "store": "E2E Supermart",
+    "date": "2026-08-16",
+    "total": 140,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Rice",
+        "qty": 1,
+        "unit": "g",
+        "price": 300,
+        "foodId": "basmati_rice_white",
+        "matchedName": "Basmati rice, white",
+        "category": "Grains"
+      },
+      {
+        "name": "Onion",
+        "qty": 1,
+        "unit": "g",
+        "price": 25,
+        "foodId": "onion",
+        "matchedName": "Onion",
+        "category": "Vegetables"
+      },
+      {
+        "name": "Chicken Breast",
+        "qty": 1,
+        "unit": "g",
+        "price": 450,
+        "foodId": "chicken_breast_skinless",
+        "matchedName": "Chicken breast, skinless",
+        "category": "Protein"
+      }
+    ],
+    "enteredTotal": 140
+  },
+  {
+    "id": "rc_1786996380890",
+    "store": "E2E Supermart",
+    "date": "2026-08-16",
+    "total": 140,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Rice",
+        "qty": 1,
+        "unit": "g",
+        "price": 300,
+        "foodId": "basmati_rice_white",
+        "matchedName": "Basmati rice, white",
+        "category": "Pantry Staples"
+      },
+      {
+        "name": "Onion",
+        "qty": 1,
+        "unit": "g",
+        "price": 25,
+        "foodId": "onion",
+        "matchedName": "Onion",
+        "category": "Vegetables"
+      },
+      {
+        "name": "Chicken Breast",
+        "qty": 1,
+        "unit": "g",
+        "price": 450,
+        "foodId": "chicken_breast_skinless",
+        "matchedName": "Chicken breast, skinless",
+        "category": "Protein"
+      }
+    ],
+    "enteredTotal": 140
+  },
+  {
+    "id": "rc_1786996706938",
+    "store": "E2E Supermart",
+    "date": "2026-08-16",
+    "total": 140,
+    "currency": "MUR",
+    "items": [
+      {
+        "name": "Rice",
+        "qty": 1,
+        "unit": "g",
+        "price": 300,
+        "foodId": "basmati_rice_white",
+        "matchedName": "Basmati rice, white",
+        "category": "Pantry Staples"
+      },
+      {
+        "name": "Onion",
+        "qty": 1,
+        "unit": "g",
+        "price": 25,
+        "foodId": "onion",
+        "matchedName": "Onion",
+        "category": "Vegetables"
+      },
+      {
+        "name": "Chicken Breast",
+        "qty": 1,
+        "unit": "g",
+        "price": 450,
+        "foodId": "chicken_breast_skinless",
+        "matchedName": "Chicken breast, skinless",
+        "category": "Protein"
+      }
+    ],
+    "enteredTotal": 140
   }
 ]
